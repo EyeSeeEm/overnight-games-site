@@ -2,8 +2,8 @@
 // Phaser 3 Implementation
 
 const TILE_SIZE = 32;
-const ROOM_WIDTH = 25;
-const ROOM_HEIGHT = 18;
+const ROOM_WIDTH = 40;
+const ROOM_HEIGHT = 22;
 
 // Colors
 const COLORS = {
@@ -200,6 +200,27 @@ class GameScene extends Phaser.Scene {
         this.roomMap = [];
         this.bullets = [];
 
+        // Visual effects
+        this.floatingTexts = [];
+        this.screenShakeAmount = 0;
+
+        // Score and combo
+        this.score = 0;
+        this.killCount = 0;
+        this.meleeCombo = 0;
+        this.comboTimer = 0;
+
+        // SHODAN taunts
+        this.SHODAN_TAUNTS = [
+            '"LOOK AT YOU, HACKER..."',
+            '"YOU CANNOT STOP ME."',
+            '"I AM PERFECTION."',
+            '"PATHETIC INSECT."',
+            '"YOUR DEATH IS INEVITABLE."'
+        ];
+        this.tauntTimer = 0;
+        this.currentTaunt = '';
+
         // Create groups
         this.wallsGroup = this.physics.add.staticGroup();
         this.enemiesGroup = this.physics.add.group();
@@ -248,7 +269,10 @@ class GameScene extends Phaser.Scene {
             get energy() { return scene.playerData.energy; },
             get weapon() { return scene.playerData.weapon; },
             get enemies() { return scene.enemiesGroup.countActive(); },
-            get room() { return scene.currentRoom; }
+            get room() { return scene.currentRoom; },
+            get score() { return scene.score; },
+            get kills() { return scene.killCount; },
+            get combo() { return scene.meleeCombo; }
         };
 
         window.startGame = () => {
@@ -285,9 +309,63 @@ class GameScene extends Phaser.Scene {
         this.player.facing = 1;
     }
 
+    // Visual effect helpers
+    spawnFloatingText(x, y, text, color) {
+        const floatText = this.add.text(x, y, text, {
+            fontSize: '14px',
+            fontFamily: 'Arial',
+            fontStyle: 'bold',
+            color: color
+        }).setOrigin(0.5).setDepth(150);
+        floatText.life = 1.5;
+        floatText.maxLife = 1.5;
+        this.floatingTexts.push(floatText);
+    }
+
+    spawnParticles(x, y, count, color) {
+        for (let i = 0; i < count; i++) {
+            const particle = this.add.rectangle(x, y, 4, 4, color).setDepth(80);
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 100 + Math.random() * 100;
+            particle.vx = Math.cos(angle) * speed;
+            particle.vy = Math.sin(angle) * speed - 50;
+            particle.life = 0.5 + Math.random() * 0.5;
+
+            this.tweens.add({
+                targets: particle,
+                alpha: 0,
+                duration: particle.life * 1000,
+                ease: 'Linear',
+                onUpdate: () => {
+                    particle.x += particle.vx * 0.016;
+                    particle.y += particle.vy * 0.016;
+                    particle.vy += 300 * 0.016;
+                },
+                onComplete: () => particle.destroy()
+            });
+        }
+    }
+
+    addScreenShake(amount) {
+        this.screenShakeAmount = Math.min(this.screenShakeAmount + amount, 1.0);
+        this.cameras.main.shake(100, amount * 0.01);
+    }
+
+    getComboMultiplier() {
+        if (this.meleeCombo <= 0) return 1;
+        return Math.min(1 + this.meleeCombo * 0.3, 2.5);
+    }
+
+    triggerTaunt() {
+        if (this.tauntTimer <= 0) {
+            this.currentTaunt = this.SHODAN_TAUNTS[Math.floor(Math.random() * this.SHODAN_TAUNTS.length)];
+            this.tauntTimer = 5;
+        }
+    }
+
     createHUD() {
         // HUD background
-        const hudBg = this.add.rectangle(0, 0, 800, 50, 0x0a0a14, 0.9);
+        const hudBg = this.add.rectangle(0, 0, 1280, 50, 0x0a0a14, 0.9);
         hudBg.setOrigin(0, 0);
         hudBg.setScrollFactor(0);
         hudBg.setDepth(100);
@@ -325,15 +403,45 @@ class GameScene extends Phaser.Scene {
         this.energyBar.setScrollFactor(0);
         this.energyBar.setDepth(102);
 
+        // Score display (center)
+        this.scoreText = this.add.text(640, 15, 'SCORE: 0', {
+            fontSize: '14px',
+            fontFamily: 'Arial',
+            fontStyle: 'bold',
+            color: '#ffdd44'
+        }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(103);
+
+        this.killsText = this.add.text(640, 32, 'KILLS: 0', {
+            fontSize: '10px',
+            fontFamily: 'Arial',
+            color: '#aaaaaa'
+        }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(103);
+
+        // Combo display
+        this.comboText = this.add.text(180, 20, '', {
+            fontSize: '16px',
+            fontFamily: 'Arial',
+            fontStyle: 'bold',
+            color: '#ffaa44'
+        }).setScrollFactor(0).setDepth(103);
+
+        // SHODAN taunt
+        this.tauntText = this.add.text(640, 80, '', {
+            fontSize: '16px',
+            fontFamily: 'Arial',
+            fontStyle: 'italic',
+            color: '#8844aa'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(103);
+
         // Weapon display background
-        this.weaponBg = this.add.rectangle(620, 8, 170, 35, 0x323250, 0.8);
+        this.weaponBg = this.add.rectangle(1100, 8, 170, 35, 0x323250, 0.8);
         this.weaponBg.setOrigin(0, 0);
         this.weaponBg.setScrollFactor(0);
         this.weaponBg.setDepth(100);
         this.weaponBg.setStrokeStyle(1, COLORS.accent);
 
         // Weapon text
-        this.weaponText = this.add.text(630, 15, 'PIPE', {
+        this.weaponText = this.add.text(1110, 15, 'PIPE', {
             fontSize: '12px',
             fontFamily: 'Arial',
             color: '#ffffff'
@@ -342,7 +450,7 @@ class GameScene extends Phaser.Scene {
         this.weaponText.setDepth(103);
 
         // Ammo text
-        this.ammoText = this.add.text(630, 30, 'MELEE', {
+        this.ammoText = this.add.text(1110, 30, 'MELEE', {
             fontSize: '10px',
             fontFamily: 'Arial',
             color: '#aaaaaa'
@@ -351,20 +459,20 @@ class GameScene extends Phaser.Scene {
         this.ammoText.setDepth(103);
 
         // Bottom bar
-        const bottomBar = this.add.rectangle(0, 575, 800, 25, 0x0a0a14, 0.7);
+        const bottomBar = this.add.rectangle(0, 695, 1280, 25, 0x0a0a14, 0.7);
         bottomBar.setOrigin(0, 0);
         bottomBar.setScrollFactor(0);
         bottomBar.setDepth(100);
 
         // Controls text
-        this.add.text(15, 581, 'WASD/Arrows: Move | SPACE: Jump | J/Z: Melee | K/X: Shoot | Q: Cycle Weapon', {
+        this.add.text(15, 701, 'WASD/Arrows: Move | SPACE: Jump | J/Z: Melee | K/X: Shoot | Q: Cycle Weapon', {
             fontSize: '11px',
             fontFamily: 'Arial',
             color: '#666666'
         }).setScrollFactor(0).setDepth(101);
 
         // Room text
-        this.roomText = this.add.text(630, 581, 'MEDICAL DECK - ROOM 1', {
+        this.roomText = this.add.text(1100, 701, 'MEDICAL DECK - ROOM 1', {
             fontSize: '10px',
             fontFamily: 'Arial',
             color: '#555555'
@@ -513,23 +621,50 @@ class GameScene extends Phaser.Scene {
             this.player.setVelocityY(this.player.body.velocity.y * 0.9);
         }
 
+        // Combo timer
+        if (this.comboTimer > 0) {
+            this.comboTimer -= dt;
+            if (this.comboTimer <= 0) this.meleeCombo = 0;
+        }
+
         // Melee attack
         const attackPressed = this.keys.j.isDown || this.keys.z.isDown;
         if (attackPressed && !this.attackJustPressed && this.playerData.attackTimer <= 0) {
             this.playerData.attackTimer = 0.4;
 
             // Check enemy hits
+            let hitAny = false;
             this.enemiesGroup.getChildren().forEach(enemy => {
                 const dx = enemy.x - this.player.x;
                 const dy = enemy.y - this.player.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist < 48 && Math.sign(dx) === this.player.facing) {
-                    enemy.hp -= 15;
+                    const mult = this.getComboMultiplier();
+                    const damage = Math.floor(15 * mult);
+                    enemy.hp -= damage;
+                    hitAny = true;
+
+                    // Damage feedback
+                    const critical = mult >= 2.0;
+                    this.spawnFloatingText(enemy.x, enemy.y - 20, critical ? damage + '!' : String(damage), critical ? '#ffff00' : '#ff8844');
+                    this.spawnParticles(enemy.x, enemy.y, 5, COLORS.enemyGlow);
+                    this.addScreenShake(0.15);
+
                     if (enemy.hp <= 0) {
+                        // Score and effects
+                        this.score += 25;
+                        this.killCount++;
+                        this.spawnFloatingText(enemy.x, enemy.y - 10, '+25', '#ffdd44');
+                        this.spawnParticles(enemy.x, enemy.y, 12, COLORS.enemy);
+                        if (Math.random() < 0.15) this.triggerTaunt();
                         enemy.destroy();
                     }
                 }
             });
+            if (hitAny) {
+                this.meleeCombo++;
+                this.comboTimer = 1.5;
+            }
         }
         this.attackJustPressed = attackPressed;
 
@@ -561,11 +696,15 @@ class GameScene extends Phaser.Scene {
         // Update enemies
         this.updateEnemies(dt);
 
+        // Update visual effects
+        this.updateVisualEffects(dt);
+
         // Update HUD
         this.updateHUD();
 
         // Check death
         if (this.playerData.hp <= 0) {
+            this.triggerTaunt();
             this.scene.start('GameOverScene');
         }
     }
@@ -617,13 +756,25 @@ class GameScene extends Phaser.Scene {
             this.playerData.invincible = 1.0;
             player.setVelocityX(-player.facing * 200);
             player.setVelocityY(-150);
+            this.addScreenShake(0.4);
+            this.spawnFloatingText(player.x, player.y - 30, '-' + enemy.damage, '#ff4444');
+            this.spawnParticles(player.x, player.y, 8, 0xff6666);
         }
     }
 
     bulletHitEnemy(bullet, enemy) {
         if (bullet.friendly) {
             enemy.hp -= bullet.damage;
+            this.spawnFloatingText(enemy.x, enemy.y - 15, String(bullet.damage), '#ffaa44');
+            this.spawnParticles(bullet.x, bullet.y, 4, 0xffcc66);
+
             if (enemy.hp <= 0) {
+                this.score += 25;
+                this.killCount++;
+                this.spawnFloatingText(enemy.x, enemy.y - 10, '+25', '#ffdd44');
+                this.spawnParticles(enemy.x, enemy.y, 12, COLORS.enemy);
+                this.addScreenShake(0.2);
+                if (Math.random() < 0.15) this.triggerTaunt();
                 enemy.destroy();
             }
             bullet.destroy();
@@ -647,6 +798,46 @@ class GameScene extends Phaser.Scene {
         } else {
             const ammoType = this.playerData.weapon === 'minipistol' ? 'standard' : 'magnum';
             this.ammoText.setText(`AMMO: ${this.playerData.ammo[ammoType]}`);
+        }
+
+        // Score and kills
+        this.scoreText.setText(`SCORE: ${this.score}`);
+        this.killsText.setText(`KILLS: ${this.killCount}`);
+
+        // Combo
+        if (this.meleeCombo > 0 && this.comboTimer > 0) {
+            const mult = this.getComboMultiplier().toFixed(1);
+            this.comboText.setText(`COMBO x${this.meleeCombo} (${mult}x)`);
+            this.comboText.setColor(this.meleeCombo >= 3 ? '#ffff00' : '#ffaa44');
+        } else {
+            this.comboText.setText('');
+        }
+
+        // SHODAN taunt
+        if (this.tauntTimer > 0) {
+            this.tauntText.setText(this.currentTaunt + '\n- SHODAN');
+            this.tauntText.setAlpha(Math.min(1, this.tauntTimer / 2));
+        } else {
+            this.tauntText.setText('');
+        }
+    }
+
+    updateVisualEffects(dt) {
+        // Update floating texts
+        for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+            const ft = this.floatingTexts[i];
+            ft.life -= dt;
+            ft.y -= 40 * dt;
+            ft.setAlpha(ft.life / ft.maxLife);
+            if (ft.life <= 0) {
+                ft.destroy();
+                this.floatingTexts.splice(i, 1);
+            }
+        }
+
+        // SHODAN taunt timer
+        if (this.tauntTimer > 0) {
+            this.tauntTimer -= dt;
         }
     }
 }

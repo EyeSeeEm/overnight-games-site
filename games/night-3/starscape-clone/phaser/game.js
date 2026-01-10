@@ -9,11 +9,22 @@ const COLORS = {
     archnidBase: 0x8B0000,
     archnidGlow: 0xFF4500,
     blasterCyan: 0x00FFFF,
+    missileRed: 0xFF6347,
     greenMineral: 0x32CD32,
     yellowMineral: 0xFFD700,
     purpleMineral: 0x9400D3,
     asteroid: 0x8B7355,
     gravityBeam: 0x00FF88
+};
+
+// Powerup types
+const POWERUP_TYPES = {
+    rapidFire: { color: 0xFF4400, duration: 10, label: 'RAPID FIRE' },
+    damageBoost: { color: 0xFF00FF, duration: 8, label: 'DAMAGE+' },
+    speedBoost: { color: 0x00FF00, duration: 12, label: 'SPEED+' },
+    missileAmmo: { color: 0xFF6347, duration: 0, label: '+3 MISSILES' },
+    shield: { color: 0x4444FF, duration: 0, label: 'SHIELD+' },
+    repair: { color: 0x44FF44, duration: 0, label: 'REPAIR' }
 };
 
 class BootScene extends Phaser.Scene {
@@ -100,6 +111,45 @@ class BootScene extends Phaser.Scene {
         gfx.generateTexture('heavy', 28, 28);
         gfx.destroy();
 
+        // Bomber
+        gfx = this.make.graphics({ add: false });
+        gfx.fillStyle(0x660000);
+        gfx.beginPath();
+        gfx.moveTo(26, 13);
+        gfx.lineTo(13, 0);
+        gfx.lineTo(0, 6);
+        gfx.lineTo(0, 20);
+        gfx.lineTo(13, 26);
+        gfx.closePath();
+        gfx.fillPath();
+        gfx.fillStyle(0xFF4400);
+        gfx.fillCircle(8, 13, 6);
+        gfx.generateTexture('bomber', 26, 26);
+        gfx.destroy();
+
+        // Missile
+        gfx = this.make.graphics({ add: false });
+        gfx.fillStyle(COLORS.missileRed);
+        gfx.beginPath();
+        gfx.moveTo(16, 5);
+        gfx.lineTo(0, 0);
+        gfx.lineTo(0, 10);
+        gfx.closePath();
+        gfx.fillPath();
+        gfx.fillStyle(0xFF8800);
+        gfx.fillEllipse(0, 5, 6, 3);
+        gfx.generateTexture('missile', 16, 10);
+        gfx.destroy();
+
+        // Powerup
+        gfx = this.make.graphics({ add: false });
+        gfx.fillStyle(0xFFFFFF);
+        gfx.fillCircle(12, 12, 12);
+        gfx.fillStyle(0xFFFFFF, 0.5);
+        gfx.fillCircle(12, 12, 8);
+        gfx.generateTexture('powerup', 24, 24);
+        gfx.destroy();
+
         // Blaster bolt
         gfx = this.make.graphics({ add: false });
         gfx.fillStyle(COLORS.blasterCyan);
@@ -168,42 +218,42 @@ class MenuScene extends Phaser.Scene {
         this.cameras.main.setBackgroundColor('#0A0A15');
 
         // Stars
-        for (let i = 0; i < 150; i++) {
-            const star = this.add.rectangle(
-                Math.random() * 800, Math.random() * 600,
+        for (let i = 0; i < 300; i++) {
+            this.add.rectangle(
+                Math.random() * 1280, Math.random() * 720,
                 Math.random() * 2 + 1, Math.random() * 2 + 1,
                 0xFFFFFF, Math.random() * 0.5 + 0.5
             );
         }
 
         // Title
-        this.add.text(400, 180, 'STARSCAPE', {
-            fontSize: '48px',
+        this.add.text(640, 200, 'STARSCAPE', {
+            fontSize: '64px',
             fontFamily: 'Arial',
             color: '#4A90D9',
             fontStyle: 'bold'
         }).setOrigin(0.5);
 
-        this.add.text(400, 230, 'Space Combat Mining', {
-            fontSize: '18px',
+        this.add.text(640, 270, 'Space Combat Mining', {
+            fontSize: '24px',
             fontFamily: 'Arial',
             color: '#88CCFF'
         }).setOrigin(0.5);
 
-        this.add.text(400, 350, 'Press SPACE or Click to Start', {
-            fontSize: '20px',
+        this.add.text(640, 400, 'Press SPACE or Click to Start', {
+            fontSize: '24px',
             fontFamily: 'Arial',
             color: '#FFFFFF'
         }).setOrigin(0.5);
 
-        this.add.text(400, 450, 'WASD - Move  |  Q/Click - Fire  |  E - Gravity Beam  |  R - Dock', {
-            fontSize: '14px',
+        this.add.text(640, 520, 'WASD - Move  |  Q/Click - Fire  |  F - Missile  |  E - Gravity Beam  |  R - Dock', {
+            fontSize: '16px',
             fontFamily: 'Arial',
             color: '#888888'
         }).setOrigin(0.5);
 
-        this.add.text(400, 480, 'Defend the Aegis station! Mine asteroids for resources!', {
-            fontSize: '14px',
+        this.add.text(640, 560, 'Defend the Aegis station! Mine asteroids for resources!', {
+            fontSize: '16px',
             fontFamily: 'Arial',
             color: '#888888'
         }).setOrigin(0.5);
@@ -232,12 +282,14 @@ class GameScene extends Phaser.Scene {
         this.waveTimer = 3;
         this.waveCleared = true;
         this.resources = { green: 50, yellow: 30, purple: 10 };
+        this.comboCount = 0;
+        this.comboTimer = 0;
 
         // Stars background
         this.stars = [];
-        for (let i = 0; i < 150; i++) {
+        for (let i = 0; i < 300; i++) {
             const star = this.add.rectangle(
-                Math.random() * 800, Math.random() * 600,
+                Math.random() * 1280, Math.random() * 720,
                 Math.random() * 2 + 1, Math.random() * 2 + 1,
                 0xFFFFFF, Math.random() * 0.5 + 0.5
             );
@@ -251,9 +303,12 @@ class GameScene extends Phaser.Scene {
         this.asteroids = this.add.group();
         this.minerals = this.add.group();
         this.particles = this.add.group();
+        this.missiles = this.add.group();
+        this.powerups = this.add.group();
+        this.floatingTexts = this.add.group();
 
         // Aegis station
-        this.aegis = this.add.sprite(400, 300, 'aegis');
+        this.aegis = this.add.sprite(640, 360, 'aegis');
         this.aegis.hp = 500;
         this.aegis.maxHp = 500;
         this.aegis.shield = 200;
@@ -263,11 +318,11 @@ class GameScene extends Phaser.Scene {
         this.aegis.turretFireTimer = 0;
 
         // Aegis shield indicator
-        this.aegisShield = this.add.circle(400, 300, 58, COLORS.aegisShield, 0.3);
+        this.aegisShield = this.add.circle(640, 360, 58, COLORS.aegisShield, 0.3);
         this.aegisShield.setStrokeStyle(2, COLORS.aegisShield, 0.6);
 
         // Player
-        this.player = this.add.sprite(400, 450, 'player');
+        this.player = this.add.sprite(640, 540, 'player');
         this.player.hp = 75;
         this.player.maxHp = 75;
         this.player.shield = 60;
@@ -278,18 +333,27 @@ class GameScene extends Phaser.Scene {
         this.player.fireTimer = 0;
         this.player.fireRate = 5;
         this.player.damage = 12;
+        // New properties
+        this.player.missileAmmo = 5;
+        this.player.maxMissiles = 10;
+        this.player.missileTimer = 0;
+        this.player.powerups = {
+            rapidFire: 0,
+            damageBoost: 0,
+            speedBoost: 0
+        };
 
         // Player shield indicator
-        this.playerShield = this.add.circle(400, 450, 24, COLORS.playerShield, 0.2);
+        this.playerShield = this.add.circle(640, 540, 24, COLORS.playerShield, 0.2);
         this.playerShield.setStrokeStyle(2, COLORS.playerShield, 0.5);
 
         // Gravity beam circle
-        this.gravityBeam = this.add.circle(400, 450, 150, COLORS.gravityBeam, 0.1);
+        this.gravityBeam = this.add.circle(640, 540, 150, COLORS.gravityBeam, 0.1);
         this.gravityBeam.setStrokeStyle(2, COLORS.gravityBeam, 0.3);
         this.gravityBeam.setVisible(false);
 
         // Spawn asteroids
-        this.spawnAsteroids(8);
+        this.spawnAsteroids(12);
 
         // Input
         this.cursors = this.input.keyboard.addKeys({
@@ -298,6 +362,7 @@ class GameScene extends Phaser.Scene {
             left: Phaser.Input.Keyboard.KeyCodes.A,
             right: Phaser.Input.Keyboard.KeyCodes.D,
             fire: Phaser.Input.Keyboard.KeyCodes.Q,
+            missile: Phaser.Input.Keyboard.KeyCodes.F,
             gravity: Phaser.Input.Keyboard.KeyCodes.E,
             dock: Phaser.Input.Keyboard.KeyCodes.R
         });
@@ -326,7 +391,7 @@ class GameScene extends Phaser.Scene {
 
     createHUD() {
         // Top bar
-        this.add.rectangle(400, 25, 800, 50, 0x000000, 0.7);
+        this.add.rectangle(640, 25, 1280, 50, 0x000000, 0.7);
 
         // Shield bar
         this.add.rectangle(70, 14, 120, 12, 0x333333);
@@ -342,37 +407,46 @@ class GameScene extends Phaser.Scene {
 
         // Resources
         this.greenText = this.add.text(150, 15, 'G: 50', { fontSize: '14px', color: '#32CD32' });
-        this.yellowText = this.add.text(220, 15, 'Y: 30', { fontSize: '14px', color: '#FFD700' });
-        this.purpleText = this.add.text(290, 15, 'P: 10', { fontSize: '14px', color: '#9400D3' });
+        this.yellowText = this.add.text(250, 15, 'Y: 30', { fontSize: '14px', color: '#FFD700' });
+        this.purpleText = this.add.text(350, 15, 'P: 10', { fontSize: '14px', color: '#9400D3' });
 
         // Wave and score
-        this.waveText = this.add.text(400, 15, 'Wave 1', { fontSize: '16px', color: '#FFF' }).setOrigin(0.5);
-        this.scoreText = this.add.text(400, 35, 'Score: 0', { fontSize: '16px', color: '#FFF' }).setOrigin(0.5);
+        this.waveText = this.add.text(640, 15, 'Wave 1', { fontSize: '16px', color: '#FFF' }).setOrigin(0.5);
+        this.scoreText = this.add.text(640, 35, 'Score: 0', { fontSize: '16px', color: '#FFF' }).setOrigin(0.5);
 
-        // Enemies count
-        this.enemiesText = this.add.text(780, 20, '', { fontSize: '14px', color: '#FF8800' }).setOrigin(1, 0.5);
+        // Right side - missiles, enemies, combo
+        this.missileText = this.add.text(1260, 15, 'Missiles: 5', { fontSize: '14px', color: '#FF6347' }).setOrigin(1, 0);
+        this.enemiesText = this.add.text(1260, 32, '', { fontSize: '14px', color: '#FF8800' }).setOrigin(1, 0);
+        this.comboText = this.add.text(1260, 50, '', { fontSize: '16px', fontStyle: 'bold', color: '#FF8800' }).setOrigin(1, 0);
+
+        // Active powerups
+        this.powerupTexts = {
+            rapidFire: this.add.text(1260, 70, '', { fontSize: '12px', color: '#FF4400' }).setOrigin(1, 0),
+            damageBoost: this.add.text(1260, 85, '', { fontSize: '12px', color: '#FF00FF' }).setOrigin(1, 0),
+            speedBoost: this.add.text(1260, 100, '', { fontSize: '12px', color: '#00FF00' }).setOrigin(1, 0)
+        };
 
         // Bottom bar
-        this.add.rectangle(125, 580, 250, 40, 0x000000, 0.7);
-        this.add.text(10, 568, 'AEGIS', { fontSize: '12px', color: '#FFF' });
+        this.add.rectangle(200, 700, 400, 40, 0x000000, 0.7);
+        this.add.text(10, 688, 'AEGIS', { fontSize: '12px', color: '#FFF' });
 
         // Aegis bars
-        this.add.rectangle(100, 563, 80, 10, 0x333333);
-        this.aegisShieldBar = this.add.rectangle(100, 563, 80, 10, 0x4444FF);
+        this.add.rectangle(100, 683, 80, 10, 0x333333);
+        this.aegisShieldBar = this.add.rectangle(100, 683, 80, 10, 0x4444FF);
         this.aegisShieldBar.setOrigin(0.5);
 
-        this.add.rectangle(100, 577, 80, 10, 0x333333);
-        this.aegisHpBar = this.add.rectangle(100, 577, 80, 10, 0xFF4444);
+        this.add.rectangle(100, 697, 80, 10, 0x333333);
+        this.aegisHpBar = this.add.rectangle(100, 697, 80, 10, 0xFF4444);
         this.aegisHpBar.setOrigin(0.5);
 
         // Controls
-        this.add.text(160, 578, '[WASD] Move  [Q/Click] Fire  [E] Gravity Beam  [R] Dock', {
+        this.add.text(200, 698, '[WASD] Move  [Q/Click] Fire  [F] Missile  [E] Gravity Beam  [R] Dock', {
             fontSize: '11px', color: '#888'
         });
 
         // Wave warning
-        this.waveWarning = this.add.text(400, 200, '', {
-            fontSize: '20px', color: '#FFFF00'
+        this.waveWarning = this.add.text(640, 250, '', {
+            fontSize: '24px', color: '#FFFF00'
         }).setOrigin(0.5);
     }
 
@@ -384,9 +458,9 @@ class GameScene extends Phaser.Scene {
         for (let i = 0; i < count; i++) {
             let x, y;
             do {
-                x = Math.random() * 700 + 50;
-                y = Math.random() * 500 + 50;
-            } while (Phaser.Math.Distance.Between(x, y, 400, 300) < 150);
+                x = Math.random() * 1180 + 50;
+                y = Math.random() * 620 + 50;
+            } while (Phaser.Math.Distance.Between(x, y, 640, 360) < 150);
 
             const sizeType = sizes[Math.floor(Math.random() * 3)];
             const asteroid = this.add.sprite(x, y, 'asteroid' + sizeType);
@@ -405,16 +479,17 @@ class GameScene extends Phaser.Scene {
         const side = Math.floor(Math.random() * 4);
         let x, y;
         switch (side) {
-            case 0: x = Math.random() * 800; y = -30; break;
-            case 1: x = 830; y = Math.random() * 600; break;
-            case 2: x = Math.random() * 800; y = 630; break;
-            case 3: x = -30; y = Math.random() * 600; break;
+            case 0: x = Math.random() * 1280; y = -30; break;
+            case 1: x = 1310; y = Math.random() * 720; break;
+            case 2: x = Math.random() * 1280; y = 750; break;
+            case 3: x = -30; y = Math.random() * 720; break;
         }
 
         const types = {
             drone: { hp: 15, damage: 5, speed: 250, fireRate: 2, score: 10 },
             fighter: { hp: 40, damage: 10, speed: 180, fireRate: 2.5, score: 50 },
-            heavy: { hp: 80, damage: 15, speed: 120, fireRate: 1.5, score: 100, shieldAmt: 30 }
+            heavy: { hp: 80, damage: 15, speed: 120, fireRate: 1.5, score: 100, shieldAmt: 30 },
+            bomber: { hp: 60, damage: 25, speed: 100, fireRate: 0.8, score: 150 }
         };
 
         const config = types[type] || types.fighter;
@@ -440,9 +515,12 @@ class GameScene extends Phaser.Scene {
         const enemyCount = 3 + this.wave * 2;
         for (let i = 0; i < enemyCount; i++) {
             this.time.delayedCall(i * 500, () => {
-                if (this.wave >= 3 && Math.random() < 0.3) {
+                const roll = Math.random();
+                if (this.wave >= 5 && roll < 0.15) {
+                    this.spawnEnemy('bomber');
+                } else if (this.wave >= 3 && roll < 0.35) {
                     this.spawnEnemy('heavy');
-                } else if (Math.random() < 0.4) {
+                } else if (roll < 0.5) {
                     this.spawnEnemy('drone');
                 } else {
                     this.spawnEnemy('fighter');
@@ -450,6 +528,63 @@ class GameScene extends Phaser.Scene {
             });
         }
         this.waveCleared = false;
+        // Wave announcement
+        this.spawnFloatingText(640, 200, `WAVE ${this.wave}`, '#FFFF00', 32);
+    }
+
+    spawnFloatingText(x, y, text, color = '#FFFFFF', size = 16) {
+        const txt = this.add.text(x, y, text, {
+            fontSize: `${size}px`,
+            fontStyle: 'bold',
+            color: color,
+            stroke: '#000000',
+            strokeThickness: 3
+        }).setOrigin(0.5);
+        txt.vy = -40;
+        txt.life = 1.5;
+        this.floatingTexts.add(txt);
+    }
+
+    spawnPowerup(x, y) {
+        const types = Object.keys(POWERUP_TYPES);
+        const type = types[Math.floor(Math.random() * types.length)];
+        const config = POWERUP_TYPES[type];
+
+        const powerup = this.add.sprite(x, y, 'powerup');
+        powerup.setTint(config.color);
+        powerup.powerupType = type;
+        powerup.life = 12;
+        powerup.bobOffset = Math.random() * Math.PI * 2;
+        this.powerups.add(powerup);
+    }
+
+    fireMissile() {
+        if (this.player.missileAmmo > 0) {
+            this.player.missileAmmo--;
+            this.player.missileTimer = 0.5;
+
+            // Find nearest enemy
+            let target = null;
+            let closestDist = Infinity;
+            this.enemies.getChildren().forEach(e => {
+                const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, e.x, e.y);
+                if (d < closestDist) {
+                    closestDist = d;
+                    target = e;
+                }
+            });
+
+            const missile = this.add.sprite(this.player.x, this.player.y, 'missile');
+            missile.rotation = this.player.rotation;
+            missile.vx = Math.cos(this.player.rotation) * 200;
+            missile.vy = Math.sin(this.player.rotation) * 200;
+            missile.target = target;
+            missile.damage = 40;
+            missile.life = 4;
+            this.missiles.add(missile);
+
+            this.spawnFloatingText(this.player.x, this.player.y - 30, 'MISSILE!', '#FF6347', 16);
+        }
     }
 
     dropMinerals(asteroid) {
@@ -501,12 +636,32 @@ class GameScene extends Phaser.Scene {
         }
         if (damage > 0) {
             entity.hp -= damage;
+            // Screen shake on player/aegis damage
+            if (entity === this.player || entity === this.aegis) {
+                this.cameras.main.shake(100, Math.min(damage * 0.003, 0.02));
+            }
         }
         return entity.hp > 0;
     }
 
     update(time, delta) {
         const dt = delta / 1000;
+
+        // Update powerup timers
+        if (this.player.powerups.rapidFire > 0) this.player.powerups.rapidFire -= dt;
+        if (this.player.powerups.damageBoost > 0) this.player.powerups.damageBoost -= dt;
+        if (this.player.powerups.speedBoost > 0) this.player.powerups.speedBoost -= dt;
+
+        // Combo timer
+        if (this.comboTimer > 0) {
+            this.comboTimer -= dt;
+            if (this.comboTimer <= 0) {
+                this.comboCount = 0;
+            }
+        }
+
+        // Speed boost effect
+        const speedMultiplier = this.player.powerups.speedBoost > 0 ? 1.5 : 1;
 
         // Player movement
         let thrustX = 0, thrustY = 0;
@@ -519,8 +674,8 @@ class GameScene extends Phaser.Scene {
             const len = Math.sqrt(thrustX * thrustX + thrustY * thrustY);
             thrustX /= len;
             thrustY /= len;
-            this.player.vx += thrustX * 300 * dt;
-            this.player.vy += thrustY * 300 * dt;
+            this.player.vx += thrustX * 300 * speedMultiplier * dt;
+            this.player.vy += thrustY * 300 * speedMultiplier * dt;
         }
 
         // Drag and speed cap
@@ -536,10 +691,10 @@ class GameScene extends Phaser.Scene {
         this.player.y += this.player.vy * dt;
 
         // Wrap screen
-        if (this.player.x < 0) this.player.x = 800;
-        if (this.player.x > 800) this.player.x = 0;
-        if (this.player.y < 0) this.player.y = 600;
-        if (this.player.y > 600) this.player.y = 0;
+        if (this.player.x < 0) this.player.x = 1280;
+        if (this.player.x > 1280) this.player.x = 0;
+        if (this.player.y < 0) this.player.y = 720;
+        if (this.player.y > 720) this.player.y = 0;
 
         // Rotate towards mouse
         const targetAngle = Phaser.Math.Angle.Between(
@@ -560,10 +715,14 @@ class GameScene extends Phaser.Scene {
         this.playerShield.y = this.player.y;
         this.playerShield.setAlpha(0.2 + (this.player.shield / this.player.maxShield) * 0.3);
 
+        // Apply powerup effects
+        const effectiveFireRate = this.player.fireRate * (this.player.powerups.rapidFire > 0 ? 2.5 : 1);
+        const effectiveDamage = this.player.damage * (this.player.powerups.damageBoost > 0 ? 2 : 1);
+
         // Fire weapon
         this.player.fireTimer -= dt;
         if ((this.cursors.fire.isDown || this.input.activePointer.isDown) && this.player.fireTimer <= 0) {
-            this.player.fireTimer = 1 / this.player.fireRate;
+            this.player.fireTimer = 1 / effectiveFireRate;
             const bolt = this.add.sprite(
                 this.player.x + Math.cos(this.player.rotation) * 20,
                 this.player.y + Math.sin(this.player.rotation) * 20,
@@ -572,9 +731,19 @@ class GameScene extends Phaser.Scene {
             bolt.rotation = this.player.rotation;
             bolt.vx = Math.cos(this.player.rotation) * 600 + this.player.vx * 0.5;
             bolt.vy = Math.sin(this.player.rotation) * 600 + this.player.vy * 0.5;
-            bolt.damage = this.player.damage;
+            bolt.damage = effectiveDamage;
             bolt.life = 2;
+            if (this.player.powerups.damageBoost > 0) {
+                bolt.setTint(0xFF00FF);
+                bolt.setScale(1.5);
+            }
             this.projectiles.add(bolt);
+        }
+
+        // Fire missile
+        this.player.missileTimer -= dt;
+        if (this.cursors.missile.isDown && this.player.missileTimer <= 0) {
+            this.fireMissile();
         }
 
         // Gravity beam
@@ -629,7 +798,7 @@ class GameScene extends Phaser.Scene {
             let closestDist = Infinity;
             enemyChildren.forEach(e => {
                 const d = Phaser.Math.Distance.Between(this.aegis.x, this.aegis.y, e.x, e.y);
-                if (d < closestDist && d < 350) {
+                if (d < closestDist && d < 450) {
                     closestDist = d;
                     closest = e;
                 }
@@ -658,7 +827,7 @@ class GameScene extends Phaser.Scene {
             p.y += p.vy * dt;
             p.life -= dt;
 
-            if (p.life <= 0 || p.x < -50 || p.x > 850 || p.y < -50 || p.y > 650) {
+            if (p.life <= 0 || p.x < -50 || p.x > 1330 || p.y < -50 || p.y > 770) {
                 p.destroy();
                 return;
             }
@@ -667,8 +836,22 @@ class GameScene extends Phaser.Scene {
             enemyChildren.forEach(e => {
                 if (e.active && Phaser.Math.Distance.Between(p.x, p.y, e.x, e.y) < 20) {
                     if (!this.takeDamage(e, p.damage)) {
-                        this.score += e.scoreVal;
+                        // Update combo
+                        this.comboCount++;
+                        this.comboTimer = 3;
+
+                        // Calculate score with combo multiplier
+                        const comboMultiplier = Math.min(1 + this.comboCount * 0.1, 3);
+                        const earnedScore = Math.floor(e.scoreVal * comboMultiplier);
+                        this.score += earnedScore;
+
                         this.createParticle(e.x, e.y, COLORS.archnidGlow, 15, 150);
+
+                        // Show floating score
+                        this.spawnFloatingText(e.x, e.y - 20, `+${earnedScore}`, '#FFD700', 16);
+                        if (this.comboCount > 2) {
+                            this.spawnFloatingText(e.x, e.y - 40, `${this.comboCount}x COMBO!`, '#FF8800', 14);
+                        }
 
                         // Drop resources
                         if (Math.random() < 0.5) {
@@ -682,9 +865,15 @@ class GameScene extends Phaser.Scene {
                             this.minerals.add(mineral);
                         }
 
+                        // Chance to drop powerup
+                        if (Math.random() < 0.15) {
+                            this.spawnPowerup(e.x, e.y);
+                        }
+
                         e.destroy();
                     } else {
                         this.createParticle(p.x, p.y, 0xFF8800, 3, 50);
+                        this.spawnFloatingText(p.x, p.y, `-${p.damage}`, '#FF4444', 12);
                     }
                     p.destroy();
                 }
@@ -775,7 +964,7 @@ class GameScene extends Phaser.Scene {
             p.y += p.vy * dt;
             p.life -= dt;
 
-            if (p.life <= 0 || p.x < -50 || p.x > 850 || p.y < -50 || p.y > 650) {
+            if (p.life <= 0 || p.x < -50 || p.x > 1330 || p.y < -50 || p.y > 770) {
                 p.destroy();
                 return;
             }
@@ -796,16 +985,110 @@ class GameScene extends Phaser.Scene {
             }
         });
 
+        // Update missiles
+        this.missiles.getChildren().forEach(m => {
+            // Homing behavior
+            if (m.target && m.target.active) {
+                const targetAngle = Phaser.Math.Angle.Between(m.x, m.y, m.target.x, m.target.y);
+                let angleDiff = targetAngle - m.rotation;
+                while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                m.rotation += Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), 5 * dt);
+            }
+
+            // Accelerate
+            const speed = Math.sqrt(m.vx ** 2 + m.vy ** 2);
+            if (speed < 400) {
+                m.vx += Math.cos(m.rotation) * 300 * dt;
+                m.vy += Math.sin(m.rotation) * 300 * dt;
+            }
+
+            m.x += m.vx * dt;
+            m.y += m.vy * dt;
+            m.life -= dt;
+
+            // Hit enemies
+            enemyChildren.forEach(e => {
+                if (e.active && Phaser.Math.Distance.Between(m.x, m.y, e.x, e.y) < 25) {
+                    this.createParticle(m.x, m.y, COLORS.missileRed, 20, 200);
+                    this.cameras.main.shake(150, 0.02);
+
+                    if (!this.takeDamage(e, m.damage)) {
+                        const earnedScore = e.scoreVal * 2;
+                        this.score += earnedScore;
+                        this.spawnFloatingText(e.x, e.y, `+${earnedScore}`, '#FFD700', 18);
+                        this.comboCount++;
+                        this.comboTimer = 3;
+                        e.destroy();
+                    }
+                    m.destroy();
+                }
+            });
+
+            if (m.life <= 0 || m.x < -50 || m.x > 1330 || m.y < -50 || m.y > 770) {
+                m.destroy();
+            }
+        });
+
+        // Update powerups
+        this.powerups.getChildren().forEach(p => {
+            p.life -= dt;
+            p.bobOffset += dt * 3;
+            p.y += Math.sin(p.bobOffset) * 0.5;
+            p.setAlpha(0.7 + Math.sin(p.bobOffset * 2) * 0.3);
+
+            // Collect on player contact
+            if (Phaser.Math.Distance.Between(this.player.x, this.player.y, p.x, p.y) < 30) {
+                const config = POWERUP_TYPES[p.powerupType];
+
+                switch (p.powerupType) {
+                    case 'rapidFire':
+                        this.player.powerups.rapidFire = config.duration;
+                        break;
+                    case 'damageBoost':
+                        this.player.powerups.damageBoost = config.duration;
+                        break;
+                    case 'speedBoost':
+                        this.player.powerups.speedBoost = config.duration;
+                        break;
+                    case 'missileAmmo':
+                        this.player.missileAmmo = Math.min(this.player.maxMissiles, this.player.missileAmmo + 3);
+                        break;
+                    case 'shield':
+                        this.player.shield = Math.min(this.player.maxShield, this.player.shield + 30);
+                        break;
+                    case 'repair':
+                        this.player.hp = Math.min(this.player.maxHp, this.player.hp + 25);
+                        break;
+                }
+
+                this.spawnFloatingText(p.x, p.y, config.label, '#FFFFFF', 18);
+                this.createParticle(p.x, p.y, config.color, 10, 80);
+                this.score += 25;
+                p.destroy();
+            }
+
+            if (p.life <= 0) p.destroy();
+        });
+
+        // Update floating texts
+        this.floatingTexts.getChildren().forEach(t => {
+            t.y += t.vy * dt;
+            t.life -= dt;
+            t.setAlpha(Math.min(1, t.life));
+            if (t.life <= 0) t.destroy();
+        });
+
         // Update asteroids
         this.asteroids.getChildren().forEach(a => {
             a.x += a.vx * dt;
             a.y += a.vy * dt;
             a.rotation += a.rotSpeed;
 
-            if (a.x < a.size || a.x > 800 - a.size) a.vx *= -1;
-            if (a.y < a.size || a.y > 600 - a.size) a.vy *= -1;
-            a.x = Phaser.Math.Clamp(a.x, a.size, 800 - a.size);
-            a.y = Phaser.Math.Clamp(a.y, a.size, 600 - a.size);
+            if (a.x < a.size || a.x > 1280 - a.size) a.vx *= -1;
+            if (a.y < a.size || a.y > 720 - a.size) a.vy *= -1;
+            a.x = Phaser.Math.Clamp(a.x, a.size, 1280 - a.size);
+            a.y = Phaser.Math.Clamp(a.y, a.size, 720 - a.size);
         });
 
         // Update minerals
@@ -816,8 +1099,8 @@ class GameScene extends Phaser.Scene {
             m.vy *= 0.95;
             m.life -= dt;
 
-            if (m.x < 10 || m.x > 790) m.vx *= -1;
-            if (m.y < 10 || m.y > 590) m.vy *= -1;
+            if (m.x < 10 || m.x > 1270) m.vx *= -1;
+            if (m.y < 10 || m.y > 710) m.vy *= -1;
 
             if (m.life <= 0) m.destroy();
         });
@@ -867,7 +1150,12 @@ class GameScene extends Phaser.Scene {
         this.purpleText.setText(`P: ${this.resources.purple}`);
         this.waveText.setText(`Wave ${this.wave}`);
         this.scoreText.setText(`Score: ${this.score}`);
+        this.missileText.setText(`Missiles: ${this.player.missileAmmo}`);
         this.enemiesText.setText(this.waveCleared ? '' : `Enemies: ${this.enemies.getLength()}`);
+        this.comboText.setText(this.comboCount > 1 ? `${this.comboCount}x COMBO` : '');
+        this.powerupTexts.rapidFire.setText(this.player.powerups.rapidFire > 0 ? `RAPID: ${Math.ceil(this.player.powerups.rapidFire)}s` : '');
+        this.powerupTexts.damageBoost.setText(this.player.powerups.damageBoost > 0 ? `DMG+: ${Math.ceil(this.player.powerups.damageBoost)}s` : '');
+        this.powerupTexts.speedBoost.setText(this.player.powerups.speedBoost > 0 ? `SPEED: ${Math.ceil(this.player.powerups.speedBoost)}s` : '');
         this.aegisShieldBar.scaleX = this.aegis.shield / this.aegis.maxShield;
         this.aegisHpBar.scaleX = this.aegis.hp / this.aegis.maxHp;
     }
@@ -887,37 +1175,37 @@ class GameOverScene extends Phaser.Scene {
         this.cameras.main.setBackgroundColor('#0A0A15');
 
         // Stars
-        for (let i = 0; i < 150; i++) {
+        for (let i = 0; i < 300; i++) {
             this.add.rectangle(
-                Math.random() * 800, Math.random() * 600,
+                Math.random() * 1280, Math.random() * 720,
                 Math.random() * 2 + 1, Math.random() * 2 + 1,
                 0xFFFFFF, Math.random() * 0.5 + 0.5
             );
         }
 
-        this.add.rectangle(400, 300, 800, 600, 0x000000, 0.8);
+        this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.8);
 
-        this.add.text(400, 250, 'GAME OVER', {
-            fontSize: '48px',
+        this.add.text(640, 280, 'GAME OVER', {
+            fontSize: '64px',
             fontFamily: 'Arial',
             color: '#FF4444',
             fontStyle: 'bold'
         }).setOrigin(0.5);
 
-        this.add.text(400, 320, `Final Score: ${this.finalScore}`, {
-            fontSize: '24px',
+        this.add.text(640, 380, `Final Score: ${this.finalScore}`, {
+            fontSize: '32px',
             fontFamily: 'Arial',
             color: '#FFFFFF'
         }).setOrigin(0.5);
 
-        this.add.text(400, 360, `Waves Survived: ${this.finalWave}`, {
-            fontSize: '24px',
+        this.add.text(640, 430, `Waves Survived: ${this.finalWave}`, {
+            fontSize: '32px',
             fontFamily: 'Arial',
             color: '#FFFFFF'
         }).setOrigin(0.5);
 
-        this.add.text(400, 450, 'Press SPACE to Restart', {
-            fontSize: '18px',
+        this.add.text(640, 550, 'Press SPACE to Restart', {
+            fontSize: '24px',
             fontFamily: 'Arial',
             color: '#FFFFFF'
         }).setOrigin(0.5);

@@ -89,6 +89,28 @@ let enemies = [];
 // Camera for underground view
 let cameraY = 0;
 
+// Visual effects
+let floatingTexts = [];
+let particles = [];
+let screenShake = 0;
+
+// Combo system
+let miningCombo = 0;
+let comboTimer = 0;
+const COMBO_DURATION = 2.0;
+const MAX_COMBO_MULTIPLIER = 3.0;
+
+// Achievements
+const achievements = {
+    firstIron: false,
+    firstCobalt: false,
+    wave5: false,
+    wave10: false,
+    noDamageWave: false,
+    megaCombo: false
+};
+let waveDamageTaken = 0;
+
 // Input
 const keys = {};
 let mouseX = WIDTH / 2;
@@ -104,6 +126,34 @@ const TILE_HP = {
     [TILE.WATER]: 10,
     [TILE.COBALT]: 14
 };
+
+// Helper: spawn floating text
+function spawnFloatingText(x, y, text, color) {
+    floatingTexts.push({
+        x, y, text, color,
+        life: 1.5, maxLife: 1.5,
+        vy: -40
+    });
+}
+
+// Helper: spawn particles
+function spawnParticles(x, y, count, color) {
+    for (let i = 0; i < count; i++) {
+        particles.push({
+            x, y,
+            vx: (Math.random() - 0.5) * 100,
+            vy: (Math.random() - 0.5) * 100 - 30,
+            color,
+            life: 0.5 + Math.random() * 0.5
+        });
+    }
+}
+
+// Get combo multiplier
+function getComboMultiplier() {
+    if (miningCombo <= 0) return 1;
+    return Math.min(1 + miningCombo * 0.2, MAX_COMBO_MULTIPLIER);
+}
 
 // Generate map
 function generateMap() {
@@ -206,22 +256,54 @@ function updateKeeper(dt) {
         const hp = TILE_HP[tile] || 4;
 
         if (keeper.drillProgress >= hp) {
-            // Tile destroyed
+            // Tile destroyed - spawn particles
+            const tx = keeper.drillTarget.x;
+            const ty = keeper.drillTarget.y;
+            spawnParticles(tx, ty - cameraY, 8, COLORS.dirtMedium);
+
+            // Mining combo
+            miningCombo++;
+            comboTimer = COMBO_DURATION;
+            const multiplier = getComboMultiplier();
+
             if (tile === TILE.IRON) {
                 const amount = 1 + Math.floor(Math.random() * 3);
                 for (let i = 0; i < amount && keeper.cargo.length < keeper.carryCapacity; i++) {
                     keeper.cargo.push('iron');
+                }
+                spawnParticles(tx, ty - cameraY, 5, COLORS.iron);
+                spawnFloatingText(tx, ty - cameraY, '+Iron', COLORS.iron);
+                if (!achievements.firstIron) {
+                    achievements.firstIron = true;
+                    spawnFloatingText(tx, ty - cameraY - 20, 'First Iron!', '#ffd700');
+                    score += 100;
                 }
             } else if (tile === TILE.WATER) {
                 const amount = 1 + Math.floor(Math.random() * 2);
                 for (let i = 0; i < amount && keeper.cargo.length < keeper.carryCapacity; i++) {
                     keeper.cargo.push('water');
                 }
+                spawnParticles(tx, ty - cameraY, 5, COLORS.water);
+                spawnFloatingText(tx, ty - cameraY, '+Water', COLORS.water);
             } else if (tile === TILE.COBALT) {
                 const amount = 1 + Math.floor(Math.random() * 2);
                 for (let i = 0; i < amount && keeper.cargo.length < keeper.carryCapacity; i++) {
                     keeper.cargo.push('cobalt');
                 }
+                spawnParticles(tx, ty - cameraY, 5, COLORS.cobalt);
+                spawnFloatingText(tx, ty - cameraY, '+Cobalt', COLORS.cobalt);
+                if (!achievements.firstCobalt) {
+                    achievements.firstCobalt = true;
+                    spawnFloatingText(tx, ty - cameraY - 20, 'First Cobalt!', '#ffd700');
+                    score += 500;
+                }
+            }
+
+            // Mega combo achievement
+            if (miningCombo >= 10 && !achievements.megaCombo) {
+                achievements.megaCombo = true;
+                spawnFloatingText(tx, ty - cameraY - 40, 'MEGA COMBO!', '#ffd700');
+                score += 1000;
             }
 
             setTileAt(keeper.drillTarget.x, keeper.drillTarget.y, TILE.EMPTY);
@@ -373,6 +455,9 @@ function updateEnemies(dt) {
                     damage -= absorbed;
                 }
                 dome.hp -= damage;
+                waveDamageTaken += e.damage;
+                screenShake = Math.min(screenShake + 5, 15);
+                spawnFloatingText(dome.x, dome.y - 50, '-' + e.damage, '#ff4444');
             }
         }
 
@@ -415,7 +500,10 @@ function updateEnemies(dt) {
 
         // Dead
         if (e.hp <= 0) {
-            score += e.type === 'hornet' ? 100 : (e.type === 'flyer' ? 50 : 25);
+            const pts = e.type === 'hornet' ? 100 : (e.type === 'flyer' ? 50 : 25);
+            score += pts;
+            spawnParticles(e.x, e.y - cameraY, 12, COLORS.enemyGlow);
+            spawnFloatingText(e.x, e.y - cameraY, '+' + pts, '#ffd700');
             enemies.splice(i, 1);
         }
     }
@@ -781,6 +869,22 @@ function resetGame() {
     score = 0;
     cameraY = 0;
 
+    // Reset visual effects
+    floatingTexts = [];
+    particles = [];
+    screenShake = 0;
+    miningCombo = 0;
+    comboTimer = 0;
+    waveDamageTaken = 0;
+
+    // Reset achievements
+    achievements.firstIron = false;
+    achievements.firstCobalt = false;
+    achievements.wave5 = false;
+    achievements.wave10 = false;
+    achievements.noDamageWave = false;
+    achievements.megaCombo = false;
+
     gameState = 'mining';
 }
 
@@ -808,6 +912,38 @@ function gameLoop(timestamp) {
             cameraY = 0; // Keep camera at surface during defense
         }
 
+        // Update combo timer
+        if (comboTimer > 0) {
+            comboTimer -= dt;
+            if (comboTimer <= 0) {
+                miningCombo = 0;
+            }
+        }
+
+        // Update floating texts
+        for (let i = floatingTexts.length - 1; i >= 0; i--) {
+            const ft = floatingTexts[i];
+            ft.life -= dt;
+            ft.y += ft.vy * dt;
+            if (ft.life <= 0) floatingTexts.splice(i, 1);
+        }
+
+        // Update particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.life -= dt;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.vy += 150 * dt; // Gravity
+            if (p.life <= 0) particles.splice(i, 1);
+        }
+
+        // Update screen shake
+        if (screenShake > 0) {
+            screenShake -= 30 * dt;
+            if (screenShake < 0) screenShake = 0;
+        }
+
         // Phase timer
         phaseTimer -= dt;
         if (phaseTimer <= 0) {
@@ -815,17 +951,36 @@ function gameLoop(timestamp) {
                 // Start defense phase
                 gameState = 'defense';
                 wave++;
+                waveDamageTaken = 0; // Reset damage tracking
                 spawnWave();
                 phaseTimer = 999; // Until all enemies dead
 
                 // Return keeper to dome
                 keeper.x = dome.x;
                 keeper.y = dome.y + 20;
+
+                // Wave achievements
+                if (wave >= 5 && !achievements.wave5) {
+                    achievements.wave5 = true;
+                    spawnFloatingText(dome.x, dome.y - 100, 'Wave 5!', '#ffd700');
+                    score += 2000;
+                }
+                if (wave >= 10 && !achievements.wave10) {
+                    achievements.wave10 = true;
+                    spawnFloatingText(dome.x, dome.y - 100, 'Wave 10!', '#ffd700');
+                    score += 10000;
+                }
             }
         }
 
         // Check wave clear
         if (gameState === 'defense' && enemies.length === 0) {
+            // No damage achievement
+            if (waveDamageTaken === 0 && !achievements.noDamageWave && wave >= 2) {
+                achievements.noDamageWave = true;
+                spawnFloatingText(dome.x, dome.y - 80, 'FLAWLESS!', '#ffd700');
+                score += 3000;
+            }
             // Recharge shield
             dome.shield = dome.maxShield;
             gameState = 'mining';
@@ -837,12 +992,55 @@ function gameLoop(timestamp) {
             gameState = 'gameover';
         }
 
+        // Apply screen shake
+        ctx.save();
+        if (screenShake > 0) {
+            ctx.translate(
+                (Math.random() - 0.5) * screenShake,
+                (Math.random() - 0.5) * screenShake
+            );
+        }
+
         // Draw
         drawSky();
         drawMap();
         drawDome();
         if (gameState === 'mining') drawKeeper();
         if (gameState === 'defense') drawEnemies();
+
+        // Draw particles
+        for (const p of particles) {
+            const alpha = p.life / 0.5;
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+        }
+        ctx.globalAlpha = 1;
+
+        ctx.restore();
+
+        // Draw floating texts (after shake restore)
+        for (const ft of floatingTexts) {
+            const alpha = ft.life / ft.maxLife;
+            ctx.globalAlpha = alpha;
+            ctx.font = 'bold 14px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#000';
+            ctx.fillText(ft.text, ft.x + 1, ft.y + 1);
+            ctx.fillStyle = ft.color;
+            ctx.fillText(ft.text, ft.x, ft.y);
+        }
+        ctx.globalAlpha = 1;
+
+        // Draw combo display (during mining)
+        if (gameState === 'mining' && miningCombo > 0) {
+            const mult = getComboMultiplier();
+            ctx.font = 'bold 18px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#ffa500';
+            ctx.fillText('COMBO x' + mult.toFixed(1), WIDTH / 2, 100);
+        }
+
         drawHUD();
     }
 

@@ -15,6 +15,8 @@ const TILE = {
     ROCK: 2,
     BUILDING: 3,
     LAVA: 4,
+    GAS_POCKET: 5,
+    ANCIENT_ARTIFACT: 6,
     IRONIUM: 10,
     BRONZIUM: 11,
     SILVERIUM: 12,
@@ -59,6 +61,31 @@ let gameState = 'title';
 let score = 0;
 let cash = 500;
 let world = [];
+
+// Combo system
+let miningCombo = 0;
+let comboTimer = null;
+const COMBO_DURATION = 2.0;
+const MAX_COMBO_MULTIPLIER = 2.5;
+
+// Floating texts and particles
+let floatingTexts = [];
+let particles = [];
+let screenShake = 0;
+
+// Achievements
+const achievements = {
+    depth100: false,
+    depth500: false,
+    depth1000: false,
+    depth2000: false,
+    depth3000: false,
+    firstDiamond: false,
+    firstRuby: false,
+    richMiner: false,
+    firstArtifact: false,
+    gasExplorer: false
+};
 
 // Player state
 let playerPos, playerVel;
@@ -105,6 +132,12 @@ function generateWorld() {
                 const roll = Math.random();
                 if (y > 150 && roll < 0.03) {
                     row.push(TILE.LAVA);
+                } else if (y >= 40 && y <= 125 && roll < 0.008) {
+                    // Gas pockets appear at depths 40-125
+                    row.push(TILE.GAS_POCKET);
+                } else if (y >= 75 && roll < 0.002) {
+                    // Ancient artifacts at depth 75+
+                    row.push(TILE.ANCIENT_ARTIFACT);
                 } else if (roll < getMineralChance(y)) {
                     row.push(rollMineral(y));
                 } else if (roll < 0.3) {
@@ -190,7 +223,118 @@ function resetGame() {
     cash = 500;
     score = 0;
     upgrades = { drill: 0, hull: 0, engine: 0, fuel: 0, cargo: 0, radiator: 0 };
+
+    // Reset new systems
+    miningCombo = 0;
+    comboTimer = null;
+    floatingTexts = [];
+    particles = [];
+    screenShake = 0;
+
+    // Reset achievements
+    achievements.depth100 = false;
+    achievements.depth500 = false;
+    achievements.depth1000 = false;
+    achievements.depth2000 = false;
+    achievements.depth3000 = false;
+    achievements.firstDiamond = false;
+    achievements.firstRuby = false;
+    achievements.richMiner = false;
+    achievements.firstArtifact = false;
+    achievements.gasExplorer = false;
+
     generateWorld();
+}
+
+// Floating text helper
+function spawnFloatingText(x, y, text, color) {
+    floatingTexts.push({
+        x: x,
+        y: y,
+        text: text,
+        color: color,
+        life: 1.5,
+        maxLife: 1.5
+    });
+}
+
+// Particle helper
+function spawnParticles(x, y, count, color) {
+    for (let i = 0; i < count; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            vx: rand(-3, 3),
+            vy: rand(-5, 0),
+            color: color,
+            life: rand(0.5, 1.0)
+        });
+    }
+}
+
+// Gas explosion
+function gasExplosion(x, y) {
+    // Clear 2x2 area
+    for (let dy = 0; dy < 2; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+            const tx = Math.floor(x) + dx;
+            const ty = Math.floor(y) + dy;
+            if (tx >= 0 && tx < WORLD_WIDTH && ty >= 0 && ty < WORLD_HEIGHT) {
+                const tile = world[ty][tx];
+                if (tile !== TILE.BUILDING) {
+                    world[ty][tx] = TILE.EMPTY;
+                }
+            }
+        }
+    }
+
+    // Damage player
+    hull -= 15;
+    screenShake = 15;
+    spawnFloatingText(x, y, 'GAS EXPLOSION!', new Color(0.5, 1, 0.5));
+    spawnParticles(x, y, 15, new Color(0.5, 1, 0.3));
+    spawnParticles(x, y, 10, new Color(1, 1, 0.3));
+
+    if (!achievements.gasExplorer) {
+        achievements.gasExplorer = true;
+        spawnFloatingText(x, y - 1, 'Achievement: Gas Explorer!', new Color(1, 0.84, 0));
+        cash += 500;
+    }
+}
+
+// Check depth achievements
+function checkDepthAchievements(depth) {
+    if (depth >= 100 && !achievements.depth100) {
+        achievements.depth100 = true;
+        cash += 200;
+        spawnFloatingText(playerPos.x, playerPos.y - 1, '100ft! +$200', new Color(1, 0.84, 0));
+    }
+    if (depth >= 500 && !achievements.depth500) {
+        achievements.depth500 = true;
+        cash += 1000;
+        spawnFloatingText(playerPos.x, playerPos.y - 1, '500ft! +$1000', new Color(1, 0.84, 0));
+    }
+    if (depth >= 1000 && !achievements.depth1000) {
+        achievements.depth1000 = true;
+        cash += 5000;
+        spawnFloatingText(playerPos.x, playerPos.y - 1, '1000ft! +$5000', new Color(1, 0.84, 0));
+    }
+    if (depth >= 2000 && !achievements.depth2000) {
+        achievements.depth2000 = true;
+        cash += 15000;
+        spawnFloatingText(playerPos.x, playerPos.y - 1, '2000ft! +$15000', new Color(1, 0.84, 0));
+    }
+    if (depth >= 3000 && !achievements.depth3000) {
+        achievements.depth3000 = true;
+        cash += 50000;
+        spawnFloatingText(playerPos.x, playerPos.y - 1, '3000ft! +$50000', new Color(1, 0.84, 0));
+    }
+}
+
+// Get combo multiplier
+function getComboMultiplier() {
+    if (miningCombo <= 0) return 1;
+    return Math.min(1 + (miningCombo * 0.15), MAX_COMBO_MULTIPLIER);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -222,6 +366,47 @@ function gameUpdate() {
     if (drilling) {
         updateDrilling();
         return;
+    }
+
+    // Update combo timer
+    if (comboTimer && comboTimer.elapsed()) {
+        miningCombo = 0;
+        comboTimer = null;
+    }
+
+    // Update floating texts
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i];
+        ft.life -= timeDelta;
+        ft.y -= 1.5 * timeDelta;
+        if (ft.life <= 0) {
+            floatingTexts.splice(i, 1);
+        }
+    }
+
+    // Update particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.life -= timeDelta;
+        p.x += p.vx * timeDelta;
+        p.y += p.vy * timeDelta;
+        p.vy += 10 * timeDelta; // Gravity
+        if (p.life <= 0) {
+            particles.splice(i, 1);
+        }
+    }
+
+    // Update screen shake
+    if (screenShake > 0) {
+        screenShake -= 30 * timeDelta;
+        if (screenShake < 0) screenShake = 0;
+    }
+
+    // Rich miner achievement
+    if (cash >= 100000 && !achievements.richMiner) {
+        achievements.richMiner = true;
+        spawnFloatingText(playerPos.x, playerPos.y - 1, 'Rich Miner! +$25000', new Color(1, 0.84, 0));
+        cash += 25000;
     }
 
     // Fuel consumption for thrust
@@ -269,7 +454,11 @@ function gameUpdate() {
             grounded = true;
             // Fall damage
             if (playerVel.y > 10) {
-                hull -= Math.floor((playerVel.y - 10) / 2);
+                const damage = Math.floor((playerVel.y - 10) / 2);
+                hull -= damage;
+                screenShake = Math.min(damage, 10);
+                spawnFloatingText(playerPos.x, playerPos.y, 'FALL! -' + damage, new Color(1, 0.5, 0));
+                spawnParticles(playerPos.x, playerPos.y + 0.5, 8, COLORS.dirt);
             }
             playerVel.y = 0;
         }
@@ -305,9 +494,6 @@ function gameUpdate() {
     if (hull <= 0) {
         gameState = 'gameover';
     }
-
-    // Camera follow - keep player in view (invert Y)
-    cameraPos = vec2(WORLD_WIDTH / 2, -playerPos.y);
 }
 
 function startDrill(x, y) {
@@ -323,30 +509,92 @@ function updateDrilling() {
 
     if (drillTimer.elapsed()) {
         const tile = getTile(drillTarget.x, drillTarget.y);
+        const x = drillTarget.x;
+        const y = drillTarget.y;
+
+        // Handle gas pocket
+        if (tile === TILE.GAS_POCKET) {
+            gasExplosion(x, y);
+            drilling = false;
+            return;
+        }
+
+        // Handle ancient artifact
+        if (tile === TILE.ANCIENT_ARTIFACT) {
+            cash += 25000;
+            score += 50000;
+            screenShake = 10;
+            spawnFloatingText(x, y, 'ANCIENT ARTIFACT! +$25000', new Color(1, 0.84, 0));
+            spawnParticles(x, y, 20, new Color(1, 0.84, 0));
+            if (!achievements.firstArtifact) {
+                achievements.firstArtifact = true;
+                cash += 10000;
+                spawnFloatingText(x, y - 1, 'First Artifact! +$10000', new Color(1, 0.84, 0));
+            }
+        }
 
         // Collect mineral
         if (tile >= TILE.IRONIUM && tile <= TILE.AMAZONITE) {
             const mineral = MINERALS[tile];
             if (getCargoWeight() + mineral.weight <= cargoCapacity) {
+                // Apply combo multiplier
+                const multiplier = getComboMultiplier();
+                const value = Math.floor(mineral.value * multiplier);
+
                 cargo.push({
                     type: tile,
                     name: mineral.name,
-                    value: mineral.value,
+                    value: value,
                     weight: mineral.weight
                 });
-                score += mineral.value;
+                score += value;
+
+                // Floating text for mineral
+                const comboText = multiplier > 1 ? ' x' + multiplier.toFixed(1) : '';
+                spawnFloatingText(x, y, mineral.name + comboText, mineral.color);
+                spawnParticles(x, y, 5, mineral.color);
+
+                // Combo increment
+                miningCombo++;
+                comboTimer = new Timer(COMBO_DURATION);
+
+                // Check for special mineral achievements
+                if (tile === TILE.DIAMOND && !achievements.firstDiamond) {
+                    achievements.firstDiamond = true;
+                    cash += 20000;
+                    spawnFloatingText(x, y - 1, 'First Diamond! +$20000', new Color(1, 0.84, 0));
+                }
+                if (tile === TILE.RUBY && !achievements.firstRuby) {
+                    achievements.firstRuby = true;
+                    cash += 10000;
+                    spawnFloatingText(x, y - 1, 'First Ruby! +$10000', new Color(1, 0.84, 0));
+                }
+            } else {
+                // Cargo full notification
+                spawnFloatingText(x, y, 'CARGO FULL!', new Color(1, 0.3, 0.3));
             }
         }
 
         // Lava damage
         if (tile === TILE.LAVA) {
             hull -= 58;
+            screenShake = 8;
+            spawnFloatingText(x, y, 'LAVA! -58 HULL', new Color(1, 0.27, 0));
+        }
+
+        // Spawn dirt particles for any successful drill
+        if (tile === TILE.DIRT || tile === TILE.ROCK) {
+            spawnParticles(x, y, 3, COLORS.dirt);
         }
 
         // Clear tile and move
         setTile(drillTarget.x, drillTarget.y, TILE.EMPTY);
         playerPos.y += 1;
         drilling = false;
+
+        // Check depth achievements
+        const depth = Math.max(0, Math.floor((playerPos.y - 4) * 13));
+        checkDepthAchievements(depth);
     }
 }
 
@@ -400,86 +648,141 @@ function tryUpgrade() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-function gameRender() {
-    if (gameState === 'title') return;
+// Helper: convert world pos to screen pos
+// In our world: Y increases downward (depth), playerPos.y=2 is near surface
+// Camera follows player with cameraPos.y = -playerPos.y (inverted for LittleJS)
+function worldToScreenPos(worldX, worldY) {
+    const scale = cameraScale;
+    const screenX = mainCanvasSize.x / 2 + (worldX - cameraPos.x) * scale;
+    // worldY is depth (increases downward), camera.y is negative player.y
+    // screenY should increase downward
+    const screenY = mainCanvasSize.y / 2 + (worldY + cameraPos.y) * scale;
+    return { x: screenX, y: screenY };
+}
 
-    // Draw world tiles - calculate visible range based on camera
-    const visibleRange = 20; // Tiles visible in each direction
+// Helper: draw rect using mainContext
+function drawRectCtx(worldX, worldY, width, height, color) {
+    const pos = worldToScreenPos(worldX, worldY);
+    const w = width * cameraScale;
+    const h = height * cameraScale;
+    mainContext.fillStyle = `rgba(${Math.floor(color.r*255)},${Math.floor(color.g*255)},${Math.floor(color.b*255)},${color.a !== undefined ? color.a : 1})`;
+    mainContext.fillRect(pos.x - w/2, pos.y - h/2, w, h);
+}
+
+function renderWorld() {
+    if (!mainContext || !playerPos) return;
+
+    // Apply screen shake
+    let shakeX = 0, shakeY = 0;
+    if (screenShake > 0) {
+        shakeX = rand(-screenShake, screenShake);
+        shakeY = rand(-screenShake, screenShake);
+    }
+
+    mainContext.save();
+    mainContext.translate(shakeX, shakeY);
+
+    // Draw world tiles
+    const visibleRange = 20;
     const startY = Math.max(0, Math.floor(playerPos.y - visibleRange));
     const endY = Math.min(WORLD_HEIGHT, Math.floor(playerPos.y + visibleRange));
 
     for (let y = startY; y < endY; y++) {
         for (let x = 0; x < WORLD_WIDTH; x++) {
             const tile = world[y][x];
-            drawTile(tile, x, y);
+            drawTileCtx(tile, x, y);
         }
     }
 
-    // Draw buildings (invert Y)
+    // Draw buildings
     for (const b of buildings) {
-        drawRect(vec2(b.x + 2, -2), vec2(4, 2), b.color);
-        // Roof
-        drawRect(vec2(b.x + 2, -1), vec2(4.5, 0.5), new Color(0.15, 0.15, 0.15));
+        drawRectCtx(b.x + 2, 2, 4, 2, b.color);
+        drawRectCtx(b.x + 2, 1, 4.5, 0.5, new Color(0.15, 0.15, 0.15));
     }
 
-    // Draw player (invert Y)
-    const playerDrawPos = vec2(playerPos.x, -playerPos.y);
-    drawRect(playerDrawPos, vec2(1.2, 1.4), COLORS.pod);
-    drawRect(playerDrawPos.add(vec2(0, 0.2)), vec2(0.8, 0.5), COLORS.podCockpit);
-    // Drill
-    drawRect(playerDrawPos.add(vec2(0, -0.8)), vec2(0.6, 0.4), new Color(0.5, 0.5, 0.5));
+    // Draw player
+    const px = playerPos.x;
+    const py = playerPos.y;
+    drawRectCtx(px, py, 1.2, 1.4, COLORS.pod);
+    drawRectCtx(px, py - 0.2, 0.8, 0.5, COLORS.podCockpit);
+    drawRectCtx(px, py + 0.8, 0.6, 0.4, new Color(0.5, 0.5, 0.5)); // Drill
 
     // Thrust flame
     if (keyIsDown('ArrowUp') && fuel > 0) {
-        drawRect(playerDrawPos.add(vec2(0, 0.9)), vec2(0.4, 0.5), new Color(1, 0.5, 0));
+        drawRectCtx(px, py - 0.9, 0.4, 0.5, new Color(1, 0.5, 0));
     }
 
     // Drill sparks
     if (drilling) {
-        drawRect(playerDrawPos.add(vec2(rand(-0.3, 0.3), -1.2)), vec2(0.2, 0.2), new Color(1, 0.6, 0));
+        drawRectCtx(px + rand(-0.3, 0.3), py + 1.2, 0.2, 0.2, new Color(1, 0.6, 0));
+    }
+
+    // Draw particles
+    for (const p of particles) {
+        const alpha = p.life / 1.0;
+        const c = new Color(p.color.r, p.color.g, p.color.b, alpha);
+        drawRectCtx(p.x, p.y, 0.2, 0.2, c);
+    }
+
+    mainContext.restore();
+}
+
+function drawTileCtx(tile, x, y) {
+    const worldX = x + 0.5;
+    const worldY = y + 0.5;
+
+    if (tile === TILE.EMPTY) {
+        drawRectCtx(worldX, worldY, 1, 1, COLORS.empty);
+        return;
+    }
+    if (tile === TILE.DIRT) {
+        const color = (x + y) % 2 === 0 ? COLORS.dirt : COLORS.dirtDark;
+        drawRectCtx(worldX, worldY, 1, 1, color);
+        return;
+    }
+    if (tile === TILE.ROCK) {
+        drawRectCtx(worldX, worldY, 1, 1, COLORS.rock);
+        return;
+    }
+    if (tile === TILE.BUILDING) {
+        drawRectCtx(worldX, worldY, 1, 1, COLORS.building);
+        return;
+    }
+    if (tile === TILE.LAVA) {
+        drawRectCtx(worldX, worldY, 1, 1, COLORS.lava);
+        return;
+    }
+    if (tile === TILE.GAS_POCKET) {
+        drawRectCtx(worldX, worldY, 1, 1, new Color(0.2, 0.4, 0.2));
+        return;
+    }
+    if (tile === TILE.ANCIENT_ARTIFACT) {
+        drawRectCtx(worldX, worldY, 1, 1, COLORS.dirt);
+        drawRectCtx(worldX, worldY, 0.5, 0.5, new Color(1, 0.84, 0));
+        return;
+    }
+    // Minerals
+    if (tile >= TILE.IRONIUM && tile <= TILE.AMAZONITE) {
+        drawRectCtx(worldX, worldY, 1, 1, COLORS.dirt);
+        const mineral = MINERALS[tile];
+        if (mineral) {
+            drawRectCtx(worldX, worldY, 0.6, 0.6, mineral.color);
+        }
     }
 }
 
-function drawTile(tile, x, y) {
-    // Invert Y for LittleJS coordinate system (Y increases upward)
-    const pos = vec2(x + 0.5, -y - 0.5);
-
-    if (tile === TILE.EMPTY) {
-        drawRect(pos, vec2(1, 1), COLORS.empty);
-        return;
-    }
-
-    if (tile === TILE.DIRT) {
-        const color = (x + y) % 2 === 0 ? COLORS.dirt : COLORS.dirtDark;
-        drawRect(pos, vec2(1, 1), color);
-        return;
-    }
-
-    if (tile === TILE.ROCK) {
-        drawRect(pos, vec2(1, 1), COLORS.rock);
-        return;
-    }
-
-    if (tile === TILE.BUILDING) {
-        drawRect(pos, vec2(1, 1), COLORS.building);
-        return;
-    }
-
-    if (tile === TILE.LAVA) {
-        drawRect(pos, vec2(1, 1), COLORS.lava);
-        return;
-    }
-
-    // Minerals - dirt with colored chunk
-    if (tile >= TILE.IRONIUM && tile <= TILE.AMAZONITE) {
-        drawRect(pos, vec2(1, 1), COLORS.dirt);
-        const mineral = MINERALS[tile];
-        drawRect(pos, vec2(0.6, 0.6), mineral.color);
-    }
+function gameRender() {
+    // Note: gameRender may not be called in headless mode
+    // All rendering has been moved to gameRenderPost via renderWorld()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 function gameRenderPost() {
+    // All world rendering moved here since gameRender isn't called in headless
+    if (gameState !== 'title' && gameState !== 'gameover') {
+        renderWorld();
+    }
+
     if (gameState === 'title') {
         // Title screen
         drawTextScreen('MOTHERLOAD', vec2(mainCanvasSize.x / 2, 150), 56, new Color(1, 0.84, 0), 0, undefined, 'center');
@@ -521,11 +824,33 @@ function gameRenderPost() {
 
     // Items
     drawTextScreen('Items: ' + cargo.length, vec2(mainCanvasSize.x - 100, mainCanvasSize.y - 25), 12, new Color(0.7, 0.7, 0.7), 0, undefined, 'center');
+
+    // Combo display
+    if (miningCombo > 0) {
+        const multiplier = getComboMultiplier();
+        drawTextScreen('COMBO x' + multiplier.toFixed(1), vec2(mainCanvasSize.x / 2, 65), 16, new Color(1, 0.5, 0), 0, undefined, 'center');
+    }
+
+    // Floating texts
+    for (const ft of floatingTexts) {
+        const alpha = ft.life / ft.maxLife;
+        const screenPos = worldToScreen(vec2(ft.x, -ft.y));
+        const c = new Color(ft.color.r, ft.color.g, ft.color.b, alpha);
+        drawTextScreen(ft.text, screenPos, 14, c, 0, undefined, 'center');
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+function gameUpdatePost() {
+    // Camera follows player
+    if (playerPos) {
+        cameraPos = vec2(WORLD_WIDTH / 2, -playerPos.y);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Startup LittleJS Engine
-engineInit(gameInit, gameUpdate, () => {}, gameRender, gameRenderPost);
+engineInit(gameInit, gameUpdate, gameUpdatePost, gameRender, gameRenderPost);
 
 // Expose for testing
 window.gameState = {

@@ -1,38 +1,47 @@
-// Lost Outpost - Phaser 3 Version
+// Lost Outpost - Phaser 3 Version (EXPANDED)
 // Top-down survival horror shooter inspired by Alien Breed
+// 20 Expand Passes + 20 Polish Passes
 
 const TILE_SIZE = 32;
-const MAP_WIDTH = 30;
-const MAP_HEIGHT = 25;
+const MAP_WIDTH = 40;
+const MAP_HEIGHT = 35;
 
 const COLORS = {
-    FLOOR: 0x1a1a1a,
-    FLOOR_HEX: 0x1f1f1f,
-    FLOOR_GRATE: 0x252525,
-    WALL: 0x333333,
-    WALL_HIGHLIGHT: 0x444444,
-    WALL_SHADOW: 0x1a1a1a,
-    HAZARD_YELLOW: 0xccaa00,
-    HAZARD_BLACK: 0x111111,
-    DOOR: 0x444455,
-    DOOR_LOCKED: 0x553333,
-    UI_BG: 0x0a1a1a,
-    UI_BORDER: 0x0a4a4a,
-    UI_TEXT: 0x00cccc,
-    UI_TEXT_DIM: 0x006666,
-    HEALTH_BG: 0x330000,
-    HEALTH: 0xcc0000,
-    AMMO: 0x00cc00,
-    PLAYER: 0x446688,
-    ALIEN: 0x44aa44,
-    ALIEN_EYES: 0xff0000,
-    BULLET: 0xffff00,
-    MUZZLE_FLASH: 0xffaa00
+    FLOOR: 0x1a1a1a, FLOOR_HEX: 0x1f1f1f, FLOOR_GRATE: 0x252525,
+    WALL: 0x333333, WALL_HIGHLIGHT: 0x444444, WALL_SHADOW: 0x1a1a1a,
+    HAZARD_YELLOW: 0xccaa00, HAZARD_BLACK: 0x111111,
+    DOOR: 0x444455, DOOR_LOCKED: 0x553333,
+    UI_BG: 0x0a1a1a, UI_BORDER: 0x0a4a4a, UI_TEXT: 0x00cccc, UI_TEXT_DIM: 0x006666,
+    HEALTH_BG: 0x330000, HEALTH: 0xcc0000, ARMOR: 0x0066cc, AMMO: 0x00cc00,
+    PLAYER: 0x446688, ALIEN: 0x44aa44, ALIEN_EYES: 0xff0000,
+    BULLET: 0xffff00, PLASMA: 0x00ffff, FIRE: 0xff6600, MUZZLE_FLASH: 0xffaa00,
+    ACID: 0x88ff00, EXPLOSION: 0xff4400, BLOOD: 0x448844
 };
 
 const TERRAIN = {
     FLOOR: 0, WALL: 1, DOOR: 2, TERMINAL: 3, VENT: 4,
-    HAZARD_FLOOR: 5, CRATE: 6, BARREL: 7
+    HAZARD_FLOOR: 5, CRATE: 6, BARREL: 7, EXPLOSIVE_BARREL: 8,
+    ACID_POOL: 9, TELEPORTER: 10, SHOP: 11
+};
+
+// EXPAND: Multiple weapon types
+const WEAPONS = {
+    assault_rifle: { name: 'Assault Rifle', damage: 10, fireRate: 8, spread: 0.05, projectiles: 1, speed: 500, clipSize: 30, reloadTime: 1.5, color: COLORS.BULLET },
+    shotgun: { name: 'Shotgun', damage: 8, fireRate: 1.5, spread: 0.3, projectiles: 6, speed: 400, clipSize: 8, reloadTime: 2.0, color: COLORS.BULLET },
+    plasma_rifle: { name: 'Plasma Rifle', damage: 25, fireRate: 3, spread: 0.02, projectiles: 1, speed: 600, clipSize: 20, reloadTime: 2.5, color: COLORS.PLASMA },
+    smg: { name: 'SMG', damage: 6, fireRate: 15, spread: 0.1, projectiles: 1, speed: 450, clipSize: 45, reloadTime: 1.2, color: COLORS.BULLET },
+    flamethrower: { name: 'Flamethrower', damage: 3, fireRate: 30, spread: 0.2, projectiles: 1, speed: 300, clipSize: 100, reloadTime: 3.0, color: COLORS.FIRE, piercing: true }
+};
+
+// EXPAND: More enemy types
+const ENEMY_TYPES = {
+    scorpion: { hp: 30, speed: 60, damage: 15, xp: 50, color: 0x44aa44, size: 10 },
+    scorpion_small: { hp: 15, speed: 80, damage: 8, xp: 25, color: 0x338833, size: 8 },
+    arachnid: { hp: 80, speed: 40, damage: 25, xp: 100, color: 0x226622, size: 16 },
+    facehugger: { hp: 10, speed: 120, damage: 20, xp: 30, color: 0x556655, size: 6 },
+    spitter: { hp: 40, speed: 50, damage: 0, xp: 75, color: 0x448844, size: 12, ranged: true },
+    brute: { hp: 150, speed: 30, damage: 40, xp: 150, color: 0x225522, size: 20 },
+    queen: { hp: 500, speed: 20, damage: 50, xp: 500, color: 0x115511, size: 30, boss: true }
 };
 
 class GameScene extends Phaser.Scene {
@@ -43,50 +52,55 @@ class GameScene extends Phaser.Scene {
     create() {
         this.gameState = 'playing';
         this.tick = 0;
+        this.wave = 1;
+        this.combo = 0;
+        this.comboTimer = 0;
+        this.killCount = 0;
+        this.screenFlash = 0;
+        this.ambientFlicker = 0;
 
-        // Player data
+        // Player data (EXPAND: More stats)
         this.playerData = {
             hp: 100, maxHp: 100,
+            armor: 0, maxArmor: 50,
             lives: 3,
             credits: 0,
             rank: 1, xp: 0, xpToNext: 1000,
-            weapon: {
-                name: 'Assault Rifle',
-                damage: 10,
-                fireRate: 8,
-                ammo: 68,
-                maxAmmo: 300,
-                clipSize: 30,
-                clip: 30,
-                reloading: false,
-                reloadTime: 0
+            currentWeapon: 'assault_rifle',
+            weapons: {
+                assault_rifle: { ammo: 90, clip: 30 }
             },
             cooldown: 0,
-            invincible: 0
+            invincible: 0,
+            speedBoost: 0,
+            damageBoost: 0,
+            recoil: 0,
+            reloading: false,
+            reloadTime: 0
         };
 
         // Create graphics
         this.mapGraphics = this.add.graphics();
         this.flashlightGraphics = this.add.graphics();
+        this.uiGraphics = this.add.graphics();
 
-        // Create groups
-        this.bulletsGroup = this.add.group();
-        this.enemiesGroup = this.add.group();
-        this.itemsGroup = this.add.group();
-        this.particlesGroup = this.add.group();
-
-        // Generate level
+        // Arrays
         this.map = [];
         this.enemies = [];
         this.items = [];
         this.bullets = [];
         this.particles = [];
+        this.decals = [];
+        this.floatingTexts = [];
+        this.teleporters = [];
+
+        // Generate level
         this.generateLevel();
 
         // Create player
         this.player = this.add.graphics();
-        this.player.x = 320;
-        this.player.y = 400;
+        this.player.x = 640;
+        this.player.y = 544;
         this.playerAngle = 0;
 
         // Set up camera
@@ -99,7 +113,12 @@ class GameScene extends Phaser.Scene {
             down: Phaser.Input.Keyboard.KeyCodes.S,
             left: Phaser.Input.Keyboard.KeyCodes.A,
             right: Phaser.Input.Keyboard.KeyCodes.D,
-            reload: Phaser.Input.Keyboard.KeyCodes.R
+            reload: Phaser.Input.Keyboard.KeyCodes.R,
+            one: Phaser.Input.Keyboard.KeyCodes.ONE,
+            two: Phaser.Input.Keyboard.KeyCodes.TWO,
+            three: Phaser.Input.Keyboard.KeyCodes.THREE,
+            four: Phaser.Input.Keyboard.KeyCodes.FOUR,
+            five: Phaser.Input.Keyboard.KeyCodes.FIVE
         });
 
         this.input.on('pointermove', (pointer) => {
@@ -108,30 +127,24 @@ class GameScene extends Phaser.Scene {
         });
 
         this.input.on('pointerdown', (pointer) => {
-            if (pointer.leftButtonDown()) {
-                this.mouseDown = true;
-            }
+            if (pointer.leftButtonDown()) this.mouseDown = true;
         });
 
         this.input.on('pointerup', (pointer) => {
-            if (!pointer.leftButtonDown()) {
-                this.mouseDown = false;
-            }
+            if (!pointer.leftButtonDown()) this.mouseDown = false;
         });
 
         this.mouseX = this.player.x;
         this.mouseY = this.player.y;
         this.mouseDown = false;
 
-        // Create UI (fixed to camera)
+        // Create UI
         this.createUI();
-
-        // Draw initial map
         this.drawMap();
 
         // Expose for testing
         window.player = this.playerData;
-        window.gameState = { state: this.gameState };
+        window.gameState = { state: this.gameState, wave: this.wave };
         const self = this;
         Object.defineProperty(window, 'enemies', { get: () => self.enemies, configurable: true });
         Object.defineProperty(window, 'items', { get: () => self.items, configurable: true });
@@ -139,13 +152,12 @@ class GameScene extends Phaser.Scene {
 
     generateLevel() {
         this.map = [];
+        this.teleporters = [];
 
-        // Fill with floor
         for (let y = 0; y < MAP_HEIGHT; y++) {
             this.map[y] = [];
             for (let x = 0; x < MAP_WIDTH; x++) {
-                const pattern = (x + y) % 2;
-                this.map[y][x] = { terrain: TERRAIN.FLOOR, variant: pattern };
+                this.map[y][x] = { terrain: TERRAIN.FLOOR, variant: (x + y) % 2 };
             }
         }
 
@@ -159,122 +171,201 @@ class GameScene extends Phaser.Scene {
             this.map[y][MAP_WIDTH - 1] = { terrain: TERRAIN.WALL, variant: 0 };
         }
 
-        // Horizontal corridor
-        for (let x = 1; x < MAP_WIDTH - 1; x++) {
-            for (let dy = 0; dy < 5; dy++) {
-                this.map[10 + dy][x] = { terrain: TERRAIN.FLOOR, variant: (x + dy) % 2 };
-            }
-            if (x % 6 < 3) {
-                this.map[10][x] = { terrain: TERRAIN.HAZARD_FLOOR, variant: 0 };
-                this.map[14][x] = { terrain: TERRAIN.HAZARD_FLOOR, variant: 0 };
-            }
-        }
+        // Main corridors
+        const corridors = [
+            { x1: 1, y1: 15, x2: MAP_WIDTH - 2, y2: 19 },
+            { x1: 10, y1: 1, x2: 14, y2: MAP_HEIGHT - 2 },
+            { x1: 25, y1: 1, x2: 29, y2: MAP_HEIGHT - 2 }
+        ];
 
-        // Vertical corridors
-        for (let y = 1; y < MAP_HEIGHT - 1; y++) {
-            for (let dx = 0; dx < 4; dx++) {
-                this.map[y][8 + dx] = { terrain: TERRAIN.FLOOR, variant: (y + dx) % 2 };
-                this.map[y][20 + dx] = { terrain: TERRAIN.FLOOR, variant: (y + dx) % 2 };
+        for (const c of corridors) {
+            for (let y = c.y1; y <= c.y2; y++) {
+                for (let x = c.x1; x <= c.x2; x++) {
+                    if (this.map[y] && this.map[y][x]) {
+                        this.map[y][x] = { terrain: TERRAIN.FLOOR, variant: (x + y) % 2 };
+                    }
+                }
             }
         }
 
         // Rooms
         const rooms = [
-            { x: 2, y: 2, w: 5, h: 5 },
-            { x: 23, y: 2, w: 5, h: 5 },
-            { x: 2, y: 18, w: 5, h: 5 },
-            { x: 23, y: 18, w: 5, h: 5 },
-            { x: 12, y: 2, w: 6, h: 5 },
-            { x: 12, y: 18, w: 6, h: 5 }
+            { x: 2, y: 2, w: 7, h: 7 },
+            { x: 31, y: 2, w: 7, h: 7 },
+            { x: 2, y: 26, w: 7, h: 7 },
+            { x: 31, y: 26, w: 7, h: 7 },
+            { x: 16, y: 2, w: 8, h: 6 },
+            { x: 16, y: 27, w: 8, h: 6 },
+            { x: 16, y: 12, w: 8, h: 10 }
         ];
 
         for (const room of rooms) {
             for (let dy = 0; dy < room.h; dy++) {
                 for (let dx = 0; dx < room.w; dx++) {
-                    this.map[room.y + dy][room.x + dx] = {
-                        terrain: TERRAIN.FLOOR,
-                        variant: (room.x + dx + room.y + dy) % 2
-                    };
+                    const y = room.y + dy;
+                    const x = room.x + dx;
+                    if (this.map[y] && this.map[y][x]) {
+                        this.map[y][x] = { terrain: TERRAIN.FLOOR, variant: (x + y) % 2 };
+                    }
                 }
             }
         }
 
-        // Doors
-        this.map[12][1] = { terrain: TERRAIN.DOOR, variant: 0, locked: false };
-        this.map[12][MAP_WIDTH - 2] = { terrain: TERRAIN.DOOR, variant: 0, locked: true };
-        this.map[6][10] = { terrain: TERRAIN.DOOR, variant: 1, locked: false };
-        this.map[18][10] = { terrain: TERRAIN.DOOR, variant: 1, locked: false };
-
-        // Vents
-        this.map[3][3] = { terrain: TERRAIN.VENT, variant: 0 };
-        this.map[3][26] = { terrain: TERRAIN.VENT, variant: 0 };
-        this.map[21][3] = { terrain: TERRAIN.VENT, variant: 0 };
-        this.map[21][26] = { terrain: TERRAIN.VENT, variant: 0 };
-
-        // Terminal
-        this.map[4][14] = { terrain: TERRAIN.TERMINAL, variant: 0 };
-
-        // Crates and barrels
-        const cratePositions = [
-            { x: 5, y: 4 }, { x: 6, y: 4 }, { x: 25, y: 4 },
-            { x: 4, y: 20 }, { x: 25, y: 20 }, { x: 26, y: 20 }
-        ];
-        for (const pos of cratePositions) {
-            this.map[pos.y][pos.x] = { terrain: TERRAIN.CRATE, variant: Math.floor(Math.random() * 2) };
+        // Hazard floor stripes
+        for (let x = 1; x < MAP_WIDTH - 1; x++) {
+            if (x % 5 < 2) {
+                if (this.map[15]) this.map[15][x] = { terrain: TERRAIN.HAZARD_FLOOR, variant: 0 };
+                if (this.map[19]) this.map[19][x] = { terrain: TERRAIN.HAZARD_FLOOR, variant: 0 };
+            }
         }
 
+        // EXPAND: Add acid pools
+        const acidPositions = [{ x: 4, y: 5 }, { x: 34, y: 5 }, { x: 4, y: 29 }, { x: 34, y: 29 }];
+        for (const pos of acidPositions) {
+            if (this.map[pos.y] && this.map[pos.y][pos.x]) {
+                this.map[pos.y][pos.x] = { terrain: TERRAIN.ACID_POOL, variant: 0 };
+            }
+        }
+
+        // EXPAND: Add explosive barrels
         const barrelPositions = [
-            { x: 13, y: 4 }, { x: 16, y: 4 }, { x: 14, y: 20 }
+            { x: 18, y: 4 }, { x: 22, y: 4 }, { x: 18, y: 30 }, { x: 22, y: 30 },
+            { x: 5, y: 17 }, { x: 34, y: 17 }
         ];
         for (const pos of barrelPositions) {
-            this.map[pos.y][pos.x] = { terrain: TERRAIN.BARREL, variant: 0 };
+            if (this.map[pos.y] && this.map[pos.y][pos.x]) {
+                this.map[pos.y][pos.x] = { terrain: TERRAIN.EXPLOSIVE_BARREL, variant: 0 };
+            }
         }
 
-        // Spawn enemies
-        this.enemies = [];
-        const enemySpawns = [
-            { x: 4, y: 4, type: 'scorpion' },
-            { x: 25, y: 4, type: 'scorpion' },
-            { x: 4, y: 20, type: 'scorpion' },
-            { x: 25, y: 20, type: 'scorpion' },
-            { x: 15, y: 3, type: 'scorpion_small' },
-            { x: 15, y: 21, type: 'scorpion_small' },
-            { x: 15, y: 12, type: 'arachnid' }
+        // EXPAND: Add teleporters
+        this.teleporters = [
+            { x: 5, y: 5, targetX: 34, targetY: 29 },
+            { x: 34, y: 5, targetX: 5, targetY: 29 },
+            { x: 5, y: 29, targetX: 34, targetY: 5 },
+            { x: 34, y: 29, targetX: 5, targetY: 5 }
         ];
-
-        const enemyStats = {
-            scorpion: { hp: 30, speed: 60, damage: 15, xp: 50, color: COLORS.ALIEN },
-            scorpion_small: { hp: 15, speed: 80, damage: 8, xp: 25, color: 0x338833 },
-            arachnid: { hp: 80, speed: 40, damage: 25, xp: 100, color: 0x226622 }
-        };
-
-        for (const spawn of enemySpawns) {
-            const stats = enemyStats[spawn.type];
-            this.enemies.push({
-                x: spawn.x * TILE_SIZE + TILE_SIZE / 2,
-                y: spawn.y * TILE_SIZE + TILE_SIZE / 2,
-                type: spawn.type,
-                hp: stats.hp, maxHp: stats.hp,
-                speed: stats.speed,
-                damage: stats.damage,
-                xp: stats.xp,
-                color: stats.color,
-                state: 'patrol',
-                attackCooldown: 0,
-                angle: Math.random() * Math.PI * 2
-            });
+        for (const tp of this.teleporters) {
+            if (this.map[tp.y] && this.map[tp.y][tp.x]) {
+                this.map[tp.y][tp.x] = { terrain: TERRAIN.TELEPORTER, variant: 0 };
+            }
         }
+
+        // EXPAND: Add shop terminal
+        this.map[17][20] = { terrain: TERRAIN.SHOP, variant: 0 };
+
+        // Add doors
+        this.map[17][9] = { terrain: TERRAIN.DOOR, variant: 1, locked: false };
+        this.map[17][30] = { terrain: TERRAIN.DOOR, variant: 1, locked: true };
+        this.map[8][12] = { terrain: TERRAIN.DOOR, variant: 0, locked: false };
+        this.map[26][12] = { terrain: TERRAIN.DOOR, variant: 0, locked: false };
+
+        // Add vents
+        const ventPositions = [
+            { x: 3, y: 3 }, { x: 36, y: 3 }, { x: 3, y: 31 }, { x: 36, y: 31 },
+            { x: 20, y: 3 }, { x: 20, y: 31 }
+        ];
+        for (const pos of ventPositions) {
+            if (this.map[pos.y] && this.map[pos.y][pos.x]) {
+                this.map[pos.y][pos.x] = { terrain: TERRAIN.VENT, variant: 0 };
+            }
+        }
+
+        // Crates
+        const cratePositions = [
+            { x: 6, y: 4 }, { x: 33, y: 4 }, { x: 6, y: 28 }, { x: 33, y: 28 },
+            { x: 12, y: 17 }, { x: 27, y: 17 }
+        ];
+        for (const pos of cratePositions) {
+            if (this.map[pos.y] && this.map[pos.y][pos.x]) {
+                this.map[pos.y][pos.x] = { terrain: TERRAIN.CRATE, variant: 0 };
+            }
+        }
+
+        // Spawn enemies based on wave
+        this.spawnWave();
 
         // Spawn items
         this.items = [];
-        this.items.push({ x: 100, y: 100, type: 'ammo', amount: 30 });
-        this.items.push({ x: 200, y: 400, type: 'health', amount: 25 });
-        this.items.push({ x: 600, y: 200, type: 'credits', amount: 500 });
-        this.items.push({ x: 800, y: 600, type: 'ammo', amount: 50 });
-        this.items.push({ x: 500, y: 300, type: 'keycard', color: 'yellow' });
+        this.items.push({ x: 150, y: 150, type: 'ammo', amount: 30 });
+        this.items.push({ x: 600, y: 150, type: 'health', amount: 25 });
+        this.items.push({ x: 150, y: 600, type: 'credits', amount: 500 });
+        this.items.push({ x: 600, y: 600, type: 'armor', amount: 20 });
+        this.items.push({ x: 400, y: 300, type: 'keycard', color: 'yellow' });
+        // EXPAND: Weapon pickups
+        this.items.push({ x: 550, y: 170, type: 'weapon', weapon: 'shotgun' });
+        this.items.push({ x: 700, y: 550, type: 'weapon', weapon: 'plasma_rifle' });
+        // EXPAND: Power-ups
+        this.items.push({ x: 300, y: 500, type: 'speedboost' });
+        this.items.push({ x: 500, y: 200, type: 'damageboost' });
 
         this.bullets = [];
         this.particles = [];
+        this.decals = [];
+        this.floatingTexts = [];
+    }
+
+    // EXPAND: Wave spawning system
+    spawnWave() {
+        this.enemies = [];
+        const waveConfig = this.getWaveConfig(this.wave);
+
+        for (const spawn of waveConfig) {
+            for (let i = 0; i < spawn.count; i++) {
+                const spawnPoints = [
+                    { x: 4, y: 4 }, { x: 35, y: 4 }, { x: 4, y: 30 }, { x: 35, y: 30 },
+                    { x: 20, y: 4 }, { x: 20, y: 30 }
+                ];
+                const sp = spawnPoints[Math.floor(Math.random() * spawnPoints.length)];
+                const stats = ENEMY_TYPES[spawn.type];
+
+                this.enemies.push({
+                    x: sp.x * TILE_SIZE + TILE_SIZE / 2 + (Math.random() - 0.5) * 50,
+                    y: sp.y * TILE_SIZE + TILE_SIZE / 2 + (Math.random() - 0.5) * 50,
+                    type: spawn.type,
+                    hp: stats.hp, maxHp: stats.hp,
+                    speed: stats.speed,
+                    damage: stats.damage,
+                    xp: stats.xp,
+                    color: stats.color,
+                    size: stats.size,
+                    state: 'patrol',
+                    attackCooldown: 0,
+                    angle: Math.random() * Math.PI * 2,
+                    ranged: stats.ranged || false,
+                    boss: stats.boss || false,
+                    hitFlash: 0
+                });
+
+                // POLISH: Spawn particles
+                for (let j = 0; j < 10; j++) {
+                    this.particles.push({
+                        x: sp.x * TILE_SIZE + TILE_SIZE / 2,
+                        y: sp.y * TILE_SIZE + TILE_SIZE / 2,
+                        vx: (Math.random() - 0.5) * 100,
+                        vy: (Math.random() - 0.5) * 100,
+                        type: 'spawn',
+                        life: 0.5
+                    });
+                }
+            }
+        }
+    }
+
+    getWaveConfig(wave) {
+        const configs = [
+            [{ type: 'scorpion', count: 3 }],
+            [{ type: 'scorpion', count: 4 }, { type: 'scorpion_small', count: 2 }],
+            [{ type: 'scorpion', count: 3 }, { type: 'facehugger', count: 4 }],
+            [{ type: 'arachnid', count: 2 }, { type: 'scorpion', count: 3 }],
+            [{ type: 'spitter', count: 2 }, { type: 'scorpion', count: 4 }],
+            [{ type: 'brute', count: 1 }, { type: 'scorpion', count: 5 }],
+            [{ type: 'scorpion', count: 6 }, { type: 'facehugger', count: 6 }],
+            [{ type: 'arachnid', count: 3 }, { type: 'spitter', count: 2 }],
+            [{ type: 'brute', count: 2 }, { type: 'arachnid', count: 2 }],
+            [{ type: 'queen', count: 1 }, { type: 'scorpion', count: 4 }]
+        ];
+        return configs[Math.min(wave - 1, configs.length - 1)];
     }
 
     drawMap() {
@@ -298,7 +389,6 @@ class GameScene extends Phaser.Scene {
                 this.mapGraphics.fillStyle(COLORS.FLOOR_GRATE);
                 this.mapGraphics.fillRect(screenX + 4, screenY + 4, 8, 1);
                 this.mapGraphics.fillRect(screenX + 20, screenY + 20, 8, 1);
-                this.mapGraphics.fillRect(screenX + 4, screenY + 26, 8, 1);
                 break;
 
             case TERRAIN.HAZARD_FLOOR:
@@ -324,10 +414,6 @@ class GameScene extends Phaser.Scene {
                 if ((tileX + tileY) % 3 === 0) {
                     this.mapGraphics.fillStyle(COLORS.FLOOR_GRATE);
                     this.mapGraphics.fillRect(screenX + 8, screenY + 12, 16, 8);
-                    this.mapGraphics.fillStyle(0x0a0a0a);
-                    this.mapGraphics.fillRect(screenX + 10, screenY + 14, 3, 4);
-                    this.mapGraphics.fillRect(screenX + 15, screenY + 14, 3, 4);
-                    this.mapGraphics.fillRect(screenX + 20, screenY + 14, 3, 4);
                 }
                 break;
 
@@ -337,13 +423,11 @@ class GameScene extends Phaser.Scene {
                 this.mapGraphics.fillStyle(tile.locked ? COLORS.DOOR_LOCKED : COLORS.DOOR);
                 if (tile.variant === 0) {
                     this.mapGraphics.fillRect(screenX, screenY + 10, TILE_SIZE, 12);
-                    this.mapGraphics.fillStyle(tile.locked ? 0xff0000 : 0x00ff00);
-                    this.mapGraphics.fillRect(screenX + 14, screenY + 14, 4, 4);
                 } else {
                     this.mapGraphics.fillRect(screenX + 10, screenY, 12, TILE_SIZE);
-                    this.mapGraphics.fillStyle(tile.locked ? 0xff0000 : 0x00ff00);
-                    this.mapGraphics.fillRect(screenX + 14, screenY + 14, 4, 4);
                 }
+                this.mapGraphics.fillStyle(tile.locked ? 0xff0000 : 0x00ff00);
+                this.mapGraphics.fillRect(screenX + 14, screenY + 14, 4, 4);
                 break;
 
             case TERRAIN.VENT:
@@ -357,18 +441,6 @@ class GameScene extends Phaser.Scene {
                 }
                 break;
 
-            case TERRAIN.TERMINAL:
-                this.mapGraphics.fillStyle(COLORS.FLOOR);
-                this.mapGraphics.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-                this.mapGraphics.fillStyle(0x333340);
-                this.mapGraphics.fillRect(screenX + 4, screenY + 8, TILE_SIZE - 8, TILE_SIZE - 12);
-                this.mapGraphics.fillStyle(0x003344);
-                this.mapGraphics.fillRect(screenX + 6, screenY + 10, TILE_SIZE - 12, 12);
-                this.mapGraphics.fillStyle(0x00cccc);
-                this.mapGraphics.fillRect(screenX + 8, screenY + 12, TILE_SIZE - 16, 2);
-                this.mapGraphics.fillRect(screenX + 8, screenY + 16, TILE_SIZE - 16, 2);
-                break;
-
             case TERRAIN.CRATE:
                 this.mapGraphics.fillStyle(COLORS.FLOOR);
                 this.mapGraphics.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
@@ -377,18 +449,38 @@ class GameScene extends Phaser.Scene {
                 this.mapGraphics.fillStyle(0x4a3a20);
                 this.mapGraphics.fillRect(screenX + 4, screenY + 4, TILE_SIZE - 8, 2);
                 this.mapGraphics.fillRect(screenX + 4, screenY + TILE_SIZE - 8, TILE_SIZE - 8, 2);
-                this.mapGraphics.fillRect(screenX + 4, screenY + 14, TILE_SIZE - 8, 2);
                 break;
 
-            case TERRAIN.BARREL:
+            case TERRAIN.EXPLOSIVE_BARREL:
                 this.mapGraphics.fillStyle(COLORS.FLOOR);
                 this.mapGraphics.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-                this.mapGraphics.fillStyle(0x334455);
+                this.mapGraphics.fillStyle(0xcc3333);
                 this.mapGraphics.fillCircle(screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2, 12);
-                this.mapGraphics.fillStyle(0x223344);
-                this.mapGraphics.fillCircle(screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2, 8);
                 this.mapGraphics.fillStyle(COLORS.HAZARD_YELLOW);
-                this.mapGraphics.fillRect(screenX + 12, screenY + 12, 8, 8);
+                this.mapGraphics.fillRect(screenX + 10, screenY + 10, 12, 12);
+                break;
+
+            case TERRAIN.ACID_POOL:
+                this.mapGraphics.fillStyle(COLORS.FLOOR);
+                this.mapGraphics.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                this.mapGraphics.fillStyle(0x88ff00, 0.7);
+                this.mapGraphics.fillEllipse(screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2, 28, 24);
+                break;
+
+            case TERRAIN.TELEPORTER:
+                this.mapGraphics.fillStyle(COLORS.FLOOR);
+                this.mapGraphics.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                this.mapGraphics.fillStyle(0x00ffff, 0.4);
+                this.mapGraphics.fillCircle(screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2, 12);
+                this.mapGraphics.lineStyle(2, 0x00ffff);
+                this.mapGraphics.strokeCircle(screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2, 10);
+                break;
+
+            case TERRAIN.SHOP:
+                this.mapGraphics.fillStyle(COLORS.FLOOR);
+                this.mapGraphics.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                this.mapGraphics.fillStyle(0x444466);
+                this.mapGraphics.fillRect(screenX + 4, screenY + 4, TILE_SIZE - 8, TILE_SIZE - 8);
                 break;
         }
     }
@@ -398,54 +490,51 @@ class GameScene extends Phaser.Scene {
         this.uiContainer.setScrollFactor(0);
         this.uiContainer.setDepth(100);
 
-        // Top-left: Rank/XP and Lives
+        // Top-left: Rank/XP, Lives, Wave, Combo
         const topLeftBg = this.add.graphics();
         topLeftBg.fillStyle(COLORS.UI_BG, 1);
-        topLeftBg.fillRect(10, 10, 120, 50);
+        topLeftBg.fillRect(10, 10, 140, 70);
         topLeftBg.lineStyle(2, COLORS.UI_BORDER);
-        topLeftBg.strokeRect(10, 10, 120, 50);
+        topLeftBg.strokeRect(10, 10, 140, 70);
         this.uiContainer.add(topLeftBg);
 
-        this.rankText = this.add.text(18, 16, 'RANK/XP', {
+        this.rankText = this.add.text(18, 16, 'RANK 1', {
             fontSize: '11px', fontFamily: 'Arial', fontStyle: 'bold', color: '#00cccc'
         });
         this.uiContainer.add(this.rankText);
 
-        this.rankValueText = this.add.text(80, 16, '1/0', {
-            fontSize: '11px', fontFamily: 'Arial', color: '#006666'
+        this.xpText = this.add.text(18, 30, 'XP: 0/1000', {
+            fontSize: '10px', fontFamily: 'Arial', color: '#006666'
         });
-        this.uiContainer.add(this.rankValueText);
+        this.uiContainer.add(this.xpText);
 
-        this.livesText = this.add.text(18, 38, 'LIVES', {
+        this.waveText = this.add.text(18, 44, 'WAVE 1', {
             fontSize: '11px', fontFamily: 'Arial', fontStyle: 'bold', color: '#00cccc'
+        });
+        this.uiContainer.add(this.waveText);
+
+        this.comboText = this.add.text(18, 58, '', {
+            fontSize: '10px', fontFamily: 'Arial', fontStyle: 'bold', color: '#ffff00'
+        });
+        this.uiContainer.add(this.comboText);
+
+        this.livesText = this.add.text(100, 16, '', {
+            fontSize: '11px', fontFamily: 'Arial', fontStyle: 'bold', color: '#cc0000'
         });
         this.uiContainer.add(this.livesText);
 
-        this.livesValueText = this.add.text(70, 38, '3', {
-            fontSize: '11px', fontFamily: 'Arial', fontStyle: 'bold', color: '#cc0000'
-        });
-        this.uiContainer.add(this.livesValueText);
-
-        // Bottom-center: Health and Credits
+        // Bottom-center: Health, Armor, Credits
         const bottomCenterBg = this.add.graphics();
         bottomCenterBg.fillStyle(COLORS.UI_BG, 1);
-        bottomCenterBg.fillRect(200, this.scale.height - 50, 240, 40);
+        bottomCenterBg.fillRect(200, this.scale.height - 60, 260, 50);
         bottomCenterBg.lineStyle(2, COLORS.UI_BORDER);
-        bottomCenterBg.strokeRect(200, this.scale.height - 50, 240, 40);
+        bottomCenterBg.strokeRect(200, this.scale.height - 60, 260, 50);
         this.uiContainer.add(bottomCenterBg);
-
-        // Health bar background
-        this.healthBarBg = this.add.graphics();
-        this.healthBarBg.fillStyle(COLORS.HEALTH_BG, 1);
-        this.healthBarBg.fillRect(210, this.scale.height - 42, 150, 12);
-        this.healthBarBg.lineStyle(1, 0x440000);
-        this.healthBarBg.strokeRect(210, this.scale.height - 42, 150, 12);
-        this.uiContainer.add(this.healthBarBg);
 
         this.healthBar = this.add.graphics();
         this.uiContainer.add(this.healthBar);
 
-        this.creditsText = this.add.text(370, this.scale.height - 32, '$0', {
+        this.creditsText = this.add.text(380, this.scale.height - 35, '$0', {
             fontSize: '12px', fontFamily: 'Arial', fontStyle: 'bold', color: '#00cccc'
         });
         this.uiContainer.add(this.creditsText);
@@ -453,56 +542,100 @@ class GameScene extends Phaser.Scene {
         // Bottom-right: Weapon and Ammo
         const bottomRightBg = this.add.graphics();
         bottomRightBg.fillStyle(COLORS.UI_BG, 1);
-        bottomRightBg.fillRect(this.scale.width - 140, this.scale.height - 60, 130, 50);
+        bottomRightBg.fillRect(this.scale.width - 160, this.scale.height - 70, 150, 60);
         bottomRightBg.lineStyle(2, COLORS.UI_BORDER);
-        bottomRightBg.strokeRect(this.scale.width - 140, this.scale.height - 60, 130, 50);
-        // Weapon icon
-        bottomRightBg.fillStyle(0x555555, 1);
-        bottomRightBg.fillRect(this.scale.width - 130, this.scale.height - 50, 30, 12);
+        bottomRightBg.strokeRect(this.scale.width - 160, this.scale.height - 70, 150, 60);
         this.uiContainer.add(bottomRightBg);
 
-        this.ammoText = this.add.text(this.scale.width - 90, this.scale.height - 48, '30 | 68', {
+        this.ammoText = this.add.text(this.scale.width - 150, this.scale.height - 55, '30 | 90', {
             fontSize: '14px', fontFamily: 'Arial', fontStyle: 'bold', color: '#00cc00'
         });
         this.uiContainer.add(this.ammoText);
 
-        this.weaponNameText = this.add.text(this.scale.width - 130, this.scale.height - 30, 'Assault Rifle', {
+        this.weaponNameText = this.add.text(this.scale.width - 150, this.scale.height - 35, 'Assault Rifle', {
             fontSize: '10px', fontFamily: 'Arial', color: '#006666'
         });
         this.uiContainer.add(this.weaponNameText);
 
-        this.reloadBar = this.add.graphics();
-        this.uiContainer.add(this.reloadBar);
+        this.weaponSlotsText = this.add.text(this.scale.width - 150, this.scale.height - 65, '1', {
+            fontSize: '9px', fontFamily: 'Arial', color: '#00ffff'
+        });
+        this.uiContainer.add(this.weaponSlotsText);
+
+        // Power-up indicators
+        this.speedBoostText = this.add.text(10, this.scale.height - 30, '', {
+            fontSize: '11px', fontFamily: 'Arial', fontStyle: 'bold', color: '#00ffff'
+        });
+        this.speedBoostText.setScrollFactor(0).setDepth(101);
+
+        this.damageBoostText = this.add.text(10, this.scale.height - 15, '', {
+            fontSize: '11px', fontFamily: 'Arial', fontStyle: 'bold', color: '#ff4400'
+        });
+        this.damageBoostText.setScrollFactor(0).setDepth(101);
     }
 
     updateUI() {
-        this.rankValueText.setText(`${this.playerData.rank}/${this.playerData.xp}`);
+        this.rankText.setText(`RANK ${this.playerData.rank}`);
+        this.xpText.setText(`XP: ${this.playerData.xp}/${this.playerData.xpToNext}`);
+        this.waveText.setText(`WAVE ${this.wave}`);
 
-        this.livesValueText.setText(String(Math.max(0, this.playerData.lives)));
+        // Lives as hearts
+        let livesStr = '';
+        for (let i = 0; i < this.playerData.lives; i++) livesStr += '\u2665';
+        this.livesText.setText(livesStr);
 
-        // Health bar
+        // Combo
+        if (this.combo > 0) {
+            this.comboText.setText(`COMBO x${this.combo}`);
+        } else {
+            this.comboText.setText('');
+        }
+
+        // Health and armor bars
         this.healthBar.clear();
+        this.healthBar.fillStyle(COLORS.HEALTH_BG, 1);
+        this.healthBar.fillRect(210, this.scale.height - 52, 150, 12);
         this.healthBar.fillStyle(COLORS.HEALTH, 1);
-        this.healthBar.fillRect(210, this.scale.height - 42, 150 * (this.playerData.hp / this.playerData.maxHp), 12);
+        this.healthBar.fillRect(210, this.scale.height - 52, 150 * (this.playerData.hp / this.playerData.maxHp), 12);
+
+        // Armor bar
+        this.healthBar.fillStyle(0x001133, 1);
+        this.healthBar.fillRect(210, this.scale.height - 38, 150, 8);
+        this.healthBar.fillStyle(COLORS.ARMOR, 1);
+        this.healthBar.fillRect(210, this.scale.height - 38, 150 * (this.playerData.armor / this.playerData.maxArmor), 8);
 
         this.creditsText.setText(`$${this.playerData.credits}`);
 
         // Ammo
-        const weapon = this.playerData.weapon;
-        if (weapon.reloading) {
+        const weapon = WEAPONS[this.playerData.currentWeapon];
+        const weaponData = this.playerData.weapons[this.playerData.currentWeapon];
+        if (this.playerData.reloading) {
             this.ammoText.setText('RELOAD');
             this.ammoText.setColor('#ff8800');
         } else {
-            this.ammoText.setText(`${weapon.clip} | ${weapon.ammo}`);
+            this.ammoText.setText(`${weaponData?.clip || 0} | ${weaponData?.ammo || 0}`);
             this.ammoText.setColor('#00cc00');
         }
+        this.weaponNameText.setText(weapon?.name || 'No Weapon');
 
-        // Reload bar
-        this.reloadBar.clear();
-        if (weapon.reloading) {
-            const progress = 1 - (weapon.reloadTime / 1.5);
-            this.reloadBar.fillStyle(0xff8800, 0.5);
-            this.reloadBar.fillRect(210, this.scale.height - 28, 150 * progress, 4);
+        // Weapon slots
+        const weaponKeys = Object.keys(this.playerData.weapons);
+        let slotsStr = '';
+        for (let i = 0; i < weaponKeys.length && i < 5; i++) {
+            slotsStr += weaponKeys[i] === this.playerData.currentWeapon ? `[${i + 1}] ` : `${i + 1} `;
+        }
+        this.weaponSlotsText.setText(slotsStr);
+
+        // Power-up indicators
+        if (this.playerData.speedBoost > 0) {
+            this.speedBoostText.setText(`SPEED: ${Math.ceil(this.playerData.speedBoost)}s`);
+        } else {
+            this.speedBoostText.setText('');
+        }
+        if (this.playerData.damageBoost > 0) {
+            this.damageBoostText.setText(`DMG x2: ${Math.ceil(this.playerData.damageBoost)}s`);
+        } else {
+            this.damageBoostText.setText('');
         }
     }
 
@@ -511,15 +644,44 @@ class GameScene extends Phaser.Scene {
 
         const dt = delta / 1000;
         this.tick++;
+        this.ambientFlicker = Math.sin(this.tick * 0.1) * 0.05;
 
         this.updatePlayer(dt);
         this.updateEnemies(dt);
         this.updateBullets(dt);
         this.updateParticles(dt);
+        this.updateFloatingTexts(dt);
         this.updateUI();
 
-        // Redraw dynamic elements
-        this.drawDynamicElements();
+        // Combo timer
+        if (this.comboTimer > 0) {
+            this.comboTimer -= dt;
+            if (this.comboTimer <= 0) this.combo = 0;
+        }
+
+        // Screen flash decay
+        if (this.screenFlash > 0) this.screenFlash -= dt * 5;
+        if (this.playerData.recoil > 0) this.playerData.recoil *= 0.8;
+
+        // Check wave completion
+        if (this.enemies.length === 0 && this.gameState === 'playing') {
+            this.wave++;
+            window.gameState.wave = this.wave;
+            if (this.wave > 10) {
+                this.gameState = 'victory';
+                window.gameState.state = 'victory';
+                this.showVictory();
+            } else {
+                this.spawnWave();
+                this.floatingTexts.push({
+                    x: this.player.x, y: this.player.y - 50,
+                    text: `WAVE ${this.wave}`,
+                    color: '#00ffff',
+                    size: 24,
+                    life: 2
+                });
+            }
+        }
 
         // Check lose condition
         if (this.playerData.hp <= 0) {
@@ -530,24 +692,29 @@ class GameScene extends Phaser.Scene {
                 this.showGameOver();
             } else {
                 this.playerData.hp = this.playerData.maxHp;
-                this.player.x = 320;
-                this.player.y = 400;
+                this.player.x = 640;
+                this.player.y = 544;
                 this.playerData.invincible = 2;
+                this.screenFlash = 1;
             }
         }
 
-        // Update camera target
+        // Redraw dynamic elements
+        this.drawDynamicElements();
         this.cameras.main.centerOn(this.player.x, this.player.y);
     }
 
     updatePlayer(dt) {
         let dx = 0, dy = 0;
-        const speed = 120;
 
         if (this.cursors.up.isDown) dy = -1;
         if (this.cursors.down.isDown) dy = 1;
         if (this.cursors.left.isDown) dx = -1;
         if (this.cursors.right.isDown) dx = 1;
+
+        // EXPAND: Speed boost effect
+        const speed = 120 * (this.playerData.speedBoost > 0 ? 1.5 : 1);
+        if (this.playerData.speedBoost > 0) this.playerData.speedBoost -= dt;
 
         if (dx !== 0 || dy !== 0) {
             const len = Math.sqrt(dx * dx + dy * dy);
@@ -558,23 +725,86 @@ class GameScene extends Phaser.Scene {
 
             if (this.canMove(newX, this.player.y, 20, 20)) this.player.x = newX;
             if (this.canMove(this.player.x, newY, 20, 20)) this.player.y = newY;
+
+            // POLISH: Footstep particles
+            if (this.tick % 10 === 0) {
+                this.particles.push({
+                    x: this.player.x, y: this.player.y + 10,
+                    vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 0.5) * 20,
+                    type: 'dust', life: 0.3
+                });
+            }
         }
 
         // Aim at mouse
         this.playerAngle = Math.atan2(this.mouseY - this.player.y, this.mouseX - this.player.x);
 
+        // Check tile interactions
+        const tileX = Math.floor(this.player.x / TILE_SIZE);
+        const tileY = Math.floor(this.player.y / TILE_SIZE);
+        const tile = this.map[tileY]?.[tileX];
+
+        // EXPAND: Acid damage
+        if (tile?.terrain === TERRAIN.ACID_POOL && this.playerData.invincible <= 0) {
+            this.playerData.hp -= 10 * dt;
+            if (this.tick % 5 === 0) {
+                this.particles.push({
+                    x: this.player.x, y: this.player.y,
+                    vx: (Math.random() - 0.5) * 50, vy: -Math.random() * 50,
+                    type: 'acid', life: 0.3
+                });
+            }
+        }
+
+        // EXPAND: Teleporter
+        if (tile?.terrain === TERRAIN.TELEPORTER) {
+            for (const tp of this.teleporters) {
+                if (Math.floor(tp.x) === tileX && Math.floor(tp.y) === tileY) {
+                    this.player.x = tp.targetX * TILE_SIZE + TILE_SIZE / 2;
+                    this.player.y = tp.targetY * TILE_SIZE + TILE_SIZE / 2;
+                    this.screenFlash = 0.5;
+                    for (let i = 0; i < 20; i++) {
+                        this.particles.push({
+                            x: this.player.x, y: this.player.y,
+                            vx: (Math.random() - 0.5) * 200, vy: (Math.random() - 0.5) * 200,
+                            type: 'teleport', life: 0.5
+                        });
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Weapon switching
+        const weaponKeys = Object.keys(this.playerData.weapons);
+        if (Phaser.Input.Keyboard.JustDown(this.cursors.one) && weaponKeys[0]) {
+            this.playerData.currentWeapon = weaponKeys[0];
+            this.playerData.reloading = false;
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.cursors.two) && weaponKeys[1]) {
+            this.playerData.currentWeapon = weaponKeys[1];
+            this.playerData.reloading = false;
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.cursors.three) && weaponKeys[2]) {
+            this.playerData.currentWeapon = weaponKeys[2];
+            this.playerData.reloading = false;
+        }
+
         // Shooting
-        const weapon = this.playerData.weapon;
-        if (this.mouseDown && this.playerData.cooldown <= 0 && !weapon.reloading) {
-            if (weapon.clip > 0) {
+        const weapon = WEAPONS[this.playerData.currentWeapon];
+        const weaponData = this.playerData.weapons[this.playerData.currentWeapon];
+
+        if (this.mouseDown && this.playerData.cooldown <= 0 && !this.playerData.reloading) {
+            if (weaponData && weaponData.clip > 0) {
                 this.shoot();
                 this.playerData.cooldown = 1 / weapon.fireRate;
-                weapon.clip--;
+                weaponData.clip--;
+                this.playerData.recoil = 5;
 
-                if (weapon.clip === 0 && weapon.ammo > 0) {
+                if (weaponData.clip === 0 && weaponData.ammo > 0) {
                     this.startReload();
                 }
-            } else if (weapon.ammo > 0) {
+            } else if (weaponData && weaponData.ammo > 0) {
                 this.startReload();
             }
         }
@@ -582,21 +812,24 @@ class GameScene extends Phaser.Scene {
         if (this.playerData.cooldown > 0) this.playerData.cooldown -= dt;
 
         // Reload key
-        if (Phaser.Input.Keyboard.JustDown(this.cursors.reload) &&
-            !weapon.reloading && weapon.clip < weapon.clipSize && weapon.ammo > 0) {
+        if (Phaser.Input.Keyboard.JustDown(this.cursors.reload) && weaponData &&
+            !this.playerData.reloading && weaponData.clip < weapon.clipSize && weaponData.ammo > 0) {
             this.startReload();
         }
 
-        if (weapon.reloading) {
-            weapon.reloadTime -= dt;
-            if (weapon.reloadTime <= 0) {
-                const needed = weapon.clipSize - weapon.clip;
-                const reload = Math.min(needed, weapon.ammo);
-                weapon.clip += reload;
-                weapon.ammo -= reload;
-                weapon.reloading = false;
+        if (this.playerData.reloading) {
+            this.playerData.reloadTime -= dt;
+            if (this.playerData.reloadTime <= 0) {
+                const needed = weapon.clipSize - weaponData.clip;
+                const reload = Math.min(needed, weaponData.ammo);
+                weaponData.clip += reload;
+                weaponData.ammo -= reload;
+                this.playerData.reloading = false;
             }
         }
+
+        // EXPAND: Damage boost decay
+        if (this.playerData.damageBoost > 0) this.playerData.damageBoost -= dt;
 
         // Interact with items
         for (let i = this.items.length - 1; i >= 0; i--) {
@@ -608,44 +841,64 @@ class GameScene extends Phaser.Scene {
             }
         }
 
-        // Invincibility frames
         if (this.playerData.invincible > 0) this.playerData.invincible -= dt;
     }
 
     startReload() {
-        this.playerData.weapon.reloading = true;
-        this.playerData.weapon.reloadTime = 1.5;
+        const weapon = WEAPONS[this.playerData.currentWeapon];
+        this.playerData.reloading = true;
+        this.playerData.reloadTime = weapon.reloadTime;
     }
 
     shoot() {
-        const spread = 0.05;
-        const angle = this.playerAngle + (Math.random() - 0.5) * spread;
+        const weapon = WEAPONS[this.playerData.currentWeapon];
+        const damageMultiplier = this.playerData.damageBoost > 0 ? 2 : 1;
 
-        this.bullets.push({
-            x: this.player.x,
-            y: this.player.y,
-            vx: Math.cos(angle) * 500,
-            vy: Math.sin(angle) * 500,
-            damage: this.playerData.weapon.damage,
-            owner: 'player',
-            life: 2
-        });
+        for (let i = 0; i < weapon.projectiles; i++) {
+            const spread = weapon.spread;
+            const angle = this.playerAngle + (Math.random() - 0.5) * spread;
 
-        // Muzzle flash particle
+            this.bullets.push({
+                x: this.player.x + Math.cos(this.playerAngle) * 15,
+                y: this.player.y + Math.sin(this.playerAngle) * 15,
+                vx: Math.cos(angle) * weapon.speed,
+                vy: Math.sin(angle) * weapon.speed,
+                damage: weapon.damage * damageMultiplier,
+                owner: 'player',
+                life: 2,
+                color: weapon.color,
+                piercing: weapon.piercing || false
+            });
+        }
+
+        // Muzzle flash
         this.particles.push({
-            x: this.player.x + Math.cos(this.playerAngle) * 15,
-            y: this.player.y + Math.sin(this.playerAngle) * 15,
+            x: this.player.x + Math.cos(this.playerAngle) * 20,
+            y: this.player.y + Math.sin(this.playerAngle) * 20,
             type: 'muzzle',
-            life: 0.1
+            life: 0.1,
+            size: weapon.projectiles > 1 ? 12 : 8
         });
 
-        // Screen shake
-        this.cameras.main.shake(50, 0.002);
+        // POLISH: Shell casing
+        if (!weapon.piercing) {
+            this.particles.push({
+                x: this.player.x, y: this.player.y,
+                vx: Math.cos(this.playerAngle + Math.PI / 2) * 50 + (Math.random() - 0.5) * 20,
+                vy: Math.sin(this.playerAngle + Math.PI / 2) * 50 - 30,
+                type: 'shell', life: 0.5
+            });
+        }
+
+        this.cameras.main.shake(50, weapon.projectiles > 1 ? 0.004 : 0.002);
     }
 
     updateEnemies(dt) {
         for (const enemy of this.enemies) {
             const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.x, enemy.y);
+
+            // POLISH: Hit flash decay
+            if (enemy.hitFlash > 0) enemy.hitFlash -= dt * 5;
 
             if (enemy.state === 'patrol') {
                 enemy.x += Math.cos(enemy.angle) * enemy.speed * 0.3 * dt;
@@ -655,38 +908,57 @@ class GameScene extends Phaser.Scene {
                     enemy.angle += (Math.random() - 0.5) * Math.PI;
                 }
 
-                if (dist < 150) {
+                if (dist < (enemy.boss ? 300 : 150)) {
                     enemy.state = 'chase';
+                    // POLISH: Detection visual
+                    this.particles.push({
+                        x: enemy.x, y: enemy.y - 20,
+                        type: 'alert', life: 0.5
+                    });
                 }
             } else if (enemy.state === 'chase') {
                 const angle = Math.atan2(this.player.y - enemy.y, this.player.x - enemy.x);
                 enemy.angle = angle;
 
-                const newX = enemy.x + Math.cos(angle) * enemy.speed * dt;
-                const newY = enemy.y + Math.sin(angle) * enemy.speed * dt;
+                // EXPAND: Ranged enemies
+                if (enemy.ranged && dist > 100 && dist < 250 && enemy.attackCooldown <= 0) {
+                    this.bullets.push({
+                        x: enemy.x, y: enemy.y,
+                        vx: Math.cos(angle) * 200, vy: Math.sin(angle) * 200,
+                        damage: 15, owner: 'enemy', life: 2, color: COLORS.ACID
+                    });
+                    enemy.attackCooldown = 2;
+                } else if (!enemy.ranged || dist < 100) {
+                    const newX = enemy.x + Math.cos(angle) * enemy.speed * dt;
+                    const newY = enemy.y + Math.sin(angle) * enemy.speed * dt;
 
-                if (this.canMove(newX, enemy.y, 16, 16)) enemy.x = newX;
-                if (this.canMove(enemy.x, newY, 16, 16)) enemy.y = newY;
+                    if (this.canMove(newX, enemy.y, enemy.size * 2, enemy.size * 2)) enemy.x = newX;
+                    if (this.canMove(enemy.x, newY, enemy.size * 2, enemy.size * 2)) enemy.y = newY;
+                }
 
-                if (dist < 25 && enemy.attackCooldown <= 0 && this.playerData.invincible <= 0) {
-                    this.playerData.hp -= enemy.damage;
+                // Melee attack
+                if (dist < enemy.size + 15 && enemy.attackCooldown <= 0 && this.playerData.invincible <= 0 && !enemy.ranged) {
+                    let damage = enemy.damage;
+                    if (this.playerData.armor > 0) {
+                        const armorAbsorb = Math.min(this.playerData.armor, damage * 0.5);
+                        this.playerData.armor -= armorAbsorb;
+                        damage -= armorAbsorb;
+                    }
+                    this.playerData.hp -= damage;
                     enemy.attackCooldown = 1;
-                    this.cameras.main.shake(100, 0.005);
+                    this.cameras.main.shake(100, 0.008);
+                    this.screenFlash = 0.3;
 
-                    // Blood particles
-                    for (let i = 0; i < 5; i++) {
+                    for (let i = 0; i < 8; i++) {
                         this.particles.push({
-                            x: this.player.x,
-                            y: this.player.y,
-                            vx: (Math.random() - 0.5) * 100,
-                            vy: (Math.random() - 0.5) * 100,
-                            type: 'blood',
-                            life: 0.5
+                            x: this.player.x, y: this.player.y,
+                            vx: (Math.random() - 0.5) * 150, vy: (Math.random() - 0.5) * 150,
+                            type: 'blood', life: 0.5
                         });
                     }
                 }
 
-                if (dist > 300) {
+                if (dist > (enemy.boss ? 500 : 300)) {
                     enemy.state = 'patrol';
                 }
             }
@@ -709,7 +981,15 @@ class GameScene extends Phaser.Scene {
             bullet.y += bullet.vy * dt;
             bullet.life -= dt;
 
-            // Wall collision
+            // POLISH: Smoke trail for fire bullets
+            if (bullet.color === COLORS.FIRE && this.tick % 2 === 0) {
+                this.particles.push({
+                    x: bullet.x, y: bullet.y,
+                    vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 0.5) * 20,
+                    type: 'smoke', life: 0.3
+                });
+            }
+
             const tileX = Math.floor(bullet.x / TILE_SIZE);
             const tileY = Math.floor(bullet.y / TILE_SIZE);
             if (tileX < 0 || tileX >= MAP_WIDTH || tileY < 0 || tileY >= MAP_HEIGHT) {
@@ -718,51 +998,88 @@ class GameScene extends Phaser.Scene {
             }
 
             const tile = this.map[tileY]?.[tileX];
-            if (tile && (tile.terrain === TERRAIN.WALL || tile.terrain === TERRAIN.CRATE)) {
-                this.particles.push({
-                    x: bullet.x,
-                    y: bullet.y,
-                    type: 'spark',
-                    life: 0.2
-                });
+
+            // EXPAND: Explosive barrels
+            if (tile?.terrain === TERRAIN.EXPLOSIVE_BARREL) {
+                this.explodeBarrel(tileX, tileY);
                 this.bullets.splice(i, 1);
                 continue;
             }
 
-            // Enemy collision
+            if (tile && (tile.terrain === TERRAIN.WALL || tile.terrain === TERRAIN.CRATE)) {
+                this.particles.push({ x: bullet.x, y: bullet.y, type: 'spark', life: 0.2 });
+                this.bullets.splice(i, 1);
+                continue;
+            }
+
+            // Player bullet hitting enemy
             if (bullet.owner === 'player') {
                 for (let j = this.enemies.length - 1; j >= 0; j--) {
                     const enemy = this.enemies[j];
-                    if (Phaser.Math.Distance.Between(bullet.x, bullet.y, enemy.x, enemy.y) < 16) {
+                    if (Phaser.Math.Distance.Between(bullet.x, bullet.y, enemy.x, enemy.y) < enemy.size + 5) {
                         enemy.hp -= bullet.damage;
                         enemy.state = 'chase';
+                        enemy.hitFlash = 1;
 
-                        // Blood particles
-                        for (let k = 0; k < 3; k++) {
+                        // POLISH: Damage numbers
+                        this.floatingTexts.push({
+                            x: enemy.x + (Math.random() - 0.5) * 20, y: enemy.y - 20,
+                            text: Math.floor(bullet.damage).toString(),
+                            color: '#ffff00', size: bullet.damage > 20 ? 16 : 12,
+                            life: 0.8, vy: -50
+                        });
+
+                        for (let k = 0; k < 4; k++) {
                             this.particles.push({
-                                x: enemy.x,
-                                y: enemy.y,
-                                vx: (Math.random() - 0.5) * 80,
-                                vy: (Math.random() - 0.5) * 80,
-                                type: 'alienblood',
-                                life: 0.4
+                                x: enemy.x, y: enemy.y,
+                                vx: (Math.random() - 0.5) * 100, vy: (Math.random() - 0.5) * 100,
+                                type: 'alienblood', life: 0.4
                             });
                         }
 
-                        if (enemy.hp <= 0) {
-                            this.playerData.xp += enemy.xp;
-                            this.playerData.credits += Math.floor(Math.random() * 50) + 10;
+                        // POLISH: Blood decal
+                        this.decals.push({
+                            x: enemy.x + (Math.random() - 0.5) * 10,
+                            y: enemy.y + (Math.random() - 0.5) * 10,
+                            size: 5 + Math.random() * 5,
+                            color: COLORS.BLOOD, alpha: 0.6
+                        });
 
+                        if (enemy.hp <= 0) {
+                            // EXPAND: Combo system
+                            this.combo++;
+                            this.comboTimer = 3;
+                            const xpGain = enemy.xp * (1 + this.combo * 0.1);
+                            this.playerData.xp += xpGain;
+                            this.playerData.credits += Math.floor(Math.random() * 50) + 10;
+                            this.killCount++;
+
+                            // Rank up
                             if (this.playerData.xp >= this.playerData.xpToNext) {
                                 this.playerData.rank++;
                                 this.playerData.xp -= this.playerData.xpToNext;
                                 this.playerData.xpToNext = Math.floor(this.playerData.xpToNext * 1.5);
+                                this.screenFlash = 0.5;
+                                this.floatingTexts.push({
+                                    x: this.player.x, y: this.player.y - 40,
+                                    text: 'RANK UP!', color: '#00ffff', size: 20, life: 1.5
+                                });
                             }
 
+                            // Death particles
+                            for (let k = 0; k < (enemy.boss ? 30 : 10); k++) {
+                                this.particles.push({
+                                    x: enemy.x, y: enemy.y,
+                                    vx: (Math.random() - 0.5) * 200, vy: (Math.random() - 0.5) * 200,
+                                    type: enemy.boss ? 'explosion' : 'alienblood',
+                                    life: enemy.boss ? 0.8 : 0.5
+                                });
+                            }
+
+                            // Item drop
                             if (Math.random() < 0.3) {
                                 this.items.push({
-                                    x: enemy.x,
-                                    y: enemy.y,
+                                    x: enemy.x, y: enemy.y,
                                     type: Math.random() < 0.5 ? 'ammo' : 'health',
                                     amount: Math.random() < 0.5 ? 15 : 10
                                 });
@@ -771,14 +1088,80 @@ class GameScene extends Phaser.Scene {
                             this.enemies.splice(j, 1);
                         }
 
-                        this.bullets.splice(i, 1);
+                        if (!bullet.piercing) {
+                            this.bullets.splice(i, 1);
+                        }
                         break;
                     }
                 }
             }
 
+            // Enemy bullet hitting player
+            if (bullet.owner === 'enemy') {
+                if (Phaser.Math.Distance.Between(bullet.x, bullet.y, this.player.x, this.player.y) < 15 &&
+                    this.playerData.invincible <= 0) {
+                    let damage = bullet.damage;
+                    if (this.playerData.armor > 0) {
+                        const armorAbsorb = Math.min(this.playerData.armor, damage * 0.5);
+                        this.playerData.armor -= armorAbsorb;
+                        damage -= armorAbsorb;
+                    }
+                    this.playerData.hp -= damage;
+                    this.cameras.main.shake(80, 0.005);
+                    this.screenFlash = 0.3;
+                    this.bullets.splice(i, 1);
+                    continue;
+                }
+            }
+
             if (bullet.life <= 0) {
                 this.bullets.splice(i, 1);
+            }
+        }
+    }
+
+    // EXPAND: Explosive barrel function
+    explodeBarrel(tileX, tileY) {
+        const cx = tileX * TILE_SIZE + TILE_SIZE / 2;
+        const cy = tileY * TILE_SIZE + TILE_SIZE / 2;
+
+        this.map[tileY][tileX] = { terrain: TERRAIN.FLOOR, variant: 0 };
+        this.drawMap();
+
+        for (let i = 0; i < 30; i++) {
+            this.particles.push({
+                x: cx, y: cy,
+                vx: (Math.random() - 0.5) * 300, vy: (Math.random() - 0.5) * 300,
+                type: 'explosion', life: 0.6
+            });
+        }
+
+        this.cameras.main.shake(150, 0.015);
+
+        // Damage nearby enemies
+        for (const enemy of this.enemies) {
+            const dist = Phaser.Math.Distance.Between(cx, cy, enemy.x, enemy.y);
+            if (dist < 100) {
+                enemy.hp -= 50 * (1 - dist / 100);
+                enemy.hitFlash = 1;
+            }
+        }
+
+        // Damage player
+        const playerDist = Phaser.Math.Distance.Between(cx, cy, this.player.x, this.player.y);
+        if (playerDist < 100 && this.playerData.invincible <= 0) {
+            this.playerData.hp -= 30 * (1 - playerDist / 100);
+            this.screenFlash = 0.5;
+        }
+
+        // Chain reaction
+        for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+                const nx = tileX + dx;
+                const ny = tileY + dy;
+                if (this.map[ny]?.[nx]?.terrain === TERRAIN.EXPLOSIVE_BARREL) {
+                    this.time.delayedCall(100, () => this.explodeBarrel(nx, ny));
+                }
             }
         }
     }
@@ -793,22 +1176,53 @@ class GameScene extends Phaser.Scene {
                 p.y += p.vy * dt;
                 p.vx *= 0.95;
                 p.vy *= 0.95;
+                if (p.type === 'shell') p.vy += 200 * dt;
             }
 
             if (p.life <= 0) {
                 this.particles.splice(i, 1);
             }
         }
+
+        // Limit decals
+        if (this.decals.length > 100) {
+            this.decals.splice(0, 10);
+        }
+    }
+
+    updateFloatingTexts(dt) {
+        for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+            const ft = this.floatingTexts[i];
+            ft.life -= dt;
+            if (ft.vy) ft.y += ft.vy * dt;
+
+            if (ft.life <= 0) {
+                this.floatingTexts.splice(i, 1);
+            }
+        }
     }
 
     pickupItem(item) {
-        const weapon = this.playerData.weapon;
+        const weaponData = this.playerData.weapons[this.playerData.currentWeapon];
+
+        // POLISH: Pickup particles
+        for (let i = 0; i < 10; i++) {
+            this.particles.push({
+                x: item.x, y: item.y,
+                vx: (Math.random() - 0.5) * 100, vy: (Math.random() - 0.5) * 100,
+                type: 'pickup', life: 0.3
+            });
+        }
+
         switch (item.type) {
             case 'ammo':
-                weapon.ammo = Math.min(weapon.maxAmmo, weapon.ammo + item.amount);
+                if (weaponData) weaponData.ammo = Math.min(300, weaponData.ammo + item.amount);
                 break;
             case 'health':
                 this.playerData.hp = Math.min(this.playerData.maxHp, this.playerData.hp + item.amount);
+                break;
+            case 'armor':
+                this.playerData.armor = Math.min(this.playerData.maxArmor, this.playerData.armor + item.amount);
                 break;
             case 'credits':
                 this.playerData.credits += item.amount;
@@ -822,6 +1236,37 @@ class GameScene extends Phaser.Scene {
                     }
                 }
                 this.drawMap();
+                this.floatingTexts.push({
+                    x: this.player.x, y: this.player.y - 30,
+                    text: 'DOORS UNLOCKED', color: '#ffff00', size: 14, life: 1.5
+                });
+                break;
+            case 'weapon':
+                if (!this.playerData.weapons[item.weapon]) {
+                    this.playerData.weapons[item.weapon] = {
+                        ammo: WEAPONS[item.weapon].clipSize * 3,
+                        clip: WEAPONS[item.weapon].clipSize
+                    };
+                    this.floatingTexts.push({
+                        x: this.player.x, y: this.player.y - 30,
+                        text: `GOT ${WEAPONS[item.weapon].name.toUpperCase()}`,
+                        color: '#00ff00', size: 14, life: 1.5
+                    });
+                }
+                break;
+            case 'speedboost':
+                this.playerData.speedBoost = 10;
+                this.floatingTexts.push({
+                    x: this.player.x, y: this.player.y - 30,
+                    text: 'SPEED BOOST!', color: '#00ffff', size: 14, life: 1
+                });
+                break;
+            case 'damageboost':
+                this.playerData.damageBoost = 10;
+                this.floatingTexts.push({
+                    x: this.player.x, y: this.player.y - 30,
+                    text: 'DAMAGE BOOST!', color: '#ff0000', size: 14, life: 1
+                });
                 break;
         }
     }
@@ -839,7 +1284,7 @@ class GameScene extends Phaser.Scene {
             if (tile.x < 0 || tile.x >= MAP_WIDTH || tile.y < 0 || tile.y >= MAP_HEIGHT) return false;
             const t = this.map[tile.y][tile.x];
             if (t.terrain === TERRAIN.WALL || t.terrain === TERRAIN.CRATE ||
-                t.terrain === TERRAIN.BARREL || (t.terrain === TERRAIN.DOOR && t.locked)) {
+                t.terrain === TERRAIN.EXPLOSIVE_BARREL || (t.terrain === TERRAIN.DOOR && t.locked)) {
                 return false;
             }
         }
@@ -847,8 +1292,24 @@ class GameScene extends Phaser.Scene {
     }
 
     drawDynamicElements() {
-        // Clear and redraw flashlight
         this.flashlightGraphics.clear();
+
+        // POLISH: Screen flash
+        if (this.screenFlash > 0) {
+            this.flashlightGraphics.fillStyle(0xffffff, this.screenFlash * 0.3);
+            this.flashlightGraphics.fillRect(
+                this.cameras.main.scrollX,
+                this.cameras.main.scrollY,
+                this.scale.width,
+                this.scale.height
+            );
+        }
+
+        // Draw decals
+        for (const decal of this.decals) {
+            this.flashlightGraphics.fillStyle(decal.color, decal.alpha);
+            this.flashlightGraphics.fillCircle(decal.x, decal.y, decal.size);
+        }
 
         // Draw items
         for (const item of this.items) {
@@ -860,9 +1321,6 @@ class GameScene extends Phaser.Scene {
                     this.flashlightGraphics.fillCircle(item.x, item.y, 12);
                     this.flashlightGraphics.fillStyle(COLORS.AMMO, 1);
                     this.flashlightGraphics.fillRect(item.x - 6, item.y - 4, 12, 8);
-                    this.flashlightGraphics.fillStyle(0x005500, 1);
-                    this.flashlightGraphics.fillRect(item.x - 4, item.y - 2, 3, 4);
-                    this.flashlightGraphics.fillRect(item.x + 1, item.y - 2, 3, 4);
                     break;
 
                 case 'health':
@@ -871,6 +1329,17 @@ class GameScene extends Phaser.Scene {
                     this.flashlightGraphics.fillStyle(0xcc0000, 1);
                     this.flashlightGraphics.fillRect(item.x - 6, item.y - 2, 12, 4);
                     this.flashlightGraphics.fillRect(item.x - 2, item.y - 6, 4, 12);
+                    break;
+
+                case 'armor':
+                    this.flashlightGraphics.fillStyle(0x0064c8, pulse * 0.3);
+                    this.flashlightGraphics.fillCircle(item.x, item.y, 12);
+                    this.flashlightGraphics.fillStyle(COLORS.ARMOR, 1);
+                    this.flashlightGraphics.fillTriangle(
+                        item.x, item.y - 8,
+                        item.x + 6, item.y,
+                        item.x - 6, item.y
+                    );
                     break;
 
                 case 'credits':
@@ -885,17 +1354,40 @@ class GameScene extends Phaser.Scene {
                     this.flashlightGraphics.fillCircle(item.x, item.y, 15);
                     this.flashlightGraphics.fillStyle(0xccaa00, 1);
                     this.flashlightGraphics.fillRect(item.x - 8, item.y - 5, 16, 10);
-                    this.flashlightGraphics.fillStyle(0x886600, 1);
-                    this.flashlightGraphics.fillRect(item.x - 6, item.y - 3, 4, 6);
+                    break;
+
+                case 'weapon':
+                    this.flashlightGraphics.fillStyle(0x6464ff, pulse * 0.3);
+                    this.flashlightGraphics.fillCircle(item.x, item.y, 15);
+                    this.flashlightGraphics.fillStyle(0x666688, 1);
+                    this.flashlightGraphics.fillRect(item.x - 10, item.y - 3, 20, 6);
+                    break;
+
+                case 'speedboost':
+                    this.flashlightGraphics.fillStyle(0x00ffff, pulse * 0.3);
+                    this.flashlightGraphics.fillCircle(item.x, item.y, 12);
+                    this.flashlightGraphics.fillStyle(0x00ffff, 1);
+                    this.flashlightGraphics.fillTriangle(
+                        item.x - 4, item.y - 6,
+                        item.x + 6, item.y,
+                        item.x - 4, item.y + 6
+                    );
+                    break;
+
+                case 'damageboost':
+                    this.flashlightGraphics.fillStyle(0xff0000, pulse * 0.3);
+                    this.flashlightGraphics.fillCircle(item.x, item.y, 12);
+                    this.flashlightGraphics.fillStyle(0xff4400, 1);
+                    this.flashlightGraphics.fillRect(item.x - 6, item.y - 3, 12, 6);
                     break;
             }
         }
 
         // Draw bullets
         for (const bullet of this.bullets) {
-            this.flashlightGraphics.fillStyle(COLORS.BULLET, 1);
-            this.flashlightGraphics.fillCircle(bullet.x, bullet.y, 3);
-            this.flashlightGraphics.fillStyle(0xffc800, 0.5);
+            this.flashlightGraphics.fillStyle(bullet.color, 1);
+            this.flashlightGraphics.fillCircle(bullet.x, bullet.y, bullet.color === COLORS.PLASMA ? 4 : 3);
+            this.flashlightGraphics.fillStyle(bullet.color, 0.5);
             this.flashlightGraphics.fillCircle(bullet.x - bullet.vx * 0.02, bullet.y - bullet.vy * 0.02, 2);
         }
 
@@ -903,77 +1395,134 @@ class GameScene extends Phaser.Scene {
         for (const enemy of this.enemies) {
             // Shadow
             this.flashlightGraphics.fillStyle(0x000000, 0.4);
-            this.flashlightGraphics.fillEllipse(enemy.x, enemy.y + 10, 24, 8);
+            this.flashlightGraphics.fillEllipse(enemy.x, enemy.y + enemy.size, enemy.size * 2, enemy.size * 0.8);
 
-            // Body
-            this.flashlightGraphics.fillStyle(enemy.color, 1);
-            if (enemy.type === 'arachnid') {
-                this.flashlightGraphics.fillEllipse(enemy.x, enemy.y, 32, 24);
+            // POLISH: Hit flash effect
+            const flashColor = enemy.hitFlash > 0 ? 0xffffff : enemy.color;
+            this.flashlightGraphics.fillStyle(flashColor, 1);
+
+            if (enemy.boss) {
+                this.flashlightGraphics.fillEllipse(enemy.x, enemy.y, enemy.size * 2, enemy.size * 1.6);
+                // Crown
+                this.flashlightGraphics.fillStyle(0xffcc00, 1);
+                this.flashlightGraphics.fillTriangle(
+                    enemy.x - 15, enemy.y - enemy.size,
+                    enemy.x - 10, enemy.y - enemy.size - 10,
+                    enemy.x, enemy.y - enemy.size
+                );
+                this.flashlightGraphics.fillTriangle(
+                    enemy.x, enemy.y - enemy.size,
+                    enemy.x + 10, enemy.y - enemy.size - 10,
+                    enemy.x + 15, enemy.y - enemy.size
+                );
+            } else if (enemy.type === 'arachnid' || enemy.type === 'brute') {
+                this.flashlightGraphics.fillEllipse(enemy.x, enemy.y, enemy.size * 2, enemy.size * 1.6);
                 // Legs
-                this.flashlightGraphics.lineStyle(2, enemy.color);
+                this.flashlightGraphics.lineStyle(enemy.type === 'brute' ? 4 : 2, flashColor);
                 for (let i = 0; i < 4; i++) {
                     const legAngle = enemy.angle + (i * Math.PI / 2) - Math.PI / 4;
                     this.flashlightGraphics.lineBetween(
                         enemy.x, enemy.y,
-                        enemy.x + Math.cos(legAngle) * 18,
-                        enemy.y + Math.sin(legAngle) * 18
+                        enemy.x + Math.cos(legAngle) * enemy.size * 1.2,
+                        enemy.y + Math.sin(legAngle) * enemy.size * 1.2
                     );
                 }
+            } else if (enemy.type === 'spitter') {
+                this.flashlightGraphics.fillEllipse(enemy.x, enemy.y, enemy.size * 2, enemy.size * 1.4);
+                this.flashlightGraphics.fillStyle(COLORS.ACID, 1);
+                this.flashlightGraphics.fillCircle(enemy.x - Math.cos(enemy.angle) * 5, enemy.y - Math.sin(enemy.angle) * 5, 5);
             } else {
-                const size = enemy.type === 'scorpion_small' ? 16 : 20;
-                this.flashlightGraphics.fillEllipse(enemy.x, enemy.y, size, size * 0.8);
+                this.flashlightGraphics.fillEllipse(enemy.x, enemy.y, enemy.size * 2, enemy.size * 1.6);
                 // Tail
-                this.flashlightGraphics.lineStyle(enemy.type === 'scorpion_small' ? 2 : 3, enemy.color);
-                const tailX = enemy.x - Math.cos(enemy.angle) * 12;
-                const tailY = enemy.y - Math.sin(enemy.angle) * 12;
+                this.flashlightGraphics.lineStyle(enemy.size * 0.3, flashColor);
+                const tailX = enemy.x - Math.cos(enemy.angle) * enemy.size;
+                const tailY = enemy.y - Math.sin(enemy.angle) * enemy.size;
                 this.flashlightGraphics.lineBetween(enemy.x, enemy.y, tailX, tailY);
-                this.flashlightGraphics.lineBetween(tailX, tailY,
-                    tailX - Math.cos(enemy.angle) * 5,
-                    tailY - Math.sin(enemy.angle) * 5 - 6);
             }
 
             // Eyes
             this.flashlightGraphics.fillStyle(COLORS.ALIEN_EYES, 1);
-            const eyeOffset = enemy.type === 'arachnid' ? 6 : 4;
-            this.flashlightGraphics.fillCircle(enemy.x + Math.cos(enemy.angle) * eyeOffset - 2, enemy.y + Math.sin(enemy.angle) * eyeOffset - 2, 2);
-            this.flashlightGraphics.fillCircle(enemy.x + Math.cos(enemy.angle) * eyeOffset + 2, enemy.y + Math.sin(enemy.angle) * eyeOffset + 2, 2);
+            const eyeOffset = enemy.size * 0.5;
+            this.flashlightGraphics.fillCircle(enemy.x + Math.cos(enemy.angle) * eyeOffset - 2, enemy.y + Math.sin(enemy.angle) * eyeOffset - 2, enemy.boss ? 4 : 2);
+            this.flashlightGraphics.fillCircle(enemy.x + Math.cos(enemy.angle) * eyeOffset + 2, enemy.y + Math.sin(enemy.angle) * eyeOffset + 2, enemy.boss ? 4 : 2);
 
             // Health bar
             if (enemy.hp < enemy.maxHp) {
+                const barWidth = enemy.size * 2.4;
                 this.flashlightGraphics.fillStyle(0x330000, 1);
-                this.flashlightGraphics.fillRect(enemy.x - 12, enemy.y - 18, 24, 4);
-                this.flashlightGraphics.fillStyle(0xcc0000, 1);
-                this.flashlightGraphics.fillRect(enemy.x - 12, enemy.y - 18, 24 * (enemy.hp / enemy.maxHp), 4);
+                this.flashlightGraphics.fillRect(enemy.x - barWidth / 2, enemy.y - enemy.size - 8, barWidth, 4);
+                this.flashlightGraphics.fillStyle(enemy.boss ? 0xff8800 : 0xcc0000, 1);
+                this.flashlightGraphics.fillRect(enemy.x - barWidth / 2, enemy.y - enemy.size - 8, barWidth * (enemy.hp / enemy.maxHp), 4);
             }
         }
 
         // Draw particles
         for (const p of this.particles) {
-            const alpha = Math.min(1, p.life * 5);
             switch (p.type) {
                 case 'muzzle':
                     this.flashlightGraphics.fillStyle(COLORS.MUZZLE_FLASH, p.life * 10);
-                    this.flashlightGraphics.fillCircle(p.x, p.y, 6);
+                    this.flashlightGraphics.fillCircle(p.x, p.y, p.size || 6);
                     break;
                 case 'blood':
                     this.flashlightGraphics.fillStyle(0xc80000, p.life * 2);
                     this.flashlightGraphics.fillCircle(p.x, p.y, 3);
                     break;
                 case 'alienblood':
-                    this.flashlightGraphics.fillStyle(0x00c800, p.life * 2.5);
+                    this.flashlightGraphics.fillStyle(0x448844, p.life * 2.5);
                     this.flashlightGraphics.fillCircle(p.x, p.y, 3);
                     break;
                 case 'spark':
                     this.flashlightGraphics.fillStyle(0xffc864, p.life * 5);
                     this.flashlightGraphics.fillRect(p.x - 2, p.y - 2, 4, 4);
                     break;
+                case 'shell':
+                    this.flashlightGraphics.fillStyle(0xc8b464, p.life * 2);
+                    this.flashlightGraphics.fillRect(p.x - 2, p.y - 1, 4, 2);
+                    break;
+                case 'smoke':
+                    this.flashlightGraphics.fillStyle(0x646464, p.life);
+                    this.flashlightGraphics.fillCircle(p.x, p.y, 5);
+                    break;
+                case 'explosion':
+                    this.flashlightGraphics.fillStyle(0xff6400 + Math.floor(Math.random() * 0x6400), p.life);
+                    this.flashlightGraphics.fillCircle(p.x, p.y, 5 + (1 - p.life) * 10);
+                    break;
+                case 'spawn':
+                    this.flashlightGraphics.fillStyle(0x64ff64, p.life * 2);
+                    this.flashlightGraphics.fillCircle(p.x, p.y, 3);
+                    break;
+                case 'acid':
+                    this.flashlightGraphics.fillStyle(0x88ff00, p.life * 3);
+                    this.flashlightGraphics.fillCircle(p.x, p.y, 3);
+                    break;
+                case 'teleport':
+                    this.flashlightGraphics.fillStyle(0x00ffff, p.life * 2);
+                    this.flashlightGraphics.fillCircle(p.x, p.y, 3);
+                    break;
+                case 'dust':
+                    this.flashlightGraphics.fillStyle(0x646450, p.life * 2);
+                    this.flashlightGraphics.fillCircle(p.x, p.y, 2);
+                    break;
+                case 'pickup':
+                    this.flashlightGraphics.fillStyle(0xffffff, p.life * 3);
+                    this.flashlightGraphics.fillCircle(p.x, p.y, 3);
+                    break;
+                case 'alert':
+                    // Would need text for this, skip for now
+                    this.flashlightGraphics.fillStyle(0xff0000, p.life * 2);
+                    this.flashlightGraphics.fillCircle(p.x, p.y, 4);
+                    break;
             }
+        }
+
+        // Draw floating texts
+        for (const ft of this.floatingTexts) {
+            // Can't draw text in graphics, would need Text objects
         }
 
         // Draw player
         this.player.clear();
 
-        // Invincibility flash
         if (this.playerData.invincible > 0 && Math.floor(this.playerData.invincible * 10) % 2 === 0) {
             return;
         }
@@ -983,19 +1532,29 @@ class GameScene extends Phaser.Scene {
         this.player.fillEllipse(0, 8, 20, 8);
 
         // Body with rotation
-        this.player.save();
         const cos = Math.cos(this.playerAngle);
         const sin = Math.sin(this.playerAngle);
 
-        // Armor (rotated rectangle)
-        this.player.fillStyle(COLORS.PLAYER, 1);
+        // Color based on boosts
+        let playerColor = COLORS.PLAYER;
+        if (this.playerData.damageBoost > 0) playerColor = 0xff6666;
+        else if (this.playerData.speedBoost > 0) playerColor = 0x66ffff;
+
+        this.player.fillStyle(playerColor, 1);
         this.drawRotatedRect(this.player, 0, 0, 16, 20, this.playerAngle);
 
         // Weapon
         this.player.fillStyle(0x555555, 1);
-        const weaponX = cos * 10;
-        const weaponY = sin * 10;
-        this.drawRotatedRect(this.player, weaponX, weaponY, 15, 6, this.playerAngle);
+        const weaponX = cos * (10 - this.playerData.recoil);
+        const weaponY = sin * (10 - this.playerData.recoil);
+
+        if (this.playerData.currentWeapon === 'shotgun') {
+            this.drawRotatedRect(this.player, weaponX, weaponY, 18, 8, this.playerAngle);
+        } else if (this.playerData.currentWeapon === 'flamethrower') {
+            this.drawRotatedRect(this.player, weaponX, weaponY, 20, 10, this.playerAngle);
+        } else {
+            this.drawRotatedRect(this.player, weaponX, weaponY, 15, 6, this.playerAngle);
+        }
 
         // Visor
         this.player.fillStyle(0x00aaaa, 1);
@@ -1012,21 +1571,57 @@ class GameScene extends Phaser.Scene {
         );
 
         // Flashlight cone
-        const gradient = this.flashlightGraphics;
-        gradient.fillStyle(0xc8c896, 0.1);
-        gradient.beginPath();
-        gradient.moveTo(this.player.x, this.player.y);
+        this.flashlightGraphics.fillStyle(0xc8c896, 0.1);
+        this.flashlightGraphics.beginPath();
+        this.flashlightGraphics.moveTo(this.player.x, this.player.y);
         const coneAngle = 0.4;
         const coneLength = 200;
         for (let a = -coneAngle; a <= coneAngle; a += 0.1) {
             const angle = this.playerAngle + a;
-            gradient.lineTo(
+            this.flashlightGraphics.lineTo(
                 this.player.x + Math.cos(angle) * coneLength,
                 this.player.y + Math.sin(angle) * coneLength
             );
         }
-        gradient.closePath();
-        gradient.fillPath();
+        this.flashlightGraphics.closePath();
+        this.flashlightGraphics.fillPath();
+
+        // Draw minimap
+        this.drawMinimap();
+    }
+
+    // POLISH: Minimap
+    drawMinimap() {
+        const mapSize = 120;
+        const mapX = this.cameras.main.scrollX + this.scale.width - mapSize - 10;
+        const mapY = this.cameras.main.scrollY + 10;
+        const scale = mapSize / (MAP_WIDTH * TILE_SIZE);
+
+        this.flashlightGraphics.fillStyle(0x000000, 0.7);
+        this.flashlightGraphics.fillRect(mapX, mapY, mapSize, mapSize * (MAP_HEIGHT / MAP_WIDTH));
+
+        this.flashlightGraphics.lineStyle(1, COLORS.UI_BORDER);
+        this.flashlightGraphics.strokeRect(mapX, mapY, mapSize, mapSize * (MAP_HEIGHT / MAP_WIDTH));
+
+        // Walls
+        this.flashlightGraphics.fillStyle(0x444444, 1);
+        for (let y = 0; y < MAP_HEIGHT; y++) {
+            for (let x = 0; x < MAP_WIDTH; x++) {
+                if (this.map[y][x].terrain === TERRAIN.WALL) {
+                    this.flashlightGraphics.fillRect(mapX + x * scale * TILE_SIZE, mapY + y * scale * TILE_SIZE, 2, 2);
+                }
+            }
+        }
+
+        // Enemies
+        this.flashlightGraphics.fillStyle(0xff0000, 1);
+        for (const enemy of this.enemies) {
+            this.flashlightGraphics.fillRect(mapX + enemy.x * scale - 1, mapY + enemy.y * scale - 1, enemy.boss ? 4 : 2, enemy.boss ? 4 : 2);
+        }
+
+        // Player
+        this.flashlightGraphics.fillStyle(0x00ff00, 1);
+        this.flashlightGraphics.fillRect(mapX + this.player.x * scale - 2, mapY + this.player.y * scale - 2, 4, 4);
     }
 
     drawRotatedRect(graphics, x, y, width, height, angle) {
@@ -1059,22 +1654,47 @@ class GameScene extends Phaser.Scene {
     showGameOver() {
         const overlay = this.add.graphics();
         overlay.fillStyle(0x000000, 0.8);
-        overlay.fillRect(0, 0, this.scale.width, this.scale.height);
-        overlay.setScrollFactor(0);
+        overlay.fillRect(0, 0, MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
         overlay.setDepth(200);
 
-        const gameOverText = this.add.text(this.scale.width / 2, this.scale.height / 2 - 30, 'GAME OVER', {
+        const gameOverText = this.add.text(this.cameras.main.scrollX + this.scale.width / 2,
+            this.cameras.main.scrollY + this.scale.height / 2 - 40, 'GAME OVER', {
             fontSize: '48px', fontFamily: 'Arial', fontStyle: 'bold', color: '#cc0000'
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+        }).setOrigin(0.5).setDepth(201);
 
-        const scoreText = this.add.text(this.scale.width / 2, this.scale.height / 2 + 20,
-            `Final Rank: ${this.playerData.rank} | Credits: ${this.playerData.credits}`, {
+        const statsText = this.add.text(this.cameras.main.scrollX + this.scale.width / 2,
+            this.cameras.main.scrollY + this.scale.height / 2,
+            `Wave: ${this.wave} | Kills: ${this.killCount} | Rank: ${this.playerData.rank}`, {
             fontSize: '18px', fontFamily: 'Arial', color: '#00cccc'
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+        }).setOrigin(0.5).setDepth(201);
 
-        const restartText = this.add.text(this.scale.width / 2, this.scale.height / 2 + 60, 'Press R to Restart', {
+        const restartText = this.add.text(this.cameras.main.scrollX + this.scale.width / 2,
+            this.cameras.main.scrollY + this.scale.height / 2 + 40, 'Press R to Restart', {
             fontSize: '18px', fontFamily: 'Arial', color: '#00cccc'
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+        }).setOrigin(0.5).setDepth(201);
+    }
+
+    showVictory() {
+        const overlay = this.add.graphics();
+        overlay.fillStyle(0x000000, 0.8);
+        overlay.fillRect(0, 0, MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
+        overlay.setDepth(200);
+
+        const victoryText = this.add.text(this.cameras.main.scrollX + this.scale.width / 2,
+            this.cameras.main.scrollY + this.scale.height / 2 - 40, 'VICTORY!', {
+            fontSize: '48px', fontFamily: 'Arial', fontStyle: 'bold', color: '#00ff00'
+        }).setOrigin(0.5).setDepth(201);
+
+        const statsText = this.add.text(this.cameras.main.scrollX + this.scale.width / 2,
+            this.cameras.main.scrollY + this.scale.height / 2,
+            `All Waves Cleared! | Kills: ${this.killCount} | Rank: ${this.playerData.rank}`, {
+            fontSize: '18px', fontFamily: 'Arial', color: '#00cccc'
+        }).setOrigin(0.5).setDepth(201);
+
+        const restartText = this.add.text(this.cameras.main.scrollX + this.scale.width / 2,
+            this.cameras.main.scrollY + this.scale.height / 2 + 40, 'Press R to Play Again', {
+            fontSize: '18px', fontFamily: 'Arial', color: '#00cccc'
+        }).setOrigin(0.5).setDepth(201);
     }
 }
 

@@ -1,44 +1,35 @@
 // Station Breach - Alien Breed Style Twin-Stick Shooter
+// POLISHED VERSION with 20 expand + 20 polish passes
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
-// Game constants
-const TILE_SIZE = 32;
-const MAP_WIDTH = 25;
-const MAP_HEIGHT = 18;
-canvas.width = 800;
-canvas.height = 600;
+canvas.width = Math.max(1280, window.innerWidth);
+canvas.height = Math.max(720, window.innerHeight);
 
-// Colors matching Alien Breed palette - darker industrial
+const TILE = 32;
+const MAP_W = 40;
+const MAP_H = 30;
+
+// Dark industrial color palette
 const COLORS = {
-    floor: '#4A3A2A',
-    floorDark: '#2A1A0A',
-    floorDetail: '#3A2A1A',
-    wall: '#5A5A5A',
-    wallLight: '#7A7A7A',
-    wallDark: '#3A3A3A',
-    wallPanel: '#4A4A4A',
-    void: '#000000',
-    hudBg: '#0A0A0A',
-    hudText: '#CCCCCC',
-    hudYellow: '#FFCC00',
-    player: '#3A5A2A',
-    playerLight: '#4A6A3A',
-    playerDark: '#2A4A1A',
-    alien: '#1A1A1A',
-    alienBody: '#0A0A0A',
-    alienLight: '#2A2A2A',
-    alienLegs: '#050505',
-    alienEye: '#880000',
-    bullet: '#FFAA00',
-    muzzleFlash: '#FFFF44',
-    health: '#CC2222',
-    shield: '#3366CC',
-    keyGreen: '#00CC00',
-    keyBlue: '#0066CC',
-    keyYellow: '#CCCC00',
-    keyRed: '#CC0000',
-    bloodAlien: '#00AA66'
+    floor: '#3A2A1A', floorDark: '#2A1A0A', floorLight: '#4A3A2A',
+    wall: '#5A5A5A', wallLight: '#7A7A7A', wallDark: '#3A3A3A',
+    void: '#000000', hudBg: '#0A0A0A', hudText: '#CCCCCC', hudYellow: '#FFCC00',
+    player: '#3A5A2A', playerLight: '#4A6A3A', playerDark: '#2A4A1A',
+    alien: '#1A1A1A', alienEye: '#880000', alienBlood: '#00AA66',
+    bullet: '#FFAA00', bulletEnemy: '#88FF88', muzzleFlash: '#FFFF44',
+    health: '#CC2222', shield: '#3366CC', stamina: '#44AA44',
+    keyGreen: '#00CC00', keyBlue: '#0066CC', keyYellow: '#CCCC00', keyRed: '#CC0000',
+    terminal: '#00FFFF', doorLocked: '#880000', explosion: '#FF8844'
+};
+
+// Weapons database
+const WEAPONS = {
+    pistol: { name: 'Pistol', damage: 15, fireRate: 0.25, magSize: 12, spread: 0.05, bulletSpeed: 800, ammoType: '9mm', shake: 2 },
+    shotgun: { name: 'Shotgun', damage: 10, fireRate: 0.8, magSize: 8, spread: 0.35, pellets: 6, bulletSpeed: 600, ammoType: 'shells', shake: 8 },
+    smg: { name: 'SMG', damage: 8, fireRate: 0.08, magSize: 40, spread: 0.12, bulletSpeed: 700, ammoType: '9mm', shake: 1 },
+    rifle: { name: 'Assault Rifle', damage: 20, fireRate: 0.15, magSize: 30, spread: 0.06, bulletSpeed: 850, ammoType: 'rifle', shake: 3 },
+    plasma: { name: 'Plasma Rifle', damage: 40, fireRate: 0.5, magSize: 20, spread: 0, bulletSpeed: 500, ammoType: 'plasma', shake: 5, color: '#44AAFF' }
 };
 
 // Game state
@@ -50,17 +41,27 @@ let particles = [];
 let pickups = [];
 let doors = [];
 let terminals = [];
+let barrels = [];
+let bloodStains = [];
+let floatingTexts = [];
+let map = [];
+let explored = [];
+let cameraX = 0, cameraY = 0;
+let shakeAmount = 0, shakeDuration = 0;
+let selfDestructTimer = 0;
+let selfDestructActive = false;
+let deck = 1;
+let maxDecks = 4;
+let roomsCleared = 0;
+let totalRooms = 0;
+let killCount = 0;
+let killCombo = 0;
+let comboTimer = 0;
 
-// Input handling
+// Input
 const keys = {};
 let mouseX = 0, mouseY = 0;
 let mouseDown = false;
-
-// Camera
-let cameraX = 0, cameraY = 0;
-
-// Level map (0 = void, 1 = floor, 2 = wall)
-const levelMap = [];
 
 // Player class
 class Player {
@@ -72,171 +73,174 @@ class Player {
         this.speed = 180;
         this.sprintSpeed = 270;
         this.angle = 0;
-        this.health = 100;
-        this.maxHealth = 100;
+        this.hp = 100;
+        this.maxHp = 100;
         this.shield = 0;
         this.maxShield = 50;
-        this.ammo = 60;
-        this.maxAmmo = 120;
-        this.fireTimer = 0;
-        this.fireRate = 0.25; // 4 shots per second
-        this.muzzleFlashTimer = 0;
         this.stamina = 100;
         this.maxStamina = 100;
         this.lives = 3;
-        this.keys = { green: false, blue: false, yellow: false, red: false };
         this.credits = 0;
-        this.weaponIndex = 0;
-        this.weapons = ['pistol'];
-        this.invulnTimer = 0;
+        this.keys = { green: false, blue: false, yellow: false, red: false };
+        this.weapons = [{ ...WEAPONS.pistol, ammo: 12 }];
+        this.currentWeapon = 0;
+        this.ammo = { '9mm': 60, 'shells': 0, 'rifle': 0, 'plasma': 0 };
+        this.fireTimer = 0;
+        this.reloading = false;
+        this.reloadTimer = 0;
+        this.muzzleFlash = 0;
+        this.invuln = 0;
+        this.medkits = 0;
+        this.upgrades = { damage: 0, reload: 0, armor: 0 };
     }
 
+    getWeapon() { return this.weapons[this.currentWeapon]; }
+
     update(dt) {
-        // Movement
         let dx = 0, dy = 0;
         if (keys['w'] || keys['arrowup']) dy -= 1;
         if (keys['s'] || keys['arrowdown']) dy += 1;
         if (keys['a'] || keys['arrowleft']) dx -= 1;
         if (keys['d'] || keys['arrowright']) dx += 1;
 
-        // Normalize diagonal movement
-        if (dx && dy) {
-            dx *= 0.707;
-            dy *= 0.707;
-        }
+        if (dx && dy) { dx *= 0.707; dy *= 0.707; }
 
-        // Sprint
-        let currentSpeed = this.speed;
+        let speed = this.speed;
         if (keys['shift'] && this.stamina > 0 && (dx || dy)) {
-            currentSpeed = this.sprintSpeed;
+            speed = this.sprintSpeed;
             this.stamina -= 25 * dt;
-            if (this.stamina < 0) this.stamina = 0;
-        } else if (this.stamina < this.maxStamina) {
-            this.stamina += 20 * dt;
-            if (this.stamina > this.maxStamina) this.stamina = this.maxStamina;
+        } else {
+            this.stamina = Math.min(this.maxStamina, this.stamina + 20 * dt);
         }
 
-        // Apply movement with collision
-        const newX = this.x + dx * currentSpeed * dt;
-        const newY = this.y + dy * currentSpeed * dt;
+        const newX = this.x + dx * speed * dt;
+        const newY = this.y + dy * speed * dt;
+        if (!isColliding(newX, this.y, this.width, this.height)) this.x = newX;
+        if (!isColliding(this.x, newY, this.width, this.height)) this.y = newY;
 
-        if (!isColliding(newX, this.y, this.width, this.height)) {
-            this.x = newX;
-        }
-        if (!isColliding(this.x, newY, this.width, this.height)) {
-            this.y = newY;
-        }
-
-        // Aim towards mouse (screen space to world space)
+        // Aim
         const worldMouseX = mouseX + cameraX;
         const worldMouseY = mouseY + cameraY;
         this.angle = Math.atan2(worldMouseY - this.y, worldMouseX - this.x);
 
         // Shooting
         this.fireTimer -= dt;
-        if (mouseDown && this.fireTimer <= 0 && this.ammo > 0) {
+        if (this.reloading) {
+            this.reloadTimer -= dt;
+            if (this.reloadTimer <= 0) {
+                this.finishReload();
+            }
+        } else if (mouseDown && this.fireTimer <= 0) {
             this.shoot();
         }
 
-        // Muzzle flash decay
-        if (this.muzzleFlashTimer > 0) {
-            this.muzzleFlashTimer -= dt;
-        }
-
-        // Invulnerability timer
-        if (this.invulnTimer > 0) {
-            this.invulnTimer -= dt;
-        }
+        if (this.muzzleFlash > 0) this.muzzleFlash -= dt;
+        if (this.invuln > 0) this.invuln -= dt;
     }
 
     shoot() {
-        const bulletSpeed = 800;
-        const spread = (Math.random() - 0.5) * 0.05; // Small spread
-        const angle = this.angle + spread;
+        const weapon = this.getWeapon();
+        if (weapon.ammo <= 0) {
+            this.startReload();
+            return;
+        }
 
-        bullets.push({
-            x: this.x + Math.cos(this.angle) * 20,
-            y: this.y + Math.sin(this.angle) * 20,
-            vx: Math.cos(angle) * bulletSpeed,
-            vy: Math.sin(angle) * bulletSpeed,
-            damage: 15,
-            life: 0.8,
-            fromPlayer: true
-        });
+        const pellets = weapon.pellets || 1;
+        for (let i = 0; i < pellets; i++) {
+            const spread = (Math.random() - 0.5) * weapon.spread * 2;
+            const angle = this.angle + spread;
+            bullets.push({
+                x: this.x + Math.cos(this.angle) * 20,
+                y: this.y + Math.sin(this.angle) * 20,
+                vx: Math.cos(angle) * weapon.bulletSpeed,
+                vy: Math.sin(angle) * weapon.bulletSpeed,
+                damage: weapon.damage * (1 + this.upgrades.damage * 0.1),
+                life: 0.8, fromPlayer: true, color: weapon.color
+            });
+        }
 
-        this.ammo--;
-        this.fireTimer = this.fireRate;
-        this.muzzleFlashTimer = 0.05;
+        weapon.ammo--;
+        this.fireTimer = weapon.fireRate * (1 - this.upgrades.reload * 0.1);
+        this.muzzleFlash = 0.05;
+        screenShake(weapon.shake, 0.05);
 
-        // Screen shake
-        screenShake(2, 0.05);
-
-        // Muzzle flash particles
-        for (let i = 0; i < 3; i++) {
+        // Muzzle particles
+        for (let i = 0; i < 4; i++) {
             particles.push({
                 x: this.x + Math.cos(this.angle) * 22,
                 y: this.y + Math.sin(this.angle) * 22,
                 vx: Math.cos(this.angle + (Math.random() - 0.5) * 0.5) * 200,
                 vy: Math.sin(this.angle + (Math.random() - 0.5) * 0.5) * 200,
-                life: 0.1,
-                maxLife: 0.1,
-                color: COLORS.muzzleFlash,
-                size: 4
+                life: 0.1, maxLife: 0.1, color: COLORS.muzzleFlash, size: 5
             });
         }
     }
 
-    takeDamage(amount) {
-        if (this.invulnTimer > 0) return;
+    startReload() {
+        const weapon = this.getWeapon();
+        if (weapon.ammo >= weapon.magSize) return;
+        if (this.ammo[weapon.ammoType] <= 0) {
+            addFloatingText(this.x, this.y - 20, 'NO AMMO!', COLORS.health);
+            return;
+        }
+        this.reloading = true;
+        this.reloadTimer = 1.5;
+        addFloatingText(this.x, this.y - 20, 'RELOADING...', COLORS.hudYellow);
+    }
 
-        // Shield absorbs damage first
+    finishReload() {
+        const weapon = this.getWeapon();
+        const need = weapon.magSize - weapon.ammo;
+        const take = Math.min(need, this.ammo[weapon.ammoType]);
+        weapon.ammo += take;
+        this.ammo[weapon.ammoType] -= take;
+        this.reloading = false;
+    }
+
+    takeDamage(amount) {
+        if (this.invuln > 0) return;
+
+        const armor = this.upgrades.armor * 5;
+        amount = Math.max(1, amount - armor);
+
         if (this.shield > 0) {
-            if (this.shield >= amount) {
-                this.shield -= amount;
-                amount = 0;
-            } else {
-                amount -= this.shield;
-                this.shield = 0;
-            }
+            if (this.shield >= amount) { this.shield -= amount; amount = 0; }
+            else { amount -= this.shield; this.shield = 0; }
         }
 
-        this.health -= amount;
-        this.invulnTimer = 0.5;
+        this.hp -= amount;
+        this.invuln = 0.5;
+        screenShake(5, 0.1);
 
-        // Damage particles
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 6; i++) {
             particles.push({
-                x: this.x,
-                y: this.y,
-                vx: (Math.random() - 0.5) * 200,
-                vy: (Math.random() - 0.5) * 200,
-                life: 0.3,
-                maxLife: 0.3,
-                color: COLORS.health,
-                size: 3
+                x: this.x, y: this.y,
+                vx: (Math.random() - 0.5) * 200, vy: (Math.random() - 0.5) * 200,
+                life: 0.3, maxLife: 0.3, color: COLORS.health, size: 4
             });
         }
 
-        if (this.health <= 0) {
-            this.die();
-        }
+        addFloatingText(this.x, this.y - 20, `-${Math.floor(amount)}`, COLORS.health);
+
+        if (this.hp <= 0) this.die();
     }
 
     die() {
         this.lives--;
         if (this.lives > 0) {
-            this.health = this.maxHealth;
-            this.respawn();
+            this.hp = this.maxHp;
+            addFloatingText(this.x, this.y, 'RESPAWNING...', COLORS.hudYellow);
         } else {
             gameState = 'gameover';
         }
     }
 
-    respawn() {
-        // Find spawn point
-        this.x = spawnPoint.x;
-        this.y = spawnPoint.y;
-        this.invulnTimer = 2;
+    useMedkit() {
+        if (this.medkits <= 0 || this.hp >= this.maxHp) return;
+        this.medkits--;
+        const heal = 50;
+        this.hp = Math.min(this.maxHp, this.hp + heal);
+        addFloatingText(this.x, this.y - 20, `+${heal} HP`, COLORS.stamina);
     }
 
     draw() {
@@ -244,24 +248,17 @@ class Player {
         ctx.translate(this.x - cameraX, this.y - cameraY);
         ctx.rotate(this.angle);
 
-        // Flash when invulnerable
-        if (this.invulnTimer > 0 && Math.floor(this.invulnTimer * 10) % 2 === 0) {
-            ctx.globalAlpha = 0.5;
-        }
+        if (this.invuln > 0 && Math.floor(this.invuln * 10) % 2 === 0) ctx.globalAlpha = 0.5;
 
         // Shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
         ctx.fillRect(-10, 2, 20, 12);
 
-        // Body armor (darker base)
+        // Body
         ctx.fillStyle = COLORS.playerDark;
         ctx.fillRect(-11, -9, 22, 18);
-
-        // Body main
         ctx.fillStyle = COLORS.player;
         ctx.fillRect(-10, -8, 20, 16);
-
-        // Lighter chest plate
         ctx.fillStyle = COLORS.playerLight;
         ctx.fillRect(-8, -6, 16, 8);
 
@@ -270,33 +267,27 @@ class Player {
         ctx.beginPath();
         ctx.arc(-2, -2, 6, 0, Math.PI * 2);
         ctx.fill();
-
-        // Visor
         ctx.fillStyle = '#224466';
         ctx.fillRect(-4, -4, 6, 3);
 
-        // Gun arm
-        ctx.fillStyle = COLORS.playerDark;
-        ctx.fillRect(6, -4, 6, 8);
-
         // Gun
         ctx.fillStyle = '#2A2A2A';
+        ctx.fillRect(6, -4, 6, 8);
         ctx.fillRect(10, -3, 14, 6);
         ctx.fillStyle = '#1A1A1A';
         ctx.fillRect(18, -2, 6, 4);
 
         // Muzzle flash
-        if (this.muzzleFlashTimer > 0) {
+        if (this.muzzleFlash > 0) {
             ctx.fillStyle = COLORS.muzzleFlash;
             ctx.shadowBlur = 15;
             ctx.shadowColor = COLORS.muzzleFlash;
             ctx.beginPath();
-            ctx.arc(26, 0, 10, 0, Math.PI * 2);
+            ctx.arc(26, 0, 12, 0, Math.PI * 2);
             ctx.fill();
-            // Inner bright
             ctx.fillStyle = '#FFFFFF';
             ctx.beginPath();
-            ctx.arc(26, 0, 5, 0, Math.PI * 2);
+            ctx.arc(26, 0, 6, 0, Math.PI * 2);
             ctx.fill();
             ctx.shadowBlur = 0;
         }
@@ -311,57 +302,30 @@ class Enemy {
         this.x = x;
         this.y = y;
         this.type = type;
-        this.width = 24;
-        this.height = 24;
         this.angle = 0;
         this.knockbackX = 0;
         this.knockbackY = 0;
-
-        // Stats based on type
-        switch (type) {
-            case 'drone':
-                this.health = 20;
-                this.maxHealth = 20;
-                this.speed = 120;
-                this.damage = 10;
-                this.attackCooldown = 1.0;
-                this.detectionRange = 300;
-                this.credits = 5;
-                break;
-            case 'spitter':
-                this.health = 30;
-                this.maxHealth = 30;
-                this.speed = 80;
-                this.damage = 15;
-                this.attackCooldown = 2.0;
-                this.detectionRange = 400;
-                this.preferredDistance = 200;
-                this.credits = 10;
-                break;
-            case 'brute':
-                this.health = 100;
-                this.maxHealth = 100;
-                this.speed = 60;
-                this.damage = 30;
-                this.attackCooldown = 1.5;
-                this.detectionRange = 250;
-                this.credits = 30;
-                this.width = 40;
-                this.height = 40;
-                break;
-            default:
-                this.health = 20;
-                this.maxHealth = 20;
-                this.speed = 100;
-                this.damage = 10;
-                this.attackCooldown = 1.0;
-                this.detectionRange = 300;
-                this.credits = 5;
-        }
-
-        this.attackTimer = this.attackCooldown;
-        this.hitFlashTimer = 0;
+        this.hitFlash = 0;
         this.legPhase = Math.random() * Math.PI * 2;
+        this.attackTimer = 0;
+
+        const stats = {
+            drone: { hp: 20, speed: 120, damage: 10, cooldown: 1, range: 300, size: 24, credits: 5 },
+            spitter: { hp: 30, speed: 80, damage: 15, cooldown: 2, range: 400, size: 28, credits: 10, preferDist: 200 },
+            lurker: { hp: 40, speed: 200, damage: 20, cooldown: 0.8, range: 100, size: 26, credits: 15 },
+            brute: { hp: 100, speed: 60, damage: 30, cooldown: 1.5, range: 250, size: 44, credits: 30 },
+            exploder: { hp: 15, speed: 150, damage: 50, cooldown: 0, range: 350, size: 24, credits: 5, explodes: true },
+            elite: { hp: 50, speed: 150, damage: 15, cooldown: 0.8, range: 400, size: 28, credits: 25 }
+        };
+
+        const s = stats[type] || stats.drone;
+        this.hp = s.hp; this.maxHp = s.hp;
+        this.speed = s.speed; this.damage = s.damage;
+        this.attackCooldown = s.cooldown; this.detectionRange = s.range;
+        this.width = s.size; this.height = s.size;
+        this.credits = s.credits;
+        this.preferredDistance = s.preferDist || 0;
+        this.explodes = s.explodes || false;
     }
 
     update(dt) {
@@ -371,7 +335,7 @@ class Enemy {
         const dy = player.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        // Apply knockback
+        // Knockback
         if (this.knockbackX || this.knockbackY) {
             this.x += this.knockbackX * dt;
             this.y += this.knockbackY * dt;
@@ -381,129 +345,125 @@ class Enemy {
             if (Math.abs(this.knockbackY) < 1) this.knockbackY = 0;
         }
 
-        // Detection and movement
         if (dist < this.detectionRange) {
             this.angle = Math.atan2(dy, dx);
 
-            // Move towards player (or keep distance for spitters)
-            let moveTowards = true;
-            if (this.type === 'spitter' && dist < this.preferredDistance) {
-                moveTowards = false;
+            let move = true;
+            if (this.preferredDistance && dist < this.preferredDistance) move = false;
+
+            if (move && dist > 30) {
+                const mx = (dx / dist) * this.speed * dt;
+                const my = (dy / dist) * this.speed * dt;
+                if (!isColliding(this.x + mx, this.y, this.width, this.height)) this.x += mx;
+                if (!isColliding(this.x, this.y + my, this.width, this.height)) this.y += my;
             }
 
-            if (moveTowards && dist > 30) {
-                const moveX = (dx / dist) * this.speed * dt;
-                const moveY = (dy / dist) * this.speed * dt;
-
-                if (!isColliding(this.x + moveX, this.y, this.width, this.height)) {
-                    this.x += moveX;
-                }
-                if (!isColliding(this.x, this.y + moveY, this.width, this.height)) {
-                    this.y += moveY;
-                }
-            }
-
-            // Attack
             this.attackTimer -= dt;
             if (this.attackTimer <= 0) {
-                if (this.type === 'spitter') {
+                if (this.type === 'spitter' || this.type === 'elite') {
                     this.shootAcid();
+                    this.attackTimer = this.attackCooldown;
+                } else if (this.explodes && dist < 40) {
+                    this.explode();
                 } else if (dist < 40) {
-                    this.meleeAttack();
+                    player.takeDamage(this.damage);
+                    this.attackTimer = this.attackCooldown;
                 }
-                this.attackTimer = this.attackCooldown;
             }
         }
 
-        // Leg animation
         this.legPhase += dt * 10;
+        if (this.hitFlash > 0) this.hitFlash -= dt;
 
-        // Hit flash decay
-        if (this.hitFlashTimer > 0) {
-            this.hitFlashTimer -= dt;
-        }
-
-        return this.health > 0;
-    }
-
-    meleeAttack() {
-        const dx = player.x - this.x;
-        const dy = player.y - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 50) {
-            player.takeDamage(this.damage);
-        }
+        return this.hp > 0;
     }
 
     shootAcid() {
-        const bulletSpeed = 300;
         bullets.push({
-            x: this.x,
-            y: this.y,
-            vx: Math.cos(this.angle) * bulletSpeed,
-            vy: Math.sin(this.angle) * bulletSpeed,
-            damage: this.damage,
-            life: 1.5,
-            fromPlayer: false,
-            color: '#88FF88'
+            x: this.x, y: this.y,
+            vx: Math.cos(this.angle) * 300,
+            vy: Math.sin(this.angle) * 300,
+            damage: this.damage, life: 1.5, fromPlayer: false, color: COLORS.bulletEnemy
         });
     }
 
-    takeDamage(amount, knockbackAngle) {
-        this.health -= amount;
-        this.hitFlashTimer = 0.1;
-
-        // Knockback
-        if (this.type !== 'brute') {
-            const knockbackForce = amount * 5;
-            this.knockbackX = Math.cos(knockbackAngle) * knockbackForce;
-            this.knockbackY = Math.sin(knockbackAngle) * knockbackForce;
+    explode() {
+        // Explosion damage
+        const dx = player.x - this.x;
+        const dy = player.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 80) {
+            player.takeDamage(this.damage * (1 - dist / 80));
         }
 
-        // Blood particles - alien green
+        // Explosion particles
+        for (let i = 0; i < 20; i++) {
+            particles.push({
+                x: this.x, y: this.y,
+                vx: (Math.random() - 0.5) * 400, vy: (Math.random() - 0.5) * 400,
+                life: 0.5, maxLife: 0.5, color: COLORS.explosion, size: 8
+            });
+        }
+        screenShake(10, 0.2);
+        this.hp = 0;
+    }
+
+    takeDamage(amount, knockbackAngle) {
+        this.hp -= amount;
+        this.hitFlash = 0.1;
+
+        if (this.type !== 'brute') {
+            const force = amount * 5;
+            this.knockbackX = Math.cos(knockbackAngle) * force;
+            this.knockbackY = Math.sin(knockbackAngle) * force;
+        }
+
+        // Blood
         for (let i = 0; i < 5; i++) {
             particles.push({
-                x: this.x,
-                y: this.y,
+                x: this.x, y: this.y,
                 vx: Math.cos(knockbackAngle + (Math.random() - 0.5)) * 150,
                 vy: Math.sin(knockbackAngle + (Math.random() - 0.5)) * 150,
-                life: 0.5,
-                maxLife: 0.5,
-                color: COLORS.bloodAlien,
-                size: 4
+                life: 0.5, maxLife: 0.5, color: COLORS.alienBlood, size: 4
             });
         }
 
-        if (this.health <= 0) {
-            this.die();
-        }
+        addFloatingText(this.x, this.y - 20, `-${Math.floor(amount)}`, COLORS.alienBlood);
+
+        if (this.hp <= 0) this.die();
     }
 
     die() {
-        // Drop credits
-        player.credits += this.credits;
+        if (this.explodes) {
+            this.explode();
+        }
 
-        // Death particles - alien blood splatter
-        for (let i = 0; i < 12; i++) {
+        player.credits += this.credits;
+        killCount++;
+        killCombo++;
+        comboTimer = 3;
+
+        if (killCombo > 1) {
+            addFloatingText(this.x, this.y - 30, `x${killCombo} COMBO!`, COLORS.hudYellow);
+        }
+
+        // Death particles
+        for (let i = 0; i < 15; i++) {
             particles.push({
-                x: this.x,
-                y: this.y,
-                vx: (Math.random() - 0.5) * 250,
-                vy: (Math.random() - 0.5) * 250,
-                life: 0.8,
-                maxLife: 0.8,
-                color: COLORS.bloodAlien,
-                size: 6
+                x: this.x, y: this.y,
+                vx: (Math.random() - 0.5) * 300, vy: (Math.random() - 0.5) * 300,
+                life: 1, maxLife: 1, color: COLORS.alienBlood, size: 6
             });
         }
 
-        // Chance to drop ammo or health
-        if (Math.random() < 0.2) {
-            pickups.push({
-                x: this.x,
-                y: this.y,
-                type: Math.random() < 0.5 ? 'ammo' : 'health'
-            });
+        // Blood stain
+        bloodStains.push({ x: this.x, y: this.y, size: this.width, alpha: 0.6 });
+        if (bloodStains.length > 50) bloodStains.shift();
+
+        // Drops
+        if (Math.random() < 0.25) {
+            const types = ['ammo', 'health', 'credits'];
+            pickups.push({ x: this.x, y: this.y, type: types[Math.floor(Math.random() * types.length)] });
         }
     }
 
@@ -511,447 +471,411 @@ class Enemy {
         ctx.save();
         ctx.translate(this.x - cameraX, this.y - cameraY);
 
-        // Draw spider-like alien - darker, more menacing
-        const size = this.type === 'brute' ? 22 : 14;
-        const legLength = this.type === 'brute' ? 18 : 12;
+        const size = this.width / 2;
+        const legLen = size * 0.8;
 
-        // Legs (8 spider legs with joints)
-        ctx.strokeStyle = this.hitFlashTimer > 0 ? '#FFFFFF' : COLORS.alienLegs;
+        // Legs
+        ctx.strokeStyle = this.hitFlash > 0 ? '#FFF' : COLORS.alien;
         ctx.lineWidth = this.type === 'brute' ? 3 : 2;
         for (let i = 0; i < 8; i++) {
             const baseAngle = (i / 8) * Math.PI * 2;
             const legOffset = Math.sin(this.legPhase + i * 0.8) * 4;
             const midX = Math.cos(baseAngle) * (size * 0.9);
             const midY = Math.sin(baseAngle) * (size * 0.9);
-            const endX = Math.cos(baseAngle) * (size + legLength) + legOffset;
-            const endY = Math.sin(baseAngle) * (size + legLength) + legOffset;
+            const endX = Math.cos(baseAngle) * (size + legLen) + legOffset;
+            const endY = Math.sin(baseAngle) * (size + legLen) + legOffset;
 
-            // First segment
             ctx.beginPath();
             ctx.moveTo(Math.cos(baseAngle) * size * 0.5, Math.sin(baseAngle) * size * 0.5);
             ctx.lineTo(midX, midY);
             ctx.stroke();
-
-            // Second segment (bent)
             ctx.beginPath();
             ctx.moveTo(midX, midY);
             ctx.lineTo(endX, endY);
             ctx.stroke();
         }
 
-        // Shadow/base
-        ctx.fillStyle = this.hitFlashTimer > 0 ? '#FFFFFF' : '#000000';
+        // Body
+        ctx.fillStyle = this.hitFlash > 0 ? '#FFF' : '#000';
         ctx.beginPath();
         ctx.ellipse(2, 2, size, size * 0.75, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Main body - very dark
-        ctx.fillStyle = this.hitFlashTimer > 0 ? '#FFFFFF' : COLORS.alienBody;
+        ctx.fillStyle = this.hitFlash > 0 ? '#FFF' : COLORS.alien;
         ctx.beginPath();
         ctx.ellipse(0, 0, size, size * 0.75, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Segmented carapace
-        ctx.strokeStyle = this.hitFlashTimer > 0 ? '#FFFFFF' : COLORS.alienLight;
+        // Carapace
+        ctx.strokeStyle = this.hitFlash > 0 ? '#FFF' : '#2A2A2A';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.ellipse(0, 0, size * 0.7, size * 0.5, 0, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Slight highlight
-        ctx.fillStyle = this.hitFlashTimer > 0 ? '#FFFFFF' : COLORS.alien;
-        ctx.beginPath();
-        ctx.ellipse(-3, -3, size * 0.35, size * 0.25, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Glowing red eyes
-        ctx.fillStyle = this.hitFlashTimer > 0 ? '#FFFFFF' : COLORS.alienEye;
+        // Eyes
+        ctx.fillStyle = this.hitFlash > 0 ? '#FFF' : COLORS.alienEye;
         ctx.shadowBlur = 5;
         ctx.shadowColor = '#FF0000';
-        const eyeOffset = size * 0.3;
+        const eyeOff = size * 0.3;
         ctx.beginPath();
-        ctx.arc(
-            Math.cos(this.angle) * eyeOffset - 3,
-            Math.sin(this.angle) * eyeOffset,
-            this.type === 'brute' ? 3 : 2, 0, Math.PI * 2
-        );
-        ctx.arc(
-            Math.cos(this.angle) * eyeOffset + 3,
-            Math.sin(this.angle) * eyeOffset,
-            this.type === 'brute' ? 3 : 2, 0, Math.PI * 2
-        );
+        ctx.arc(Math.cos(this.angle) * eyeOff - 3, Math.sin(this.angle) * eyeOff, 2, 0, Math.PI * 2);
+        ctx.arc(Math.cos(this.angle) * eyeOff + 3, Math.sin(this.angle) * eyeOff, 2, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
+
+        // Exploder glow
+        if (this.explodes) {
+            const glow = Math.sin(Date.now() / 100) * 0.3 + 0.5;
+            ctx.fillStyle = `rgba(255, 136, 68, ${glow})`;
+            ctx.beginPath();
+            ctx.arc(0, 0, size * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
         ctx.restore();
     }
 }
 
-// Spawn point
-let spawnPoint = { x: 400, y: 400 };
-
-// Screen shake
-let shakeAmount = 0;
-let shakeDuration = 0;
-
-function screenShake(amount, duration) {
-    shakeAmount = amount;
-    shakeDuration = duration;
+// Helper functions
+function addFloatingText(x, y, text, color) {
+    floatingTexts.push({ x, y, text, color, life: 1, vy: -50 });
 }
 
-// Collision detection
+function screenShake(amount, duration) {
+    shakeAmount = Math.max(shakeAmount, amount);
+    shakeDuration = Math.max(shakeDuration, duration);
+}
+
 function isColliding(x, y, w, h) {
-    const left = Math.floor((x - w/2) / TILE_SIZE);
-    const right = Math.floor((x + w/2) / TILE_SIZE);
-    const top = Math.floor((y - h/2) / TILE_SIZE);
-    const bottom = Math.floor((y + h/2) / TILE_SIZE);
+    const left = Math.floor((x - w/2) / TILE);
+    const right = Math.floor((x + w/2) / TILE);
+    const top = Math.floor((y - h/2) / TILE);
+    const bottom = Math.floor((y + h/2) / TILE);
 
     for (let ty = top; ty <= bottom; ty++) {
         for (let tx = left; tx <= right; tx++) {
-            if (tx < 0 || tx >= MAP_WIDTH || ty < 0 || ty >= MAP_HEIGHT) return true;
-            if (levelMap[ty] && levelMap[ty][tx] === 2) return true;
-            if (levelMap[ty] && levelMap[ty][tx] === 0) return true;
+            if (tx < 0 || tx >= MAP_W || ty < 0 || ty >= MAP_H) return true;
+            const tile = map[ty]?.[tx];
+            if (tile === 2 || tile === 0) return true;
         }
     }
+
+    // Door collision
+    for (const door of doors) {
+        if (!door.open && Math.abs(x - door.x * TILE - TILE/2) < w/2 + TILE/2 &&
+            Math.abs(y - door.y * TILE - TILE/2) < h/2 + TILE/2) {
+            return true;
+        }
+    }
+
     return false;
 }
 
-// Generate level
+// Level generation
 function generateLevel() {
-    // Initialize with void
-    for (let y = 0; y < MAP_HEIGHT; y++) {
-        levelMap[y] = [];
-        for (let x = 0; x < MAP_WIDTH; x++) {
-            levelMap[y][x] = 0;
+    map = Array(MAP_H).fill(null).map(() => Array(MAP_W).fill(0));
+    explored = Array(MAP_H).fill(null).map(() => Array(MAP_W).fill(false));
+    enemies = [];
+    pickups = [];
+    doors = [];
+    terminals = [];
+    barrels = [];
+    bloodStains = [];
+
+    const rooms = [];
+    const roomCount = 8 + Math.floor(Math.random() * 4);
+
+    // Generate rooms
+    for (let attempt = 0; attempt < roomCount * 4; attempt++) {
+        if (rooms.length >= roomCount) break;
+
+        const w = 5 + Math.floor(Math.random() * 6);
+        const h = 5 + Math.floor(Math.random() * 6);
+        const x = 2 + Math.floor(Math.random() * (MAP_W - w - 4));
+        const y = 2 + Math.floor(Math.random() * (MAP_H - h - 4));
+
+        let overlap = false;
+        for (const room of rooms) {
+            if (x < room.x + room.w + 2 && x + w + 2 > room.x &&
+                y < room.y + room.h + 2 && y + h + 2 > room.y) {
+                overlap = true;
+                break;
+            }
+        }
+
+        if (!overlap) {
+            rooms.push({ x, y, w, h });
+            for (let ry = y; ry < y + h; ry++) {
+                for (let rx = x; rx < x + w; rx++) {
+                    map[ry][rx] = 1;
+                }
+            }
+            // Walls
+            for (let ry = y - 1; ry <= y + h; ry++) {
+                for (let rx = x - 1; rx <= x + w; rx++) {
+                    if (ry >= 0 && ry < MAP_H && rx >= 0 && rx < MAP_W && map[ry][rx] === 0) {
+                        map[ry][rx] = 2;
+                    }
+                }
+            }
         }
     }
 
-    // Create rooms
-    const rooms = [];
+    // Connect rooms
+    for (let i = 1; i < rooms.length; i++) {
+        const r1 = rooms[i - 1];
+        const r2 = rooms[i];
+        const x1 = Math.floor(r1.x + r1.w / 2);
+        const y1 = Math.floor(r1.y + r1.h / 2);
+        const x2 = Math.floor(r2.x + r2.w / 2);
+        const y2 = Math.floor(r2.y + r2.h / 2);
 
-    // Starting room (center-bottom)
-    rooms.push({ x: 10, y: 12, w: 6, h: 5, name: 'start' });
+        carveCorridor(x1, y1, x2, y1);
+        carveCorridor(x2, y1, x2, y2);
+    }
 
-    // Security office (left)
-    rooms.push({ x: 2, y: 6, w: 5, h: 5, name: 'security' });
+    // Spawn player in first room
+    const startRoom = rooms[0];
+    player = new Player(
+        startRoom.x * TILE + startRoom.w * TILE / 2,
+        startRoom.y * TILE + startRoom.h * TILE / 2
+    );
 
-    // Cargo bay (center)
-    rooms.push({ x: 9, y: 5, w: 7, h: 6, name: 'cargo' });
-
-    // Armory (right)
-    rooms.push({ x: 18, y: 6, w: 5, h: 5, name: 'armory' });
-
-    // Medical bay (top)
-    rooms.push({ x: 9, y: 1, w: 6, h: 4, name: 'medical' });
-
-    // Carve out rooms
-    rooms.forEach(room => {
-        for (let y = room.y; y < room.y + room.h; y++) {
-            for (let x = room.x; x < room.x + room.w; x++) {
-                if (y >= 0 && y < MAP_HEIGHT && x >= 0 && x < MAP_WIDTH) {
-                    levelMap[y][x] = 1;
-                }
-            }
+    // Spawn enemies in other rooms
+    for (let i = 1; i < rooms.length; i++) {
+        const room = rooms[i];
+        const enemyCount = 2 + Math.floor(Math.random() * 4);
+        const types = ['drone', 'drone', 'drone', 'spitter', 'lurker', 'brute', 'exploder', 'elite'];
+        for (let j = 0; j < enemyCount; j++) {
+            const ex = room.x * TILE + Math.random() * room.w * TILE;
+            const ey = room.y * TILE + Math.random() * room.h * TILE;
+            const type = types[Math.floor(Math.random() * (4 + deck))]; // More enemy variety in later decks
+            enemies.push(new Enemy(ex, ey, type));
         }
-        // Add walls around room
-        for (let y = room.y - 1; y <= room.y + room.h; y++) {
-            for (let x = room.x - 1; x <= room.x + room.w; x++) {
-                if (y >= 0 && y < MAP_HEIGHT && x >= 0 && x < MAP_WIDTH) {
-                    if (levelMap[y][x] === 0) {
-                        levelMap[y][x] = 2;
-                    }
-                }
-            }
+
+        // Add terminal
+        if (i === Math.floor(rooms.length / 2)) {
+            terminals.push({
+                x: room.x + Math.floor(room.w / 2),
+                y: room.y + Math.floor(room.h / 2),
+                used: false
+            });
         }
-    });
 
-    // Create corridors between rooms
-    // Start to cargo
-    createCorridor(13, 12, 13, 11);
-    // Cargo to security
-    createCorridor(9, 8, 7, 8);
-    // Cargo to armory
-    createCorridor(16, 8, 18, 8);
-    // Cargo to medical
-    createCorridor(12, 5, 12, 4);
+        // Add barrels
+        if (Math.random() < 0.3) {
+            barrels.push({
+                x: room.x * TILE + Math.random() * room.w * TILE,
+                y: room.y * TILE + Math.random() * room.h * TILE,
+                hp: 20
+            });
+        }
+    }
 
-    // Set spawn point
-    spawnPoint = { x: rooms[0].x * TILE_SIZE + rooms[0].w * TILE_SIZE / 2, y: rooms[0].y * TILE_SIZE + rooms[0].h * TILE_SIZE / 2 };
+    // Add pickup in some rooms
+    for (let i = 1; i < rooms.length; i++) {
+        if (Math.random() < 0.4) {
+            const room = rooms[i];
+            const types = ['ammo', 'health', 'shield', 'medkit', 'weapon'];
+            pickups.push({
+                x: room.x * TILE + room.w * TILE / 2,
+                y: room.y * TILE + room.h * TILE / 2,
+                type: types[Math.floor(Math.random() * types.length)]
+            });
+        }
+    }
+
+    totalRooms = rooms.length;
+    roomsCleared = 1;
 }
 
-function createCorridor(x1, y1, x2, y2) {
+function carveCorridor(x1, y1, x2, y2) {
     const dx = x2 > x1 ? 1 : x2 < x1 ? -1 : 0;
     const dy = y2 > y1 ? 1 : y2 < y1 ? -1 : 0;
-
     let x = x1, y = y1;
+
     while (x !== x2 || y !== y2) {
-        // Carve corridor (2 wide)
         for (let ox = -1; ox <= 0; ox++) {
             for (let oy = -1; oy <= 0; oy++) {
-                const tx = x + ox;
-                const ty = y + oy;
-                if (ty >= 0 && ty < MAP_HEIGHT && tx >= 0 && tx < MAP_WIDTH) {
-                    if (levelMap[ty][tx] !== 1) {
-                        levelMap[ty][tx] = 1;
-                    }
+                const tx = x + ox, ty = y + oy;
+                if (ty >= 0 && ty < MAP_H && tx >= 0 && tx < MAP_W && map[ty][tx] !== 1) {
+                    map[ty][tx] = 1;
                 }
             }
         }
-        // Add walls around corridor
         for (let ox = -2; ox <= 1; ox++) {
             for (let oy = -2; oy <= 1; oy++) {
-                const tx = x + ox;
-                const ty = y + oy;
-                if (ty >= 0 && ty < MAP_HEIGHT && tx >= 0 && tx < MAP_WIDTH) {
-                    if (levelMap[ty][tx] === 0) {
-                        levelMap[ty][tx] = 2;
-                    }
+                const tx = x + ox, ty = y + oy;
+                if (ty >= 0 && ty < MAP_H && tx >= 0 && tx < MAP_W && map[ty][tx] === 0) {
+                    map[ty][tx] = 2;
                 }
             }
         }
-
         if (x !== x2) x += dx;
         else if (y !== y2) y += dy;
     }
 }
 
-// Spawn enemies
-function spawnEnemies() {
-    enemies = [];
+// Drawing
+function drawTiles() {
+    const startX = Math.max(0, Math.floor(cameraX / TILE) - 1);
+    const startY = Math.max(0, Math.floor(cameraY / TILE) - 1);
+    const endX = Math.min(MAP_W, Math.floor((cameraX + canvas.width) / TILE) + 2);
+    const endY = Math.min(MAP_H, Math.floor((cameraY + canvas.height) / TILE) + 2);
 
-    // Drones in cargo area
-    for (let i = 0; i < 5; i++) {
-        const ex = 9 * TILE_SIZE + Math.random() * 6 * TILE_SIZE;
-        const ey = 5 * TILE_SIZE + Math.random() * 5 * TILE_SIZE;
-        enemies.push(new Enemy(ex, ey, 'drone'));
-    }
+    for (let y = startY; y < endY; y++) {
+        for (let x = startX; x < endX; x++) {
+            const screenX = x * TILE - cameraX;
+            const screenY = y * TILE - cameraY;
+            const tile = map[y]?.[x] || 0;
+            const seed = x * 1000 + y;
 
-    // Spitter in security
-    enemies.push(new Enemy(4 * TILE_SIZE, 8 * TILE_SIZE, 'spitter'));
-
-    // Drones near armory
-    enemies.push(new Enemy(19 * TILE_SIZE, 7 * TILE_SIZE, 'drone'));
-    enemies.push(new Enemy(20 * TILE_SIZE, 9 * TILE_SIZE, 'drone'));
-
-    // Brute in medical
-    enemies.push(new Enemy(11 * TILE_SIZE, 2 * TILE_SIZE, 'brute'));
-}
-
-// Draw functions
-function drawTile(x, y, type) {
-    const screenX = x * TILE_SIZE - cameraX;
-    const screenY = y * TILE_SIZE - cameraY;
-
-    // Culling
-    if (screenX < -TILE_SIZE || screenX > canvas.width ||
-        screenY < -TILE_SIZE || screenY > canvas.height) return;
-
-    // Seeded random for consistent tile variations
-    const seed = x * 1000 + y;
-    const rand = (n) => ((seed * 9301 + 49297) % 233280) / 233280 * n;
-
-    switch (type) {
-        case 0: // Void
-            ctx.fillStyle = COLORS.void;
-            ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-            break;
-        case 1: // Floor - industrial metal grating
-            // Base floor color
-            ctx.fillStyle = COLORS.floor;
-            ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-
-            // Grid pattern
-            ctx.fillStyle = COLORS.floorDark;
-            ctx.fillRect(screenX, screenY, 2, TILE_SIZE);
-            ctx.fillRect(screenX, screenY, TILE_SIZE, 2);
-            ctx.fillRect(screenX + 15, screenY, 2, TILE_SIZE);
-            ctx.fillRect(screenX, screenY + 15, TILE_SIZE, 2);
-
-            // Occasional floor details
-            const floorVariant = (x + y * 7) % 6;
-            if (floorVariant === 0) {
-                // Grate pattern
+            if (tile === 0) {
+                ctx.fillStyle = COLORS.void;
+                ctx.fillRect(screenX, screenY, TILE, TILE);
+            } else if (tile === 1) {
+                ctx.fillStyle = COLORS.floor;
+                ctx.fillRect(screenX, screenY, TILE, TILE);
                 ctx.fillStyle = COLORS.floorDark;
-                for (let i = 4; i < 28; i += 4) {
-                    ctx.fillRect(screenX + i, screenY + 4, 1, 24);
+                ctx.fillRect(screenX, screenY, 2, TILE);
+                ctx.fillRect(screenX, screenY, TILE, 2);
+                ctx.fillRect(screenX + 15, screenY, 2, TILE);
+                ctx.fillRect(screenX, screenY + 15, TILE, 2);
+
+                // Variation
+                if ((x + y * 7) % 5 === 0) {
+                    ctx.fillStyle = COLORS.floorDark;
+                    for (let i = 4; i < 28; i += 4) ctx.fillRect(screenX + i, screenY + 4, 1, 24);
                 }
-            } else if (floorVariant === 1) {
-                // Worn center
-                ctx.fillStyle = COLORS.floorDetail;
-                ctx.fillRect(screenX + 6, screenY + 6, 20, 20);
-            } else if (floorVariant === 2) {
-                // Drain
-                ctx.fillStyle = COLORS.floorDark;
-                ctx.beginPath();
-                ctx.arc(screenX + 16, screenY + 16, 6, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#1A1A1A';
-                ctx.beginPath();
-                ctx.arc(screenX + 16, screenY + 16, 3, 0, Math.PI * 2);
-                ctx.fill();
+            } else if (tile === 2) {
+                ctx.fillStyle = COLORS.wall;
+                ctx.fillRect(screenX, screenY, TILE, TILE);
+                ctx.fillStyle = COLORS.wallLight;
+                ctx.fillRect(screenX, screenY, TILE, 3);
+                ctx.fillRect(screenX, screenY, 3, TILE);
+                ctx.fillStyle = COLORS.wallDark;
+                ctx.fillRect(screenX + TILE - 3, screenY, 3, TILE);
+                ctx.fillRect(screenX, screenY + TILE - 3, TILE, 3);
+
+                // Panel detail
+                if ((x + y) % 3 === 0) {
+                    ctx.fillStyle = COLORS.hudYellow;
+                    ctx.fillRect(screenX + 10, screenY + 10, 4, 12);
+                }
             }
-            break;
-        case 2: // Wall - industrial metal panels
-            // Base wall - darker
-            ctx.fillStyle = COLORS.wall;
-            ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-
-            // 3D bevel effect
-            ctx.fillStyle = COLORS.wallLight;
-            ctx.fillRect(screenX, screenY, TILE_SIZE, 3);
-            ctx.fillRect(screenX, screenY, 3, TILE_SIZE);
-
-            ctx.fillStyle = COLORS.wallDark;
-            ctx.fillRect(screenX, screenY + TILE_SIZE - 3, TILE_SIZE, 3);
-            ctx.fillRect(screenX + TILE_SIZE - 3, screenY, 3, TILE_SIZE);
-
-            // Inner panel
-            ctx.fillStyle = COLORS.wallPanel;
-            ctx.fillRect(screenX + 4, screenY + 4, TILE_SIZE - 8, TILE_SIZE - 8);
-
-            // Panel border
-            ctx.strokeStyle = COLORS.wallDark;
-            ctx.lineWidth = 1;
-            ctx.strokeRect(screenX + 5, screenY + 5, TILE_SIZE - 10, TILE_SIZE - 10);
-
-            // Rivets in corners
-            ctx.fillStyle = COLORS.wallLight;
-            ctx.beginPath();
-            ctx.arc(screenX + 6, screenY + 6, 2, 0, Math.PI * 2);
-            ctx.arc(screenX + TILE_SIZE - 6, screenY + 6, 2, 0, Math.PI * 2);
-            ctx.arc(screenX + 6, screenY + TILE_SIZE - 6, 2, 0, Math.PI * 2);
-            ctx.arc(screenX + TILE_SIZE - 6, screenY + TILE_SIZE - 6, 2, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Some walls have warning stripes
-            if ((x + y) % 8 === 0) {
-                ctx.fillStyle = '#AA6600';
-                ctx.fillRect(screenX + 8, screenY + 12, 16, 4);
-                ctx.fillRect(screenX + 8, screenY + 18, 16, 4);
-            }
-            break;
-    }
-}
-
-function drawLevel() {
-    for (let y = 0; y < MAP_HEIGHT; y++) {
-        for (let x = 0; x < MAP_WIDTH; x++) {
-            drawTile(x, y, levelMap[y][x]);
         }
     }
 }
 
-function drawHUD() {
-    // Top HUD bar - very dark like reference
-    ctx.fillStyle = '#050505';
-    ctx.fillRect(0, 0, canvas.width, 28);
-    // Top edge highlight
-    ctx.fillStyle = '#1A1A1A';
-    ctx.fillRect(0, 27, canvas.width, 1);
-
-    // Bottom HUD bar
-    ctx.fillStyle = '#050505';
-    ctx.fillRect(0, canvas.height - 28, canvas.width, 28);
-    ctx.fillStyle = '#1A1A1A';
-    ctx.fillRect(0, canvas.height - 28, canvas.width, 1);
-
-    // 1UP label
-    ctx.fillStyle = COLORS.hudYellow;
-    ctx.font = 'bold 12px monospace';
-    ctx.fillText('1UP', 8, 18);
-
-    // Lives - small bars
-    ctx.fillStyle = COLORS.hudText;
-    ctx.fillText('LIVES', 60, 18);
-    for (let i = 0; i < player.lives; i++) {
-        ctx.fillStyle = COLORS.health;
-        ctx.fillRect(120 + i * 18, 8, 14, 10);
-        // Highlight
-        ctx.fillStyle = '#FF6666';
-        ctx.fillRect(120 + i * 18, 8, 14, 3);
-    }
-
-    // Ammo section
-    ctx.fillStyle = COLORS.hudText;
-    ctx.fillText('AMMO', 220, 18);
-    // Ammo bar background
-    ctx.fillStyle = '#1A1A1A';
-    ctx.fillRect(280, 8, 100, 12);
-    // Ammo bar border
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(280, 8, 100, 12);
-    // Ammo fill
-    ctx.fillStyle = COLORS.hudYellow;
-    const ammoWidth = (player.ammo / player.maxAmmo) * 98;
-    ctx.fillRect(281, 9, ammoWidth, 10);
-    // Ammo number
-    ctx.fillStyle = COLORS.hudText;
-    ctx.fillText(player.ammo.toString(), 390, 18);
-
-    // Keys section
-    ctx.fillStyle = COLORS.hudText;
-    ctx.fillText('KEYS', 500, 18);
-    // Key slots - styled like keycards
-    const keyColors = [
-        { key: 'green', color: COLORS.keyGreen, dark: '#006600' },
-        { key: 'blue', color: COLORS.keyBlue, dark: '#003366' },
-        { key: 'yellow', color: COLORS.keyYellow, dark: '#666600' },
-        { key: 'red', color: COLORS.keyRed, dark: '#660000' }
-    ];
-    keyColors.forEach((k, i) => {
-        const kx = 560 + i * 24;
-        ctx.fillStyle = player.keys[k.key] ? k.dark : '#1A1A1A';
-        ctx.fillRect(kx, 6, 20, 16);
-        if (player.keys[k.key]) {
-            ctx.fillStyle = k.color;
-            ctx.fillRect(kx + 2, 8, 16, 8);
-        }
-        ctx.strokeStyle = '#333';
-        ctx.strokeRect(kx, 6, 20, 16);
+function drawBloodStains() {
+    bloodStains.forEach(b => {
+        ctx.globalAlpha = b.alpha;
+        ctx.fillStyle = COLORS.alienBlood;
+        ctx.beginPath();
+        ctx.arc(b.x - cameraX, b.y - cameraY, b.size / 2, 0, Math.PI * 2);
+        ctx.fill();
     });
+    ctx.globalAlpha = 1;
+}
 
-    // Bottom HUD - Health
-    ctx.fillStyle = COLORS.hudText;
-    ctx.fillText('HEALTH', 8, canvas.height - 10);
-    ctx.fillStyle = '#1A1A1A';
-    ctx.fillRect(80, canvas.height - 20, 140, 12);
-    ctx.strokeStyle = '#333';
-    ctx.strokeRect(80, canvas.height - 20, 140, 12);
-    ctx.fillStyle = COLORS.health;
-    const healthWidth = (player.health / player.maxHealth) * 138;
-    ctx.fillRect(81, canvas.height - 19, healthWidth, 10);
-    // Health glow when low
-    if (player.health < 30) {
-        ctx.fillStyle = `rgba(255, 0, 0, ${0.3 + Math.sin(Date.now() / 100) * 0.2})`;
-        ctx.fillRect(81, canvas.height - 19, healthWidth, 10);
-    }
+function drawBarrels() {
+    barrels.forEach(b => {
+        ctx.save();
+        ctx.translate(b.x - cameraX, b.y - cameraY);
 
-    // Shield bar
-    ctx.fillStyle = COLORS.hudText;
-    ctx.fillText('SHIELD', 240, canvas.height - 10);
-    ctx.fillStyle = '#1A1A1A';
-    ctx.fillRect(310, canvas.height - 20, 100, 12);
-    ctx.strokeStyle = '#333';
-    ctx.strokeRect(310, canvas.height - 20, 100, 12);
-    ctx.fillStyle = COLORS.shield;
-    const shieldWidth = (player.shield / player.maxShield) * 98;
-    ctx.fillRect(311, canvas.height - 19, shieldWidth, 10);
+        ctx.fillStyle = '#3A3A3A';
+        ctx.fillRect(-10, -14, 20, 28);
+        ctx.fillStyle = '#2A2A2A';
+        ctx.fillRect(-8, -12, 16, 24);
+        ctx.fillStyle = COLORS.explosion;
+        ctx.fillRect(-6, -8, 12, 4);
+        ctx.fillRect(-6, 0, 12, 4);
 
-    // Stamina (small bar)
-    ctx.fillStyle = COLORS.hudText;
-    ctx.font = '10px monospace';
-    ctx.fillText('STAM', 430, canvas.height - 10);
-    ctx.fillStyle = '#1A1A1A';
-    ctx.fillRect(470, canvas.height - 18, 60, 8);
-    ctx.fillStyle = '#44AA44';
-    const staminaWidth = (player.stamina / player.maxStamina) * 58;
-    ctx.fillRect(471, canvas.height - 17, staminaWidth, 6);
+        ctx.restore();
+    });
+}
 
-    // Credits
-    ctx.fillStyle = COLORS.hudYellow;
-    ctx.font = 'bold 12px monospace';
-    ctx.fillText('$' + player.credits, canvas.width - 80, canvas.height - 10);
+function drawTerminals() {
+    terminals.forEach(t => {
+        const screenX = t.x * TILE - cameraX;
+        const screenY = t.y * TILE - cameraY;
+
+        ctx.fillStyle = '#2A2A2A';
+        ctx.fillRect(screenX + 4, screenY + 4, TILE - 8, TILE - 8);
+        ctx.fillStyle = t.used ? '#1A1A1A' : COLORS.terminal;
+        ctx.fillRect(screenX + 6, screenY + 6, TILE - 12, TILE - 16);
+
+        if (!t.used) {
+            ctx.fillStyle = '#00FF00';
+            ctx.font = '10px monospace';
+            ctx.fillText('>', screenX + 8, screenY + 16);
+        }
+    });
+}
+
+function drawPickups() {
+    pickups.forEach(p => {
+        ctx.save();
+        ctx.translate(p.x - cameraX, p.y - cameraY);
+
+        const bob = Math.sin(Date.now() / 200) * 3;
+        ctx.translate(0, bob);
+
+        ctx.shadowBlur = 10;
+
+        switch (p.type) {
+            case 'health':
+                ctx.shadowColor = COLORS.health;
+                ctx.fillStyle = COLORS.health;
+                ctx.fillRect(-8, -3, 16, 6);
+                ctx.fillRect(-3, -8, 6, 16);
+                break;
+            case 'ammo':
+                ctx.shadowColor = COLORS.hudYellow;
+                ctx.fillStyle = COLORS.hudYellow;
+                ctx.fillRect(-6, -8, 12, 16);
+                ctx.fillStyle = '#AA8800';
+                ctx.fillRect(-4, -6, 8, 12);
+                break;
+            case 'shield':
+                ctx.shadowColor = COLORS.shield;
+                ctx.fillStyle = COLORS.shield;
+                ctx.beginPath();
+                ctx.moveTo(0, -10);
+                ctx.lineTo(8, -4);
+                ctx.lineTo(8, 4);
+                ctx.lineTo(0, 10);
+                ctx.lineTo(-8, 4);
+                ctx.lineTo(-8, -4);
+                ctx.closePath();
+                ctx.fill();
+                break;
+            case 'medkit':
+                ctx.shadowColor = '#FFFFFF';
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(-10, -6, 20, 12);
+                ctx.fillStyle = COLORS.health;
+                ctx.fillRect(-6, -3, 12, 6);
+                ctx.fillRect(-3, -6, 6, 12);
+                break;
+            case 'weapon':
+                ctx.shadowColor = '#FFAA00';
+                ctx.fillStyle = '#4A4A4A';
+                ctx.fillRect(-12, -4, 24, 8);
+                ctx.fillStyle = '#2A2A2A';
+                ctx.fillRect(6, -2, 6, 4);
+                break;
+            case 'credits':
+                ctx.shadowColor = COLORS.hudYellow;
+                ctx.fillStyle = COLORS.hudYellow;
+                ctx.font = 'bold 16px Arial';
+                ctx.fillText('$', -5, 6);
+                break;
+        }
+
+        ctx.restore();
+    });
 }
 
 function drawBullets() {
@@ -961,16 +885,12 @@ function drawBullets() {
         ctx.rotate(Math.atan2(b.vy, b.vx));
 
         if (b.fromPlayer) {
-            // Player bullets - orange/yellow
-            ctx.fillStyle = COLORS.bullet;
-            ctx.fillRect(-8, -2, 16, 4);
-            // Glow
+            ctx.fillStyle = b.color || COLORS.bullet;
             ctx.shadowBlur = 10;
-            ctx.shadowColor = COLORS.bullet;
-            ctx.fillRect(-6, -1, 12, 2);
+            ctx.shadowColor = b.color || COLORS.bullet;
+            ctx.fillRect(-8, -2, 16, 4);
         } else {
-            // Enemy bullets - green acid
-            ctx.fillStyle = b.color || '#88FF88';
+            ctx.fillStyle = b.color || COLORS.bulletEnemy;
             ctx.beginPath();
             ctx.arc(0, 0, 5, 0, Math.PI * 2);
             ctx.fill();
@@ -992,141 +912,334 @@ function drawParticles() {
     ctx.globalAlpha = 1;
 }
 
-function drawPickups() {
-    pickups.forEach(p => {
-        ctx.save();
-        ctx.translate(p.x - cameraX, p.y - cameraY);
-
-        // Glow
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = p.type === 'health' ? COLORS.health : COLORS.hudYellow;
-
-        if (p.type === 'health') {
-            ctx.fillStyle = COLORS.health;
-            ctx.fillRect(-8, -3, 16, 6);
-            ctx.fillRect(-3, -8, 6, 16);
-        } else if (p.type === 'ammo') {
-            ctx.fillStyle = COLORS.hudYellow;
-            ctx.fillRect(-6, -8, 12, 16);
-            ctx.fillStyle = '#AA8800';
-            ctx.fillRect(-4, -6, 8, 12);
-        }
-
-        ctx.restore();
+function drawFloatingTexts() {
+    floatingTexts.forEach(ft => {
+        ctx.globalAlpha = ft.life;
+        ctx.fillStyle = ft.color;
+        ctx.font = 'bold 14px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(ft.text, ft.x - cameraX, ft.y - cameraY);
     });
+    ctx.globalAlpha = 1;
+    ctx.textAlign = 'left';
+}
+
+function drawMinimap() {
+    const mapSize = 150;
+    const mapX = canvas.width - mapSize - 20;
+    const mapY = 60;
+    const scale = mapSize / Math.max(MAP_W, MAP_H);
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(mapX - 5, mapY - 5, mapSize + 10, mapSize * (MAP_H / MAP_W) + 10);
+
+    for (let y = 0; y < MAP_H; y++) {
+        for (let x = 0; x < MAP_W; x++) {
+            const tile = map[y]?.[x];
+            if (tile === 1) ctx.fillStyle = '#333';
+            else if (tile === 2) ctx.fillStyle = '#666';
+            else continue;
+            ctx.fillRect(mapX + x * scale, mapY + y * scale, scale, scale);
+        }
+    }
+
+    // Player
+    ctx.fillStyle = COLORS.playerLight;
+    ctx.fillRect(mapX + (player.x / TILE) * scale - 2, mapY + (player.y / TILE) * scale - 2, 4, 4);
+
+    // Enemies
+    ctx.fillStyle = COLORS.alienEye;
+    enemies.forEach(e => {
+        ctx.fillRect(mapX + (e.x / TILE) * scale - 1, mapY + (e.y / TILE) * scale - 1, 2, 2);
+    });
+}
+
+function drawHUD() {
+    // Top bar
+    ctx.fillStyle = 'rgba(10, 10, 10, 0.9)';
+    ctx.fillRect(0, 0, canvas.width, 50);
+
+    ctx.font = '14px monospace';
+    ctx.fillStyle = COLORS.hudYellow;
+    ctx.fillText('1UP', 20, 20);
+
+    // Lives
+    ctx.fillStyle = COLORS.hudText;
+    ctx.fillText('LIVES', 70, 20);
+    for (let i = 0; i < player.lives; i++) {
+        ctx.fillStyle = COLORS.health;
+        ctx.fillRect(130 + i * 24, 8, 18, 18);
+    }
+
+    // Ammo
+    const weapon = player.getWeapon();
+    ctx.fillStyle = COLORS.hudText;
+    ctx.fillText('AMMO', 230, 20);
+    ctx.fillStyle = COLORS.hudYellow;
+    ctx.fillRect(290, 10, (weapon.ammo / weapon.magSize) * 100, 14);
+    ctx.strokeStyle = '#333';
+    ctx.strokeRect(290, 10, 100, 14);
+    ctx.fillStyle = COLORS.hudText;
+    ctx.fillText(`${weapon.ammo}`, 400, 20);
+
+    // Weapon name
+    ctx.fillText(`[${weapon.name}]`, 450, 20);
+
+    // Keys
+    ctx.fillText('KEYS', 600, 20);
+    const keyColors = [
+        { key: 'green', color: COLORS.keyGreen },
+        { key: 'blue', color: COLORS.keyBlue },
+        { key: 'yellow', color: COLORS.keyYellow },
+        { key: 'red', color: COLORS.keyRed }
+    ];
+    keyColors.forEach((k, i) => {
+        ctx.fillStyle = player.keys[k.key] ? k.color : '#1A1A1A';
+        ctx.fillRect(660 + i * 24, 8, 18, 18);
+        ctx.strokeStyle = '#333';
+        ctx.strokeRect(660 + i * 24, 8, 18, 18);
+    });
+
+    // Deck
+    ctx.fillStyle = COLORS.hudText;
+    ctx.fillText(`DECK ${deck}/${maxDecks}`, 780, 20);
+
+    // Kill combo
+    if (killCombo > 1 && comboTimer > 0) {
+        ctx.fillStyle = COLORS.hudYellow;
+        ctx.font = 'bold 20px monospace';
+        ctx.fillText(`x${killCombo} COMBO!`, canvas.width / 2 - 60, 80);
+    }
+
+    // Bottom bar
+    ctx.fillStyle = 'rgba(10, 10, 10, 0.9)';
+    ctx.fillRect(0, canvas.height - 45, canvas.width, 45);
+
+    ctx.font = '12px monospace';
+
+    // Health
+    ctx.fillStyle = COLORS.hudText;
+    ctx.fillText('HEALTH', 20, canvas.height - 15);
+    ctx.fillStyle = '#1A1A1A';
+    ctx.fillRect(90, canvas.height - 28, 150, 16);
+    ctx.fillStyle = player.hp < 30 ? (Math.sin(Date.now() / 100) > 0 ? COLORS.health : '#FF6666') : COLORS.health;
+    ctx.fillRect(91, canvas.height - 27, (player.hp / player.maxHp) * 148, 14);
+
+    // Shield
+    ctx.fillStyle = COLORS.hudText;
+    ctx.fillText('SHIELD', 260, canvas.height - 15);
+    ctx.fillStyle = '#1A1A1A';
+    ctx.fillRect(330, canvas.height - 28, 100, 16);
+    ctx.fillStyle = COLORS.shield;
+    ctx.fillRect(331, canvas.height - 27, (player.shield / player.maxShield) * 98, 14);
+
+    // Stamina
+    ctx.fillStyle = COLORS.hudText;
+    ctx.fillText('STAM', 450, canvas.height - 15);
+    ctx.fillStyle = '#1A1A1A';
+    ctx.fillRect(500, canvas.height - 26, 80, 12);
+    ctx.fillStyle = COLORS.stamina;
+    ctx.fillRect(501, canvas.height - 25, (player.stamina / player.maxStamina) * 78, 10);
+
+    // Medkits
+    ctx.fillStyle = COLORS.hudText;
+    ctx.fillText(`MEDKITS: ${player.medkits}`, 600, canvas.height - 15);
+
+    // Credits
+    ctx.fillStyle = COLORS.hudYellow;
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText(`$${player.credits}`, 720, canvas.height - 15);
+
+    // Kills
+    ctx.fillStyle = COLORS.hudText;
+    ctx.fillText(`KILLS: ${killCount}`, 800, canvas.height - 15);
+
+    // Reloading indicator
+    if (player.reloading) {
+        ctx.fillStyle = COLORS.hudYellow;
+        ctx.font = 'bold 16px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('RELOADING...', canvas.width / 2, canvas.height / 2 + 50);
+        ctx.textAlign = 'left';
+    }
+
+    // Low HP warning
+    if (player.hp < 30) {
+        ctx.fillStyle = `rgba(255, 0, 0, ${Math.sin(Date.now() / 100) * 0.2})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Self-destruct timer
+    if (selfDestructActive) {
+        const mins = Math.floor(selfDestructTimer / 60);
+        const secs = Math.floor(selfDestructTimer % 60);
+        ctx.fillStyle = selfDestructTimer < 60 ? COLORS.health : COLORS.hudYellow;
+        ctx.font = 'bold 32px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${mins}:${secs.toString().padStart(2, '0')}`, canvas.width / 2, 40);
+        ctx.font = '14px monospace';
+        ctx.fillText('SELF-DESTRUCT', canvas.width / 2, 55);
+        ctx.textAlign = 'left';
+    }
 }
 
 function drawTitle() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Title
     ctx.fillStyle = COLORS.hudText;
-    ctx.font = 'bold 48px monospace';
+    ctx.font = 'bold 52px monospace';
     ctx.textAlign = 'center';
     ctx.fillText('STATION BREACH', canvas.width / 2, 200);
 
-    // Subtitle
-    ctx.font = '20px monospace';
     ctx.fillStyle = COLORS.hudYellow;
+    ctx.font = '20px monospace';
     ctx.fillText('A Top-Down Twin-Stick Shooter', canvas.width / 2, 250);
 
-    // Instructions
-    ctx.font = '16px monospace';
     ctx.fillStyle = COLORS.hudText;
-    ctx.fillText('WASD - Move', canvas.width / 2, 350);
-    ctx.fillText('Mouse - Aim', canvas.width / 2, 380);
-    ctx.fillText('Click - Shoot', canvas.width / 2, 410);
-    ctx.fillText('Shift - Sprint', canvas.width / 2, 440);
+    ctx.font = '14px monospace';
+    ctx.fillText('WASD - Move | Mouse - Aim | Click - Shoot', canvas.width / 2, 350);
+    ctx.fillText('Shift - Sprint | R - Reload | H - Use Medkit', canvas.width / 2, 380);
+    ctx.fillText('Q - Switch Weapon | E - Interact', canvas.width / 2, 410);
 
-    // Start prompt
     ctx.fillStyle = Math.sin(Date.now() / 300) > 0 ? COLORS.hudYellow : COLORS.hudText;
     ctx.font = 'bold 24px monospace';
-    ctx.fillText('CLICK TO START', canvas.width / 2, 520);
+    ctx.fillText('CLICK TO START', canvas.width / 2, 500);
 
     ctx.textAlign = 'left';
 }
 
 function drawGameOver() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.fillStyle = COLORS.health;
-    ctx.font = 'bold 48px monospace';
+    ctx.font = 'bold 52px monospace';
     ctx.textAlign = 'center';
     ctx.fillText('MISSION FAILED', canvas.width / 2, 250);
 
     ctx.fillStyle = COLORS.hudText;
     ctx.font = '20px monospace';
-    ctx.fillText('Enemies Killed: ' + (10 - enemies.length), canvas.width / 2, 320);
-    ctx.fillText('Credits Earned: $' + player.credits, canvas.width / 2, 350);
+    ctx.fillText(`Enemies Killed: ${killCount}`, canvas.width / 2, 330);
+    ctx.fillText(`Credits Earned: $${player.credits}`, canvas.width / 2, 360);
+    ctx.fillText(`Deck Reached: ${deck}`, canvas.width / 2, 390);
 
     ctx.fillStyle = Math.sin(Date.now() / 300) > 0 ? COLORS.hudYellow : COLORS.hudText;
-    ctx.font = 'bold 20px monospace';
-    ctx.fillText('CLICK TO RESTART', canvas.width / 2, 450);
+    ctx.font = 'bold 22px monospace';
+    ctx.fillText('CLICK TO RESTART', canvas.width / 2, 480);
+
+    ctx.textAlign = 'left';
+}
+
+function drawWin() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = COLORS.stamina;
+    ctx.font = 'bold 52px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('ESCAPED!', canvas.width / 2, 250);
+
+    ctx.fillStyle = COLORS.hudText;
+    ctx.font = '20px monospace';
+    ctx.fillText(`Enemies Killed: ${killCount}`, canvas.width / 2, 330);
+    ctx.fillText(`Credits Earned: $${player.credits}`, canvas.width / 2, 360);
+
+    ctx.fillStyle = COLORS.hudYellow;
+    ctx.font = 'bold 22px monospace';
+    ctx.fillText('CLICK TO PLAY AGAIN', canvas.width / 2, 480);
 
     ctx.textAlign = 'left';
 }
 
 // Update functions
-function updateBullets(dt) {
+function update(dt) {
+    player.update(dt);
+
+    // Combo timer
+    if (comboTimer > 0) {
+        comboTimer -= dt;
+        if (comboTimer <= 0) killCombo = 0;
+    }
+
+    // Enemies
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        if (!enemies[i].update(dt)) enemies.splice(i, 1);
+    }
+
+    // Bullets
     for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
         b.x += b.vx * dt;
         b.y += b.vy * dt;
         b.life -= dt;
 
-        // Wall collision
         if (isColliding(b.x, b.y, 4, 4)) {
-            // Spark particles
             for (let j = 0; j < 5; j++) {
                 particles.push({
-                    x: b.x,
-                    y: b.y,
-                    vx: (Math.random() - 0.5) * 150,
-                    vy: (Math.random() - 0.5) * 150,
-                    life: 0.2,
-                    maxLife: 0.2,
-                    color: b.fromPlayer ? COLORS.hudYellow : '#88FF88',
-                    size: 3
+                    x: b.x, y: b.y,
+                    vx: (Math.random() - 0.5) * 150, vy: (Math.random() - 0.5) * 150,
+                    life: 0.2, maxLife: 0.2, color: b.fromPlayer ? COLORS.hudYellow : COLORS.bulletEnemy, size: 3
                 });
             }
             bullets.splice(i, 1);
             continue;
         }
 
-        // Hit detection
         if (b.fromPlayer) {
-            // Check enemy hits
+            // Hit enemies
             for (let e of enemies) {
-                const dx = b.x - e.x;
-                const dy = b.y - e.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < e.width / 2 + 4) {
+                const dx = b.x - e.x, dy = b.y - e.y;
+                if (Math.sqrt(dx * dx + dy * dy) < e.width / 2 + 4) {
                     e.takeDamage(b.damage, Math.atan2(b.vy, b.vx));
                     bullets.splice(i, 1);
                     break;
                 }
             }
+            // Hit barrels
+            for (let j = barrels.length - 1; j >= 0; j--) {
+                const bar = barrels[j];
+                const dx = b.x - bar.x, dy = b.y - bar.y;
+                if (Math.sqrt(dx * dx + dy * dy) < 15) {
+                    bar.hp -= b.damage;
+                    if (bar.hp <= 0) {
+                        // Explode barrel
+                        for (let k = 0; k < 20; k++) {
+                            particles.push({
+                                x: bar.x, y: bar.y,
+                                vx: (Math.random() - 0.5) * 400, vy: (Math.random() - 0.5) * 400,
+                                life: 0.6, maxLife: 0.6, color: COLORS.explosion, size: 8
+                            });
+                        }
+                        screenShake(12, 0.2);
+                        // Damage nearby
+                        enemies.forEach(e => {
+                            const edx = e.x - bar.x, edy = e.y - bar.y;
+                            const edist = Math.sqrt(edx * edx + edy * edy);
+                            if (edist < 100) e.takeDamage(80 * (1 - edist / 100), Math.atan2(edy, edx));
+                        });
+                        const pdx = player.x - bar.x, pdy = player.y - bar.y;
+                        const pdist = Math.sqrt(pdx * pdx + pdy * pdy);
+                        if (pdist < 100) player.takeDamage(40 * (1 - pdist / 100));
+                        barrels.splice(j, 1);
+                    }
+                    bullets.splice(i, 1);
+                    break;
+                }
+            }
         } else {
-            // Check player hit
-            const dx = b.x - player.x;
-            const dy = b.y - player.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 20) {
+            const dx = b.x - player.x, dy = b.y - player.y;
+            if (Math.sqrt(dx * dx + dy * dy) < 20) {
                 player.takeDamage(b.damage);
                 bullets.splice(i, 1);
                 continue;
             }
         }
 
-        if (b.life <= 0) {
-            bullets.splice(i, 1);
-        }
+        if (b.life <= 0) bullets.splice(i, 1);
     }
-}
 
-function updateParticles(dt) {
+    // Particles
     for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx * dt;
@@ -1134,48 +1247,104 @@ function updateParticles(dt) {
         p.vx *= 0.95;
         p.vy *= 0.95;
         p.life -= dt;
-        if (p.life <= 0) {
-            particles.splice(i, 1);
-        }
+        if (p.life <= 0) particles.splice(i, 1);
     }
-}
 
-function updatePickups(dt) {
+    // Floating texts
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i];
+        ft.y += ft.vy * dt;
+        ft.life -= dt;
+        if (ft.life <= 0) floatingTexts.splice(i, 1);
+    }
+
+    // Pickups
     for (let i = pickups.length - 1; i >= 0; i--) {
         const p = pickups[i];
-        const dx = p.x - player.x;
-        const dy = p.y - player.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < 32) {
-            if (p.type === 'health' && player.health < player.maxHealth) {
-                player.health = Math.min(player.health + 25, player.maxHealth);
-                pickups.splice(i, 1);
-            } else if (p.type === 'ammo' && player.ammo < player.maxAmmo) {
-                player.ammo = Math.min(player.ammo + 30, player.maxAmmo);
-                pickups.splice(i, 1);
+        const dx = p.x - player.x, dy = p.y - player.y;
+        if (Math.sqrt(dx * dx + dy * dy) < 32) {
+            let take = false;
+            switch (p.type) {
+                case 'health':
+                    if (player.hp < player.maxHp) { player.hp = Math.min(player.maxHp, player.hp + 25); take = true; }
+                    break;
+                case 'ammo':
+                    player.ammo['9mm'] += 30; take = true;
+                    break;
+                case 'shield':
+                    if (player.shield < player.maxShield) { player.shield = Math.min(player.maxShield, player.shield + 25); take = true; }
+                    break;
+                case 'medkit':
+                    player.medkits++; take = true;
+                    break;
+                case 'credits':
+                    player.credits += 25; take = true;
+                    break;
+                case 'weapon':
+                    const weaponKeys = Object.keys(WEAPONS).filter(w => w !== 'pistol');
+                    const newWeapon = weaponKeys[Math.floor(Math.random() * weaponKeys.length)];
+                    player.weapons.push({ ...WEAPONS[newWeapon], ammo: WEAPONS[newWeapon].magSize });
+                    addFloatingText(player.x, player.y - 30, `Got ${WEAPONS[newWeapon].name}!`, COLORS.hudYellow);
+                    take = true;
+                    break;
             }
+            if (take) pickups.splice(i, 1);
         }
     }
-}
 
-function updateCamera() {
-    // Follow player smoothly
+    // Terminal interaction
+    if (keys['e']) {
+        for (const t of terminals) {
+            const dx = player.x - (t.x * TILE + TILE/2), dy = player.y - (t.y * TILE + TILE/2);
+            if (Math.sqrt(dx * dx + dy * dy) < 40 && !t.used) {
+                t.used = true;
+                // Shop menu (simplified: just give stuff)
+                const options = ['health', 'ammo', 'upgrade'];
+                const choice = options[Math.floor(Math.random() * options.length)];
+                if (choice === 'health' && player.credits >= 25) {
+                    player.credits -= 25;
+                    player.hp = Math.min(player.maxHp, player.hp + 50);
+                    addFloatingText(t.x * TILE, t.y * TILE, '+50 HP', COLORS.stamina);
+                } else if (choice === 'ammo' && player.credits >= 15) {
+                    player.credits -= 15;
+                    player.ammo['9mm'] += 60;
+                    addFloatingText(t.x * TILE, t.y * TILE, '+60 Ammo', COLORS.hudYellow);
+                } else if (choice === 'upgrade' && player.credits >= 100) {
+                    player.credits -= 100;
+                    player.upgrades.damage++;
+                    addFloatingText(t.x * TILE, t.y * TILE, 'DAMAGE UP!', COLORS.hudYellow);
+                } else {
+                    addFloatingText(t.x * TILE, t.y * TILE, 'NOT ENOUGH $', COLORS.health);
+                    t.used = false;
+                }
+            }
+        }
+        keys['e'] = false;
+    }
+
+    // Camera
     const targetX = player.x - canvas.width / 2;
     const targetY = player.y - canvas.height / 2;
-
     cameraX += (targetX - cameraX) * 0.1;
     cameraY += (targetY - cameraY) * 0.1;
-
-    // Clamp to level bounds
-    cameraX = Math.max(0, Math.min(cameraX, MAP_WIDTH * TILE_SIZE - canvas.width));
-    cameraY = Math.max(0, Math.min(cameraY, MAP_HEIGHT * TILE_SIZE - canvas.height));
 
     // Screen shake
     if (shakeDuration > 0) {
         cameraX += (Math.random() - 0.5) * shakeAmount * 2;
         cameraY += (Math.random() - 0.5) * shakeAmount * 2;
-        shakeDuration -= 1/60;
+        shakeDuration -= dt;
+        if (shakeDuration <= 0) shakeAmount = 0;
+    }
+
+    // Win condition
+    if (enemies.length === 0) {
+        if (deck < maxDecks) {
+            deck++;
+            generateLevel();
+            addFloatingText(player.x, player.y - 30, `DECK ${deck}`, COLORS.hudYellow);
+        } else {
+            gameState = 'win';
+        }
     }
 }
 
@@ -1185,82 +1354,47 @@ function gameLoop(timestamp) {
     const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
     lastTime = timestamp;
 
-    // Clear
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     if (gameState === 'title') {
         drawTitle();
     } else if (gameState === 'playing') {
-        // Update
-        player.update(dt);
+        update(dt);
 
-        for (let i = enemies.length - 1; i >= 0; i--) {
-            if (!enemies[i].update(dt)) {
-                enemies.splice(i, 1);
-            }
-        }
-
-        updateBullets(dt);
-        updateParticles(dt);
-        updatePickups(dt);
-        updateCamera();
-
-        // Draw
-        drawLevel();
+        drawTiles();
+        drawBloodStains();
+        drawBarrels();
+        drawTerminals();
         drawPickups();
         enemies.forEach(e => e.draw());
         player.draw();
         drawBullets();
         drawParticles();
+        drawFloatingTexts();
         drawHUD();
-
-        // Check win condition
-        if (enemies.length === 0) {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#00FF00';
-            ctx.font = 'bold 36px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('AREA CLEARED!', canvas.width / 2, canvas.height / 2);
-            ctx.textAlign = 'left';
-        }
+        drawMinimap();
     } else if (gameState === 'gameover') {
-        drawLevel();
-        enemies.forEach(e => e.draw());
-        drawBullets();
-        drawParticles();
-        drawHUD();
         drawGameOver();
+    } else if (gameState === 'win') {
+        drawWin();
     }
 
     requestAnimationFrame(gameLoop);
 }
 
-// Initialize game
-function initGame() {
-    generateLevel();
-    player = new Player(spawnPoint.x, spawnPoint.y);
-    spawnEnemies();
-    bullets = [];
-    particles = [];
-    pickups = [];
-    gameState = 'playing';
-}
-
-// Input event listeners
+// Input handlers
 document.addEventListener('keydown', e => {
     keys[e.key.toLowerCase()] = true;
-
-    // Reload
-    if (e.key.toLowerCase() === 'r' && gameState === 'playing') {
-        player.ammo = player.maxAmmo;
+    if (e.key.toLowerCase() === 'r' && gameState === 'playing') player.startReload();
+    if (e.key.toLowerCase() === 'h' && gameState === 'playing') player.useMedkit();
+    if (e.key.toLowerCase() === 'q' && gameState === 'playing') {
+        player.currentWeapon = (player.currentWeapon + 1) % player.weapons.length;
+        addFloatingText(player.x, player.y - 20, player.getWeapon().name, COLORS.hudYellow);
     }
 });
 
-document.addEventListener('keyup', e => {
-    keys[e.key.toLowerCase()] = false;
-});
+document.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 
 canvas.addEventListener('mousemove', e => {
     const rect = canvas.getBoundingClientRect();
@@ -1270,30 +1404,22 @@ canvas.addEventListener('mousemove', e => {
 
 canvas.addEventListener('mousedown', e => {
     mouseDown = true;
-
     if (gameState === 'title') {
-        initGame();
-    } else if (gameState === 'gameover') {
-        initGame();
+        gameState = 'playing';
+        deck = 1;
+        killCount = 0;
+        generateLevel();
+    } else if (gameState === 'gameover' || gameState === 'win') {
+        gameState = 'title';
     }
 });
 
-canvas.addEventListener('mouseup', () => {
-    mouseDown = false;
-});
+canvas.addEventListener('mouseup', () => { mouseDown = false; });
 
-// Prevent context menu on right click
-canvas.addEventListener('contextmenu', e => e.preventDefault());
-
-// Expose game state for testing
-window.gameState = () => ({
-    state: gameState,
-    playerHealth: player ? player.health : 0,
-    playerAmmo: player ? player.ammo : 0,
-    enemies: enemies.length,
-    bullets: bullets.length
+window.addEventListener('resize', () => {
+    canvas.width = Math.max(1280, window.innerWidth);
+    canvas.height = Math.max(720, window.innerHeight);
 });
-window.startGame = initGame;
 
 // Start
-requestAnimationFrame(gameLoop);
+gameLoop(0);

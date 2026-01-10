@@ -45,6 +45,10 @@ const MINERALS = {
     [TILE.AMAZONITE]: { name: 'Amazonite', value: 500000, weight: 120, color: '#00C4B0', minDepth: 3500 }
 };
 
+// Additional tile types
+TILE.GAS_POCKET = 20;
+TILE.ANCIENT_ARTIFACT = 21;
+
 // Colors
 const COLORS = {
     sky: '#FF6B35',
@@ -57,8 +61,36 @@ const COLORS = {
     lava: '#FF4500',
     pod: '#3CB371',
     podCockpit: '#4169E1',
-    podDrill: '#888888'
+    podDrill: '#888888',
+    gasPocket: '#88FF88',
+    artifact: '#FFD700'
 };
+
+// Floating texts
+let floatingTexts = [];
+
+// Particles
+let particles = [];
+
+// Screen shake
+let screenShake = 0;
+
+// Achievements
+const achievements = {
+    depth100: false,
+    depth500: false,
+    depth1000: false,
+    depth2000: false,
+    depth3000: false,
+    firstDiamond: false,
+    firstRuby: false,
+    richMiner: false,
+    survivalist: false
+};
+
+// Combo system
+let miningCombo = 0;
+let comboTimer = 0;
 
 // Game state
 let gameState = 'title'; // title, playing, shop, gameover
@@ -112,6 +144,117 @@ const FUEL_CAPACITY = [10, 15, 25, 40, 60, 100, 150];
 const CARGO_CAPACITY = [70, 150, 250, 400, 700, 1200];
 const RADIATOR_REDUCTION = [0, 0.1, 0.25, 0.4, 0.6, 0.8];
 
+// Helper functions for effects
+function spawnFloatingText(x, y, text, color = '#FFF', size = 16) {
+    floatingTexts.push({
+        x, y,
+        text,
+        color,
+        size,
+        vy: -50,
+        life: 1.5,
+        alpha: 1
+    });
+}
+
+function spawnParticle(x, y, color, count = 5, speed = 80) {
+    for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const vel = Math.random() * speed + speed * 0.3;
+        particles.push({
+            x, y,
+            vx: Math.cos(angle) * vel,
+            vy: Math.sin(angle) * vel - 30,
+            color,
+            size: 3 + Math.random() * 3,
+            life: 0.8 + Math.random() * 0.4
+        });
+    }
+}
+
+function updateFloatingTexts(dt) {
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const t = floatingTexts[i];
+        t.y += t.vy * dt;
+        t.life -= dt;
+        t.alpha = Math.min(1, t.life);
+        if (t.life <= 0) floatingTexts.splice(i, 1);
+    }
+}
+
+function updateParticles(dt) {
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += 200 * dt; // Gravity
+        p.life -= dt;
+        if (p.life <= 0) particles.splice(i, 1);
+    }
+}
+
+function checkAchievements() {
+    const depth = Math.floor(Math.max(0, player.y - 100) / TILE_SIZE * 13);
+
+    if (!achievements.depth100 && depth >= 100) {
+        achievements.depth100 = true;
+        spawnFloatingText(player.x, player.y - 50, 'ACHIEVEMENT: 100ft!', '#FFD700', 20);
+        cash += 100;
+    }
+    if (!achievements.depth500 && depth >= 500) {
+        achievements.depth500 = true;
+        spawnFloatingText(player.x, player.y - 50, 'ACHIEVEMENT: 500ft!', '#FFD700', 20);
+        cash += 500;
+    }
+    if (!achievements.depth1000 && depth >= 1000) {
+        achievements.depth1000 = true;
+        spawnFloatingText(player.x, player.y - 50, 'ACHIEVEMENT: 1000ft!', '#FFD700', 20);
+        cash += 2000;
+    }
+    if (!achievements.depth2000 && depth >= 2000) {
+        achievements.depth2000 = true;
+        spawnFloatingText(player.x, player.y - 50, 'ACHIEVEMENT: 2000ft!', '#FFD700', 20);
+        cash += 10000;
+    }
+    if (!achievements.depth3000 && depth >= 3000) {
+        achievements.depth3000 = true;
+        spawnFloatingText(player.x, player.y - 50, 'DEEP EXPLORER!', '#FFD700', 22);
+        cash += 50000;
+    }
+    if (!achievements.richMiner && cash >= 100000) {
+        achievements.richMiner = true;
+        spawnFloatingText(player.x, player.y - 50, 'RICH MINER!', '#FFD700', 20);
+    }
+}
+
+function triggerGasExplosion(worldX, worldY) {
+    // Screen shake
+    screenShake = 20;
+
+    // Damage player
+    player.hull -= 15;
+    spawnFloatingText(player.x, player.y - 30, '-15 HULL', '#FF4444', 18);
+
+    // Particles
+    spawnParticle(worldX, worldY - cameraY, '#88FF88', 30, 150);
+    spawnParticle(worldX, worldY - cameraY, '#FFFF00', 15, 120);
+
+    // Clear nearby tiles (2x2 area)
+    const tx = Math.floor(worldX / TILE_SIZE);
+    const ty = Math.floor(worldY / TILE_SIZE);
+    for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+            const nx = tx + dx;
+            const ny = ty + dy;
+            if (nx >= 0 && nx < WORLD_WIDTH && ny >= 0 && ny < WORLD_HEIGHT) {
+                if (world[ny][nx] !== TILE.BUILDING) {
+                    world[ny][nx] = TILE.EMPTY;
+                }
+            }
+        }
+    }
+}
+
 // Camera
 let cameraY = 0;
 
@@ -148,6 +291,14 @@ function generateWorld() {
                 // Lava appears deep
                 if (depth > 3000 && roll < 0.03) {
                     row.push(TILE.LAVA);
+                }
+                // Gas pockets (dangerous!)
+                else if (depth > 500 && depth < 2500 && roll < 0.008) {
+                    row.push(TILE.GAS_POCKET);
+                }
+                // Ancient artifacts (rare, valuable)
+                else if (depth > 1500 && roll < 0.003) {
+                    row.push(TILE.ANCIENT_ARTIFACT);
                 }
                 // Minerals
                 else if (roll < getMineralChance(depth)) {
@@ -280,6 +431,9 @@ function updatePlayer(dt) {
             if (player.vy > 200) {
                 const damage = Math.floor((player.vy - 200) / 50);
                 player.hull -= damage;
+                screenShake = Math.min(screenShake + damage * 2, 15);
+                spawnFloatingText(player.x, player.y - 30, `-${damage} HULL`, '#FF4444', 14);
+                spawnParticle(player.x, player.y + player.height / 2, '#8B6914', 8, 50);
             }
             player.vy = 0;
         }
@@ -335,9 +489,37 @@ function updateDrilling(dt) {
     player.fuel -= 0.3 * dt;
     player.drillProgress += dt;
 
+    // Combo timer
+    comboTimer -= dt;
+    if (comboTimer <= 0) {
+        miningCombo = 0;
+    }
+
     if (player.drillProgress >= player.drillTime) {
         // Complete drilling
         const tile = getTileAt(player.drillTarget.x, player.drillTarget.y);
+        const screenX = player.drillTarget.x;
+        const screenY = player.drillTarget.y - cameraY;
+
+        // Spawn dirt particles
+        spawnParticle(player.x, screenY, '#8B6914', 5, 40);
+
+        // Gas pocket explosion!
+        if (tile === TILE.GAS_POCKET) {
+            triggerGasExplosion(player.drillTarget.x, player.drillTarget.y);
+            player.drilling = false;
+            return;
+        }
+
+        // Ancient artifact (very valuable!)
+        if (tile === TILE.ANCIENT_ARTIFACT) {
+            const artifactValue = 25000;
+            cash += artifactValue;
+            score += artifactValue * 2;
+            spawnFloatingText(player.x, screenY - 20, `ARTIFACT! +$${artifactValue}`, '#FFD700', 22);
+            spawnParticle(player.x, screenY, '#FFD700', 20, 100);
+            screenShake = 8;
+        }
 
         // Collect mineral
         if (tile >= TILE.IRONIUM && tile <= TILE.AMAZONITE) {
@@ -349,7 +531,33 @@ function updateDrilling(dt) {
                     value: mineral.value,
                     weight: mineral.weight
                 });
-                score += mineral.value;
+
+                // Combo bonus
+                miningCombo++;
+                comboTimer = 2;
+                const comboMultiplier = Math.min(1 + miningCombo * 0.1, 2.5);
+                const earnedScore = Math.floor(mineral.value * comboMultiplier);
+                score += earnedScore;
+
+                spawnFloatingText(player.x, screenY - 20, `+${mineral.name}`, mineral.color, 14);
+                if (miningCombo > 2) {
+                    spawnFloatingText(player.x, screenY - 40, `${miningCombo}x COMBO!`, '#FF8800', 12);
+                }
+                spawnParticle(player.x, screenY, mineral.color, 8, 60);
+
+                // Achievement checks
+                if (tile === TILE.DIAMOND && !achievements.firstDiamond) {
+                    achievements.firstDiamond = true;
+                    spawnFloatingText(player.x, player.y - 50, 'FIRST DIAMOND!', '#B9F2FF', 20);
+                    cash += 5000;
+                }
+                if (tile === TILE.RUBY && !achievements.firstRuby) {
+                    achievements.firstRuby = true;
+                    spawnFloatingText(player.x, player.y - 50, 'FIRST RUBY!', '#E0115F', 20);
+                    cash += 2000;
+                }
+            } else {
+                spawnFloatingText(player.x, screenY - 20, 'CARGO FULL!', '#FF4444', 16);
             }
         }
 
@@ -357,6 +565,8 @@ function updateDrilling(dt) {
         if (tile === TILE.LAVA) {
             const damage = 58 * (1 - RADIATOR_REDUCTION[upgrades.radiator]);
             player.hull -= damage;
+            spawnFloatingText(player.x, screenY - 20, `-${Math.floor(damage)} LAVA!`, '#FF4500', 16);
+            screenShake = 5;
         }
 
         // Clear tile
@@ -431,6 +641,34 @@ function drawTile(tile, x, y, tileX, tileY) {
         // Glow effect
         ctx.fillStyle = 'rgba(255,200,0,0.5)';
         ctx.fillRect(x + 4, y + 4, 12, 12);
+        return;
+    }
+
+    if (tile === TILE.GAS_POCKET) {
+        // Hidden in rock - looks like rock with slight green tint
+        ctx.fillStyle = '#445544';
+        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        // Subtle gas leak hint
+        ctx.fillStyle = 'rgba(100,255,100,0.15)';
+        ctx.fillRect(x + 2, y + 2, 16, 16);
+        return;
+    }
+
+    if (tile === TILE.ANCIENT_ARTIFACT) {
+        // Gold artifact in dirt
+        ctx.fillStyle = COLORS.dirt;
+        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.moveTo(x + 10, y + 3);
+        ctx.lineTo(x + 17, y + 10);
+        ctx.lineTo(x + 10, y + 17);
+        ctx.lineTo(x + 3, y + 10);
+        ctx.closePath();
+        ctx.fill();
+        // Sparkle
+        ctx.fillStyle = '#FFF';
+        ctx.fillRect(x + 8, y + 5, 3, 3);
         return;
     }
 
@@ -591,6 +829,37 @@ function drawHUD() {
     ctx.textAlign = 'center';
     ctx.fillStyle = '#666';
     ctx.fillText('Arrow Keys: Move/Drill | Land on buildings to interact', WIDTH / 2, HEIGHT - 8);
+
+    // Combo display
+    if (miningCombo > 1) {
+        ctx.fillStyle = '#FF8800';
+        ctx.font = 'bold 18px Arial';
+        ctx.fillText(`${miningCombo}x MINING COMBO`, WIDTH / 2, 70);
+    }
+}
+
+function drawFloatingTexts() {
+    for (const t of floatingTexts) {
+        ctx.save();
+        ctx.globalAlpha = t.alpha;
+        ctx.fillStyle = t.color;
+        ctx.font = `bold ${t.size}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 3;
+        ctx.strokeText(t.text, t.x, t.y - cameraY);
+        ctx.fillText(t.text, t.x, t.y - cameraY);
+        ctx.restore();
+    }
+}
+
+function drawParticles() {
+    for (const p of particles) {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life;
+        ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+        ctx.globalAlpha = 1;
+    }
 }
 
 // Building interactions
@@ -734,6 +1003,18 @@ function resetGame() {
         upgrades[key] = 0;
     }
 
+    // Reset new systems
+    floatingTexts = [];
+    particles = [];
+    screenShake = 0;
+    miningCombo = 0;
+    comboTimer = 0;
+
+    // Reset achievements
+    for (const key of Object.keys(achievements)) {
+        achievements[key] = false;
+    }
+
     cash = 500;
     score = 0;
     cameraY = 0;
@@ -756,11 +1037,33 @@ function gameLoop(timestamp) {
         updatePlayer(dt);
         checkBuildingInteraction();
         updateCamera();
+        updateFloatingTexts(dt);
+        updateParticles(dt);
+        checkAchievements();
+
+        // Screen shake decay
+        screenShake = Math.max(0, screenShake - dt * 30);
+
+        // Apply screen shake
+        if (screenShake > 0) {
+            ctx.save();
+            const shakeX = (Math.random() - 0.5) * screenShake * 2;
+            const shakeY = (Math.random() - 0.5) * screenShake * 2;
+            ctx.translate(shakeX, shakeY);
+        }
 
         drawSky();
         drawWorld();
         drawBuildings();
         drawPlayer();
+        drawParticles();
+        drawFloatingTexts();
+
+        // Restore from screen shake
+        if (screenShake > 0) {
+            ctx.restore();
+        }
+
         drawHUD();
     } else if (gameState === 'gameover') {
         drawGameOver();

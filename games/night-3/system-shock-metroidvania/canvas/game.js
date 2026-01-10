@@ -76,6 +76,32 @@ let enemies = [];
 // Bullets
 let bullets = [];
 
+// Visual effects
+let floatingTexts = [];
+let particles = [];
+let screenShakeAmount = 0;
+
+// Combo system
+let meleeCombo = 0;
+let comboTimer = 0;
+const COMBO_DURATION = 1.5;
+const MAX_COMBO_MULT = 2.5;
+
+// Score tracking
+let score = 0;
+let killCount = 0;
+
+// SHODAN taunts
+const SHODAN_TAUNTS = [
+    '"LOOK AT YOU, HACKER..."',
+    '"YOU CANNOT STOP ME."',
+    '"I AM PERFECTION."',
+    '"PATHETIC INSECT."',
+    '"YOUR DEATH IS INEVITABLE."'
+];
+let currentTaunt = '';
+let tauntTimer = 0;
+
 // Room map data
 let roomMap = [];
 
@@ -236,6 +262,45 @@ function createEnemy(x, y, type) {
     }
 }
 
+// Visual effect helpers
+function spawnFloatingText(x, y, text, color) {
+    floatingTexts.push({
+        x, y, text, color,
+        life: 1.5, maxLife: 1.5
+    });
+}
+
+function spawnParticles(x, y, count, color, speed = 100) {
+    for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const spd = Math.random() * speed + speed * 0.5;
+        particles.push({
+            x, y,
+            vx: Math.cos(angle) * spd,
+            vy: Math.sin(angle) * spd - 50,
+            color,
+            life: 0.5 + Math.random() * 0.5,
+            size: 2 + Math.random() * 3
+        });
+    }
+}
+
+function addScreenShake(amount) {
+    screenShakeAmount = Math.min(screenShakeAmount + amount, 1.0);
+}
+
+function getComboMultiplier() {
+    if (meleeCombo <= 0) return 1;
+    return Math.min(1 + meleeCombo * 0.3, MAX_COMBO_MULT);
+}
+
+function triggerTaunt() {
+    if (tauntTimer <= 0) {
+        currentTaunt = SHODAN_TAUNTS[Math.floor(Math.random() * SHODAN_TAUNTS.length)];
+        tauntTimer = 5;
+    }
+}
+
 // Collision helpers
 function isSolid(x, y) {
     const tx = Math.floor(x / TILE_SIZE);
@@ -364,6 +429,12 @@ function updatePlayer(dt) {
     player.x = Math.max(halfW, Math.min(ROOM_WIDTH * TILE_SIZE - halfW, player.x));
     player.y = Math.max(halfH, Math.min(ROOM_HEIGHT * TILE_SIZE - halfH, player.y));
 
+    // Combo timer
+    if (comboTimer > 0) {
+        comboTimer -= dt;
+        if (comboTimer <= 0) meleeCombo = 0;
+    }
+
     // Melee attack
     if ((keys['KeyJ'] || keys['KeyZ']) && player.attackTimer <= 0 && WEAPONS[player.weapon].melee) {
         player.attacking = true;
@@ -371,13 +442,27 @@ function updatePlayer(dt) {
 
         // Check enemy hits
         const weapon = WEAPONS[player.weapon];
+        let hitAny = false;
         for (const enemy of enemies) {
             const dx = enemy.x - player.x;
             const dy = enemy.y - player.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
             if (dist < weapon.range && Math.sign(dx) === player.facing) {
-                enemy.hp -= weapon.damage;
+                const mult = getComboMultiplier();
+                const damage = Math.floor(weapon.damage * mult);
+                enemy.hp -= damage;
+                hitAny = true;
+
+                // Damage feedback
+                const critical = mult >= 2.0;
+                spawnFloatingText(enemy.x, enemy.y - 20, critical ? damage + '!' : String(damage), critical ? '#ffff00' : '#ff8844');
+                spawnParticles(enemy.x, enemy.y, 5, COLORS.enemyGlow);
+                addScreenShake(0.15);
             }
+        }
+        if (hitAny) {
+            meleeCombo++;
+            comboTimer = COMBO_DURATION;
         }
     } else if (player.attackTimer <= 0) {
         player.attacking = false;
@@ -420,12 +505,16 @@ function updatePlayer(dt) {
             player.invincible = 1.0;
             player.vx = -player.facing * 200;
             player.vy = -150;
+            addScreenShake(0.4);
+            spawnFloatingText(player.x, player.y - 30, '-' + enemy.damage, '#ff4444');
+            spawnParticles(player.x, player.y, 8, '#ff6666');
         }
     }
 
     // Death check
     if (player.hp <= 0) {
         gameState = 'gameover';
+        triggerTaunt();
     }
 }
 
@@ -525,6 +614,17 @@ function updateEnemies(dt) {
 
         // Death
         if (e.hp <= 0) {
+            // Score and effects
+            const pts = e.type === 'drone' ? 50 : 25;
+            score += pts;
+            killCount++;
+            spawnFloatingText(e.x, e.y - 10, '+' + pts, '#ffdd44');
+            spawnParticles(e.x, e.y, 12, e.type === 'drone' ? '#556677' : COLORS.enemy);
+            addScreenShake(0.2);
+
+            // Chance of SHODAN taunt
+            if (Math.random() < 0.15) triggerTaunt();
+
             enemies.splice(i, 1);
         }
     }
@@ -552,6 +652,8 @@ function updateBullets(dt) {
                 const dy = b.y - e.y;
                 if (Math.abs(dx) < e.width/2 && Math.abs(dy) < e.height/2) {
                     e.hp -= b.damage;
+                    spawnFloatingText(e.x, e.y - 15, String(b.damage), '#ffaa44');
+                    spawnParticles(b.x, b.y, 4, '#ffcc66', 60);
                     bullets.splice(i, 1);
                     break;
                 }
@@ -563,6 +665,9 @@ function updateBullets(dt) {
                 if (Math.abs(dx) < player.width/2 && Math.abs(dy) < player.height/2) {
                     player.hp -= b.damage;
                     player.invincible = 1.0;
+                    addScreenShake(0.3);
+                    spawnFloatingText(player.x, player.y - 25, '-' + b.damage, '#ff4444');
+                    spawnParticles(player.x, player.y, 6, '#ff6666');
                     bullets.splice(i, 1);
                     continue;
                 }
@@ -573,6 +678,38 @@ function updateBullets(dt) {
         if (b.life <= 0) {
             bullets.splice(i, 1);
         }
+    }
+}
+
+// Update visual effects
+function updateVisualEffects(dt) {
+    // Update floating texts
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i];
+        ft.life -= dt;
+        ft.y -= 40 * dt; // Rise upward
+        if (ft.life <= 0) floatingTexts.splice(i, 1);
+    }
+
+    // Update particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.life -= dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += 300 * dt; // Gravity
+        if (p.life <= 0) particles.splice(i, 1);
+    }
+
+    // Screen shake decay
+    if (screenShakeAmount > 0) {
+        screenShakeAmount -= 2 * dt;
+        if (screenShakeAmount < 0) screenShakeAmount = 0;
+    }
+
+    // SHODAN taunt timer
+    if (tauntTimer > 0) {
+        tauntTimer -= dt;
     }
 }
 
@@ -736,6 +873,49 @@ function drawBullets() {
     }
 }
 
+function drawParticles() {
+    for (const p of particles) {
+        const alpha = Math.min(1, p.life * 2);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawFloatingTexts() {
+    for (const ft of floatingTexts) {
+        const alpha = ft.life / ft.maxLife;
+        ctx.globalAlpha = alpha;
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+
+        // Drop shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillText(ft.text, ft.x + 1, ft.y + 1);
+
+        // Main text
+        ctx.fillStyle = ft.color;
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.textAlign = 'left';
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawSHODANTaunt() {
+    if (tauntTimer > 0 && currentTaunt) {
+        const alpha = Math.min(1, tauntTimer / 2);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = COLORS.accent;
+        ctx.font = 'italic 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(currentTaunt, WIDTH / 2, 80);
+        ctx.fillText('- SHODAN', WIDTH / 2, 100);
+        ctx.textAlign = 'left';
+        ctx.globalAlpha = 1;
+    }
+}
+
 function drawHUD() {
     // Top bar background
     ctx.fillStyle = 'rgba(10, 10, 20, 0.9)';
@@ -784,6 +964,24 @@ function drawHUD() {
         ctx.fillStyle = '#aaa';
         ctx.font = '10px Arial';
         ctx.fillText('MELEE', WIDTH - 170, 38);
+    }
+
+    // Score and kills (center top)
+    ctx.fillStyle = '#ffdd44';
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(`SCORE: ${score}`, WIDTH / 2, 20);
+    ctx.fillStyle = '#aaa';
+    ctx.font = '10px Arial';
+    ctx.fillText(`KILLS: ${killCount}`, WIDTH / 2, 35);
+    ctx.textAlign = 'left';
+
+    // Combo display
+    if (meleeCombo > 0 && comboTimer > 0) {
+        const mult = getComboMultiplier().toFixed(1);
+        ctx.fillStyle = meleeCombo >= 3 ? '#ffff00' : '#ffaa44';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText(`COMBO x${meleeCombo} (${mult}x)`, 180, 25);
     }
 
     // Bottom controls help
@@ -878,6 +1076,22 @@ function resetGame() {
     player.ammo = { standard: 50, magnum: 20 };
     bullets = [];
     currentRoom = { x: 0, y: 0 };
+
+    // Clear visual effects
+    floatingTexts = [];
+    particles = [];
+    screenShakeAmount = 0;
+
+    // Clear combo and score
+    meleeCombo = 0;
+    comboTimer = 0;
+    score = 0;
+    killCount = 0;
+
+    // Clear taunts
+    currentTaunt = '';
+    tauntTimer = 0;
+
     loadRoom(0);
     gameState = 'playing';
 }
@@ -898,6 +1112,7 @@ function gameLoop(timestamp) {
         updatePlayer(dt);
         updateEnemies(dt);
         updateBullets(dt);
+        updateVisualEffects(dt);
 
         // Check room transitions
         if (player.x < 10) {
@@ -910,10 +1125,27 @@ function gameLoop(timestamp) {
             player.x = 30;
         }
 
+        // Apply screen shake
+        if (screenShakeAmount > 0) {
+            ctx.save();
+            const shakeX = (Math.random() - 0.5) * screenShakeAmount * 15;
+            const shakeY = (Math.random() - 0.5) * screenShakeAmount * 15;
+            ctx.translate(shakeX, shakeY);
+        }
+
         drawRoom();
         drawBullets();
+        drawParticles();
         drawEnemies();
         drawPlayer();
+
+        // Restore screen shake before UI
+        if (screenShakeAmount > 0) {
+            ctx.restore();
+        }
+
+        drawFloatingTexts();
+        drawSHODANTaunt();
         drawHUD();
     } else if (gameState === 'gameover') {
         drawGameOver();
@@ -933,7 +1165,10 @@ window.gameState = {
     get energy() { return player.energy; },
     get weapon() { return player.weapon; },
     get enemies() { return enemies.length; },
-    get room() { return currentRoom; }
+    get room() { return currentRoom; },
+    get score() { return score; },
+    get kills() { return killCount; },
+    get combo() { return meleeCombo; }
 };
 
 window.startGame = () => {

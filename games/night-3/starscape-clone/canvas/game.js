@@ -113,7 +113,41 @@ const player = {
     damage: 12,
     gravityBeamActive: false,
     size: 18,
-    shieldFlash: 0
+    shieldFlash: 0,
+    // New features
+    missileAmmo: 5,
+    maxMissiles: 10,
+    missileTimer: 0,
+    comboCount: 0,
+    comboTimer: 0,
+    powerups: {
+        rapidFire: 0,
+        damageBoost: 0,
+        speedBoost: 0
+    }
+};
+
+// Screen effects
+let screenShake = 0;
+let hitStop = 0;
+
+// Floating texts (damage numbers, combos)
+let floatingTexts = [];
+
+// Powerups
+let powerups = [];
+
+// Missiles
+let missiles = [];
+
+// Powerup types
+const POWERUP_TYPES = {
+    rapidFire: { color: '#FF4400', duration: 10, label: 'RAPID FIRE' },
+    damageBoost: { color: '#FF00FF', duration: 8, label: 'DAMAGE+' },
+    speedBoost: { color: '#00FF00', duration: 12, label: 'SPEED+' },
+    missileAmmo: { color: '#FF6347', duration: 0, label: '+3 MISSILES' },
+    shield: { color: '#4444FF', duration: 0, label: 'SHIELD+' },
+    repair: { color: '#44FF44', duration: 0, label: 'REPAIR' }
 };
 
 // Aegis station
@@ -186,7 +220,8 @@ function spawnEnemy(type = 'fighter') {
     const types = {
         drone: { hp: 15, damage: 5, speed: 250, fireRate: 2, size: 12, score: 10 },
         fighter: { hp: 40, damage: 10, speed: 180, fireRate: 2.5, size: 18, score: 50 },
-        heavy: { hp: 80, damage: 15, speed: 120, fireRate: 1.5, size: 24, score: 100, shield: 30 }
+        heavy: { hp: 80, damage: 15, speed: 120, fireRate: 1.5, size: 24, score: 100, shield: 30 },
+        bomber: { hp: 60, damage: 25, speed: 100, fireRate: 0.8, size: 22, score: 150 }
     };
 
     const config = types[type] || types.fighter;
@@ -211,9 +246,12 @@ function spawnWave() {
     for (let i = 0; i < enemyCount; i++) {
         setTimeout(() => {
             if (gameState === 'playing') {
-                if (wave >= 3 && Math.random() < 0.3) {
+                const roll = Math.random();
+                if (wave >= 5 && roll < 0.15) {
+                    spawnEnemy('bomber');
+                } else if (wave >= 3 && roll < 0.35) {
                     spawnEnemy('heavy');
-                } else if (Math.random() < 0.4) {
+                } else if (roll < 0.5) {
                     spawnEnemy('drone');
                 } else {
                     spawnEnemy('fighter');
@@ -222,6 +260,9 @@ function spawnWave() {
         }, i * 500);
     }
     waveCleared = false;
+
+    // Announce wave
+    spawnFloatingText(WIDTH / 2, HEIGHT / 2 - 150, `WAVE ${wave}`, '#FFFF00', 32);
 }
 
 // Distance helper
@@ -293,12 +334,202 @@ function takeDamage(entity, damage) {
     }
     if (damage > 0) {
         entity.hp -= damage;
+        // Screen shake on player/aegis damage
+        if (entity === player || entity === aegis) {
+            screenShake = Math.min(screenShake + damage * 0.3, 15);
+        }
     }
     return entity.hp > 0;
 }
 
+// Spawn floating text
+function spawnFloatingText(x, y, text, color = '#FFF', size = 14) {
+    floatingTexts.push({
+        x, y,
+        text,
+        color,
+        size,
+        vy: -40,
+        life: 1.5,
+        alpha: 1
+    });
+}
+
+// Spawn powerup
+function spawnPowerup(x, y) {
+    const types = Object.keys(POWERUP_TYPES);
+    const type = types[Math.floor(Math.random() * types.length)];
+    const config = POWERUP_TYPES[type];
+
+    powerups.push({
+        x, y,
+        type,
+        color: config.color,
+        label: config.label,
+        size: 12,
+        life: 12,
+        bobOffset: Math.random() * Math.PI * 2
+    });
+}
+
+// Fire missile
+function fireMissile() {
+    if (player.missileAmmo > 0) {
+        player.missileAmmo--;
+        player.missileTimer = 0.5;
+
+        // Find nearest enemy
+        let target = null;
+        let closestDist = Infinity;
+        for (const e of enemies) {
+            const d = distance(player.x, player.y, e.x, e.y);
+            if (d < closestDist) {
+                closestDist = d;
+                target = e;
+            }
+        }
+
+        missiles.push({
+            x: player.x,
+            y: player.y,
+            vx: Math.cos(player.angle) * 200,
+            vy: Math.sin(player.angle) * 200,
+            angle: player.angle,
+            target: target,
+            damage: 40,
+            life: 4,
+            trail: []
+        });
+
+        spawnFloatingText(player.x, player.y - 30, 'MISSILE!', COLORS.missileRed, 16);
+    }
+}
+
+// Update floating texts
+function updateFloatingTexts(dt) {
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const t = floatingTexts[i];
+        t.y += t.vy * dt;
+        t.life -= dt;
+        t.alpha = Math.min(1, t.life);
+
+        if (t.life <= 0) {
+            floatingTexts.splice(i, 1);
+        }
+    }
+}
+
+// Update powerups
+function updatePowerups(dt) {
+    for (let i = powerups.length - 1; i >= 0; i--) {
+        const p = powerups[i];
+        p.life -= dt;
+        p.bobOffset += dt * 3;
+
+        // Collect on player contact
+        if (distance(player.x, player.y, p.x, p.y) < 30) {
+            const config = POWERUP_TYPES[p.type];
+
+            switch (p.type) {
+                case 'rapidFire':
+                    player.powerups.rapidFire = config.duration;
+                    break;
+                case 'damageBoost':
+                    player.powerups.damageBoost = config.duration;
+                    break;
+                case 'speedBoost':
+                    player.powerups.speedBoost = config.duration;
+                    break;
+                case 'missileAmmo':
+                    player.missileAmmo = Math.min(player.maxMissiles, player.missileAmmo + 3);
+                    break;
+                case 'shield':
+                    player.shield = Math.min(player.maxShield, player.shield + 30);
+                    break;
+                case 'repair':
+                    player.hp = Math.min(player.maxHp, player.hp + 25);
+                    break;
+            }
+
+            spawnFloatingText(p.x, p.y, config.label, p.color, 18);
+            createParticle(p.x, p.y, p.color, 10, 80);
+            score += 25;
+            powerups.splice(i, 1);
+            continue;
+        }
+
+        if (p.life <= 0) {
+            powerups.splice(i, 1);
+        }
+    }
+}
+
+// Update missiles
+function updateMissiles(dt) {
+    for (let i = missiles.length - 1; i >= 0; i--) {
+        const m = missiles[i];
+
+        // Homing behavior
+        if (m.target && enemies.includes(m.target)) {
+            const targetAngle = angleTo(m.x, m.y, m.target.x, m.target.y);
+            let angleDiff = targetAngle - m.angle;
+            while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+            while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+            m.angle += Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), 5 * dt);
+        }
+
+        // Accelerate
+        const speed = Math.sqrt(m.vx * m.vx + m.vy * m.vy);
+        const targetSpeed = 400;
+        if (speed < targetSpeed) {
+            m.vx += Math.cos(m.angle) * 300 * dt;
+            m.vy += Math.sin(m.angle) * 300 * dt;
+        }
+
+        m.x += m.vx * dt;
+        m.y += m.vy * dt;
+        m.life -= dt;
+
+        // Trail
+        m.trail.push({ x: m.x, y: m.y, life: 0.3 });
+        if (m.trail.length > 20) m.trail.shift();
+        for (const t of m.trail) t.life -= dt;
+
+        // Hit enemies
+        for (let j = enemies.length - 1; j >= 0; j--) {
+            const e = enemies[j];
+            if (distance(m.x, m.y, e.x, e.y) < e.size + 10) {
+                // Explosion damage
+                createParticle(m.x, m.y, COLORS.missileRed, 20, 200);
+                screenShake = Math.min(screenShake + 8, 15);
+
+                // Damage and destroy
+                if (!takeDamage(e, m.damage)) {
+                    score += e.score * 2; // Bonus for missile kill
+                    spawnFloatingText(e.x, e.y, `+${e.score * 2}`, '#FFD700', 18);
+                    enemies.splice(j, 1);
+
+                    // Update combo
+                    player.comboCount++;
+                    player.comboTimer = 3;
+                }
+
+                missiles.splice(i, 1);
+                break;
+            }
+        }
+
+        if (m.life <= 0 || m.x < -50 || m.x > WIDTH + 50 || m.y < -50 || m.y > HEIGHT + 50) {
+            missiles.splice(i, 1);
+        }
+    }
+}
+
 // Update player
 function updatePlayer(dt) {
+    // Speed boost effect
+    const speedMultiplier = player.powerups.speedBoost > 0 ? 1.5 : 1;
+
     // Thrust
     let thrustX = 0, thrustY = 0;
     if (keys['w'] || keys['arrowup']) thrustY -= 1;
@@ -311,8 +542,8 @@ function updatePlayer(dt) {
         thrustX /= len;
         thrustY /= len;
 
-        player.vx += thrustX * PHYSICS.thrustForce * dt;
-        player.vy += thrustY * PHYSICS.thrustForce * dt;
+        player.vx += thrustX * PHYSICS.thrustForce * speedMultiplier * dt;
+        player.vy += thrustY * PHYSICS.thrustForce * speedMultiplier * dt;
 
         // Thrust particles
         if (Math.random() < 0.3) {
@@ -358,22 +589,45 @@ function updatePlayer(dt) {
     }
     player.shieldFlash = Math.max(0, player.shieldFlash - dt);
 
+    // Update powerup timers
+    if (player.powerups.rapidFire > 0) player.powerups.rapidFire -= dt;
+    if (player.powerups.damageBoost > 0) player.powerups.damageBoost -= dt;
+    if (player.powerups.speedBoost > 0) player.powerups.speedBoost -= dt;
+
+    // Combo timer
+    if (player.comboTimer > 0) {
+        player.comboTimer -= dt;
+        if (player.comboTimer <= 0) {
+            player.comboCount = 0;
+        }
+    }
+
+    // Apply powerup effects
+    const effectiveFireRate = player.fireRate * (player.powerups.rapidFire > 0 ? 2.5 : 1);
+    const effectiveDamage = player.damage * (player.powerups.damageBoost > 0 ? 2 : 1);
+
     // Fire weapon
     player.fireTimer -= dt;
     if ((keys['q'] || mouseDown) && player.fireTimer <= 0) {
-        player.fireTimer = 1 / player.fireRate;
+        player.fireTimer = 1 / effectiveFireRate;
 
         projectiles.push({
             x: player.x + Math.cos(player.angle) * 20,
             y: player.y + Math.sin(player.angle) * 20,
             vx: Math.cos(player.angle) * 600 + player.vx * 0.5,
             vy: Math.sin(player.angle) * 600 + player.vy * 0.5,
-            damage: player.damage,
+            damage: effectiveDamage,
             friendly: true,
-            color: COLORS.blasterCyan,
-            size: 4,
+            color: player.powerups.damageBoost > 0 ? '#FF00FF' : COLORS.blasterCyan,
+            size: player.powerups.damageBoost > 0 ? 6 : 4,
             life: 2
         });
+    }
+
+    // Fire missile (F key)
+    player.missileTimer -= dt;
+    if (keys['f'] && player.missileTimer <= 0) {
+        fireMissile();
     }
 
     // Gravity beam
@@ -549,8 +803,22 @@ function updateProjectiles(dt) {
                 const e = enemies[j];
                 if (distance(p.x, p.y, e.x, e.y) < e.size) {
                     if (!takeDamage(e, p.damage)) {
-                        score += e.score;
+                        // Update combo
+                        player.comboCount++;
+                        player.comboTimer = 3;
+
+                        // Calculate score with combo multiplier
+                        const comboMultiplier = Math.min(1 + player.comboCount * 0.1, 3);
+                        const earnedScore = Math.floor(e.score * comboMultiplier);
+                        score += earnedScore;
+
                         createParticle(e.x, e.y, COLORS.archnidGlow, 15, 150);
+
+                        // Show floating score
+                        spawnFloatingText(e.x, e.y - 20, `+${earnedScore}`, '#FFD700', 16);
+                        if (player.comboCount > 2) {
+                            spawnFloatingText(e.x, e.y - 40, `${player.comboCount}x COMBO!`, '#FF8800', 14);
+                        }
 
                         // Drop resources
                         if (Math.random() < 0.5) {
@@ -567,9 +835,16 @@ function updateProjectiles(dt) {
                             });
                         }
 
+                        // Chance to drop powerup
+                        if (Math.random() < 0.15) {
+                            spawnPowerup(e.x, e.y);
+                        }
+
                         enemies.splice(j, 1);
                     } else {
                         createParticle(p.x, p.y, '#FF8800', 3, 50);
+                        // Show damage number
+                        spawnFloatingText(p.x, p.y, `-${p.damage}`, '#FF4444', 12);
                     }
                     projectiles.splice(i, 1);
                     break;
@@ -817,6 +1092,22 @@ function drawEnemy(e) {
             ctx.lineTo(-e.size * 0.6, e.size * 0.8);
             ctx.closePath();
             ctx.fill();
+        } else if (e.type === 'bomber') {
+            // Wide flat bomber shape
+            ctx.fillStyle = '#660000';
+            ctx.beginPath();
+            ctx.moveTo(e.size, 0);
+            ctx.lineTo(0, -e.size * 0.9);
+            ctx.lineTo(-e.size * 0.8, -e.size * 0.5);
+            ctx.lineTo(-e.size * 0.8, e.size * 0.5);
+            ctx.lineTo(0, e.size * 0.9);
+            ctx.closePath();
+            ctx.fill();
+            // Payload
+            ctx.fillStyle = '#FF4400';
+            ctx.beginPath();
+            ctx.arc(-e.size * 0.3, 0, e.size * 0.3, 0, Math.PI * 2);
+            ctx.fill();
         } else {
             ctx.beginPath();
             ctx.moveTo(e.size, 0);
@@ -919,6 +1210,86 @@ function drawParticle(p) {
     ctx.globalAlpha = 1;
 }
 
+function drawFloatingText(t) {
+    ctx.save();
+    ctx.globalAlpha = t.alpha;
+    ctx.fillStyle = t.color;
+    ctx.font = `bold ${t.size}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 3;
+    ctx.strokeText(t.text, t.x, t.y);
+    ctx.fillText(t.text, t.x, t.y);
+    ctx.restore();
+}
+
+function drawPowerup(p) {
+    const bob = Math.sin(p.bobOffset) * 3;
+    const flash = Math.sin(p.bobOffset * 2) * 0.3 + 0.7;
+
+    ctx.save();
+    ctx.translate(p.x, p.y + bob);
+
+    // Outer glow
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = 0.3 * flash;
+    ctx.beginPath();
+    ctx.arc(0, 0, p.size * 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Inner circle
+    ctx.globalAlpha = flash;
+    ctx.beginPath();
+    ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+    ctx.fill();
+
+    // White center
+    ctx.fillStyle = '#FFF';
+    ctx.globalAlpha = 0.8;
+    ctx.beginPath();
+    ctx.arc(0, 0, p.size * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+}
+
+function drawMissile(m) {
+    // Trail
+    ctx.strokeStyle = COLORS.missileRed;
+    ctx.lineWidth = 4;
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath();
+    for (let i = 0; i < m.trail.length; i++) {
+        const t = m.trail[i];
+        ctx.globalAlpha = t.life;
+        if (i === 0) ctx.moveTo(t.x, t.y);
+        else ctx.lineTo(t.x, t.y);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Missile body
+    ctx.save();
+    ctx.translate(m.x, m.y);
+    ctx.rotate(m.angle);
+
+    ctx.fillStyle = COLORS.missileRed;
+    ctx.beginPath();
+    ctx.moveTo(12, 0);
+    ctx.lineTo(-8, -5);
+    ctx.lineTo(-8, 5);
+    ctx.closePath();
+    ctx.fill();
+
+    // Exhaust glow
+    ctx.fillStyle = '#FF8800';
+    ctx.beginPath();
+    ctx.ellipse(-12, 0, 6, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+}
+
 function drawHUD() {
     // Top bar background
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -986,7 +1357,39 @@ function drawHUD() {
     // Controls hint
     ctx.fillStyle = '#888';
     ctx.font = '11px Arial';
-    ctx.fillText('[WASD] Move  [Q/Click] Fire  [E] Gravity Beam  [R] Dock', 160, HEIGHT - 15);
+    ctx.fillText('[WASD] Move  [Q/Click] Fire  [F] Missile  [E] Gravity Beam  [R] Dock', 160, HEIGHT - 15);
+
+    // Missiles ammo (top right)
+    ctx.fillStyle = COLORS.missileRed;
+    ctx.font = '14px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText(`Missiles: ${player.missileAmmo}`, WIDTH - 20, 40);
+
+    // Combo display
+    if (player.comboCount > 1) {
+        ctx.fillStyle = '#FF8800';
+        ctx.font = 'bold 18px Arial';
+        ctx.fillText(`${player.comboCount}x COMBO`, WIDTH - 20, 60);
+    }
+
+    // Active powerups
+    let powerupY = 80;
+    if (player.powerups.rapidFire > 0) {
+        ctx.fillStyle = '#FF4400';
+        ctx.font = '12px Arial';
+        ctx.fillText(`RAPID: ${Math.ceil(player.powerups.rapidFire)}s`, WIDTH - 20, powerupY);
+        powerupY += 15;
+    }
+    if (player.powerups.damageBoost > 0) {
+        ctx.fillStyle = '#FF00FF';
+        ctx.fillText(`DMG+: ${Math.ceil(player.powerups.damageBoost)}s`, WIDTH - 20, powerupY);
+        powerupY += 15;
+    }
+    if (player.powerups.speedBoost > 0) {
+        ctx.fillStyle = '#00FF00';
+        ctx.fillText(`SPEED: ${Math.ceil(player.powerups.speedBoost)}s`, WIDTH - 20, powerupY);
+    }
+    ctx.textAlign = 'left';
 
     // Wave warning
     if (waveCleared && waveTimer > 0) {
@@ -1069,9 +1472,15 @@ function gameLoop(timestamp) {
         updateAegis(dt);
         updateEnemies(dt);
         updateProjectiles(dt);
+        updateMissiles(dt);
         updateAsteroids(dt);
         updateMinerals(dt);
+        updatePowerups(dt);
+        updateFloatingTexts(dt);
         updateParticles(dt);
+
+        // Update screen shake
+        screenShake = Math.max(0, screenShake - dt * 20);
 
         // Wave management
         if (waveCleared) {
@@ -1095,15 +1504,32 @@ function gameLoop(timestamp) {
             gameState = 'gameover';
         }
 
+        // Apply screen shake
+        if (screenShake > 0) {
+            ctx.save();
+            const shakeX = (Math.random() - 0.5) * screenShake * 2;
+            const shakeY = (Math.random() - 0.5) * screenShake * 2;
+            ctx.translate(shakeX, shakeY);
+        }
+
         // Draw
         drawStars();
         for (const a of asteroids) drawAsteroid(a);
         for (const m of minerals) drawMineral(m);
+        for (const p of powerups) drawPowerup(p);
         drawAegis();
         drawPlayer();
         for (const e of enemies) drawEnemy(e);
         for (const p of projectiles) drawProjectile(p);
+        for (const m of missiles) drawMissile(m);
         for (const p of particles) drawParticle(p);
+        for (const t of floatingTexts) drawFloatingText(t);
+
+        // Restore from screen shake
+        if (screenShake > 0) {
+            ctx.restore();
+        }
+
         drawHUD();
 
     } else if (gameState === 'gameover') {
@@ -1122,6 +1548,12 @@ function resetGame() {
     player.vy = 0;
     player.hp = player.maxHp;
     player.shield = player.maxShield;
+    player.missileAmmo = 5;
+    player.comboCount = 0;
+    player.comboTimer = 0;
+    player.powerups.rapidFire = 0;
+    player.powerups.damageBoost = 0;
+    player.powerups.speedBoost = 0;
 
     aegis.hp = aegis.maxHp;
     aegis.shield = aegis.maxShield;
@@ -1140,6 +1572,10 @@ function resetGame() {
     asteroids = [];
     minerals = [];
     particles = [];
+    missiles = [];
+    powerups = [];
+    floatingTexts = [];
+    screenShake = 0;
 
     spawnAsteroids(8);
 }

@@ -97,6 +97,53 @@ let enemies = [];
 let mouseWorldPos = vec2(DOME_X, SURFACE_Y + 10);
 let mouseDown = false;
 
+// Visual effects
+let floatingTexts = [];
+let particles = [];
+let screenShakeAmount = 0;
+
+// Combo system
+let miningCombo = 0;
+let comboTimer = 0;
+const COMBO_DURATION = 2.0;
+const MAX_COMBO_MULT = 3.0;
+
+// Achievements
+const achievements = {
+    firstIron: false,
+    firstCobalt: false,
+    wave5: false,
+    wave10: false,
+    noDamageWave: false,
+    megaCombo: false
+};
+let waveDamageTaken = 0;
+
+// Helper functions
+function spawnFloatingText(x, y, text, color) {
+    floatingTexts.push({
+        x, y, text, color,
+        life: 1.5, maxLife: 1.5
+    });
+}
+
+function spawnParticles(x, y, count, color) {
+    for (let i = 0; i < count; i++) {
+        particles.push({
+            x, y,
+            vx: (Math.random() - 0.5) * 6,
+            vy: Math.random() * 4 + 2,
+            color,
+            life: 0.5 + Math.random() * 0.5
+        });
+    }
+}
+
+function getComboMultiplier() {
+    if (miningCombo <= 0) return 1;
+    return Math.min(1 + miningCombo * 0.2, MAX_COMBO_MULT);
+}
+
 // Generate map
 function generateMap() {
     map = [];
@@ -241,21 +288,70 @@ function gameUpdate() {
         updateEnemies(dt);
     }
 
+    // Update combo timer
+    if (comboTimer > 0) {
+        comboTimer -= dt;
+        if (comboTimer <= 0) miningCombo = 0;
+    }
+
+    // Update floating texts
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i];
+        ft.life -= dt;
+        ft.y += 2 * dt; // Rise upward in LittleJS coords
+        if (ft.life <= 0) floatingTexts.splice(i, 1);
+    }
+
+    // Update particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.life -= dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy -= 10 * dt; // Gravity (downward in LittleJS)
+        if (p.life <= 0) particles.splice(i, 1);
+    }
+
+    // Update screen shake
+    if (screenShakeAmount > 0) {
+        screenShakeAmount -= 2 * dt;
+        if (screenShakeAmount < 0) screenShakeAmount = 0;
+    }
+
     // Phase timer
     phaseTimer -= dt;
     if (phaseTimer <= 0) {
         if (gameState === 'mining') {
             gameState = 'defense';
             currentWave++;
+            waveDamageTaken = 0;
             spawnWave();
             phaseTimer = 999;
             keeper.x = dome.x;
             keeper.y = dome.y - 2;
+
+            // Wave achievements
+            if (currentWave >= 5 && !achievements.wave5) {
+                achievements.wave5 = true;
+                spawnFloatingText(dome.x, dome.y + 5, 'Wave 5!', new Color(1, 0.84, 0));
+                score += 2000;
+            }
+            if (currentWave >= 10 && !achievements.wave10) {
+                achievements.wave10 = true;
+                spawnFloatingText(dome.x, dome.y + 5, 'Wave 10!', new Color(1, 0.84, 0));
+                score += 10000;
+            }
         }
     }
 
     // Check wave clear
     if (gameState === 'defense' && enemies.length === 0) {
+        // Flawless achievement
+        if (waveDamageTaken === 0 && !achievements.noDamageWave && currentWave >= 2) {
+            achievements.noDamageWave = true;
+            spawnFloatingText(dome.x, dome.y + 4, 'FLAWLESS!', new Color(1, 0.84, 0));
+            score += 3000;
+        }
         dome.shield = dome.maxShield;
         gameState = 'mining';
         phaseTimer = 60 + currentWave * 5;
@@ -275,21 +371,54 @@ function updateKeeper(dt) {
         const hp = TILE_HP[tile] || 4;
 
         if (keeper.drillProgress >= hp) {
+            const tx = keeper.drillTarget.x;
+            const ty = keeper.drillTarget.y;
+
+            // Spawn dirt particles
+            spawnParticles(tx, ty, 8, COLORS.dirtMedium);
+
+            // Mining combo
+            miningCombo++;
+            comboTimer = COMBO_DURATION;
+
             if (tile === TILE.IRON) {
                 const amount = 1 + Math.floor(Math.random() * 3);
                 for (let i = 0; i < amount && keeper.cargo.length < keeper.carryCapacity; i++) {
                     keeper.cargo.push('iron');
+                }
+                spawnParticles(tx, ty, 5, COLORS.iron);
+                spawnFloatingText(tx, ty, '+Iron', COLORS.iron);
+                if (!achievements.firstIron) {
+                    achievements.firstIron = true;
+                    spawnFloatingText(tx, ty + 1, 'First Iron!', new Color(1, 0.84, 0));
+                    score += 100;
                 }
             } else if (tile === TILE.WATER) {
                 const amount = 1 + Math.floor(Math.random() * 2);
                 for (let i = 0; i < amount && keeper.cargo.length < keeper.carryCapacity; i++) {
                     keeper.cargo.push('water');
                 }
+                spawnParticles(tx, ty, 5, COLORS.water);
+                spawnFloatingText(tx, ty, '+Water', COLORS.water);
             } else if (tile === TILE.COBALT) {
                 const amount = 1 + Math.floor(Math.random() * 2);
                 for (let i = 0; i < amount && keeper.cargo.length < keeper.carryCapacity; i++) {
                     keeper.cargo.push('cobalt');
                 }
+                spawnParticles(tx, ty, 5, COLORS.cobalt);
+                spawnFloatingText(tx, ty, '+Cobalt', COLORS.cobalt);
+                if (!achievements.firstCobalt) {
+                    achievements.firstCobalt = true;
+                    spawnFloatingText(tx, ty + 1, 'First Cobalt!', new Color(1, 0.84, 0));
+                    score += 500;
+                }
+            }
+
+            // Mega combo achievement
+            if (miningCombo >= 10 && !achievements.megaCombo) {
+                achievements.megaCombo = true;
+                spawnFloatingText(tx, ty + 2, 'MEGA COMBO!', new Color(1, 0.84, 0));
+                score += 1000;
             }
 
             setTileAt(keeper.drillTarget.x, keeper.drillTarget.y, TILE.EMPTY);
@@ -427,6 +556,9 @@ function updateEnemies(dt) {
                     damage -= absorbed;
                 }
                 dome.hp -= damage;
+                waveDamageTaken += e.damage;
+                screenShakeAmount = Math.min(screenShakeAmount + 0.3, 1);
+                spawnFloatingText(dome.x, dome.y + 3, '-' + e.damage, new Color(1, 0.3, 0.3));
             }
         }
 
@@ -465,7 +597,10 @@ function updateEnemies(dt) {
         }
 
         if (e.hp <= 0) {
-            score += e.type === 'hornet' ? 100 : (e.type === 'flyer' ? 50 : 25);
+            const pts = e.type === 'hornet' ? 100 : (e.type === 'flyer' ? 50 : 25);
+            score += pts;
+            spawnParticles(e.x, e.y, 12, COLORS.enemyGlow);
+            spawnFloatingText(e.x, e.y, '+' + pts, new Color(1, 0.84, 0));
             enemies.splice(i, 1);
         }
     }
@@ -492,6 +627,24 @@ function resetGame() {
     currentWave = 0;
     phaseTimer = 60;
     score = 0;
+
+    // Clear visual effects
+    floatingTexts = [];
+    particles = [];
+    screenShakeAmount = 0;
+
+    // Clear combo
+    miningCombo = 0;
+    comboTimer = 0;
+    waveDamageTaken = 0;
+
+    // Reset achievements
+    achievements.firstIron = false;
+    achievements.firstCobalt = false;
+    achievements.wave5 = false;
+    achievements.wave10 = false;
+    achievements.noDamageWave = false;
+    achievements.megaCombo = false;
 
     gameState = 'mining';
 }
@@ -528,6 +681,14 @@ function gameRenderPost() {
         return;
     }
 
+    // Apply screen shake
+    if (screenShakeAmount > 0) {
+        mainContext.save();
+        const shakeX = (Math.random() - 0.5) * screenShakeAmount * 10;
+        const shakeY = (Math.random() - 0.5) * screenShakeAmount * 10;
+        mainContext.translate(shakeX, shakeY);
+    }
+
     // Draw map
     drawMap();
 
@@ -543,6 +704,17 @@ function gameRenderPost() {
     if (gameState === 'defense') {
         drawEnemies();
     }
+
+    // Draw particles
+    drawParticles();
+
+    // Restore screen shake before UI
+    if (screenShakeAmount > 0) {
+        mainContext.restore();
+    }
+
+    // Draw floating texts (after shake restore)
+    drawFloatingTexts();
 
     // Draw HUD
     drawHUD();
@@ -744,6 +916,14 @@ function drawHUD() {
     // Dome HP
     mainContext.fillText(`Dome HP: ${Math.ceil(dome.hp)}/${dome.maxHp}`, 20, 38);
 
+    // Combo display during mining
+    if (gameState === 'mining' && miningCombo > 0) {
+        const mult = getComboMultiplier().toFixed(1);
+        mainContext.fillStyle = '#ffdd44';
+        mainContext.font = 'bold 18px Arial';
+        mainContext.fillText(`Combo: ${miningCombo}x (${mult}x)`, mainCanvasSize.x - 180, 30);
+    }
+
     // Controls
     mainContext.fillStyle = '#888';
     mainContext.font = '12px Arial';
@@ -751,6 +931,43 @@ function drawHUD() {
         mainContext.fillText('WASD: Move/Drill | Return to dome before timer ends!', 20, mainCanvasSize.y - 20);
     } else {
         mainContext.fillText('Mouse: Aim | Click: Fire Laser | Defend the dome!', 20, mainCanvasSize.y - 20);
+    }
+}
+
+// Draw particles
+function drawParticles() {
+    for (const p of particles) {
+        const alpha = p.life / 1.0;
+        const screenPos = worldToScreen(vec2(p.x, p.y));
+        const size = 4 * cameraScale / 16;
+        const r = Math.floor(p.color.r * 255);
+        const g = Math.floor(p.color.g * 255);
+        const b = Math.floor(p.color.b * 255);
+        mainContext.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+        mainContext.fillRect(screenPos.x - size/2, screenPos.y - size/2, size, size);
+    }
+}
+
+// Draw floating texts
+function drawFloatingTexts() {
+    for (const ft of floatingTexts) {
+        const alpha = ft.life / ft.maxLife;
+        const screenPos = worldToScreen(vec2(ft.x, ft.y));
+        const r = Math.floor(ft.color.r * 255);
+        const g = Math.floor(ft.color.g * 255);
+        const b = Math.floor(ft.color.b * 255);
+
+        mainContext.font = 'bold 14px Arial';
+        mainContext.textAlign = 'center';
+
+        // Drop shadow
+        mainContext.fillStyle = `rgba(0,0,0,${alpha * 0.5})`;
+        mainContext.fillText(ft.text, screenPos.x + 1, screenPos.y + 1);
+
+        // Main text
+        mainContext.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+        mainContext.fillText(ft.text, screenPos.x, screenPos.y);
+        mainContext.textAlign = 'left';
     }
 }
 

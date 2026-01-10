@@ -1,31 +1,48 @@
-// Tower Wizard Clone - Phaser 3 Version
-// Incremental/Idle Game
+// Tower Wizard Clone - Phaser 3 Version (EXPANDED)
+// Incremental/Idle Game - 20 Expand + 20 Polish Passes
 
 const COLORS = {
-    bg: 0x1a1a2e,
-    bgLight: 0x2a2a4e,
-    mountain1: 0x252545,
-    mountain2: 0x1e1e3e,
-    mountain3: 0x151530,
-    pink: 0xe8a0a0,
-    pinkLight: 0xf0b8b8,
-    pinkDark: 0xc88080,
-    salmon: 0xd4918f,
-    towerPink: 0xd4918f,
-    towerLight: 0xe8b0b0,
-    towerRoof: 0xc07878,
-    towerWindow: 0x2a2a4e,
-    panelBg: 0x0a0a1a,
-    panelBorder: 0xc88080,
-    magic: 0x9370db,
-    knowledge: 0x6495ed,
-    wood: 0x8b6b4a,
-    spirits: 0xe8a0a0,
-    orbDark: 0x1a1a3e,
-    orbGlow: 0xff69b4,
-    button: 0x4b0082,
-    buttonDisabled: 0x2a2a3a
+    bg: 0x1a1a2e, bgLight: 0x2a2a4e,
+    mountain1: 0x252545, mountain2: 0x1e1e3e, mountain3: 0x151530,
+    pink: 0xe8a0a0, pinkLight: 0xf0b8b8, pinkDark: 0xc88080, salmon: 0xd4918f,
+    towerPink: 0xd4918f, towerLight: 0xe8b0b0, towerRoof: 0xc07878, towerWindow: 0x2a2a4e,
+    panelBg: 0x0a0a1a, panelBorder: 0xc88080, text: '#ffffff', textDim: '#a0a0a0',
+    magic: 0x9370db, knowledge: 0x6495ed, wood: 0x8b6b4a, spirits: 0xe8a0a0,
+    research: 0x7cfc00, dragonXP: 0xff6600, arcaneGold: 0xffd700, runePoints: 0x00ffff,
+    orbDark: 0x1a1a3e, orbGlow: 0xff69b4, orbHighlight: 0xffffff,
+    button: 0x4b0082, buttonDisabled: 0x2a2a3a, buttonActive: 0x6b20a2,
+    fire: 0xff4500, wall: 0x555555, damage: 0xff0000
 };
+
+// EXPAND: Production rates for all spirit types
+const PRODUCTION_RATES = {
+    cloudlings: 0.5, spiritTomes: 0.2, druids: 0.3, sages: 0.1,
+    keepers: 0.05, alchemists: 0.02, runesmiths: 0.01
+};
+
+const SORCERY_DPS = { shamans: 5, ifrits: 10 };
+
+// EXPAND: Ascension costs (11 levels)
+const ASCENSION_COSTS = [0, 100, 1000, 10000, 50000, 200000, 1000000, 5000000, 25000000, 100000000, 500000000];
+
+// EXPAND: Wall definitions
+const WALLS = [
+    { name: 'Stone Wall', health: 10000, reward: 'academy' },
+    { name: 'Iron Wall', health: 100000, reward: 'dragonNest' },
+    { name: 'Crystal Wall', health: 1000000, reward: 'alchemyLab' },
+    { name: 'Cloud Wall', health: 10000000, reward: 'runecraft' },
+    { name: 'Void Wall', health: 100000000, reward: 'temple' }
+];
+
+const TOTEM_TYPES = ['magic', 'knowledge', 'forest'];
+const RELICS = {
+    manaStone: { cost: 100, effect: 'magic', value: 1.25 },
+    holyGrail: { cost: 1000, effect: 'all', value: 1.5 },
+    ouroboros: { cost: 10000, effect: 'damage', value: 2 }
+};
+const BLESSING_COSTS = { magic: 1, knowledge: 1, forest: 1, research: 2, dragon: 2, alchemy: 2, doubling: 3 };
+
+const ROOMS = ['orb', 'study', 'forest', 'prestige', 'academy', 'dragon', 'alchemy', 'sorcery', 'runes'];
 
 class GameScene extends Phaser.Scene {
     constructor() {
@@ -33,65 +50,78 @@ class GameScene extends Phaser.Scene {
     }
 
     create() {
+        // EXPAND: Full game state with all systems
         this.gameData = {
             tick: 0,
-            magic: 0,
-            lifetimeMagic: 0,
-            spirits: 0,
-            knowledge: 0,
-            wood: 0,
+            magic: 0, lifetimeMagic: 0, spirits: 0,
+            knowledge: 0, wood: 0, research: 0,
+            dragonXP: 0, arcaneGold: 0, runePoints: 0, cosmicDust: 0,
             towerLevel: 1,
-            prestigePoints: 0,
-            cloudlings: 0,
-            spiritTomes: 0,
-            druids: 0,
-            wizardMagic: 0,
+            assignments: {
+                cloudlings: 0, spiritTomes: 0, druids: 0, sages: 0,
+                keepers: 0, alchemists: 0, shamans: 0, ifrits: 0, runesmiths: 0
+            },
+            upgrades: {
+                wizardMagic: 0, tomeEfficiency: 0, forestry: 0,
+                academyResearch: 0, dragonTraining: 0, alchemyEfficiency: 0
+            },
+            prestigePoints: 0, lifetimePrestige: 0,
+            blessings: {
+                magic: false, knowledge: false, forest: false,
+                research: false, dragon: false, alchemy: false, doubling: false
+            },
+            totems: [], totemPoles: 0,
+            dragon: { xp: 0, level: 0, abilities: [] },
+            relics: {},
+            runes: { ember: 0, storm: 0, stone: 0, infinity: 0 },
+            currentWall: 0, wallHealth: 0, wallMaxHealth: 10000,
+            wallDamage: 0, lifetimeDamage: 0,
             selectedRoom: 'orb',
-            orbHeld: false,
-            orbClickCooldown: 0
+            orbHeld: false, orbClickCooldown: 0,
+            showPrestige: false
         };
 
         this.particles = [];
         this.floatingSpirits = [];
+        this.damageNumbers = [];
+        this.notifications = [];
+        this.screenShake = 0;
+        this.stars = [];
 
-        // Create graphics layers
+        // POLISH: Generate star field
+        for (let i = 0; i < 80; i++) {
+            this.stars.push({
+                x: Math.random() * this.scale.width,
+                y: Math.random() * this.scale.height * 0.6,
+                brightness: 0.3 + Math.random() * 0.7,
+                twinkle: Math.random() * Math.PI * 2
+            });
+        }
+
+        // Initialize wall health
+        if (WALLS[0]) this.gameData.wallMaxHealth = WALLS[0].health;
+
         this.bgGraphics = this.add.graphics();
+        this.starGraphics = this.add.graphics();
         this.towerGraphics = this.add.graphics();
         this.orbGraphics = this.add.graphics();
         this.uiGraphics = this.add.graphics();
         this.particleGraphics = this.add.graphics();
 
-        // Draw static background
         this.drawBackground();
-
-        // Create text objects for UI
         this.createUIText();
 
-        // Create interactive orb zone
+        // Interactive orb zone
         this.orbZone = this.add.zone(200, 120, 100, 100).setInteractive();
+        this.orbZone.on('pointerdown', () => { this.gameData.orbHeld = true; this.clickOrb(); });
+        this.orbZone.on('pointerup', () => { this.gameData.orbHeld = false; });
+        this.orbZone.on('pointerout', () => { this.gameData.orbHeld = false; });
 
-        this.orbZone.on('pointerdown', () => {
-            this.gameData.orbHeld = true;
-            this.clickOrb();
-        });
-
-        this.orbZone.on('pointerup', () => {
-            this.gameData.orbHeld = false;
-        });
-
-        this.orbZone.on('pointerout', () => {
-            this.gameData.orbHeld = false;
-        });
-
-        // Create buttons
         this.createButtons();
 
-        // Initialize floating spirits
-        for (let i = 0; i < 3; i++) {
-            this.createFloatingSpirit();
-        }
+        // Initial floating spirits
+        for (let i = 0; i < 5; i++) this.createFloatingSpirit();
 
-        // Expose for testing
         window.game = this.gameData;
         window.gameState = { state: 'playing' };
     }
@@ -101,7 +131,6 @@ class GameScene extends Phaser.Scene {
         const w = this.scale.width;
         const h = this.scale.height;
 
-        // Sky gradient
         g.fillStyle(COLORS.bg);
         g.fillRect(0, 0, w, h);
 
@@ -116,14 +145,11 @@ class GameScene extends Phaser.Scene {
             g.fillStyle(layer.color);
             g.beginPath();
             g.moveTo(0, h);
-
             for (let x = 0; x <= w; x += 20) {
                 const baseY = h - h * layer.height;
-                const peakY = baseY - Math.sin((x + layer.offset) * 0.01) * 100
-                             - Math.sin((x + layer.offset) * 0.02) * 50;
+                const peakY = baseY - Math.sin((x + layer.offset) * 0.01) * 100 - Math.sin((x + layer.offset) * 0.02) * 50;
                 g.lineTo(x, peakY);
             }
-
             g.lineTo(w, h);
             g.closePath();
             g.fillPath();
@@ -136,158 +162,125 @@ class GameScene extends Phaser.Scene {
             g.fillTriangle(x, h - 50, x + 10, h - 50 - treeHeight, x + 20, h - 50);
         }
 
-        // Pink trees
-        g.fillStyle(COLORS.salmon);
-        for (let x = 50; x < 350; x += 40) {
-            const treeHeight = 40 + Math.sin(x) * 20;
-            // Trunk
+        // Pink trees in foreground
+        for (let x = 50; x < 320; x += 35) {
+            const treeHeight = 50 + Math.sin(x) * 20;
             g.fillStyle(COLORS.pinkDark);
-            g.fillRect(x + 8, h - 80, 4, 20);
-            // Foliage
+            g.fillRect(x + 8, h - 90, 4, 30);
             g.fillStyle(COLORS.salmon);
-            g.fillTriangle(x, h - 80, x + 10, h - 80 - treeHeight, x + 20, h - 80);
+            g.fillTriangle(x, h - 90, x + 10, h - 90 - treeHeight, x + 20, h - 90);
         }
-
-        // Cloud
-        g.fillStyle(0x4a6080);
-        g.fillCircle(w - 200, 80, 24);
-        g.fillCircle(w - 176, 68, 18);
-        g.fillCircle(w - 158, 80, 21);
     }
 
     createUIText() {
-        const textStyle = { fontFamily: 'monospace', fontSize: '12px', color: '#ffffff' };
-        const dimStyle = { fontFamily: 'monospace', fontSize: '12px', color: '#a0a0a0' };
+        const style = { fontFamily: 'monospace', fontSize: '12px', color: COLORS.text };
+        const dimStyle = { fontFamily: 'monospace', fontSize: '11px', color: COLORS.textDim };
 
-        // Resource panel texts
-        this.resourceTitle = this.add.text(30, 30, 'Resources', { ...textStyle, fontStyle: 'bold', fontSize: '14px' });
-        this.magicText = this.add.text(30, 55, '', textStyle);
-        this.spiritsText = this.add.text(30, 75, '', textStyle);
-        this.knowledgeText = this.add.text(30, 95, '', textStyle);
-        this.woodText = this.add.text(30, 115, '', textStyle);
+        // Resource panel
+        this.resourceTitle = this.add.text(30, 30, 'Resources', { ...style, fontStyle: 'bold', fontSize: '14px' });
+        this.magicText = this.add.text(30, 55, '', style);
+        this.spiritsText = this.add.text(30, 75, '', style);
+        this.knowledgeText = this.add.text(30, 95, '', style);
+        this.woodText = this.add.text(30, 115, '', style);
+        this.researchText = this.add.text(30, 135, '', style);
+        this.dragonXPText = this.add.text(30, 155, '', style);
+        this.goldText = this.add.text(30, 175, '', style);
+        this.runeText = this.add.text(30, 195, '', style);
 
-        // Action panel texts
-        const panelX = this.scale.width - 310;
-        this.roomTitle = this.add.text(panelX + 10, 215, 'Orb Room', { ...textStyle, fontStyle: 'bold', fontSize: '16px' });
-        this.summonCostText = this.add.text(panelX + 10, 285, '', textStyle);
-        this.roomInfo1 = this.add.text(panelX + 10, 320, '', textStyle);
-        this.roomInfo2 = this.add.text(panelX + 10, 340, '', textStyle);
+        // Action panel
+        const panelX = this.scale.width - 280;
+        this.roomTitle = this.add.text(panelX + 10, 195, 'Orb Room', { ...style, fontStyle: 'bold', fontSize: '16px' });
+        this.roomInfo1 = this.add.text(panelX + 10, 275, '', style);
+        this.roomInfo2 = this.add.text(panelX + 10, 295, '', style);
+        this.roomInfo3 = this.add.text(panelX + 10, 315, '', style);
+        this.towerLevelText = this.add.text(panelX + 10, 515, '', { ...style, fontStyle: 'bold', fontSize: '14px' });
+        this.ascendReqText = this.add.text(panelX + 10, 535, '', dimStyle);
 
-        this.towerLevelText = this.add.text(panelX + 10, 420, '', { ...textStyle, fontStyle: 'bold', fontSize: '14px' });
-        this.ascendReqText = this.add.text(panelX + 10, 445, '', dimStyle);
-        this.lifetimeText = this.add.text(panelX + 10, 520, '', { ...dimStyle, fontSize: '11px' });
-        this.prestigeText = this.add.text(panelX + 10, 540, '', { ...dimStyle, fontSize: '11px' });
-
-        // Orb click text
-        this.orbClickText = this.add.text(200, 55, '+1', {
-            fontFamily: 'monospace', fontSize: '14px', fontStyle: 'bold', color: '#e8a0a0'
-        }).setOrigin(0.5);
-
-        this.orbHintText = this.add.text(200, 180, 'Click orb for magic', {
-            fontFamily: 'monospace', fontSize: '12px', color: '#a0a0a0'
-        }).setOrigin(0.5);
+        // Orb text
+        this.orbClickText = this.add.text(200, 55, '+1', { fontFamily: 'monospace', fontSize: '16px', fontStyle: 'bold', color: '#e8a0a0' }).setOrigin(0.5);
+        this.orbHintText = this.add.text(200, 180, 'Click/hold for magic', { fontFamily: 'monospace', fontSize: '11px', color: COLORS.textDim }).setOrigin(0.5);
     }
 
     createButtons() {
-        const panelX = this.scale.width - 310;
+        const panelX = this.scale.width - 280;
+        const navY = this.scale.height - 50;
 
-        // Summon Spirit button
-        this.summonBtn = this.createButton(panelX + 10, 255, 280, 35, 'Summon Spirit', () => {
-            this.summonSpirit();
-        });
+        // Summon button
+        this.summonBtn = this.createButton(panelX + 10, 235, 240, 32, 'Summon Spirit   10', () => this.summonSpirit());
 
-        // Assign/Remove buttons
-        this.assignBtn = this.createButton(panelX + 10, 360, 130, 35, 'Assign +1', () => {
-            this.assignSpirit(this.gameData.selectedRoom === 'orb' ? 'cloudling' :
-                            this.gameData.selectedRoom === 'study' ? 'spiritTome' : 'druid');
-        });
+        // Assign/Remove
+        this.assignBtn = this.createButton(panelX + 10, 340, 115, 32, 'Assign +1', () => this.assignSpirit());
+        this.removeBtn = this.createButton(panelX + 135, 340, 115, 32, 'Remove -1', () => this.unassignSpirit());
 
-        this.removeBtn = this.createButton(panelX + 150, 360, 130, 35, 'Remove -1', () => {
-            this.unassignSpirit(this.gameData.selectedRoom === 'orb' ? 'cloudling' :
-                              this.gameData.selectedRoom === 'study' ? 'spiritTome' : 'druid');
-        });
+        // Ascend
+        this.ascendBtn = this.createButton(panelX + 10, 560, 240, 32, 'Ascend Tower', () => this.ascend());
 
-        // Ascend button
-        this.ascendBtn = this.createButton(panelX + 10, 470, 280, 35, 'Ascend Tower', () => {
-            this.ascend();
-        });
+        // Room navigation tabs
+        const rooms = ['Orb', 'Study', 'Forest', 'Prestige', 'Academy', 'Dragon', 'Alchemy', 'Sorcery', 'Runes'];
+        const tabWidth = 80;
+        const startX = (this.scale.width - rooms.length * tabWidth) / 2;
 
-        // Room navigation buttons
-        const navY = this.scale.height - 60;
-        const startX = this.scale.width / 2 - 150;
-
-        this.orbRoomBtn = this.createButton(startX, navY, 90, 40, 'Orb', () => {
-            this.gameData.selectedRoom = 'orb';
-        });
-
-        this.studyRoomBtn = this.createButton(startX + 100, navY, 90, 40, 'Study', () => {
-            if (this.gameData.towerLevel >= 2) this.gameData.selectedRoom = 'study';
-        });
-
-        this.forestRoomBtn = this.createButton(startX + 200, navY, 90, 40, 'Forest', () => {
-            if (this.gameData.towerLevel >= 3) this.gameData.selectedRoom = 'forest';
+        this.roomTabs = rooms.map((name, i) => {
+            const btn = this.createButton(startX + i * tabWidth, navY, tabWidth - 4, 38, name, () => {
+                this.gameData.selectedRoom = ROOMS[i];
+            });
+            return btn;
         });
     }
 
     createButton(x, y, w, h, text, callback) {
         const btn = this.add.container(x, y);
-
         const bg = this.add.graphics();
         bg.fillStyle(COLORS.button);
-        bg.fillRect(0, 0, w, h);
-        bg.lineStyle(2, COLORS.panelBorder);
-        bg.strokeRect(0, 0, w, h);
+        bg.fillRoundedRect(0, 0, w, h, 4);
+        bg.lineStyle(1, COLORS.panelBorder);
+        bg.strokeRoundedRect(0, 0, w, h, 4);
 
-        const label = this.add.text(w/2, h/2, text, {
-            fontFamily: 'monospace', fontSize: '12px', color: '#ffffff'
-        }).setOrigin(0.5);
-
+        const label = this.add.text(w/2, h/2, text, { fontFamily: 'monospace', fontSize: '11px', color: '#ffffff' }).setOrigin(0.5);
         btn.add([bg, label]);
         btn.setSize(w, h);
         btn.setInteractive();
-
         btn.on('pointerdown', callback);
-
-        btn.bg = bg;
-        btn.label = label;
-        btn.w = w;
-        btn.h = h;
-
+        btn.bg = bg; btn.label = label; btn.w = w; btn.h = h;
         return btn;
     }
 
-    updateButton(btn, enabled) {
+    updateButton(btn, enabled, active = false) {
         btn.bg.clear();
-        btn.bg.fillStyle(enabled ? COLORS.button : COLORS.buttonDisabled);
-        btn.bg.fillRect(0, 0, btn.w, btn.h);
-        btn.bg.lineStyle(2, enabled ? COLORS.panelBorder : 0x4a4a5a);
-        btn.bg.strokeRect(0, 0, btn.w, btn.h);
-        btn.label.setColor(enabled ? '#ffffff' : '#808080');
+        btn.bg.fillStyle(active ? COLORS.buttonActive : (enabled ? COLORS.button : COLORS.buttonDisabled));
+        btn.bg.fillRoundedRect(0, 0, btn.w, btn.h, 4);
+        btn.bg.lineStyle(1, enabled ? COLORS.panelBorder : 0x4a4a5a);
+        btn.bg.strokeRoundedRect(0, 0, btn.w, btn.h, 4);
+        btn.label.setColor(enabled ? '#ffffff' : '#606060');
     }
 
     clickOrb() {
         if (this.gameData.orbClickCooldown > 0) return;
-
-        const magicGain = this.getMagicPerClick();
-        this.gameData.magic += magicGain;
-        this.gameData.lifetimeMagic += magicGain;
+        const gain = this.getMagicPerClick();
+        this.gameData.magic += gain;
+        this.gameData.lifetimeMagic += gain;
         this.gameData.orbClickCooldown = 0.05;
 
-        // Create particles
-        for (let i = 0; i < 5; i++) {
+        // POLISH: Particles
+        for (let i = 0; i < 6; i++) {
             this.particles.push({
-                x: 200 + (Math.random() - 0.5) * 60,
-                y: 120 + (Math.random() - 0.5) * 60,
-                vx: (Math.random() - 0.5) * 100,
-                vy: -Math.random() * 100 - 50,
-                life: 0.8,
+                x: 200 + (Math.random() - 0.5) * 50,
+                y: 120 + (Math.random() - 0.5) * 50,
+                vx: (Math.random() - 0.5) * 80,
+                vy: -Math.random() * 80 - 30,
+                life: 1,
                 color: i % 2 === 0 ? COLORS.orbGlow : COLORS.magic
             });
         }
     }
 
     getMagicPerClick() {
-        return Math.pow(2, this.gameData.wizardMagic);
+        let base = 1 + this.gameData.towerLevel * 0.5;
+        base *= Math.pow(1.5, this.gameData.upgrades.wizardMagic);
+        if (this.gameData.blessings.magic) base *= 2;
+        if (this.gameData.relics.manaStone) base *= RELICS.manaStone.value;
+        if (this.gameData.relics.holyGrail) base *= RELICS.holyGrail.value;
+        return Math.floor(base);
     }
 
     getSpiritCost() {
@@ -295,7 +288,7 @@ class GameScene extends Phaser.Scene {
     }
 
     getTotalAssigned() {
-        return this.gameData.cloudlings + this.gameData.spiritTomes + this.gameData.druids;
+        return Object.values(this.gameData.assignments).reduce((a, b) => a + b, 0);
     }
 
     summonSpirit() {
@@ -304,85 +297,186 @@ class GameScene extends Phaser.Scene {
             this.gameData.magic -= cost;
             this.gameData.spirits++;
             this.createFloatingSpirit();
+            this.addNotification('Spirit summoned!');
         }
     }
 
-    assignSpirit(type) {
+    assignSpirit() {
         if (this.gameData.spirits <= this.getTotalAssigned()) return;
-
-        switch(type) {
-            case 'cloudling': this.gameData.cloudlings++; break;
-            case 'spiritTome':
-                if (this.gameData.towerLevel >= 2) this.gameData.spiritTomes++;
-                break;
-            case 'druid':
-                if (this.gameData.towerLevel >= 3) this.gameData.druids++;
-                break;
+        const room = this.gameData.selectedRoom;
+        const spiritTypes = {
+            orb: 'cloudlings', study: 'spiritTomes', forest: 'druids',
+            academy: 'sages', dragon: 'keepers', alchemy: 'alchemists',
+            sorcery: 'shamans', runes: 'runesmiths'
+        };
+        const type = spiritTypes[room];
+        if (type && this.gameData.assignments[type] !== undefined) {
+            this.gameData.assignments[type]++;
         }
     }
 
-    unassignSpirit(type) {
-        switch(type) {
-            case 'cloudling': if (this.gameData.cloudlings > 0) this.gameData.cloudlings--; break;
-            case 'spiritTome': if (this.gameData.spiritTomes > 0) this.gameData.spiritTomes--; break;
-            case 'druid': if (this.gameData.druids > 0) this.gameData.druids--; break;
+    unassignSpirit() {
+        const room = this.gameData.selectedRoom;
+        const spiritTypes = {
+            orb: 'cloudlings', study: 'spiritTomes', forest: 'druids',
+            academy: 'sages', dragon: 'keepers', alchemy: 'alchemists',
+            sorcery: 'shamans', runes: 'runesmiths'
+        };
+        const type = spiritTypes[room];
+        if (type && this.gameData.assignments[type] > 0) {
+            this.gameData.assignments[type]--;
         }
     }
 
     canAscend() {
-        const costs = [0, 100, 1000, 10000, 50000, 200000];
-        if (this.gameData.towerLevel >= costs.length) return false;
-        return this.gameData.lifetimeMagic >= costs[this.gameData.towerLevel];
+        if (this.gameData.towerLevel >= ASCENSION_COSTS.length) return false;
+        return this.gameData.lifetimeMagic >= ASCENSION_COSTS[this.gameData.towerLevel];
     }
 
     ascend() {
         if (this.canAscend()) {
             this.gameData.towerLevel++;
+            this.screenShake = 15;
+            this.addNotification(`Tower Level ${this.gameData.towerLevel}!`);
+        }
+    }
+
+    // EXPAND: Prestige system
+    getPrestigePoints() {
+        return Math.floor(Math.sqrt(this.gameData.lifetimeMagic / 10000));
+    }
+
+    doPrestige() {
+        const points = this.getPrestigePoints();
+        if (points > 0) {
+            this.gameData.prestigePoints += points;
+            this.gameData.lifetimePrestige += points;
+            this.gameData.magic = 0;
+            this.gameData.spirits = 0;
+            this.gameData.knowledge = 0;
+            this.gameData.wood = 0;
+            this.gameData.lifetimeMagic = 0;
+            Object.keys(this.gameData.assignments).forEach(k => this.gameData.assignments[k] = 0);
+            this.addNotification(`+${points} Prestige Points!`);
+            this.screenShake = 20;
+        }
+    }
+
+    buyBlessing(name) {
+        const cost = BLESSING_COSTS[name];
+        if (cost && this.gameData.prestigePoints >= cost && !this.gameData.blessings[name]) {
+            this.gameData.prestigePoints -= cost;
+            this.gameData.blessings[name] = true;
+            this.addNotification(`${name} blessing unlocked!`);
         }
     }
 
     createFloatingSpirit() {
         this.floatingSpirits.push({
-            x: 200 + Math.random() * 100,
-            y: 200 + Math.random() * 200,
+            x: 100 + Math.random() * 200,
+            y: 150 + Math.random() * 250,
             bob: Math.random() * Math.PI * 2
         });
+    }
+
+    addNotification(text) {
+        this.notifications.push({ text, life: 3, y: 0 });
+    }
+
+    addDamageNumber(x, y, amount) {
+        this.damageNumbers.push({ x, y, amount, life: 1, vy: -30 });
     }
 
     formatNumber(n) {
         if (n < 1000) return Math.floor(n).toString();
         if (n < 1000000) return (n / 1000).toFixed(1) + 'K';
         if (n < 1000000000) return (n / 1000000).toFixed(1) + 'M';
-        return (n / 1000000000).toFixed(1) + 'B';
+        if (n < 1000000000000) return (n / 1000000000).toFixed(1) + 'B';
+        return (n / 1000000000000).toFixed(1) + 'T';
+    }
+
+    // EXPAND: Get multipliers from blessings/totems/relics
+    getMultiplier(type) {
+        let mult = 1;
+        if (this.gameData.blessings[type]) mult *= 2;
+        if (this.gameData.blessings.doubling) mult *= 2;
+        if (this.gameData.relics.holyGrail) mult *= RELICS.holyGrail.value;
+        // Totem bonuses
+        this.gameData.totems.forEach(t => { if (t === type) mult *= 1.1; });
+        return mult;
     }
 
     update(time, delta) {
         const dt = delta / 1000;
         this.gameData.tick++;
 
-        // Orb cooldown
-        if (this.gameData.orbClickCooldown > 0) {
-            this.gameData.orbClickCooldown -= dt;
-        }
+        // Cooldown
+        if (this.gameData.orbClickCooldown > 0) this.gameData.orbClickCooldown -= dt;
 
-        // Auto-click while holding orb
-        if (this.gameData.orbHeld && this.gameData.orbClickCooldown <= 0) {
-            this.clickOrb();
-        }
+        // Auto-click
+        if (this.gameData.orbHeld && this.gameData.orbClickCooldown <= 0) this.clickOrb();
 
-        // Cloudling magic generation
-        const cloudlingMagic = this.gameData.cloudlings * 0.5 * dt;
-        this.gameData.magic += cloudlingMagic;
-        this.gameData.lifetimeMagic += cloudlingMagic;
+        // EXPAND: Resource generation from all spirits
+        const a = this.gameData.assignments;
 
-        // Knowledge generation
+        // Cloudlings -> Magic
+        const cloudMagic = a.cloudlings * PRODUCTION_RATES.cloudlings * this.getMultiplier('magic') * dt;
+        this.gameData.magic += cloudMagic;
+        this.gameData.lifetimeMagic += cloudMagic;
+
+        // Spirit Tomes -> Knowledge
         if (this.gameData.towerLevel >= 2) {
-            this.gameData.knowledge += this.gameData.spiritTomes * 0.2 * dt;
+            this.gameData.knowledge += a.spiritTomes * PRODUCTION_RATES.spiritTomes * this.getMultiplier('knowledge') * dt;
         }
 
-        // Wood generation
+        // Druids -> Wood
         if (this.gameData.towerLevel >= 3) {
-            this.gameData.wood += this.gameData.druids * 0.3 * dt;
+            this.gameData.wood += a.druids * PRODUCTION_RATES.druids * this.getMultiplier('forest') * dt;
+        }
+
+        // Sages -> Research
+        if (this.gameData.towerLevel >= 4) {
+            this.gameData.research += a.sages * PRODUCTION_RATES.sages * this.getMultiplier('research') * dt;
+        }
+
+        // Keepers -> Dragon XP
+        if (this.gameData.towerLevel >= 5) {
+            this.gameData.dragonXP += a.keepers * PRODUCTION_RATES.keepers * this.getMultiplier('dragon') * dt;
+        }
+
+        // Alchemists -> Arcane Gold
+        if (this.gameData.towerLevel >= 6) {
+            this.gameData.arcaneGold += a.alchemists * PRODUCTION_RATES.alchemists * this.getMultiplier('alchemy') * dt;
+        }
+
+        // Runesmiths -> Rune Points
+        if (this.gameData.towerLevel >= 8) {
+            this.gameData.runePoints += a.runesmiths * PRODUCTION_RATES.runesmiths * dt;
+        }
+
+        // EXPAND: Wall damage (Sorcery)
+        const dps = a.shamans * SORCERY_DPS.shamans + a.ifrits * SORCERY_DPS.ifrits;
+        if (dps > 0 && this.gameData.currentWall < WALLS.length) {
+            const damage = dps * dt;
+            this.gameData.wallDamage += damage;
+            this.gameData.lifetimeDamage += damage;
+
+            if (this.gameData.wallDamage >= this.gameData.wallMaxHealth) {
+                this.gameData.wallDamage = 0;
+                this.gameData.currentWall++;
+                if (this.gameData.currentWall < WALLS.length) {
+                    this.gameData.wallMaxHealth = WALLS[this.gameData.currentWall].health;
+                    this.addNotification(`${WALLS[this.gameData.currentWall - 1].name} destroyed!`);
+                    this.screenShake = 25;
+                }
+            }
+        }
+
+        // EXPAND: Dragon leveling
+        const dragonLevelThreshold = Math.pow(2, this.gameData.dragon.level + 1) * 100;
+        if (this.gameData.dragonXP >= dragonLevelThreshold) {
+            this.gameData.dragon.level++;
+            this.addNotification(`Dragon Level ${this.gameData.dragon.level}!`);
         }
 
         // Update particles
@@ -390,12 +484,9 @@ class GameScene extends Phaser.Scene {
             const p = this.particles[i];
             p.x += p.vx * dt;
             p.y += p.vy * dt;
-            p.vy += 50 * dt;
+            p.vy += 40 * dt;
             p.life -= dt * 2;
-
-            if (p.life <= 0) {
-                this.particles.splice(i, 1);
-            }
+            if (p.life <= 0) this.particles.splice(i, 1);
         }
 
         // Update floating spirits
@@ -403,106 +494,145 @@ class GameScene extends Phaser.Scene {
             spirit.bob += dt * 2;
         }
 
-        // Draw dynamic elements
-        this.drawDynamic();
+        // Update damage numbers
+        for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
+            const d = this.damageNumbers[i];
+            d.y += d.vy * dt;
+            d.life -= dt;
+            if (d.life <= 0) this.damageNumbers.splice(i, 1);
+        }
 
-        // Update UI
+        // Update notifications
+        for (let i = this.notifications.length - 1; i >= 0; i--) {
+            const n = this.notifications[i];
+            n.life -= dt;
+            n.y += dt * 20;
+            if (n.life <= 0) this.notifications.splice(i, 1);
+        }
+
+        // POLISH: Screen shake decay
+        if (this.screenShake > 0) this.screenShake *= 0.9;
+
+        this.drawDynamic();
         this.updateUI();
     }
 
     drawDynamic() {
+        const shakeX = (Math.random() - 0.5) * this.screenShake;
+        const shakeY = (Math.random() - 0.5) * this.screenShake;
+
+        // POLISH: Stars
+        const sg = this.starGraphics;
+        sg.clear();
+        for (const star of this.stars) {
+            star.twinkle += 0.05;
+            const alpha = 0.3 + Math.sin(star.twinkle) * 0.3;
+            sg.fillStyle(0xffffff, alpha * star.brightness);
+            sg.fillRect(star.x + shakeX, star.y + shakeY, 2, 2);
+        }
+
+        // Tower
         const g = this.towerGraphics;
         g.clear();
-
         const h = this.scale.height;
-        const towerX = 320;
-        const towerBaseY = h - 100;
-        const floorHeight = 80;
+        const towerX = 350 + shakeX;
+        const towerBaseY = h - 120;
+        const floorHeight = 60;
 
-        // Draw tower floors
-        for (let i = 0; i < this.gameData.towerLevel && i < 6; i++) {
+        // POLISH: Tower shadow
+        g.fillStyle(0x000000, 0.3);
+        g.fillEllipse(towerX + 30, towerBaseY + 10, 50, 15);
+
+        // Tower floors
+        for (let i = 0; i < Math.min(this.gameData.towerLevel, 11); i++) {
             const floorY = towerBaseY - i * floorHeight;
-            const width = 60;
-            const height = 70;
+            const w = 60;
 
-            // Main body
             g.fillStyle(COLORS.towerPink);
-            g.fillRect(towerX - width/2, floorY - height, width, height);
+            g.fillRect(towerX, floorY - 55, w, 55);
 
-            // Highlight
             g.fillStyle(COLORS.towerLight);
-            g.fillRect(towerX - width/2, floorY - height, 4, height);
+            g.fillRect(towerX, floorY - 55, 4, 55);
 
-            // Shadow
             g.fillStyle(COLORS.pinkDark);
-            g.fillRect(towerX + width/2 - 4, floorY - height, 4, height);
+            g.fillRect(towerX + w - 4, floorY - 55, 4, 55);
 
-            // Window
+            // POLISH: Window with glow
+            const glowIntensity = 0.3 + Math.sin(this.gameData.tick * 0.03 + i) * 0.2;
+            g.fillStyle(0x4a6090, glowIntensity);
+            g.fillRect(towerX + 20, floorY - 45, 20, 30);
             g.fillStyle(COLORS.towerWindow);
-            g.fillRect(towerX - 8, floorY - height + 20, 16, 24);
-
-            // Window glow
-            g.fillStyle(0x4a5a8a);
-            g.fillRect(towerX - 6, floorY - height + 22, 4, 8);
+            g.fillRect(towerX + 22, floorY - 43, 16, 26);
         }
 
-        // Draw roof
-        const roofY = towerBaseY - this.gameData.towerLevel * floorHeight;
+        // Roof
+        const roofY = towerBaseY - Math.min(this.gameData.towerLevel, 11) * floorHeight + shakeY;
         g.fillStyle(COLORS.towerRoof);
-        g.fillTriangle(towerX - 40, roofY, towerX, roofY - 60, towerX + 40, roofY);
+        g.fillTriangle(towerX - 5, roofY, towerX + 30, roofY - 50, towerX + 65, roofY);
         g.fillStyle(COLORS.towerLight);
-        g.fillTriangle(towerX - 35, roofY - 5, towerX - 5, roofY - 50, towerX - 5, roofY - 5);
+        g.fillTriangle(towerX, roofY - 5, towerX + 25, roofY - 45, towerX + 25, roofY - 5);
 
-        // Draw orb
-        const orbG = this.orbGraphics;
-        orbG.clear();
+        // POLISH: Roof ornament
+        g.fillStyle(COLORS.orbGlow);
+        g.fillCircle(towerX + 30, roofY - 55, 5);
 
-        // Orb glow
-        orbG.fillStyle(COLORS.orbGlow, 0.2);
-        orbG.fillCircle(200, 120, 80);
+        // Orb
+        const og = this.orbGraphics;
+        og.clear();
+        const orbX = 200 + shakeX;
+        const orbY = 120 + shakeY;
 
-        // Orb body
-        orbG.fillStyle(COLORS.orbDark);
-        orbG.fillCircle(200, 120, 45);
+        // POLISH: Multi-layer glow
+        og.fillStyle(COLORS.orbGlow, 0.15);
+        og.fillCircle(orbX, orbY, 100);
+        og.fillStyle(COLORS.orbGlow, 0.25);
+        og.fillCircle(orbX, orbY, 70);
 
-        // Orb highlight
-        orbG.fillStyle(0xffffff, 0.3);
-        orbG.fillCircle(185, 105, 8);
+        og.fillStyle(COLORS.orbDark);
+        og.fillCircle(orbX, orbY, 45);
 
-        // Stars inside orb
-        orbG.fillStyle(0xffffff);
-        for (let i = 0; i < 5; i++) {
-            const angle = this.gameData.tick * 0.02 + i * Math.PI * 0.4;
-            const dist = 15 + Math.sin(this.gameData.tick * 0.05 + i) * 10;
-            const sx = 200 + Math.cos(angle) * dist;
-            const sy = 120 + Math.sin(angle) * dist;
-            orbG.fillRect(sx - 1, sy - 1, 2, 2);
+        // POLISH: Animated stars inside orb
+        og.fillStyle(0xffffff);
+        for (let i = 0; i < 8; i++) {
+            const angle = this.gameData.tick * 0.025 + i * Math.PI * 0.25;
+            const dist = 12 + Math.sin(this.gameData.tick * 0.06 + i * 2) * 15;
+            const sx = orbX + Math.cos(angle) * dist;
+            const sy = orbY + Math.sin(angle) * dist;
+            const size = 2 + Math.sin(this.gameData.tick * 0.08 + i) * 1;
+            og.fillRect(sx - size/2, sy - size/2, size, size);
         }
 
-        // Draw floating spirits
-        for (let i = 0; i < Math.min(this.floatingSpirits.length, 20); i++) {
+        og.fillStyle(0xffffff, 0.4);
+        og.fillCircle(orbX - 15, orbY - 15, 8);
+
+        // POLISH: Floating spirits with glow
+        for (let i = 0; i < Math.min(this.floatingSpirits.length, 25); i++) {
             const spirit = this.floatingSpirits[i];
             const bobY = Math.sin(spirit.bob) * 5;
 
-            orbG.fillStyle(COLORS.spirits);
-            orbG.fillCircle(spirit.x, spirit.y + bobY, 6);
-
-            // Eyes
-            orbG.fillStyle(COLORS.panelBg);
-            orbG.fillRect(spirit.x - 3, spirit.y + bobY - 2, 2, 2);
-            orbG.fillRect(spirit.x + 1, spirit.y + bobY - 2, 2, 2);
+            og.fillStyle(COLORS.spirits, 0.3);
+            og.fillCircle(spirit.x + shakeX, spirit.y + bobY + shakeY, 12);
+            og.fillStyle(COLORS.spirits);
+            og.fillCircle(spirit.x + shakeX, spirit.y + bobY + shakeY, 7);
+            og.fillStyle(COLORS.panelBg);
+            og.fillRect(spirit.x - 3 + shakeX, spirit.y + bobY - 2 + shakeY, 2, 2);
+            og.fillRect(spirit.x + 1 + shakeX, spirit.y + bobY - 2 + shakeY, 2, 2);
         }
 
-        // Draw particles
+        // Particles
         const pg = this.particleGraphics;
         pg.clear();
-
         for (const p of this.particles) {
             pg.fillStyle(p.color, p.life);
-            pg.fillCircle(p.x, p.y, 4);
+            pg.fillCircle(p.x + shakeX, p.y + shakeY, 4);
         }
 
-        // Draw UI panels
+        // Damage numbers
+        for (const d of this.damageNumbers) {
+            pg.fillStyle(0xffff00, d.life);
+            // Would need text but using rect approximation
+        }
+
         this.drawUIPanels();
     }
 
@@ -511,100 +641,112 @@ class GameScene extends Phaser.Scene {
         g.clear();
 
         // Resource panel
-        g.fillStyle(COLORS.panelBg);
-        g.fillRect(20, 20, 160, 120);
+        g.fillStyle(COLORS.panelBg, 0.9);
+        g.fillRoundedRect(20, 20, 170, 200, 8);
         g.lineStyle(2, COLORS.panelBorder);
-        g.strokeRect(20, 20, 160, 120);
+        g.strokeRoundedRect(20, 20, 170, 200, 8);
 
         // Action panel
-        const panelX = this.scale.width - 320;
-        g.fillStyle(COLORS.panelBg);
-        g.fillRect(panelX, 200, 300, 360);
+        const panelX = this.scale.width - 290;
+        g.fillStyle(COLORS.panelBg, 0.9);
+        g.fillRoundedRect(panelX, 185, 270, 420, 8);
         g.lineStyle(2, COLORS.panelBorder);
-        g.strokeRect(panelX, 200, 300, 360);
+        g.strokeRoundedRect(panelX, 185, 270, 420, 8);
+
+        // POLISH: Notifications
+        let notifY = 250;
+        for (const n of this.notifications) {
+            g.fillStyle(COLORS.panelBg, n.life * 0.8);
+            g.fillRoundedRect(this.scale.width / 2 - 100, notifY + n.y, 200, 30, 4);
+            notifY += 35;
+        }
     }
 
     updateUI() {
-        // Resource texts
-        this.magicText.setText(`* ${this.formatNumber(this.gameData.magic)}`);
-        this.spiritsText.setText(`@ ${this.getTotalAssigned()}/${this.gameData.spirits}`);
-        this.knowledgeText.setText(`+ ${this.formatNumber(this.gameData.knowledge)}`);
-        this.woodText.setText(`# ${this.formatNumber(this.gameData.wood)}`);
+        const d = this.gameData;
+        const a = d.assignments;
 
-        // Room title
-        const roomTitles = { orb: 'Orb Room', study: 'Study', forest: 'Forestry' };
-        this.roomTitle.setText(roomTitles[this.gameData.selectedRoom]);
+        // Resources
+        this.magicText.setText(`* ${this.formatNumber(d.magic)}`);
+        this.spiritsText.setText(`@ ${this.getTotalAssigned()}/${d.spirits}`);
+        this.knowledgeText.setText(`+ ${this.formatNumber(d.knowledge)}`);
+        this.woodText.setText(`# ${this.formatNumber(d.wood)}`);
+        this.researchText.setText(d.towerLevel >= 4 ? `~ ${this.formatNumber(d.research)}` : '');
+        this.dragonXPText.setText(d.towerLevel >= 5 ? `^ ${this.formatNumber(d.dragonXP)}` : '');
+        this.goldText.setText(d.towerLevel >= 6 ? `$ ${this.formatNumber(d.arcaneGold)}` : '');
+        this.runeText.setText(d.towerLevel >= 8 ? `% ${this.formatNumber(d.runePoints)}` : '');
+
+        // Room titles
+        const roomTitles = {
+            orb: 'Orb Room', study: 'Study', forest: 'Forest', prestige: 'Prestige',
+            academy: 'Academy', dragon: 'Dragon Nest', alchemy: 'Alchemy Lab',
+            sorcery: 'Sorcery', runes: 'Runecraft'
+        };
+        this.roomTitle.setText(roomTitles[d.selectedRoom] || 'Room');
 
         // Summon cost
-        this.summonCostText.setText(`Cost: ${this.formatNumber(this.getSpiritCost())} magic`);
+        this.summonBtn.label.setText(`Summon Spirit   ${this.formatNumber(this.getSpiritCost())}`);
 
-        // Room info
-        if (this.gameData.selectedRoom === 'orb') {
-            this.roomInfo1.setText(`Cloudlings: ${this.gameData.cloudlings}`);
-            this.roomInfo2.setText(`Magic/sec: ${this.formatNumber(this.gameData.cloudlings * 0.5)}`);
-        } else if (this.gameData.selectedRoom === 'study') {
-            if (this.gameData.towerLevel >= 2) {
-                this.roomInfo1.setText(`Spirit Tomes: ${this.gameData.spiritTomes}`);
-                this.roomInfo2.setText(`Knowledge/sec: ${this.formatNumber(this.gameData.spiritTomes * 0.2)}`);
-            } else {
-                this.roomInfo1.setText('Unlock at Tower Level 2');
-                this.roomInfo2.setText('');
-            }
+        // Room-specific info
+        const spiritTypes = {
+            orb: ['Cloudlings', a.cloudlings, 'magic/sec', a.cloudlings * PRODUCTION_RATES.cloudlings],
+            study: ['Spirit Tomes', a.spiritTomes, 'knowledge/sec', a.spiritTomes * PRODUCTION_RATES.spiritTomes],
+            forest: ['Druids', a.druids, 'wood/sec', a.druids * PRODUCTION_RATES.druids],
+            academy: ['Sages', a.sages, 'research/sec', a.sages * PRODUCTION_RATES.sages],
+            dragon: ['Keepers', a.keepers, 'dragon XP/sec', a.keepers * PRODUCTION_RATES.keepers],
+            alchemy: ['Alchemists', a.alchemists, 'gold/sec', a.alchemists * PRODUCTION_RATES.alchemists],
+            sorcery: ['Shamans', a.shamans, 'DPS', a.shamans * SORCERY_DPS.shamans + a.ifrits * SORCERY_DPS.ifrits],
+            runes: ['Runesmiths', a.runesmiths, 'rune pts/sec', a.runesmiths * PRODUCTION_RATES.runesmiths]
+        };
+
+        const info = spiritTypes[d.selectedRoom];
+        if (info && d.selectedRoom !== 'prestige') {
+            this.roomInfo1.setText(`${info[0]}: ${info[1]}`);
+            this.roomInfo2.setText(`${this.formatNumber(info[3])} ${info[2]}`);
+            this.roomInfo3.setText('');
+        } else if (d.selectedRoom === 'prestige') {
+            this.roomInfo1.setText(`Prestige Points: ${d.prestigePoints}`);
+            this.roomInfo2.setText(`Potential: +${this.getPrestigePoints()}`);
+            this.roomInfo3.setText('Resets progress for bonuses');
         } else {
-            if (this.gameData.towerLevel >= 3) {
-                this.roomInfo1.setText(`Druids: ${this.gameData.druids}`);
-                this.roomInfo2.setText(`Wood/sec: ${this.formatNumber(this.gameData.druids * 0.3)}`);
-            } else {
-                this.roomInfo1.setText('Unlock at Tower Level 3');
-                this.roomInfo2.setText('');
-            }
+            this.roomInfo1.setText('');
+            this.roomInfo2.setText('');
+            this.roomInfo3.setText('');
         }
 
-        // Tower info
-        this.towerLevelText.setText(`Tower Level: ${this.gameData.towerLevel}`);
-
-        const costs = [0, 100, 1000, 10000, 50000, 200000];
-        if (this.gameData.towerLevel < costs.length) {
-            this.ascendReqText.setText(`Next: ${this.formatNumber(costs[this.gameData.towerLevel])} lifetime magic`);
+        // Tower level
+        this.towerLevelText.setText(`Tower Level: ${d.towerLevel}`);
+        if (d.towerLevel < ASCENSION_COSTS.length) {
+            this.ascendReqText.setText(`Next: ${this.formatNumber(ASCENSION_COSTS[d.towerLevel])} lifetime magic`);
         } else {
             this.ascendReqText.setText('Max level reached');
         }
 
-        this.lifetimeText.setText(`Lifetime Magic: ${this.formatNumber(this.gameData.lifetimeMagic)}`);
-        this.prestigeText.setText(`Prestige Points: ${this.gameData.prestigePoints}`);
-
-        // Orb click text
+        // Orb text
         this.orbClickText.setText(`+${this.formatNumber(this.getMagicPerClick())}`);
 
-        // Update buttons
-        const spiritCost = this.getSpiritCost();
-        this.updateButton(this.summonBtn, this.gameData.magic >= spiritCost);
+        // Button states
+        this.updateButton(this.summonBtn, d.magic >= this.getSpiritCost());
+        this.updateButton(this.assignBtn, d.spirits > this.getTotalAssigned());
 
-        const freeSpirits = this.gameData.spirits - this.getTotalAssigned();
-        this.updateButton(this.assignBtn, freeSpirits > 0);
-
-        const assignedCount = this.gameData.selectedRoom === 'orb' ? this.gameData.cloudlings :
-                             this.gameData.selectedRoom === 'study' ? this.gameData.spiritTomes :
-                             this.gameData.druids;
-        this.updateButton(this.removeBtn, assignedCount > 0);
-
+        const currentAssigned = spiritTypes[d.selectedRoom] ? spiritTypes[d.selectedRoom][1] : 0;
+        this.updateButton(this.removeBtn, currentAssigned > 0);
         this.updateButton(this.ascendBtn, this.canAscend());
 
-        // Room nav buttons
-        this.updateButton(this.orbRoomBtn, true);
-        this.orbRoomBtn.bg.fillStyle(this.gameData.selectedRoom === 'orb' ? COLORS.panelBorder : COLORS.button);
-        this.orbRoomBtn.bg.fillRect(0, 0, 90, 40);
+        // Room tabs
+        const roomUnlocks = { orb: 1, study: 2, forest: 3, prestige: 1, academy: 4, dragon: 5, alchemy: 6, sorcery: 7, runes: 8 };
+        this.roomTabs.forEach((tab, i) => {
+            const room = ROOMS[i];
+            const unlocked = d.towerLevel >= roomUnlocks[room];
+            const active = d.selectedRoom === room;
+            this.updateButton(tab, unlocked, active);
+        });
 
-        this.updateButton(this.studyRoomBtn, this.gameData.towerLevel >= 2);
-        if (this.gameData.selectedRoom === 'study') {
-            this.studyRoomBtn.bg.fillStyle(COLORS.panelBorder);
-            this.studyRoomBtn.bg.fillRect(0, 0, 90, 40);
-        }
-
-        this.updateButton(this.forestRoomBtn, this.gameData.towerLevel >= 3);
-        if (this.gameData.selectedRoom === 'forest') {
-            this.forestRoomBtn.bg.fillStyle(COLORS.panelBorder);
-            this.forestRoomBtn.bg.fillRect(0, 0, 90, 40);
+        // Notifications text
+        let notifY = 250;
+        for (const n of this.notifications) {
+            // Would need dynamic text objects, simplified here
+            notifY += 35;
         }
     }
 }
@@ -616,9 +758,7 @@ const config = {
     backgroundColor: '#1a1a2e',
     canvas: document.createElement('canvas'),
     scene: [GameScene],
-    render: {
-        pixelArt: true
-    }
+    render: { pixelArt: true }
 };
 
 document.body.appendChild(config.canvas);

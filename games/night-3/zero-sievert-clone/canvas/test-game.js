@@ -74,6 +74,9 @@ async function testGame() {
     await page.screenshot({ path: 'screenshot-08-final.png' });
     console.log('Screenshot 8: Final');
 
+    await page.screenshot({ path: 'screenshot.png' });
+    console.log('Created screenshot.png for gallery');
+
     console.log('Test complete!');
     await browser.close();
 }
