@@ -282,6 +282,65 @@
       color: #fff;
     }
 
+    /* Final rating display on card */
+    .final-rating {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0,0,0,0.8);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      z-index: 10;
+    }
+    .final-rating .star { color: #ffd700; }
+    .final-rating .star.empty { color: #444; }
+
+    /* Star rating component */
+    .star-rating {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    .star-rating label {
+      color: #8f98a0;
+      font-size: 13px;
+      margin-right: 8px;
+      align-self: center;
+    }
+    .star-rating .stars {
+      display: flex;
+      gap: 2px;
+    }
+    .star-rating .star-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #444;
+      transition: color 0.1s;
+      padding: 0;
+    }
+    .star-rating .star-btn:hover,
+    .star-rating .star-btn.active {
+      color: #ffd700;
+    }
+    .star-rating .star-btn.hovered {
+      color: #ffd700;
+    }
+    .star-rating .clear-btn {
+      background: none;
+      border: none;
+      color: #8f98a0;
+      font-size: 11px;
+      cursor: pointer;
+      margin-left: 8px;
+      text-decoration: underline;
+    }
+    .star-rating .clear-btn:hover {
+      color: #fff;
+    }
+
     /* Notes modal */
     .notes-modal {
       display: none;
@@ -550,8 +609,9 @@
       <span id="totalGames">0 Games</span>
       <span id="playedGames">0 Played</span>
       <span id="polishedGames">0 Polished</span>
+      <span id="ratedGames" style="color:#ffd700;">0 Rated</span>
       <span id="brokenGames" style="color:#ff6666;">0 Broken</span>
-      <span style="color:#67c1f5; font-size:11px; margin-left:20px;">v2026.01.10-0352</span>
+      <span style="color:#67c1f5; font-size:11px; margin-left:20px;">v2026.01.10-ratings</span>
     </div>
   </div>
 
@@ -563,7 +623,8 @@
         <option value="date-desc">Recent</option>
         <option value="date-asc">Oldest</option>
         <option value="name">Name</option>
-        <option value="rating">Rating</option>
+        <option value="rating">Auto Rating</option>
+        <option value="final-rating">Final Rating ★</option>
       </select>
     </div>
     <div class="control-group">
@@ -589,6 +650,11 @@
         <option value="played">Played</option>
         <option value="polished">Polished</option>
         <option value="has-notes">Has Notes</option>
+        <option value="has-rating">Has Rating</option>
+        <option value="no-rating">No Rating</option>
+        <option value="rating-5">★★★★★ (5)</option>
+        <option value="rating-4">★★★★☆ (4+)</option>
+        <option value="rating-3">★★★☆☆ (3+)</option>
         <option value="broken">Broken</option>
         <option value="working">Working</option>
       </select>
@@ -613,6 +679,17 @@
         <button class="notes-close" onclick="closeNotes()">&times;</button>
       </div>
       <div class="notes-body">
+        <div class="star-rating">
+          <label>Final Rating:</label>
+          <div class="stars" id="modalStars">
+            <button class="star-btn" data-rating="1" onclick="setModalRating(1)">★</button>
+            <button class="star-btn" data-rating="2" onclick="setModalRating(2)">★</button>
+            <button class="star-btn" data-rating="3" onclick="setModalRating(3)">★</button>
+            <button class="star-btn" data-rating="4" onclick="setModalRating(4)">★</button>
+            <button class="star-btn" data-rating="5" onclick="setModalRating(5)">★</button>
+          </div>
+          <button class="clear-btn" onclick="setModalRating(0)">Clear</button>
+        </div>
         <textarea id="notesText" placeholder="Add your feedback, bugs found, ideas for improvement..."></textarea>
       </div>
       <div class="notes-footer">
@@ -654,26 +731,29 @@
     let playedStatus = JSON.parse(localStorage.getItem('playedGames') || '{}');
     let gameNotes = {};
     let brokenGames = {};
+    let finalRatings = {};
     let currentNoteGameId = null;
     let currentPlayerGame = null;
 
-    // Load notes and broken status from server (falls back to localStorage)
+    // Load notes, broken status, and ratings from server (falls back to localStorage)
     async function loadNotes() {
       try {
         const resp = await fetch('/api/notes');
         const data = await resp.json();
-        // Support old format (just notes) and new format (notes + broken)
+        // Support old format (just notes) and new format (notes + broken + ratings)
         if (data._broken) {
           brokenGames = data._broken;
           delete data._broken;
-          gameNotes = data;
-        } else {
-          gameNotes = data;
-          brokenGames = {};
         }
+        if (data._ratings) {
+          finalRatings = data._ratings;
+          delete data._ratings;
+        }
+        gameNotes = data;
       } catch (e) {
         gameNotes = JSON.parse(localStorage.getItem('gameNotes') || '{}');
         brokenGames = JSON.parse(localStorage.getItem('brokenGames') || '{}');
+        finalRatings = JSON.parse(localStorage.getItem('finalRatings') || '{}');
       }
     }
 
@@ -692,12 +772,13 @@
       // Always save to localStorage first (GitHub Pages has no backend)
       localStorage.setItem('gameNotes', JSON.stringify(gameNotes));
       localStorage.setItem('brokenGames', JSON.stringify(brokenGames));
+      localStorage.setItem('finalRatings', JSON.stringify(finalRatings));
       // Try server API if available (for local dev)
       try {
         const resp = await fetch('/api/notes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...gameNotes, _broken: brokenGames })
+          body: JSON.stringify({ ...gameNotes, _broken: brokenGames, _ratings: finalRatings })
         });
         if (!resp.ok) throw new Error('API not available');
       } catch (e) {
@@ -764,6 +845,11 @@
       else if (status === 'played') games = games.filter(g => g.played);
       else if (status === 'polished') games = games.filter(g => g.polished);
       else if (status === 'has-notes') games = games.filter(g => gameNotes[g.id]);
+      else if (status === 'has-rating') games = games.filter(g => finalRatings[g.id]);
+      else if (status === 'no-rating') games = games.filter(g => !finalRatings[g.id]);
+      else if (status === 'rating-5') games = games.filter(g => finalRatings[g.id] === 5);
+      else if (status === 'rating-4') games = games.filter(g => finalRatings[g.id] >= 4);
+      else if (status === 'rating-3') games = games.filter(g => finalRatings[g.id] >= 3);
       else if (status === 'broken') games = games.filter(g => brokenGames[g.id]);
       else if (status === 'working') games = games.filter(g => !brokenGames[g.id]);
 
@@ -771,6 +857,7 @@
         case 'date-asc': games.sort((a, b) => new Date(a.createdDate) - new Date(b.createdDate)); break;
         case 'name': games.sort((a, b) => a.name.localeCompare(b.name)); break;
         case 'rating': games.sort((a, b) => (b.rating || 0) - (a.rating || 0)); break;
+        case 'final-rating': games.sort((a, b) => (finalRatings[b.id] || 0) - (finalRatings[a.id] || 0)); break;
         case 'grouped': games.sort((a, b) => {
           // Extract base game name (without -expanded, -polished, -v2)
           const getBase = (g) => g.gameDir.replace(/-expanded$|-polished$|-v2$/, '');
@@ -877,18 +964,35 @@
       renderGames();
     }
 
+    let currentModalRating = 0;
+
     function openNotes(e, gameId, gameName) {
       e.stopPropagation();
       currentNoteGameId = gameId;
+      currentModalRating = finalRatings[gameId] || 0;
       document.getElementById('notesTitle').textContent = 'Notes: ' + gameName;
       document.getElementById('notesText').value = gameNotes[gameId] || '';
+      updateModalStars();
       document.getElementById('notesModal').classList.add('active');
       document.getElementById('notesText').focus();
+    }
+
+    function setModalRating(rating) {
+      currentModalRating = rating;
+      updateModalStars();
+    }
+
+    function updateModalStars() {
+      const stars = document.querySelectorAll('#modalStars .star-btn');
+      stars.forEach((star, i) => {
+        star.classList.toggle('active', i < currentModalRating);
+      });
     }
 
     function closeNotes() {
       document.getElementById('notesModal').classList.remove('active');
       currentNoteGameId = null;
+      currentModalRating = 0;
     }
 
     async function saveNotes() {
@@ -898,6 +1002,12 @@
       } else {
         delete gameNotes[currentNoteGameId];
       }
+      // Save rating
+      if (currentModalRating > 0) {
+        finalRatings[currentNoteGameId] = currentModalRating;
+      } else {
+        delete finalRatings[currentNoteGameId];
+      }
       await saveData();
       closeNotes();
       renderGames();
@@ -906,30 +1016,47 @@
     // Note: Escape key handling is done in the popstate/escape listener above
 
     function exportNotes() {
-      const exportData = { games: [], broken: [], summary: {} };
+      const exportData = { games: [], broken: [], rated: [], summary: {} };
 
-      // All games with notes or broken status
+      // All games with notes, broken status, or final rating
       allGames.forEach(g => {
         const hasNotes = gameNotes[g.id];
         const isBroken = brokenGames[g.id];
-        if (hasNotes || isBroken) {
+        const rating = finalRatings[g.id];
+        if (hasNotes || isBroken || rating) {
           exportData.games.push({
             id: g.id,
             name: g.name,
             framework: g.framework,
             path: g.path,
             broken: isBroken || false,
+            finalRating: rating || null,
             notes: hasNotes || ''
           });
         }
         if (isBroken) exportData.broken.push(g.id);
+        if (rating) exportData.rated.push({ id: g.id, rating });
       });
+
+      // Sort rated by rating descending
+      exportData.rated.sort((a, b) => b.rating - a.rating);
 
       exportData.summary = {
         total: allGames.length,
         broken: Object.keys(brokenGames).length,
         working: allGames.length - Object.keys(brokenGames).length,
-        withNotes: Object.keys(gameNotes).length
+        withNotes: Object.keys(gameNotes).length,
+        withRating: Object.keys(finalRatings).length,
+        avgRating: Object.keys(finalRatings).length > 0
+          ? (Object.values(finalRatings).reduce((a,b) => a+b, 0) / Object.keys(finalRatings).length).toFixed(1)
+          : null,
+        ratingBreakdown: {
+          '5': Object.values(finalRatings).filter(r => r === 5).length,
+          '4': Object.values(finalRatings).filter(r => r === 4).length,
+          '3': Object.values(finalRatings).filter(r => r === 3).length,
+          '2': Object.values(finalRatings).filter(r => r === 2).length,
+          '1': Object.values(finalRatings).filter(r => r === 1).length
+        }
       };
 
       const blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
@@ -945,6 +1072,7 @@
       document.getElementById('totalGames').textContent = allGames.length + ' Games';
       document.getElementById('playedGames').textContent = allGames.filter(g => g.played).length + ' Played';
       document.getElementById('polishedGames').textContent = allGames.filter(g => g.polished).length + ' Polished';
+      document.getElementById('ratedGames').textContent = Object.keys(finalRatings).length + ' Rated';
       document.getElementById('brokenGames').textContent = Object.keys(brokenGames).length + ' Broken';
 
       const getBase = (g) => g.gameDir.replace(/-expanded$|-polished$|-v2$/, '');
@@ -979,6 +1107,7 @@
         <div class="game-card ${g.played ? 'played' : ''} ${brokenGames[g.id] ? 'broken' : ''}" onclick="playGame('${g.id}', '${g.path}')">
           <button class="notes-btn ${gameNotes[g.id] ? 'has-notes' : ''}" onclick="openNotes(event, '${g.id}', '${g.name.replace(/'/g, "\\'")}')">📝</button>
           <button class="broken-btn ${brokenGames[g.id] ? 'is-broken' : ''}" onclick="toggleBroken(event, '${g.id}')" title="Mark as broken">✕</button>
+          ${finalRatings[g.id] ? `<div class="final-rating">${'<span class="star">★</span>'.repeat(finalRatings[g.id])}${'<span class="star empty">★</span>'.repeat(5-finalRatings[g.id])}</div>` : ''}
           ${g.screenshot
             ? `<img class="screenshot" src="${g.path}${g.screenshot}" alt="${g.name}" onerror="this.outerHTML='<div class=no-screenshot>🎮</div>'">`
             : '<div class="no-screenshot">🎮</div>'
