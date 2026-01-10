@@ -689,16 +689,19 @@
     }
 
     async function saveData() {
-      const dataToSave = { ...gameNotes, _broken: brokenGames };
+      // Always save to localStorage first (GitHub Pages has no backend)
+      localStorage.setItem('gameNotes', JSON.stringify(gameNotes));
+      localStorage.setItem('brokenGames', JSON.stringify(brokenGames));
+      // Try server API if available (for local dev)
       try {
-        await fetch('/api/notes', {
+        const resp = await fetch('/api/notes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(dataToSave)
+          body: JSON.stringify({ ...gameNotes, _broken: brokenGames })
         });
+        if (!resp.ok) throw new Error('API not available');
       } catch (e) {
-        localStorage.setItem('gameNotes', JSON.stringify(gameNotes));
-        localStorage.setItem('brokenGames', JSON.stringify(brokenGames));
+        // Silently ignore - localStorage already saved
       }
     }
 
