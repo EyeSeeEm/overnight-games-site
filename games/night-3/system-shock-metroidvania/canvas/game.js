@@ -37,6 +37,12 @@ const COLORS = {
 let gameState = 'title';
 let currentRoom = { x: 0, y: 0 };
 
+// Debug overlay
+let debugMode = false;
+let fps = 0;
+let frameCount = 0;
+let fpsTimer = 0;
+
 // Player
 const player = {
     x: 100,
@@ -185,6 +191,12 @@ let lastKeys = {};
 
 document.addEventListener('keydown', e => {
     keys[e.code] = true;
+
+    // Toggle debug mode with Q
+    if (e.code === 'KeyQ') {
+        debugMode = !debugMode;
+    }
+
     if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
         e.preventDefault();
     }
@@ -997,6 +1009,41 @@ function drawHUD() {
     ctx.fillText(`MEDICAL DECK - ROOM ${currentRoom.x + currentRoom.y * 3 + 1}`, WIDTH - 180, HEIGHT - 9);
 }
 
+function drawDebugOverlay() {
+    if (!debugMode) return;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    ctx.fillRect(10, 60, 300, 340);
+
+    ctx.fillStyle = '#0f0';
+    ctx.font = '14px monospace';
+    let y = 80;
+    const line = (text) => { ctx.fillText(text, 20, y); y += 18; };
+
+    line('=== DEBUG (Q to close) ===');
+    line(`Player Pos: (${Math.round(player.x)}, ${Math.round(player.y)})`);
+    line(`Player Vel: (${player.vx.toFixed(0)}, ${player.vy.toFixed(0)})`);
+    line(`HP: ${Math.ceil(player.hp)}/${player.maxHp}`);
+    line(`Energy: ${Math.ceil(player.energy)}/${player.maxEnergy}`);
+    line(`Grounded: ${player.grounded}`);
+    line(`On Wall: ${player.onWall}`);
+    line(`Can Double Jump: ${player.canDoubleJump}`);
+    line(`Facing: ${player.facing > 0 ? 'Right' : 'Left'}`);
+    line(`Attacking: ${player.attacking}`);
+    line(`Weapon: ${player.weapon}`);
+    line(`Room: (${currentRoom.x}, ${currentRoom.y})`);
+    line(`Enemies: ${enemies.length}`);
+    line(`Bullets: ${bullets.length}`);
+    line(`Score: ${score} | Kills: ${killCount}`);
+    line(`Combo: ${meleeCombo}x`);
+    line(`FPS: ${Math.round(fps)}`);
+    line(`Particles: ${particles.length}`);
+    line(`FloatTexts: ${floatingTexts.length}`);
+
+    ctx.restore();
+}
+
 function drawTitle() {
     ctx.fillStyle = COLORS.bg;
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -1103,6 +1150,15 @@ function gameLoop(timestamp) {
     const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
     lastTime = timestamp;
 
+    // FPS tracking
+    frameCount++;
+    fpsTimer += dt;
+    if (fpsTimer >= 1) {
+        fps = frameCount;
+        frameCount = 0;
+        fpsTimer = 0;
+    }
+
     if (gameState === 'title') {
         drawTitle();
         if (keys['Space']) {
@@ -1147,6 +1203,7 @@ function gameLoop(timestamp) {
         drawFloatingTexts();
         drawSHODANTaunt();
         drawHUD();
+        drawDebugOverlay();
     } else if (gameState === 'gameover') {
         drawGameOver();
         if (keys['Space'] && !lastKeys.gameoverContinue) {

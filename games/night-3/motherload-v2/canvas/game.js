@@ -97,6 +97,12 @@ let gameState = 'title'; // title, playing, shop, gameover
 let score = 0;
 let cash = 500; // Starting cash
 
+// Debug overlay
+let debugMode = false;
+let fps = 0;
+let frameCount = 0;
+let fpsTimer = 0;
+
 // World
 let world = [];
 
@@ -544,6 +550,7 @@ function updateDrilling(dt) {
                     spawnFloatingText(player.x, screenY - 40, `${miningCombo}x COMBO!`, '#FF8800', 12);
                 }
                 spawnParticle(player.x, screenY, mineral.color, 8, 60);
+                screenShake = Math.min(screenShake + 2, 6); // Satisfying shake on mineral collect
 
                 // Achievement checks
                 if (tile === TILE.DIAMOND && !achievements.firstDiamond) {
@@ -862,6 +869,42 @@ function drawParticles() {
     }
 }
 
+function drawDebugOverlay() {
+    if (!debugMode) return;
+
+    const depth = Math.floor(Math.max(0, player.y - 100) / TILE_SIZE * 13);
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    ctx.fillRect(10, 60, 280, 320);
+
+    ctx.fillStyle = '#0f0';
+    ctx.font = '14px monospace';
+    let y = 80;
+    const line = (text) => { ctx.fillText(text, 20, y); y += 18; };
+
+    line('=== DEBUG (Q to close) ===');
+    line(`Player Pos: (${Math.round(player.x)}, ${Math.round(player.y)})`);
+    line(`Player Vel: (${player.vx.toFixed(1)}, ${player.vy.toFixed(1)})`);
+    line(`Depth: ${depth} ft`);
+    line(`Hull: ${Math.ceil(player.hull)}/${player.maxHull}`);
+    line(`Fuel: ${player.fuel.toFixed(1)}/${player.maxFuel}`);
+    line(`Cargo: ${getCargoWeight()}/${player.cargoCapacity} kg`);
+    line(`Items: ${player.cargo.length}`);
+    line(`Cash: $${cash.toLocaleString()}`);
+    line(`Score: ${score.toLocaleString()}`);
+    line(`Drilling: ${player.drilling}`);
+    line(`Grounded: ${player.grounded}`);
+    line(`Mining Combo: ${miningCombo}x`);
+    line(`Upgrades: D${upgrades.drill} H${upgrades.hull} E${upgrades.engine}`);
+    line(`          F${upgrades.fuel} C${upgrades.cargo} R${upgrades.radiator}`);
+    line(`FPS: ${Math.round(fps)}`);
+    line(`Particles: ${particles.length}`);
+    line(`FloatTexts: ${floatingTexts.length}`);
+
+    ctx.restore();
+}
+
 // Building interactions
 function checkBuildingInteraction() {
     if (player.y > 150 || !player.grounded) return;
@@ -1028,6 +1071,15 @@ function gameLoop(timestamp) {
     const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
     lastTime = timestamp;
 
+    // FPS tracking
+    frameCount++;
+    fpsTimer += dt;
+    if (fpsTimer >= 1) {
+        fps = frameCount;
+        frameCount = 0;
+        fpsTimer = 0;
+    }
+
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
@@ -1065,6 +1117,7 @@ function gameLoop(timestamp) {
         }
 
         drawHUD();
+        drawDebugOverlay();
     } else if (gameState === 'gameover') {
         drawGameOver();
     }
@@ -1075,6 +1128,11 @@ function gameLoop(timestamp) {
 // Input
 document.addEventListener('keydown', (e) => {
     keys[e.key.toLowerCase()] = true;
+
+    // Toggle debug mode with Q
+    if (e.key === 'q' || e.key === 'Q') {
+        debugMode = !debugMode;
+    }
 
     if (e.code === 'Space') {
         if (gameState === 'title') {

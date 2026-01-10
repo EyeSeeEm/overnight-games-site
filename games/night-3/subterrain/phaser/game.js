@@ -271,9 +271,35 @@ class GameScene extends Phaser.Scene {
             ]
         };
 
+        // Stats tracking
+        this.stats = {
+            killCount: 0,
+            totalDamageDealt: 0,
+            totalDamageTaken: 0,
+            critCount: 0,
+            containersLooted: 0,
+            itemsUsed: 0,
+            sectorsVisited: new Set(['hub']),
+            maxKillStreak: 0
+        };
+
+        // Kill streak system
+        this.killStreak = 0;
+        this.killStreakTimer = 0;
+
+        // Visual effects state
+        this.damageFlashAlpha = 0;
+        this.lowHealthPulse = 0;
+        this.screenShake = { x: 0, y: 0, intensity: 0 };
+
+        // Debug mode
+        this.debugMode = false;
+
         this.enemies = [];
         this.containers = [];
         this.projectiles = [];
+        this.floatingTexts = [];
+        this.particles = [];
         this.bloodGroup = null;
     }
 
@@ -380,6 +406,10 @@ class GameScene extends Phaser.Scene {
     }
 
     loadSector(name) {
+        // Track sector visit
+        const isNewSector = !this.stats.sectorsVisited.has(name);
+        this.stats.sectorsVisited.add(name);
+
         // Clear existing
         if (this.mapGroup) this.mapGroup.destroy(true);
         if (this.enemyGroup) this.enemyGroup.destroy(true);
@@ -392,6 +422,13 @@ class GameScene extends Phaser.Scene {
         this.projectileGroup = this.add.group();
         this.enemies = [];
         this.projectiles = [];
+
+        // Show sector transition message if entering new sector
+        if (isNewSector && this.sectors[name]) {
+            this.time.delayedCall(100, () => {
+                this.createFloatingText(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50, 'ENTERING: ' + this.sectors[name].name.toUpperCase(), '#aaaaff', 18);
+            });
+        }
 
         const sector = this.sectors[name];
         this.gameData.currentSector = name;
@@ -589,7 +626,25 @@ class GameScene extends Phaser.Scene {
         });
 
         // Instructions
-        this.add.text(10, GAME_HEIGHT - 15, 'WASD:Move Click:Attack E:Interact 1-4:Items', { fontSize: '9px', color: '#666666' }).setScrollFactor(0);
+        this.add.text(10, GAME_HEIGHT - 15, 'WASD:Move Click:Attack E:Interact 1-4:Items Q:Debug', { fontSize: '9px', color: '#666666' }).setScrollFactor(0);
+
+        // Visual effects overlays
+        this.damageOverlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0xff0000, 0);
+        this.damageOverlay.setScrollFactor(0).setDepth(90);
+
+        this.lowHealthOverlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x330000, 0);
+        this.lowHealthOverlay.setScrollFactor(0).setDepth(89);
+
+        this.infectionOverlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x003300, 0);
+        this.infectionOverlay.setScrollFactor(0).setDepth(88);
+
+        // Kill streak display
+        this.killStreakText = this.add.text(GAME_WIDTH / 2, 80, '', { fontSize: '18px', color: '#ffaa00', fontStyle: 'bold' });
+        this.killStreakText.setOrigin(0.5).setScrollFactor(0).setDepth(101);
+
+        // Debug overlay
+        this.debugText = this.add.text(GAME_WIDTH - 200, 50, '', { fontSize: '10px', color: '#00ff00', backgroundColor: '#000000aa' });
+        this.debugText.setScrollFactor(0).setDepth(150).setVisible(false);
     }
 
     setupInput() {
@@ -601,6 +656,7 @@ class GameScene extends Phaser.Scene {
             d: this.input.keyboard.addKey('D')
         };
         this.eKey = this.input.keyboard.addKey('E');
+        this.qKey = this.input.keyboard.addKey('Q');
         this.keys1to4 = [
             this.input.keyboard.addKey('ONE'),
             this.input.keyboard.addKey('TWO'),
@@ -654,8 +710,14 @@ class GameScene extends Phaser.Scene {
         });
     }
 
-    update() {
+    update(time, delta) {
         if (this.gameData.state !== 'playing') return;
+
+        // Debug toggle
+        if (Phaser.Input.Keyboard.JustDown(this.qKey)) {
+            this.debugMode = !this.debugMode;
+            this.debugText.setVisible(this.debugMode);
+        }
 
         this.updatePlayer();
         this.updateEnemies();
@@ -663,6 +725,11 @@ class GameScene extends Phaser.Scene {
         this.updateUI();
         this.checkItemUse();
         this.checkInteraction();
+        this.updateVisualEffects(delta);
+        this.updateFloatingTexts(delta);
+        this.updateParticles(delta);
+        this.updateKillStreak(delta);
+        this.updateDebugOverlay();
     }
 
     updatePlayer() {
@@ -770,21 +837,111 @@ class GameScene extends Phaser.Scene {
     }
 
     damageEnemy(enemy, damage) {
+        // Critical hit system (15% chance, 2x damage)
+        const isCrit = Math.random() < 0.15;
+        if (isCrit) {
+            damage *= 2;
+            this.stats.critCount++;
+        }
+
         enemy.hp -= damage;
+        this.stats.totalDamageDealt += damage;
 
         // Flash red
-        enemy.setTint(0xff0000);
+        enemy.setTint(isCrit ? 0xffff00 : 0xff0000);
         this.time.delayedCall(100, () => enemy.clearTint());
 
-        if (enemy.hp <= 0) {
-            // Blood splatter
-            const blood = this.add.image(enemy.x, enemy.y, enemy.type === 'spitter' ? 'bloodGreen' : 'blood');
-            blood.setAlpha(0.8);
-            this.bloodGroup.add(blood);
+        // Floating damage number
+        this.createFloatingText(
+            enemy.x, enemy.y - 20,
+            damage.toString() + (isCrit ? '!' : ''),
+            isCrit ? '#ffff00' : '#ff4444',
+            isCrit ? 18 : 14
+        );
 
-            enemy.destroy();
-            this.enemies = this.enemies.filter(e => e !== enemy);
+        // Screen shake on hit
+        this.triggerScreenShake(isCrit ? 6 : 3);
+
+        if (enemy.hp <= 0) {
+            this.killEnemy(enemy, isCrit);
         }
+    }
+
+    killEnemy(enemy, wasCrit) {
+        this.stats.killCount++;
+
+        // Kill streak
+        this.killStreak++;
+        this.killStreakTimer = 3000; // 3 second timer
+        if (this.killStreak > this.stats.maxKillStreak) {
+            this.stats.maxKillStreak = this.killStreak;
+        }
+
+        // Kill streak messages
+        if (this.killStreak >= 3) {
+            const streakMessages = { 3: 'TRIPLE KILL!', 4: 'QUAD KILL!', 5: 'RAMPAGE!', 6: 'MASSACRE!' };
+            const msg = streakMessages[Math.min(this.killStreak, 6)] || 'UNSTOPPABLE!';
+            this.createFloatingText(GAME_WIDTH / 2, 120, msg, '#ffaa00', 22);
+        }
+
+        // Blood splatter with more particles for crits
+        const isGreen = enemy.type === 'spitter';
+        const blood = this.add.image(enemy.x, enemy.y, isGreen ? 'bloodGreen' : 'blood');
+        blood.setAlpha(0.8);
+        this.bloodGroup.add(blood);
+
+        // Extra blood particles for crits
+        if (wasCrit) {
+            for (let i = 0; i < 5; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 10 + Math.random() * 20;
+                const extraBlood = this.add.image(
+                    enemy.x + Math.cos(angle) * dist,
+                    enemy.y + Math.sin(angle) * dist,
+                    isGreen ? 'bloodGreen' : 'blood'
+                );
+                extraBlood.setAlpha(0.6).setScale(0.5 + Math.random() * 0.3);
+                this.bloodGroup.add(extraBlood);
+            }
+        }
+
+        // Death burst particles
+        this.createDeathBurst(enemy.x, enemy.y, isGreen ? 0x305a30 : 0x6a2020);
+
+        // Item drop chance (20%)
+        if (Math.random() < 0.2) {
+            this.dropItem(enemy.x, enemy.y);
+        }
+
+        enemy.destroy();
+        this.enemies = this.enemies.filter(e => e !== enemy);
+    }
+
+    createDeathBurst(x, y, color) {
+        for (let i = 0; i < 8; i++) {
+            const angle = (Math.PI * 2 * i) / 8;
+            const speed = 50 + Math.random() * 50;
+            this.particles.push({
+                x, y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                life: 500,
+                maxLife: 500,
+                color,
+                size: 4 + Math.random() * 4
+            });
+        }
+        this.triggerScreenShake(8);
+    }
+
+    dropItem(x, y) {
+        const types = ['scrap', 'cloth', 'chemicals'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        const item = { type, name: type, count: 1 };
+        const existing = this.playerData.inventory.find(i => i.type === item.type);
+        if (existing) existing.count++;
+        else this.playerData.inventory.push(item);
+        this.createFloatingText(x, y - 30, '+' + type.toUpperCase(), '#88ff88', 12);
     }
 
     updateEnemies() {
@@ -844,9 +1001,7 @@ class GameScene extends Phaser.Scene {
                         this.projectiles.push(proj);
                     } else if (!enemy.ranged && dist < 40) {
                         enemy.lastAttack = time;
-                        this.playerData.health -= enemy.damage;
-                        this.playerData.infection += enemy.infection;
-                        this.cameras.main.shake(100, 0.01);
+                        this.damagePlayer(enemy.damage, enemy.infection);
                     }
                 }
             }
@@ -863,8 +1018,7 @@ class GameScene extends Phaser.Scene {
             // Hit player
             const dist = Phaser.Math.Distance.Between(proj.x, proj.y, this.player.x, this.player.y);
             if (dist < 20) {
-                this.playerData.health -= proj.damage;
-                this.playerData.infection += proj.infection || 0;
+                this.damagePlayer(proj.damage, proj.infection || 0);
                 proj.destroy();
                 this.projectiles = this.projectiles.filter(p => p !== proj);
             }
@@ -890,11 +1044,33 @@ class GameScene extends Phaser.Scene {
         const idx = this.playerData.inventory.findIndex(i => i.type === type);
         if (idx < 0) return;
 
+        this.stats.itemsUsed++;
+        let feedback = '';
+
         switch (type) {
-            case 'food': this.playerData.hunger = Math.max(0, this.playerData.hunger - 30); break;
-            case 'water': this.playerData.thirst = Math.max(0, this.playerData.thirst - 40); break;
-            case 'medkit': this.playerData.health = Math.min(100, this.playerData.health + 30); break;
-            case 'antidote': this.playerData.infection = Math.max(0, this.playerData.infection - 30); break;
+            case 'food':
+                this.playerData.hunger = Math.max(0, this.playerData.hunger - 30);
+                feedback = 'HUNGER -30';
+                break;
+            case 'water':
+                this.playerData.thirst = Math.max(0, this.playerData.thirst - 40);
+                feedback = 'THIRST -40';
+                break;
+            case 'medkit':
+                this.playerData.health = Math.min(100, this.playerData.health + 30);
+                feedback = '+30 HP';
+                this.createHealingParticles();
+                break;
+            case 'antidote':
+                this.playerData.infection = Math.max(0, this.playerData.infection - 30);
+                feedback = 'INFECTION -30';
+                this.createCureParticles();
+                break;
+        }
+
+        // Floating text feedback
+        if (feedback) {
+            this.createFloatingText(this.player.x, this.player.y - 40, feedback, '#88ff88', 14);
         }
 
         if (this.playerData.inventory[idx].count > 1) {
@@ -938,15 +1114,21 @@ class GameScene extends Phaser.Scene {
         if (!container) return;
 
         container.looted = true;
+        this.stats.containersLooted++;
 
         if (container.lootType === 'keycard') {
             this.gameData.hasKeycard = true;
+            this.createFloatingText(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE, 'KEYCARD FOUND!', '#ffff00', 16);
         } else {
             const item = { type: container.lootType, name: container.lootType, count: 1 };
             const existing = this.playerData.inventory.find(i => i.type === item.type);
             if (existing) existing.count++;
             else this.playerData.inventory.push(item);
+            this.createFloatingText(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE, '+' + container.lootType.toUpperCase(), '#88ff88', 12);
         }
+
+        // Loot sparkle effect
+        this.createLootSparkle(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2);
 
         this.sectors[this.gameData.currentSector].tiles[y][x] = TILE.FLOOR;
 
@@ -976,6 +1158,204 @@ class GameScene extends Phaser.Scene {
         });
     }
 
+    // Helper methods for visual effects and feedback
+    damagePlayer(damage, infection = 0) {
+        this.playerData.health -= damage;
+        this.playerData.infection += infection;
+        this.stats.totalDamageTaken += damage;
+
+        // Damage flash
+        this.damageFlashAlpha = 0.4;
+
+        // Floating damage text
+        this.createFloatingText(this.player.x, this.player.y - 30, '-' + damage, '#ff4444', 14);
+
+        // Screen shake
+        this.triggerScreenShake(5);
+    }
+
+    createFloatingText(x, y, text, color, size) {
+        const floatText = this.add.text(x, y, text, {
+            fontSize: size + 'px',
+            color: color,
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5).setDepth(120);
+
+        this.floatingTexts.push({
+            obj: floatText,
+            life: 1000,
+            maxLife: 1000,
+            vy: -30
+        });
+    }
+
+    triggerScreenShake(intensity) {
+        this.screenShake.intensity = Math.max(this.screenShake.intensity, intensity);
+    }
+
+    createHealingParticles() {
+        for (let i = 0; i < 10; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 20 + Math.random() * 20;
+            this.particles.push({
+                x: this.player.x + Math.cos(angle) * dist,
+                y: this.player.y + Math.sin(angle) * dist,
+                vx: 0,
+                vy: -20 - Math.random() * 20,
+                life: 800,
+                maxLife: 800,
+                color: 0x44ff44,
+                size: 3 + Math.random() * 3
+            });
+        }
+    }
+
+    createCureParticles() {
+        for (let i = 0; i < 10; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 20 + Math.random() * 20;
+            this.particles.push({
+                x: this.player.x + Math.cos(angle) * dist,
+                y: this.player.y + Math.sin(angle) * dist,
+                vx: 0,
+                vy: -20 - Math.random() * 20,
+                life: 800,
+                maxLife: 800,
+                color: 0x44ffff,
+                size: 3 + Math.random() * 3
+            });
+        }
+    }
+
+    createLootSparkle(x, y) {
+        for (let i = 0; i < 8; i++) {
+            const angle = (Math.PI * 2 * i) / 8;
+            this.particles.push({
+                x, y,
+                vx: Math.cos(angle) * 30,
+                vy: Math.sin(angle) * 30,
+                life: 400,
+                maxLife: 400,
+                color: 0xffff44,
+                size: 3
+            });
+        }
+    }
+
+    updateVisualEffects(delta) {
+        const dt = delta / 1000;
+
+        // Damage flash decay
+        if (this.damageFlashAlpha > 0) {
+            this.damageFlashAlpha = Math.max(0, this.damageFlashAlpha - dt * 2);
+            this.damageOverlay.setAlpha(this.damageFlashAlpha);
+        }
+
+        // Low health pulsing vignette
+        if (this.playerData.health < 30) {
+            this.lowHealthPulse += dt * 4;
+            const pulseAlpha = 0.2 + Math.sin(this.lowHealthPulse) * 0.1;
+            this.lowHealthOverlay.setAlpha(pulseAlpha);
+        } else {
+            this.lowHealthOverlay.setAlpha(0);
+        }
+
+        // Infection visual effect
+        if (this.playerData.infection > 50) {
+            const infAlpha = (this.playerData.infection - 50) / 100 * 0.3;
+            this.infectionOverlay.setAlpha(infAlpha);
+        } else {
+            this.infectionOverlay.setAlpha(0);
+        }
+
+        // Screen shake
+        if (this.screenShake.intensity > 0) {
+            this.screenShake.x = (Math.random() - 0.5) * this.screenShake.intensity;
+            this.screenShake.y = (Math.random() - 0.5) * this.screenShake.intensity;
+            this.cameras.main.setScroll(
+                this.cameras.main.scrollX + this.screenShake.x,
+                this.cameras.main.scrollY + this.screenShake.y
+            );
+            this.screenShake.intensity = Math.max(0, this.screenShake.intensity - dt * 30);
+        }
+    }
+
+    updateFloatingTexts(delta) {
+        this.floatingTexts = this.floatingTexts.filter(ft => {
+            ft.life -= delta;
+            ft.obj.y += ft.vy * (delta / 1000);
+            ft.obj.setAlpha(ft.life / ft.maxLife);
+
+            if (ft.life <= 0) {
+                ft.obj.destroy();
+                return false;
+            }
+            return true;
+        });
+    }
+
+    updateParticles(delta) {
+        const dt = delta / 1000;
+
+        this.particles = this.particles.filter(p => {
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.life -= delta;
+
+            return p.life > 0;
+        });
+
+        // Draw particles (simple circles)
+        // Note: In Phaser we'd use graphics or particle emitters
+        // For simplicity, we'll use tween'd circles
+    }
+
+    updateKillStreak(delta) {
+        if (this.killStreakTimer > 0) {
+            this.killStreakTimer -= delta;
+            if (this.killStreakTimer <= 0) {
+                this.killStreak = 0;
+            }
+        }
+
+        // Update kill streak display
+        if (this.killStreak >= 2) {
+            this.killStreakText.setText(`${this.killStreak}x STREAK`);
+            this.killStreakText.setVisible(true);
+        } else {
+            this.killStreakText.setVisible(false);
+        }
+    }
+
+    updateDebugOverlay() {
+        if (!this.debugMode) return;
+
+        const debugInfo = [
+            `KILLS: ${this.stats.killCount}`,
+            `DMG DEALT: ${this.stats.totalDamageDealt}`,
+            `DMG TAKEN: ${this.stats.totalDamageTaken}`,
+            `CRITS: ${this.stats.critCount}`,
+            `CONTAINERS: ${this.stats.containersLooted}`,
+            `ITEMS USED: ${this.stats.itemsUsed}`,
+            `SECTORS: ${this.stats.sectorsVisited.size}/5`,
+            `MAX STREAK: ${this.stats.maxKillStreak}`,
+            `STREAK: ${this.killStreak}`,
+            `---`,
+            `HP: ${Math.floor(this.playerData.health)}`,
+            `HUN: ${Math.floor(this.playerData.hunger)}`,
+            `THI: ${Math.floor(this.playerData.thirst)}`,
+            `FAT: ${Math.floor(this.playerData.fatigue)}`,
+            `INF: ${Math.floor(this.playerData.infection)}`,
+            `GLOBAL: ${this.gameData.globalInfection.toFixed(1)}%`,
+            `ENEMIES: ${this.enemies.length}`,
+            `KEYCARD: ${this.gameData.hasKeycard ? 'YES' : 'NO'}`
+        ];
+
+        this.debugText.setText(debugInfo.join('\n'));
+    }
+
     gameOver(reason) {
         this.gameData.state = 'gameover';
 
@@ -983,11 +1363,35 @@ class GameScene extends Phaser.Scene {
         overlay.setScrollFactor(0);
         overlay.setDepth(200);
 
-        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40, 'GAME OVER', { fontSize: '32px', color: '#aa3030' })
+        // Calculate performance rating
+        let rating = 'VICTIM';
+        const score = this.stats.killCount * 10 + this.stats.containersLooted * 5 - this.stats.totalDamageTaken;
+        if (score >= 100) rating = 'SURVIVOR';
+        else if (score >= 50) rating = 'FIGHTER';
+        else if (score >= 20) rating = 'STRUGGLER';
+
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 100, 'GAME OVER', { fontSize: '32px', color: '#aa3030' })
             .setOrigin(0.5).setScrollFactor(0).setDepth(201);
-        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, reason, { fontSize: '16px', color: '#886060' })
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 60, reason, { fontSize: '16px', color: '#886060' })
             .setOrigin(0.5).setScrollFactor(0).setDepth(201);
-        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 60, 'Press SPACE to restart', { fontSize: '14px', color: '#666666' })
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30, `Rating: ${rating}`, { fontSize: '20px', color: '#ffaa00' })
+            .setOrigin(0.5).setScrollFactor(0).setDepth(201);
+
+        // Stats display
+        const statsY = GAME_HEIGHT / 2 + 10;
+        const statsText = [
+            `Kills: ${this.stats.killCount}  |  Crits: ${this.stats.critCount}  |  Max Streak: ${this.stats.maxKillStreak}`,
+            `Damage Dealt: ${this.stats.totalDamageDealt}  |  Damage Taken: ${this.stats.totalDamageTaken}`,
+            `Containers: ${this.stats.containersLooted}  |  Items Used: ${this.stats.itemsUsed}  |  Sectors: ${this.stats.sectorsVisited.size}/5`,
+            `Survived: ${Math.floor(this.gameData.time / 60)}h ${this.gameData.time % 60}m  |  Global: ${this.gameData.globalInfection.toFixed(1)}%`
+        ];
+
+        statsText.forEach((line, i) => {
+            this.add.text(GAME_WIDTH / 2, statsY + i * 18, line, { fontSize: '11px', color: '#888888' })
+                .setOrigin(0.5).setScrollFactor(0).setDepth(201);
+        });
+
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 100, 'Press SPACE to restart', { fontSize: '14px', color: '#666666' })
             .setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
         this.input.keyboard.once('keydown-SPACE', () => this.scene.restart());
@@ -1000,13 +1404,37 @@ class GameScene extends Phaser.Scene {
         overlay.setScrollFactor(0);
         overlay.setDepth(200);
 
-        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40, 'ESCAPED!', { fontSize: '32px', color: '#30aa30' })
+        // Calculate efficiency rating
+        const efficiency = (100 - this.gameData.globalInfection) + this.stats.killCount * 2 - this.stats.totalDamageTaken / 10;
+        let rating = 'D';
+        if (efficiency >= 120) rating = 'S';
+        else if (efficiency >= 100) rating = 'A';
+        else if (efficiency >= 80) rating = 'B';
+        else if (efficiency >= 60) rating = 'C';
+
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 110, 'ESCAPED!', { fontSize: '32px', color: '#30aa30' })
             .setOrigin(0.5).setScrollFactor(0).setDepth(201);
-        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, `Time: ${Math.floor(this.gameData.time / 60)}h ${this.gameData.time % 60}m`, { fontSize: '16px', color: '#60aa60' })
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 70, `Efficiency Rating: ${rating}`, { fontSize: '22px', color: '#ffff00' })
             .setOrigin(0.5).setScrollFactor(0).setDepth(201);
-        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 30, `Global Infection: ${this.gameData.globalInfection.toFixed(1)}%`, { fontSize: '14px', color: '#888888' })
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40, `Time: ${Math.floor(this.gameData.time / 60)}h ${this.gameData.time % 60}m`, { fontSize: '16px', color: '#60aa60' })
             .setOrigin(0.5).setScrollFactor(0).setDepth(201);
-        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 70, 'Press SPACE to play again', { fontSize: '14px', color: '#666666' })
+
+        // Stats display
+        const statsY = GAME_HEIGHT / 2;
+        const statsText = [
+            `Kills: ${this.stats.killCount}  |  Crits: ${this.stats.critCount}  |  Max Streak: ${this.stats.maxKillStreak}`,
+            `Damage Dealt: ${this.stats.totalDamageDealt}  |  Damage Taken: ${this.stats.totalDamageTaken}`,
+            `Containers: ${this.stats.containersLooted}  |  Items Used: ${this.stats.itemsUsed}  |  Sectors: ${this.stats.sectorsVisited.size}/5`,
+            `Final Health: ${Math.floor(this.playerData.health)}  |  Infection: ${Math.floor(this.playerData.infection)}%`,
+            `Global Infection: ${this.gameData.globalInfection.toFixed(1)}%`
+        ];
+
+        statsText.forEach((line, i) => {
+            this.add.text(GAME_WIDTH / 2, statsY + i * 18, line, { fontSize: '11px', color: '#88aa88' })
+                .setOrigin(0.5).setScrollFactor(0).setDepth(201);
+        });
+
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 110, 'Press SPACE to play again', { fontSize: '14px', color: '#666666' })
             .setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
         this.input.keyboard.once('keydown-SPACE', () => this.scene.restart());

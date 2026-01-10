@@ -210,6 +210,9 @@ class GameScene extends Phaser.Scene {
         this.meleeCombo = 0;
         this.comboTimer = 0;
 
+        // Debug overlay
+        this.debugMode = false;
+
         // SHODAN taunts
         this.SHODAN_TAUNTS = [
             '"LOOK AT YOU, HACKER..."',
@@ -250,8 +253,18 @@ class GameScene extends Phaser.Scene {
         this.jumpJustPressed = false;
         this.attackJustPressed = false;
 
+        // Debug mode toggle (using Backquote key to avoid Q weapon cycle conflict)
+        this.input.keyboard.on('keydown-Q', () => {
+            this.debugMode = !this.debugMode;
+            if (this.debugPanel) this.debugPanel.setVisible(this.debugMode);
+            if (this.debugText) this.debugText.setVisible(this.debugMode);
+        });
+
         // Create HUD
         this.createHUD();
+
+        // Create debug overlay
+        this.createDebugOverlay();
 
         // Collisions
         this.physics.add.collider(this.player, this.wallsGroup);
@@ -481,6 +494,50 @@ class GameScene extends Phaser.Scene {
         this.roomText.setDepth(101);
     }
 
+    createDebugOverlay() {
+        // Debug panel background
+        this.debugPanel = this.add.rectangle(150, 200, 280, 340, 0x000000, 0.85);
+        this.debugPanel.setScrollFactor(0);
+        this.debugPanel.setDepth(200);
+        this.debugPanel.setVisible(false);
+
+        // Debug text
+        this.debugText = this.add.text(20, 60, '', {
+            fontSize: '14px',
+            fontFamily: 'monospace',
+            color: '#00FF00',
+            lineSpacing: 4
+        });
+        this.debugText.setScrollFactor(0);
+        this.debugText.setDepth(201);
+        this.debugText.setVisible(false);
+    }
+
+    updateDebugOverlay() {
+        if (!this.debugMode || !this.debugText) return;
+
+        const onGround = this.player.body.blocked.down || this.player.body.touching.down;
+        const lines = [
+            '=== DEBUG (Q to close) ===',
+            `Player Pos: (${Math.round(this.player.x)}, ${Math.round(this.player.y)})`,
+            `Player Vel: (${Math.round(this.player.body.velocity.x)}, ${Math.round(this.player.body.velocity.y)})`,
+            `HP: ${Math.ceil(this.playerData.hp)}/${this.playerData.maxHp}`,
+            `Energy: ${Math.ceil(this.playerData.energy)}/${this.playerData.maxEnergy}`,
+            `Grounded: ${onGround}`,
+            `Can Double Jump: ${this.playerData.canDoubleJump}`,
+            `Facing: ${this.player.facing > 0 ? 'Right' : 'Left'}`,
+            `Weapon: ${this.playerData.weapon}`,
+            `Room: ${this.currentRoom}`,
+            `Enemies: ${this.enemiesGroup.getLength()}`,
+            `Bullets: ${this.bulletsGroup.getLength()}`,
+            `Score: ${this.score} | Kills: ${this.killCount}`,
+            `Combo: ${this.meleeCombo}x`,
+            `FloatTexts: ${this.floatingTexts.length}`
+        ];
+
+        this.debugText.setText(lines.join('\n'));
+    }
+
     loadRoom(roomIndex) {
         // Clear existing
         this.wallsGroup.clear(true, true);
@@ -701,6 +758,7 @@ class GameScene extends Phaser.Scene {
 
         // Update HUD
         this.updateHUD();
+        this.updateDebugOverlay();
 
         // Check death
         if (this.playerData.hp <= 0) {

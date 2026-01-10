@@ -284,6 +284,10 @@ class GameScene extends Phaser.Scene {
         this.resources = { green: 50, yellow: 30, purple: 10 };
         this.comboCount = 0;
         this.comboTimer = 0;
+        this.debugMode = false;
+        this.fps = 0;
+        this.frameCount = 0;
+        this.fpsTimer = 0;
 
         // Stars background
         this.stars = [];
@@ -369,8 +373,20 @@ class GameScene extends Phaser.Scene {
 
         this.arrows = this.input.keyboard.createCursorKeys();
 
+        // Debug mode toggle (Q key)
+        this.input.keyboard.on('keydown-Q', () => {
+            this.debugMode = !this.debugMode;
+            if (this.debugPanel) {
+                this.debugPanel.setVisible(this.debugMode);
+                this.debugText.setVisible(this.debugMode);
+            }
+        });
+
         // Create HUD
         this.createHUD();
+
+        // Create Debug Overlay
+        this.createDebugOverlay();
 
         // Expose for testing
         const scene = this;
@@ -448,6 +464,55 @@ class GameScene extends Phaser.Scene {
         this.waveWarning = this.add.text(640, 250, '', {
             fontSize: '24px', color: '#FFFF00'
         }).setOrigin(0.5);
+    }
+
+    createDebugOverlay() {
+        // Debug panel background
+        this.debugPanel = this.add.rectangle(150, 200, 280, 300, 0x000000, 0.8);
+        this.debugPanel.setVisible(false);
+
+        // Debug text
+        this.debugText = this.add.text(20, 60, '', {
+            fontSize: '14px',
+            fontFamily: 'monospace',
+            color: '#00FF00',
+            lineSpacing: 4
+        });
+        this.debugText.setVisible(false);
+    }
+
+    updateDebugOverlay(dt) {
+        // FPS tracking
+        this.frameCount++;
+        this.fpsTimer += dt;
+        if (this.fpsTimer >= 1) {
+            this.fps = this.frameCount;
+            this.frameCount = 0;
+            this.fpsTimer = 0;
+        }
+
+        if (!this.debugMode || !this.debugText) return;
+
+        const lines = [
+            '=== DEBUG (Q to close) ===',
+            `Player: (${Math.round(this.player.x)}, ${Math.round(this.player.y)})`,
+            `Player Vel: (${Math.round(this.player.vx)}, ${Math.round(this.player.vy)})`,
+            `Player HP: ${Math.round(this.player.hp)}/${this.player.maxHp}`,
+            `Player Shield: ${Math.round(this.player.shield)}/${this.player.maxShield}`,
+            `Missiles: ${this.player.missileAmmo}/${this.player.maxMissiles}`,
+            `Combo: ${this.comboCount}x (${this.comboTimer.toFixed(1)}s)`,
+            `Aegis HP: ${Math.round(this.aegis.hp)}/${this.aegis.maxHp}`,
+            `Aegis Shield: ${Math.round(this.aegis.shield)}/${this.aegis.maxShield}`,
+            `Enemies: ${this.enemies.getLength()}`,
+            `Asteroids: ${this.asteroids.getLength()}`,
+            `Minerals: ${this.minerals.getLength()}`,
+            `Powerups: ${this.powerups.getLength()}`,
+            `Wave: ${this.wave} | Cleared: ${this.waveCleared}`,
+            `Score: ${this.score}`,
+            `FPS: ${Math.round(this.fps)}`
+        ];
+
+        this.debugText.setText(lines.join('\n'));
     }
 
     spawnAsteroids(count) {
@@ -845,7 +910,9 @@ class GameScene extends Phaser.Scene {
                         const earnedScore = Math.floor(e.scoreVal * comboMultiplier);
                         this.score += earnedScore;
 
-                        this.createParticle(e.x, e.y, COLORS.archnidGlow, 15, 150);
+                        this.createParticle(e.x, e.y, COLORS.archnidGlow, 25, 180);
+                        this.createParticle(e.x, e.y, 0xFFFF00, 10, 100); // Extra bright particles
+                        this.screenShake = Math.min(this.screenShake + 5, 12); // Screen shake on kill
 
                         // Show floating score
                         this.spawnFloatingText(e.x, e.y - 20, `+${earnedScore}`, '#FFD700', 16);
@@ -1129,7 +1196,7 @@ class GameScene extends Phaser.Scene {
             if (this.enemies.getLength() === 0) {
                 this.waveCleared = true;
                 this.wave++;
-                this.waveTimer = 5;
+                this.waveTimer = 3; // Faster pacing
 
                 if (this.asteroids.getLength() < 5) {
                     this.spawnAsteroids(3);
@@ -1158,6 +1225,9 @@ class GameScene extends Phaser.Scene {
         this.powerupTexts.speedBoost.setText(this.player.powerups.speedBoost > 0 ? `SPEED: ${Math.ceil(this.player.powerups.speedBoost)}s` : '');
         this.aegisShieldBar.scaleX = this.aegis.shield / this.aegis.maxShield;
         this.aegisHpBar.scaleX = this.aegis.hp / this.aegis.maxHp;
+
+        // Update debug overlay
+        this.updateDebugOverlay(dt);
     }
 }
 

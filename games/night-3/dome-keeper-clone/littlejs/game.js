@@ -57,6 +57,9 @@ let currentWave = 0;
 let phaseTimer = 60;
 let score = 0;
 
+// Debug overlay
+let debugMode = false;
+
 // Resources
 const resources = { iron: 0, water: 0, cobalt: 0 };
 
@@ -262,6 +265,11 @@ function gameInit() {
 // Game update
 function gameUpdate() {
     const dt = timeDelta;
+
+    // Toggle debug mode with Q
+    if (keyWasPressed('KeyQ')) {
+        debugMode = !debugMode;
+    }
 
     if (gameState === 'title') {
         if (keyWasPressed('Space') || mouseWasPressed(0)) {
@@ -718,6 +726,34 @@ function gameRenderPost() {
 
     // Draw HUD
     drawHUD();
+
+    // Debug overlay
+    if (debugMode) {
+        mainContext.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        mainContext.fillRect(10, 60, 280, 320);
+
+        mainContext.fillStyle = '#0f0';
+        mainContext.font = '14px monospace';
+        let y = 80;
+        const line = (text) => { mainContext.fillText(text, 20, y); y += 18; };
+
+        line('=== DEBUG (Q to close) ===');
+        line(`Keeper Pos: (${keeper.x.toFixed(1)}, ${keeper.y.toFixed(1)})`);
+        line(`Keeper Vel: (${(keeper.vx || 0).toFixed(1)}, ${(keeper.vy || 0).toFixed(1)})`);
+        line(`Dome HP: ${Math.ceil(dome.hp)}/${dome.maxHp}`);
+        line(`Dome Shield: ${Math.ceil(dome.shield)}/${dome.maxShield}`);
+        line(`Resources: I:${resources.iron} W:${resources.water} C:${resources.cobalt}`);
+        line(`Keeper Cargo: ${keeper.cargo?.length || 0}/${keeper.carryCapacity}`);
+        line(`Mining Combo: ${miningCombo}x`);
+        line(`Wave: ${currentWave}`);
+        line(`Phase: ${gameState}`);
+        line(`Timer: ${phaseTimer.toFixed(1)}s`);
+        line(`Score: ${score}`);
+        line(`Enemies: ${enemies.length}`);
+        line(`Drilling: ${keeper.drilling}`);
+        line(`Camera Y: ${cameraPos.y.toFixed(1)}`);
+        line(`Particles: ${particles.length}`);
+    }
 }
 
 // Draw map

@@ -73,9 +73,15 @@ let gameState = 'title'; // title, playing, gameover, victory
 let score = 0;
 let wave = 1;
 let waveTimer = 0;
-let waveDelay = 5;
+let waveDelay = 3; // Reduced for faster pacing
 let enemiesInWave = 0;
 let waveCleared = true;
+
+// Debug overlay
+let debugMode = false;
+let fps = 0;
+let frameCount = 0;
+let fpsTimer = 0;
 
 // Input state
 const keys = {};
@@ -619,7 +625,7 @@ function updatePlayer(dt) {
             damage: effectiveDamage,
             friendly: true,
             color: player.powerups.damageBoost > 0 ? '#FF00FF' : COLORS.blasterCyan,
-            size: player.powerups.damageBoost > 0 ? 6 : 4,
+            size: player.powerups.damageBoost > 0 ? 8 : 6, // Larger bullets for visibility
             life: 2
         });
     }
@@ -812,7 +818,9 @@ function updateProjectiles(dt) {
                         const earnedScore = Math.floor(e.score * comboMultiplier);
                         score += earnedScore;
 
-                        createParticle(e.x, e.y, COLORS.archnidGlow, 15, 150);
+                        createParticle(e.x, e.y, COLORS.archnidGlow, 25, 180);
+                        createParticle(e.x, e.y, '#FFFF00', 10, 100); // Extra bright particles
+                        screenShake = Math.min(screenShake + 5, 12); // Screen shake on kill!
 
                         // Show floating score
                         spawnFloatingText(e.x, e.y - 20, `+${earnedScore}`, '#FFD700', 16);
@@ -947,6 +955,17 @@ function drawStars() {
 }
 
 function drawPlayer() {
+    // Draw player glow for better visibility
+    ctx.save();
+    ctx.shadowColor = '#00BFFF';
+    ctx.shadowBlur = 20;
+    ctx.fillStyle = 'rgba(0, 191, 255, 0.3)';
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, 25, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
     ctx.save();
     ctx.translate(player.x, player.y);
     ctx.rotate(player.angle + Math.PI / 2); // Adjust for sprite orientation
@@ -1192,13 +1211,19 @@ function drawMineral(m) {
 function drawProjectile(p) {
     ctx.fillStyle = p.color;
     ctx.shadowColor = p.color;
-    ctx.shadowBlur = 8;
+    ctx.shadowBlur = 15; // Increased glow
 
     const angle = Math.atan2(p.vy, p.vx);
     ctx.save();
     ctx.translate(p.x, p.y);
     ctx.rotate(angle);
-    ctx.fillRect(-p.size * 2, -p.size / 2, p.size * 4, p.size);
+    // Larger bullet trail for visibility
+    ctx.fillRect(-p.size * 2.5, -p.size / 2, p.size * 5, p.size);
+    // Core glow
+    ctx.fillStyle = '#FFFFFF';
+    ctx.globalAlpha = 0.7;
+    ctx.fillRect(-p.size, -p.size / 4, p.size * 2, p.size / 2);
+    ctx.globalAlpha = 1;
     ctx.restore();
     ctx.shadowBlur = 0;
 }
@@ -1410,6 +1435,38 @@ function drawHUD() {
     }
 }
 
+function drawDebugOverlay() {
+    if (!debugMode) return;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(10, 60, 280, 280);
+
+    ctx.fillStyle = '#0f0';
+    ctx.font = '14px monospace';
+    let y = 80;
+    const line = (text) => { ctx.fillText(text, 20, y); y += 18; };
+
+    line('=== DEBUG (Q to close) ===');
+    line(`Player: (${Math.round(player.x)}, ${Math.round(player.y)})`);
+    line(`Player Vel: (${Math.round(player.vx)}, ${Math.round(player.vy)})`);
+    line(`Player HP: ${Math.round(player.hp)}/${player.maxHp}`);
+    line(`Player Shield: ${Math.round(player.shield)}/${player.maxShield}`);
+    line(`Missiles: ${player.missileAmmo}/${player.maxMissiles}`);
+    line(`Combo: ${player.comboCount}x (${player.comboTimer.toFixed(1)}s)`);
+    line(`Aegis HP: ${Math.round(aegis.hp)}/${aegis.maxHp}`);
+    line(`Aegis Shield: ${Math.round(aegis.shield)}/${aegis.maxShield}`);
+    line(`Enemies: ${enemies.length}`);
+    line(`Asteroids: ${asteroids.length}`);
+    line(`Minerals: ${minerals.length}`);
+    line(`Powerups: ${powerups.length}`);
+    line(`Wave: ${wave} | Cleared: ${waveCleared}`);
+    line(`Score: ${score}`);
+    line(`FPS: ${Math.round(fps)}`);
+
+    ctx.restore();
+}
+
 function drawTitleScreen() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -1459,6 +1516,15 @@ let lastTime = 0;
 function gameLoop(timestamp) {
     const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
     lastTime = timestamp;
+
+    // FPS tracking
+    frameCount++;
+    fpsTimer += dt;
+    if (fpsTimer >= 1) {
+        fps = frameCount;
+        frameCount = 0;
+        fpsTimer = 0;
+    }
 
     // Clear
     ctx.fillStyle = '#0A0A15';
@@ -1531,6 +1597,7 @@ function gameLoop(timestamp) {
         }
 
         drawHUD();
+        drawDebugOverlay();
 
     } else if (gameState === 'gameover') {
         drawStars();
@@ -1583,6 +1650,11 @@ function resetGame() {
 // Input handlers
 document.addEventListener('keydown', (e) => {
     keys[e.key.toLowerCase()] = true;
+
+    // Toggle debug overlay with Q
+    if (e.key === 'q' || e.key === 'Q') {
+        debugMode = !debugMode;
+    }
 
     if (e.code === 'Space') {
         if (gameState === 'title') {

@@ -112,6 +112,37 @@ class GameScene extends Phaser.Scene {
             lastFire: 0
         };
 
+        // Stats tracking
+        this.stats = {
+            shipsSunk: 0,
+            totalDamageDealt: 0,
+            totalDamageTaken: 0,
+            critCount: 0,
+            lootCollected: 0,
+            cannonsFired: 0,
+            maxKillStreak: 0,
+            goldEarned: 0
+        };
+
+        // Kill streak system
+        this.killStreak = 0;
+        this.killStreakTimer = 0;
+
+        // Visual effects
+        this.damageFlashAlpha = 0;
+        this.lowHealthPulse = 0;
+        this.screenShake = { x: 0, y: 0, intensity: 0 };
+        this.floatingTexts = [];
+
+        // Debug mode
+        this.debugMode = false;
+
+        // Game start time
+        this.gameStartTime = Date.now();
+
+        // Game over flag
+        this.gameOver = false;
+
         // Create ocean background
         for (let y = 0; y < WORLD_HEIGHT; y += 150) {
             for (let x = 0; x < WORLD_WIDTH; x += 150) {
@@ -150,6 +181,10 @@ class GameScene extends Phaser.Scene {
         });
 
         this.input.keyboard.on('keydown-SPACE', () => this.fireCanons());
+        this.input.keyboard.on('keydown-Q', () => {
+            this.debugMode = !this.debugMode;
+            if (this.debugText) this.debugText.setVisible(this.debugMode);
+        });
 
         this.addMessage("Day " + this.gameData.day + " - Set sail!");
     }
@@ -240,6 +275,36 @@ class GameScene extends Phaser.Scene {
         // Messages
         this.messagesText = this.add.text(UI_WIDTH + 10, GAME_HEIGHT - 60, '', { fontSize: '12px', fontFamily: 'monospace', color: '#60c860' });
         this.messagesText.setScrollFactor(0).setDepth(101);
+
+        // Damage overlay
+        this.damageOverlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0xff0000, 0);
+        this.damageOverlay.setScrollFactor(0).setDepth(150);
+
+        // Low health overlay
+        this.lowHealthOverlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x880000, 0);
+        this.lowHealthOverlay.setScrollFactor(0).setDepth(149);
+
+        // Kill streak text
+        this.killStreakText = this.add.text(GAME_WIDTH - 150, 60, '', {
+            fontSize: '24px',
+            fontFamily: 'monospace',
+            color: '#ff00ff',
+            stroke: '#000000',
+            strokeThickness: 3
+        });
+        this.killStreakText.setScrollFactor(0).setDepth(101);
+        this.killStreakText.setVisible(false);
+
+        // Debug text
+        this.debugText = this.add.text(UI_WIDTH + 10, 50, '', {
+            fontSize: '12px',
+            fontFamily: 'monospace',
+            color: '#00ff00',
+            backgroundColor: '#000000aa',
+            padding: { x: 5, y: 5 }
+        });
+        this.debugText.setScrollFactor(0).setDepth(200);
+        this.debugText.setVisible(false);
     }
 
     addMessage(text) {
@@ -248,6 +313,8 @@ class GameScene extends Phaser.Scene {
     }
 
     update(time, delta) {
+        if (this.gameOver) return;
+
         const dt = delta / 1000;
 
         // Day timer
@@ -261,13 +328,15 @@ class GameScene extends Phaser.Scene {
         this.updateEnemies(dt, time);
         this.updateCannonballs(dt);
         this.updateLoot(dt);
+        this.updateVisualEffects(dt);
+        this.updateFloatingTexts(dt);
+        this.updateKillStreak(dt);
+        this.updateDebugOverlay();
         this.updateUI();
 
         // Check death
         if (this.playerData.armor <= 0) {
-            this.gameData.gold = Math.floor(this.gameData.gold * 0.75);
-            this.addMessage("Ship destroyed!");
-            this.endDay();
+            this.showDestroyedScreen();
         }
     }
 
@@ -307,7 +376,16 @@ class GameScene extends Phaser.Scene {
             const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, l.x, l.y);
             if (dist < 50) {
                 this.gameData.gold += l.value;
+                this.stats.lootCollected++;
+                this.stats.goldEarned += l.value;
                 this.addMessage("+" + l.value + " gold!");
+
+                // Floating gold text
+                this.createFloatingText(l.x, l.y - 15, '+' + l.value, '#ffd700', 20);
+
+                // Gold sparkle particles
+                this.createGoldSparkle(l.x, l.y);
+
                 l.destroy();
                 this.loot.splice(i, 1);
             }
@@ -342,8 +420,18 @@ class GameScene extends Phaser.Scene {
                     owner: 'player'
                 };
                 this.cannonballs.push(ball);
+                this.stats.cannonsFired++;
+
+                // Muzzle flash particle
+                this.createMuzzleFlash(
+                    this.player.x + Math.cos(fireAngle) * 25,
+                    this.player.y + Math.sin(fireAngle) * 25
+                );
             }
         }
+
+        // Screen shake for firing
+        this.triggerScreenShake(3);
     }
 
     updateEnemies(dt, time) {
@@ -423,8 +511,7 @@ class GameScene extends Phaser.Scene {
             } else {
                 const dist = Phaser.Math.Distance.Between(ball.x, ball.y, this.player.x, this.player.y);
                 if (dist < 30) {
-                    this.playerData.armor -= data.damage;
-                    this.addMessage("Hit! -" + data.damage + " armor");
+                    this.damagePlayer(data.damage);
                     ball.destroy();
                     this.cannonballs.splice(i, 1);
                 }
@@ -434,18 +521,66 @@ class GameScene extends Phaser.Scene {
 
     damageEnemy(enemy, damage) {
         const data = enemy.enemyData;
-        data.hp -= damage;
+
+        // Critical hit check
+        const isCrit = Math.random() < 0.15;
+        const finalDamage = isCrit ? damage * 2 : damage;
+
+        data.hp -= finalDamage;
+        this.stats.totalDamageDealt += finalDamage;
+        if (isCrit) this.stats.critCount++;
+
+        // Floating damage number
+        const color = isCrit ? '#ffff00' : '#ff8800';
+        const text = isCrit ? finalDamage + '!' : '' + finalDamage;
+        this.createFloatingText(enemy.x, enemy.y - 20, text, color, isCrit ? 24 : 18);
+
+        // Hit particles
+        this.createHitParticles(enemy.x, enemy.y, isCrit ? 8 : 4);
+
+        // Screen shake on hit
+        this.triggerScreenShake(isCrit ? 6 : 3);
 
         if (data.hp <= 0) {
-            const coin = this.add.sprite(enemy.x, enemy.y, 'gold');
-            coin.setDepth(5);
-            coin.value = data.gold;
-            coin.life = 15;
-            this.loot.push(coin);
-
-            enemy.setActive(false).setVisible(false);
-            this.addMessage("Enemy sunk!");
+            this.killEnemy(enemy);
         }
+    }
+
+    killEnemy(enemy) {
+        const data = enemy.enemyData;
+
+        // Stats
+        this.stats.shipsSunk++;
+
+        // Kill streak
+        this.killStreak++;
+        this.killStreakTimer = 3;
+        if (this.killStreak > this.stats.maxKillStreak) {
+            this.stats.maxKillStreak = this.killStreak;
+        }
+
+        // Kill streak messages
+        if (this.killStreak >= 2) {
+            const streakMessages = ['', '', 'DOUBLE SINK!', 'TRIPLE SINK!', 'QUAD SINK!', 'RAMPAGE!'];
+            const msg = this.killStreak >= 5 ? 'RAMPAGE!' : streakMessages[this.killStreak];
+            this.createFloatingText(enemy.x, enemy.y - 40, msg, '#ff00ff', 22);
+        }
+
+        // Drop loot
+        const coin = this.add.sprite(enemy.x, enemy.y, 'gold');
+        coin.setDepth(5);
+        coin.value = data.gold;
+        coin.life = 15;
+        this.loot.push(coin);
+
+        // Death burst effect
+        this.createDeathBurst(enemy.x, enemy.y);
+
+        // Extra screen shake on kill
+        this.triggerScreenShake(8);
+
+        enemy.setActive(false).setVisible(false);
+        this.addMessage("Enemy sunk!");
     }
 
     updateLoot(dt) {
@@ -504,6 +639,309 @@ class GameScene extends Phaser.Scene {
 
         this.spawnEnemies();
         this.addMessage("Day " + this.gameData.day + " begins!");
+    }
+
+    // === Helper Methods ===
+
+    damagePlayer(damage) {
+        this.playerData.armor -= damage;
+        this.stats.totalDamageTaken += damage;
+
+        // Floating damage text
+        this.createFloatingText(this.player.x, this.player.y - 30, '-' + damage, '#ff4444', 18);
+
+        // Damage flash
+        this.damageFlashAlpha = 0.4;
+
+        // Screen shake
+        this.triggerScreenShake(5);
+
+        this.addMessage("Hit! -" + damage + " armor");
+    }
+
+    createFloatingText(x, y, text, color, size = 16) {
+        const ft = this.add.text(x, y, text, {
+            fontSize: size + 'px',
+            fontFamily: 'monospace',
+            color: color,
+            stroke: '#000000',
+            strokeThickness: 3
+        });
+        ft.setOrigin(0.5);
+        ft.setDepth(200);
+        ft.life = 1.0;
+        ft.vy = -50;
+        this.floatingTexts.push(ft);
+    }
+
+    triggerScreenShake(intensity) {
+        this.screenShake.intensity = Math.max(this.screenShake.intensity, intensity);
+    }
+
+    updateVisualEffects(dt) {
+        // Damage flash decay
+        if (this.damageFlashAlpha > 0) {
+            this.damageFlashAlpha -= dt * 2;
+            if (this.damageFlashAlpha < 0) this.damageFlashAlpha = 0;
+        }
+        if (this.damageOverlay) {
+            this.damageOverlay.setAlpha(this.damageFlashAlpha);
+        }
+
+        // Low health pulse
+        const armorPercent = this.playerData.armor / this.playerData.maxArmor;
+        if (armorPercent < 0.3) {
+            this.lowHealthPulse += dt * 4;
+            const pulseAlpha = (Math.sin(this.lowHealthPulse) * 0.5 + 0.5) * 0.3;
+            if (this.lowHealthOverlay) {
+                this.lowHealthOverlay.setAlpha(pulseAlpha);
+            }
+        } else {
+            if (this.lowHealthOverlay) {
+                this.lowHealthOverlay.setAlpha(0);
+            }
+        }
+
+        // Screen shake
+        if (this.screenShake.intensity > 0) {
+            this.screenShake.x = (Math.random() - 0.5) * this.screenShake.intensity * 2;
+            this.screenShake.y = (Math.random() - 0.5) * this.screenShake.intensity * 2;
+            this.screenShake.intensity -= dt * 30;
+            if (this.screenShake.intensity < 0) this.screenShake.intensity = 0;
+            this.cameras.main.setScroll(
+                this.cameras.main.scrollX + this.screenShake.x,
+                this.cameras.main.scrollY + this.screenShake.y
+            );
+        }
+    }
+
+    updateFloatingTexts(dt) {
+        for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+            const ft = this.floatingTexts[i];
+            ft.y += ft.vy * dt;
+            ft.life -= dt;
+            ft.setAlpha(ft.life);
+            if (ft.life <= 0) {
+                ft.destroy();
+                this.floatingTexts.splice(i, 1);
+            }
+        }
+    }
+
+    updateKillStreak(dt) {
+        if (this.killStreakTimer > 0) {
+            this.killStreakTimer -= dt;
+            if (this.killStreakTimer <= 0) {
+                this.killStreak = 0;
+            }
+        }
+
+        // Update kill streak display
+        if (this.killStreakText) {
+            if (this.killStreak >= 2) {
+                this.killStreakText.setText(this.killStreak + 'x STREAK');
+                this.killStreakText.setVisible(true);
+            } else {
+                this.killStreakText.setVisible(false);
+            }
+        }
+    }
+
+    createHitParticles(x, y, count) {
+        for (let i = 0; i < count; i++) {
+            const particle = this.add.circle(x, y, 3, 0xff6600);
+            particle.setDepth(50);
+
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 50 + Math.random() * 100;
+
+            this.tweens.add({
+                targets: particle,
+                x: x + Math.cos(angle) * speed,
+                y: y + Math.sin(angle) * speed,
+                alpha: 0,
+                scale: 0.5,
+                duration: 400,
+                onComplete: () => particle.destroy()
+            });
+        }
+    }
+
+    createDeathBurst(x, y) {
+        // Ring effect
+        const ring = this.add.circle(x, y, 10, 0xff4400, 0);
+        ring.setStrokeStyle(4, 0xff8800);
+        ring.setDepth(45);
+
+        this.tweens.add({
+            targets: ring,
+            scale: 4,
+            alpha: 0,
+            duration: 500,
+            onComplete: () => ring.destroy()
+        });
+
+        // Explosion particles
+        for (let i = 0; i < 15; i++) {
+            const particle = this.add.circle(x, y, 4 + Math.random() * 3, 0xff6600);
+            particle.setDepth(50);
+
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 80 + Math.random() * 120;
+
+            this.tweens.add({
+                targets: particle,
+                x: x + Math.cos(angle) * speed,
+                y: y + Math.sin(angle) * speed,
+                alpha: 0,
+                scale: 0.3,
+                duration: 600,
+                onComplete: () => particle.destroy()
+            });
+        }
+    }
+
+    createMuzzleFlash(x, y) {
+        const flash = this.add.circle(x, y, 8, 0xffff88);
+        flash.setDepth(50);
+
+        this.tweens.add({
+            targets: flash,
+            alpha: 0,
+            scale: 2,
+            duration: 150,
+            onComplete: () => flash.destroy()
+        });
+    }
+
+    createGoldSparkle(x, y) {
+        for (let i = 0; i < 8; i++) {
+            const sparkle = this.add.circle(x, y, 3, 0xffd700);
+            sparkle.setDepth(50);
+
+            const angle = (i / 8) * Math.PI * 2;
+            const speed = 40 + Math.random() * 30;
+
+            this.tweens.add({
+                targets: sparkle,
+                x: x + Math.cos(angle) * speed,
+                y: y + Math.sin(angle) * speed,
+                alpha: 0,
+                scale: 0.5,
+                duration: 400,
+                onComplete: () => sparkle.destroy()
+            });
+        }
+    }
+
+    updateDebugOverlay() {
+        if (!this.debugText || !this.debugMode) return;
+
+        const elapsed = Math.floor((Date.now() - this.gameStartTime) / 1000);
+        const mins = Math.floor(elapsed / 60);
+        const secs = elapsed % 60;
+
+        const debugInfo = [
+            '=== DEBUG ===',
+            'Day: ' + this.gameData.day,
+            'Armor: ' + this.playerData.armor + '/' + this.playerData.maxArmor,
+            'Gold: ' + this.gameData.gold,
+            'Time: ' + mins + ':' + secs.toString().padStart(2, '0'),
+            '',
+            '=== STATS ===',
+            'Ships Sunk: ' + this.stats.shipsSunk,
+            'Damage Dealt: ' + this.stats.totalDamageDealt,
+            'Damage Taken: ' + this.stats.totalDamageTaken,
+            'Crits: ' + this.stats.critCount,
+            'Loot: ' + this.stats.lootCollected,
+            'Cannons Fired: ' + this.stats.cannonsFired,
+            'Gold Earned: ' + this.stats.goldEarned,
+            '',
+            '=== STREAK ===',
+            'Current: ' + this.killStreak,
+            'Max: ' + this.stats.maxKillStreak
+        ];
+
+        this.debugText.setText(debugInfo.join('\n'));
+    }
+
+    showDestroyedScreen() {
+        this.gameOver = true;
+
+        // Calculate elapsed time
+        const elapsed = Math.floor((Date.now() - this.gameStartTime) / 1000);
+        const mins = Math.floor(elapsed / 60);
+        const secs = elapsed % 60;
+
+        // Performance rating
+        let rating = 'DECKHAND';
+        let ratingColor = '#888888';
+        if (this.stats.shipsSunk >= 15) {
+            rating = 'ADMIRAL';
+            ratingColor = '#ffd700';
+        } else if (this.stats.shipsSunk >= 10) {
+            rating = 'CAPTAIN';
+            ratingColor = '#00ff00';
+        } else if (this.stats.shipsSunk >= 5) {
+            rating = 'SAILOR';
+            ratingColor = '#00aaff';
+        }
+
+        // Dark overlay
+        const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.85);
+        overlay.setScrollFactor(0).setDepth(300);
+
+        // Title
+        this.add.text(GAME_WIDTH / 2, 80, 'SHIP DESTROYED', {
+            fontSize: '48px',
+            fontFamily: 'monospace',
+            color: '#ff4444',
+            stroke: '#000000',
+            strokeThickness: 4
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
+
+        // Rating
+        this.add.text(GAME_WIDTH / 2, 140, rating, {
+            fontSize: '36px',
+            fontFamily: 'monospace',
+            color: ratingColor
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
+
+        // Stats
+        const statsText = [
+            'Time Sailed: ' + mins + ':' + secs.toString().padStart(2, '0'),
+            'Day Reached: ' + this.gameData.day,
+            'Final Gold: ' + this.gameData.gold,
+            '',
+            'Ships Sunk: ' + this.stats.shipsSunk,
+            'Total Damage Dealt: ' + this.stats.totalDamageDealt,
+            'Total Damage Taken: ' + this.stats.totalDamageTaken,
+            'Critical Hits: ' + this.stats.critCount,
+            'Max Kill Streak: ' + this.stats.maxKillStreak,
+            'Cannons Fired: ' + this.stats.cannonsFired,
+            'Loot Collected: ' + this.stats.lootCollected,
+            'Gold Earned: ' + this.stats.goldEarned
+        ];
+
+        this.add.text(GAME_WIDTH / 2, 340, statsText.join('\n'), {
+            fontSize: '18px',
+            fontFamily: 'monospace',
+            color: '#ffffff',
+            align: 'center',
+            lineSpacing: 8
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
+
+        // Restart prompt
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 80, 'Press SPACE to restart', {
+            fontSize: '20px',
+            fontFamily: 'monospace',
+            color: '#888888'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
+
+        // Restart handler
+        this.input.keyboard.once('keydown-SPACE', () => {
+            this.scene.restart();
+        });
     }
 }
 

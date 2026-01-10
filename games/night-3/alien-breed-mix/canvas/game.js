@@ -10,26 +10,29 @@ const TILE = 32;
 const MAP_W = 40;
 const MAP_H = 30;
 
-// Dark industrial color palette
+// Dark industrial color palette - Alien Breed style
 const COLORS = {
-    floor: '#3A2A1A', floorDark: '#2A1A0A', floorLight: '#4A3A2A',
-    wall: '#5A5A5A', wallLight: '#7A7A7A', wallDark: '#3A3A3A',
+    floor: '#2A2830', floorDark: '#1A1820', floorLight: '#3A3840',
+    wall: '#4A4848', wallLight: '#6A6868', wallDark: '#2A2828',
     void: '#000000', hudBg: '#0A0A0A', hudText: '#CCCCCC', hudYellow: '#FFCC00',
     player: '#3A5A2A', playerLight: '#4A6A3A', playerDark: '#2A4A1A',
-    alien: '#1A1A1A', alienEye: '#880000', alienBlood: '#00AA66',
+    alien: '#0A0A0A', alienEye: '#AA0000', alienBlood: '#00AA66',
     bullet: '#FFAA00', bulletEnemy: '#88FF88', muzzleFlash: '#FFFF44',
     health: '#CC2222', shield: '#3366CC', stamina: '#44AA44',
     keyGreen: '#00CC00', keyBlue: '#0066CC', keyYellow: '#CCCC00', keyRed: '#CC0000',
     terminal: '#00FFFF', doorLocked: '#880000', explosion: '#FF8844'
 };
 
+// Visibility radius for atmospheric darkness
+let visibilityRadius = 350;
+
 // Weapons database
 const WEAPONS = {
-    pistol: { name: 'Pistol', damage: 15, fireRate: 0.25, magSize: 12, spread: 0.05, bulletSpeed: 800, ammoType: '9mm', shake: 2 },
-    shotgun: { name: 'Shotgun', damage: 10, fireRate: 0.8, magSize: 8, spread: 0.35, pellets: 6, bulletSpeed: 600, ammoType: 'shells', shake: 8 },
-    smg: { name: 'SMG', damage: 8, fireRate: 0.08, magSize: 40, spread: 0.12, bulletSpeed: 700, ammoType: '9mm', shake: 1 },
-    rifle: { name: 'Assault Rifle', damage: 20, fireRate: 0.15, magSize: 30, spread: 0.06, bulletSpeed: 850, ammoType: 'rifle', shake: 3 },
-    plasma: { name: 'Plasma Rifle', damage: 40, fireRate: 0.5, magSize: 20, spread: 0, bulletSpeed: 500, ammoType: 'plasma', shake: 5, color: '#44AAFF' }
+    pistol: { name: 'Pistol', damage: 15, fireRate: 0.25, magSize: 12, spread: 0.05, bulletSpeed: 800, ammoType: '9mm', shake: 4 },
+    shotgun: { name: 'Shotgun', damage: 12, fireRate: 0.7, magSize: 8, spread: 0.3, pellets: 8, bulletSpeed: 600, ammoType: 'shells', shake: 12 },
+    smg: { name: 'SMG', damage: 9, fireRate: 0.07, magSize: 40, spread: 0.1, bulletSpeed: 700, ammoType: '9mm', shake: 2 },
+    rifle: { name: 'Assault Rifle', damage: 22, fireRate: 0.12, magSize: 30, spread: 0.04, bulletSpeed: 900, ammoType: 'rifle', shake: 5 },
+    plasma: { name: 'Plasma Rifle', damage: 45, fireRate: 0.4, magSize: 20, spread: 0, bulletSpeed: 550, ammoType: 'plasma', shake: 8, color: '#44AAFF' }
 };
 
 // Game state
@@ -48,6 +51,8 @@ let map = [];
 let explored = [];
 let cameraX = 0, cameraY = 0;
 let shakeAmount = 0, shakeDuration = 0;
+let killFlash = 0;  // White flash on enemy kill
+let slowMotion = 1;  // Time scale for hitlag effect
 let selfDestructTimer = 0;
 let selfDestructActive = false;
 let deck = 1;
@@ -57,6 +62,10 @@ let totalRooms = 0;
 let killCount = 0;
 let killCombo = 0;
 let comboTimer = 0;
+let debugMode = false;
+let fps = 60;
+let frameCount = 0;
+let fpsTimer = 0;
 
 // Input
 const keys = {};
@@ -146,6 +155,7 @@ class Player {
         }
 
         const pellets = weapon.pellets || 1;
+        const isPiercing = weapon.name === 'Plasma Rifle';
         for (let i = 0; i < pellets; i++) {
             const spread = (Math.random() - 0.5) * weapon.spread * 2;
             const angle = this.angle + spread;
@@ -155,7 +165,10 @@ class Player {
                 vx: Math.cos(angle) * weapon.bulletSpeed,
                 vy: Math.sin(angle) * weapon.bulletSpeed,
                 damage: weapon.damage * (1 + this.upgrades.damage * 0.1),
-                life: 0.8, fromPlayer: true, color: weapon.color
+                life: isPiercing ? 1.5 : 0.8,  // Plasma travels longer
+                fromPlayer: true,
+                color: weapon.color,
+                piercing: isPiercing
             });
         }
 
@@ -220,7 +233,7 @@ class Player {
             });
         }
 
-        addFloatingText(this.x, this.y - 20, `-${Math.floor(amount)}`, COLORS.health);
+        addDamageText(this.x, this.y - 20, amount, COLORS.health);
 
         if (this.hp <= 0) this.die();
     }
@@ -310,12 +323,12 @@ class Enemy {
         this.attackTimer = 0;
 
         const stats = {
-            drone: { hp: 20, speed: 120, damage: 10, cooldown: 1, range: 300, size: 24, credits: 5 },
-            spitter: { hp: 30, speed: 80, damage: 15, cooldown: 2, range: 400, size: 28, credits: 10, preferDist: 200 },
-            lurker: { hp: 40, speed: 200, damage: 20, cooldown: 0.8, range: 100, size: 26, credits: 15 },
-            brute: { hp: 100, speed: 60, damage: 30, cooldown: 1.5, range: 250, size: 44, credits: 30 },
-            exploder: { hp: 15, speed: 150, damage: 50, cooldown: 0, range: 350, size: 24, credits: 5, explodes: true },
-            elite: { hp: 50, speed: 150, damage: 15, cooldown: 0.8, range: 400, size: 28, credits: 25 }
+            drone: { hp: 22, speed: 140, damage: 12, cooldown: 0.9, range: 350, size: 24, credits: 5 },
+            spitter: { hp: 35, speed: 100, damage: 18, cooldown: 1.5, range: 450, size: 28, credits: 10, preferDist: 180 },
+            lurker: { hp: 45, speed: 240, damage: 22, cooldown: 0.6, range: 150, size: 26, credits: 15 },
+            brute: { hp: 120, speed: 80, damage: 35, cooldown: 1.2, range: 300, size: 44, credits: 30 },
+            exploder: { hp: 18, speed: 180, damage: 60, cooldown: 0, range: 400, size: 24, credits: 5, explodes: true },
+            elite: { hp: 60, speed: 170, damage: 18, cooldown: 0.6, range: 450, size: 28, credits: 25 }
         };
 
         const s = stats[type] || stats.drone;
@@ -409,8 +422,14 @@ class Enemy {
     }
 
     takeDamage(amount, knockbackAngle) {
+        const prevHp = this.hp;
         this.hp -= amount;
         this.hitFlash = 0.1;
+
+        // Track overkill for bonus
+        if (this.hp <= 0 && prevHp > 0) {
+            this.overkillDamage = Math.abs(this.hp);
+        }
 
         if (this.type !== 'brute') {
             const force = amount * 5;
@@ -428,7 +447,7 @@ class Enemy {
             });
         }
 
-        addFloatingText(this.x, this.y - 20, `-${Math.floor(amount)}`, COLORS.alienBlood);
+        addDamageText(this.x, this.y - 20, amount, COLORS.alienBlood);
 
         if (this.hp <= 0) this.die();
     }
@@ -438,31 +457,50 @@ class Enemy {
             this.explode();
         }
 
+        // Base credits
         player.credits += this.credits;
         killCount++;
         killCombo++;
         comboTimer = 3;
 
+        // Overkill bonus (10% of overkill damage as credits)
+        if (this.overkillDamage && this.overkillDamage > 10) {
+            const bonus = Math.floor(this.overkillDamage / 10);
+            player.credits += bonus;
+            addFloatingText(this.x + 30, this.y - 30, `OVERKILL +$${bonus}`, '#FF6600', 1.2);
+        }
+
         if (killCombo > 1) {
             addFloatingText(this.x, this.y - 30, `x${killCombo} COMBO!`, COLORS.hudYellow);
         }
 
-        // Death particles
-        for (let i = 0; i < 15; i++) {
+        // Death particles - MORE for satisfying kills
+        const particleCount = this.type === 'brute' ? 40 : (this.type === 'exploder' ? 25 : 25);
+        for (let i = 0; i < particleCount; i++) {
+            const angle = (i / particleCount) * Math.PI * 2 + Math.random() * 0.5;
+            const speed = 150 + Math.random() * 250;
             particles.push({
                 x: this.x, y: this.y,
-                vx: (Math.random() - 0.5) * 300, vy: (Math.random() - 0.5) * 300,
-                life: 1, maxLife: 1, color: COLORS.alienBlood, size: 6
+                vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                life: 0.8 + Math.random() * 0.6, maxLife: 1.4,
+                color: COLORS.alienBlood, size: 4 + Math.random() * 6
             });
         }
 
-        // Blood stain
-        bloodStains.push({ x: this.x, y: this.y, size: this.width, alpha: 0.6 });
-        if (bloodStains.length > 50) bloodStains.shift();
+        // Screen shake on kill for satisfaction
+        screenShake(this.type === 'brute' ? 10 : 5, 0.15);
 
-        // Drops
-        if (Math.random() < 0.25) {
-            const types = ['ammo', 'health', 'credits'];
+        // Kill flash and hitlag for juicy kills
+        killFlash = this.type === 'brute' ? 0.4 : 0.2;
+        slowMotion = this.type === 'brute' ? 0.3 : 0.6;
+
+        // Blood stain - bigger
+        bloodStains.push({ x: this.x, y: this.y, size: this.width * 1.5, alpha: 0.7 });
+        if (bloodStains.length > 80) bloodStains.shift();
+
+        // Drops - more generous loot
+        if (Math.random() < 0.35) {
+            const types = ['ammo', 'health', 'credits', 'credits'];
             pickups.push({ x: this.x, y: this.y, type: types[Math.floor(Math.random() * types.length)] });
         }
     }
@@ -513,14 +551,20 @@ class Enemy {
         ctx.ellipse(0, 0, size * 0.7, size * 0.5, 0, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Eyes
+        // Eyes - more menacing with glow
         ctx.fillStyle = this.hitFlash > 0 ? '#FFF' : COLORS.alienEye;
-        ctx.shadowBlur = 5;
+        ctx.shadowBlur = 8;
         ctx.shadowColor = '#FF0000';
         const eyeOff = size * 0.3;
         ctx.beginPath();
-        ctx.arc(Math.cos(this.angle) * eyeOff - 3, Math.sin(this.angle) * eyeOff, 2, 0, Math.PI * 2);
-        ctx.arc(Math.cos(this.angle) * eyeOff + 3, Math.sin(this.angle) * eyeOff, 2, 0, Math.PI * 2);
+        ctx.arc(Math.cos(this.angle) * eyeOff - 3, Math.sin(this.angle) * eyeOff, 3, 0, Math.PI * 2);
+        ctx.arc(Math.cos(this.angle) * eyeOff + 3, Math.sin(this.angle) * eyeOff, 3, 0, Math.PI * 2);
+        ctx.fill();
+        // Inner eye glow
+        ctx.fillStyle = '#FF4444';
+        ctx.beginPath();
+        ctx.arc(Math.cos(this.angle) * eyeOff - 3, Math.sin(this.angle) * eyeOff, 1.5, 0, Math.PI * 2);
+        ctx.arc(Math.cos(this.angle) * eyeOff + 3, Math.sin(this.angle) * eyeOff, 1.5, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
 
@@ -538,8 +582,23 @@ class Enemy {
 }
 
 // Helper functions
-function addFloatingText(x, y, text, color) {
-    floatingTexts.push({ x, y, text, color, life: 1, vy: -50 });
+function addFloatingText(x, y, text, color, scale = 1) {
+    floatingTexts.push({ x, y, text, color, life: 1.2, vy: -80, scale: scale, startLife: 1.2 });
+}
+
+function addDamageText(x, y, amount, color) {
+    // Bigger numbers for bigger damage
+    const scale = Math.min(2, 1 + amount / 30);
+    floatingTexts.push({
+        x: x + (Math.random() - 0.5) * 20,
+        y: y + (Math.random() - 0.5) * 10,
+        text: `-${Math.floor(amount)}`,
+        color: color,
+        life: 1.0,
+        vy: -100 - Math.random() * 50,
+        scale: scale,
+        startLife: 1.0
+    });
 }
 
 function screenShake(amount, duration) {
@@ -729,39 +788,115 @@ function drawTiles() {
             const screenX = x * TILE - cameraX;
             const screenY = y * TILE - cameraY;
             const tile = map[y]?.[x] || 0;
-            const seed = x * 1000 + y;
+            const seed = (x * 7919 + y * 6271) % 100;
 
             if (tile === 0) {
                 ctx.fillStyle = COLORS.void;
                 ctx.fillRect(screenX, screenY, TILE, TILE);
             } else if (tile === 1) {
-                ctx.fillStyle = COLORS.floor;
+                // Metal floor base - darker Alien Breed style
+                ctx.fillStyle = '#2A2A2E';
                 ctx.fillRect(screenX, screenY, TILE, TILE);
-                ctx.fillStyle = COLORS.floorDark;
-                ctx.fillRect(screenX, screenY, 2, TILE);
-                ctx.fillRect(screenX, screenY, TILE, 2);
-                ctx.fillRect(screenX + 15, screenY, 2, TILE);
-                ctx.fillRect(screenX, screenY + 15, TILE, 2);
 
-                // Variation
-                if ((x + y * 7) % 5 === 0) {
-                    ctx.fillStyle = COLORS.floorDark;
-                    for (let i = 4; i < 28; i += 4) ctx.fillRect(screenX + i, screenY + 4, 1, 24);
+                // Metal grating pattern - more visible
+                ctx.fillStyle = '#1E1E22';
+                // Horizontal lines
+                for (let i = 0; i < 4; i++) {
+                    ctx.fillRect(screenX, screenY + i * 8, TILE, 2);
+                }
+                // Vertical lines
+                for (let i = 0; i < 4; i++) {
+                    ctx.fillRect(screenX + i * 8, screenY, 2, TILE);
+                }
+
+                // Highlight corners for depth
+                ctx.fillStyle = '#3A3A3E';
+                ctx.fillRect(screenX, screenY, TILE, 2);
+                ctx.fillRect(screenX, screenY, 2, TILE);
+
+                // Rivets at corners - more prominent
+                ctx.fillStyle = '#4A4A50';
+                ctx.fillRect(screenX + 2, screenY + 2, 3, 3);
+                ctx.fillRect(screenX + 27, screenY + 2, 3, 3);
+                ctx.fillRect(screenX + 2, screenY + 27, 3, 3);
+                ctx.fillRect(screenX + 27, screenY + 27, 3, 3);
+
+                // Random floor variation
+                if (seed < 15) {
+                    // Rust stain
+                    ctx.fillStyle = 'rgba(60, 40, 20, 0.4)';
+                    ctx.fillRect(screenX + 6, screenY + 6, 20, 20);
+                } else if (seed < 30) {
+                    // Oil stain - larger
+                    ctx.fillStyle = 'rgba(15, 15, 20, 0.5)';
+                    ctx.beginPath();
+                    ctx.arc(screenX + 16, screenY + 16, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (seed < 40) {
+                    // Blood splatter (alien green)
+                    ctx.fillStyle = 'rgba(0, 100, 60, 0.3)';
+                    ctx.beginPath();
+                    ctx.arc(screenX + 16 + (seed % 8) - 4, screenY + 16 + (seed % 6) - 3, 8, 0, Math.PI * 2);
+                    ctx.fill();
                 }
             } else if (tile === 2) {
-                ctx.fillStyle = COLORS.wall;
+                // Wall base - darker metallic look
+                ctx.fillStyle = '#3A3A3C';
                 ctx.fillRect(screenX, screenY, TILE, TILE);
-                ctx.fillStyle = COLORS.wallLight;
+
+                // 3D depth effect - more pronounced
+                ctx.fillStyle = '#5A5A5C';
                 ctx.fillRect(screenX, screenY, TILE, 3);
                 ctx.fillRect(screenX, screenY, 3, TILE);
-                ctx.fillStyle = COLORS.wallDark;
+                ctx.fillStyle = '#1A1A1C';
                 ctx.fillRect(screenX + TILE - 3, screenY, 3, TILE);
                 ctx.fillRect(screenX, screenY + TILE - 3, TILE, 3);
 
-                // Panel detail
-                if ((x + y) % 3 === 0) {
+                // Panel lines - more visible
+                ctx.fillStyle = '#2A2A2C';
+                ctx.fillRect(screenX + 8, screenY + 3, 2, TILE - 6);
+                ctx.fillRect(screenX + TILE - 10, screenY + 3, 2, TILE - 6);
+                ctx.fillRect(screenX + 3, screenY + 10, TILE - 6, 2);
+
+                // Hazard stripes on certain walls
+                if ((x + y * 3) % 7 === 0) {
+                    ctx.fillStyle = '#FF8800';
+                    for (let i = 0; i < 6; i++) {
+                        const stripeX = screenX + i * 6 - 2;
+                        ctx.beginPath();
+                        ctx.moveTo(stripeX, screenY + 10);
+                        ctx.lineTo(stripeX + 4, screenY + 10);
+                        ctx.lineTo(stripeX + 8, screenY + 22);
+                        ctx.lineTo(stripeX + 4, screenY + 22);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                }
+
+                // Panel indicator lights
+                if ((x + y) % 4 === 0) {
                     ctx.fillStyle = COLORS.hudYellow;
-                    ctx.fillRect(screenX + 10, screenY + 10, 4, 12);
+                    ctx.shadowBlur = 3;
+                    ctx.shadowColor = COLORS.hudYellow;
+                    ctx.fillRect(screenX + 14, screenY + 12, 4, 8);
+                    ctx.shadowBlur = 0;
+                } else if ((x + y) % 5 === 0) {
+                    // Red warning light
+                    ctx.fillStyle = '#CC0000';
+                    ctx.shadowBlur = 3;
+                    ctx.shadowColor = '#FF0000';
+                    ctx.fillRect(screenX + 14, screenY + 12, 4, 8);
+                    ctx.shadowBlur = 0;
+                }
+
+                // Vent grating on some walls
+                if (seed < 10) {
+                    ctx.fillStyle = '#1A1A1A';
+                    ctx.fillRect(screenX + 6, screenY + 6, 20, 20);
+                    ctx.fillStyle = '#3A3A3A';
+                    for (let i = 0; i < 4; i++) {
+                        ctx.fillRect(screenX + 8, screenY + 8 + i * 5, 16, 2);
+                    }
                 }
             }
         }
@@ -914,14 +1049,25 @@ function drawParticles() {
 
 function drawFloatingTexts() {
     floatingTexts.forEach(ft => {
-        ctx.globalAlpha = ft.life;
+        ctx.save();
+        const scale = ft.scale || 1;
+        const alpha = ft.startLife ? (ft.life / ft.startLife) : ft.life;
+        ctx.globalAlpha = alpha;
         ctx.fillStyle = ft.color;
-        ctx.font = 'bold 14px monospace';
+
+        // Scale effect - bigger numbers pop more
+        const fontSize = Math.floor(14 * scale);
+        ctx.font = `bold ${fontSize}px monospace`;
         ctx.textAlign = 'center';
+
+        // Slight outline for readability
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.strokeText(ft.text, ft.x - cameraX, ft.y - cameraY);
         ctx.fillText(ft.text, ft.x - cameraX, ft.y - cameraY);
+
+        ctx.restore();
     });
-    ctx.globalAlpha = 1;
-    ctx.textAlign = 'left';
 }
 
 function drawMinimap() {
@@ -1063,10 +1209,27 @@ function drawHUD() {
         ctx.textAlign = 'left';
     }
 
-    // Low HP warning
+    // Low HP warning - dramatic vignette effect
     if (player.hp < 30) {
-        ctx.fillStyle = `rgba(255, 0, 0, ${Math.sin(Date.now() / 100) * 0.2})`;
+        const pulse = Math.sin(Date.now() / 100) * 0.15 + 0.15;
+        const gradient = ctx.createRadialGradient(
+            canvas.width / 2, canvas.height / 2, 100,
+            canvas.width / 2, canvas.height / 2, canvas.width / 1.5
+        );
+        gradient.addColorStop(0, 'rgba(255, 0, 0, 0)');
+        gradient.addColorStop(0.5, `rgba(255, 0, 0, ${pulse * 0.3})`);
+        gradient.addColorStop(1, `rgba(200, 0, 0, ${pulse})`);
+        ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Heartbeat text
+        if (Math.sin(Date.now() / 200) > 0.7) {
+            ctx.fillStyle = 'rgba(255, 50, 50, 0.8)';
+            ctx.font = 'bold 18px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('! LOW HEALTH !', canvas.width / 2, 90);
+            ctx.textAlign = 'left';
+        }
     }
 
     // Self-destruct timer
@@ -1170,6 +1333,37 @@ function update(dt) {
     // Bullets
     for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
+
+        // Auto-aim assist for player bullets (gentle homing)
+        if (b.fromPlayer && enemies.length > 0) {
+            let nearest = null;
+            let nearestDist = 150;  // Max homing range
+            for (const e of enemies) {
+                const dx = e.x - b.x, dy = e.y - b.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < nearestDist) {
+                    nearestDist = dist;
+                    nearest = e;
+                }
+            }
+            if (nearest) {
+                const targetAngle = Math.atan2(nearest.y - b.y, nearest.x - b.x);
+                const bulletAngle = Math.atan2(b.vy, b.vx);
+                let angleDiff = targetAngle - bulletAngle;
+                // Normalize angle diff
+                while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                // Only curve if within 45 degrees
+                if (Math.abs(angleDiff) < Math.PI / 4) {
+                    const homeStrength = 2.5 * dt;  // Subtle homing
+                    const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
+                    const newAngle = bulletAngle + angleDiff * homeStrength;
+                    b.vx = Math.cos(newAngle) * speed;
+                    b.vy = Math.sin(newAngle) * speed;
+                }
+            }
+        }
+
         b.x += b.vx * dt;
         b.y += b.vy * dt;
         b.life -= dt;
@@ -1188,14 +1382,30 @@ function update(dt) {
 
         if (b.fromPlayer) {
             // Hit enemies
+            let hitEnemy = false;
             for (let e of enemies) {
                 const dx = b.x - e.x, dy = b.y - e.y;
                 if (Math.sqrt(dx * dx + dy * dy) < e.width / 2 + 4) {
-                    e.takeDamage(b.damage, Math.atan2(b.vy, b.vx));
-                    bullets.splice(i, 1);
+                    // Critical hit chance (15%)
+                    const isCrit = Math.random() < 0.15;
+                    const finalDamage = isCrit ? b.damage * 2 : b.damage;
+
+                    if (isCrit) {
+                        addFloatingText(e.x, e.y - 40, 'CRITICAL!', '#FF4400', 1.5);
+                        screenShake(8, 0.1);
+                    }
+
+                    e.takeDamage(finalDamage, Math.atan2(b.vy, b.vx));
+                    hitEnemy = true;
+
+                    // Piercing plasma goes through enemies
+                    if (!b.piercing) {
+                        bullets.splice(i, 1);
+                    }
                     break;
                 }
             }
+            if (hitEnemy && b.piercing) continue;
             // Hit barrels
             for (let j = barrels.length - 1; j >= 0; j--) {
                 const bar = barrels[j];
@@ -1350,9 +1560,82 @@ function update(dt) {
 
 // Game loop
 let lastTime = 0;
+// Atmospheric darkness overlay - Alien Breed style limited visibility
+function drawDarknessOverlay() {
+    if (!player) return;
+
+    const playerScreenX = player.x - cameraX;
+    const playerScreenY = player.y - cameraY;
+
+    // Create radial gradient for visibility cone
+    const gradient = ctx.createRadialGradient(
+        playerScreenX, playerScreenY, 0,
+        playerScreenX, playerScreenY, visibilityRadius
+    );
+
+    gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    gradient.addColorStop(0.6, 'rgba(0, 0, 0, 0.2)');
+    gradient.addColorStop(0.85, 'rgba(0, 0, 0, 0.5)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.75)');
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Add a subtle scan line effect for retro feel
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+    for (let y = 0; y < canvas.height; y += 3) {
+        ctx.fillRect(0, y, canvas.width, 1);
+    }
+}
+
+function drawDebugOverlay() {
+    if (!debugMode || !player) return;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(10, 60, 280, 240);
+
+    ctx.fillStyle = '#0f0';
+    ctx.font = '14px monospace';
+    let y = 80;
+    const line = (text) => { ctx.fillText(text, 20, y); y += 18; };
+
+    line('=== DEBUG (` to close) ===');
+    line(`Player: (${Math.round(player.x)}, ${Math.round(player.y)})`);
+    line(`Health: ${player.hp}/${player.maxHp}`);
+    line(`Shield: ${player.shield}/${player.maxShield}`);
+    line(`Stamina: ${Math.round(player.stamina)}/${player.maxStamina}`);
+    line(`Enemies: ${enemies.length}`);
+    line(`Bullets: ${bullets.length}`);
+    line(`Pickups: ${pickups.length}`);
+    line(`Deck: ${deck}/${maxDecks}`);
+    line(`Kills: ${killCount}`);
+    line(`Combo: ${killCombo}`);
+    line(`State: ${gameState}`);
+    line(`FPS: ${Math.round(fps)}`);
+
+    ctx.restore();
+}
+
 function gameLoop(timestamp) {
-    const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
+    let dt = Math.min((timestamp - lastTime) / 1000, 0.1);
     lastTime = timestamp;
+
+    // Apply slow motion effect (hitlag on kills)
+    dt *= slowMotion;
+    slowMotion = Math.min(1, slowMotion + 0.05);  // Gradually return to normal
+
+    // FPS tracking
+    frameCount++;
+    fpsTimer += dt / slowMotion;  // Track real FPS
+    if (fpsTimer >= 1) {
+        fps = frameCount / fpsTimer;
+        frameCount = 0;
+        fpsTimer = 0;
+    }
+
+    // Fade kill flash
+    if (killFlash > 0) killFlash -= 0.02;
 
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1372,8 +1655,17 @@ function gameLoop(timestamp) {
         drawBullets();
         drawParticles();
         drawFloatingTexts();
+        drawDarknessOverlay();
+
+        // Kill flash effect for satisfying kills
+        if (killFlash > 0) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${killFlash * 0.5})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
         drawHUD();
         drawMinimap();
+        drawDebugOverlay();
     } else if (gameState === 'gameover') {
         drawGameOver();
     } else if (gameState === 'win') {
@@ -1391,6 +1683,9 @@ document.addEventListener('keydown', e => {
     if (e.key.toLowerCase() === 'q' && gameState === 'playing') {
         player.currentWeapon = (player.currentWeapon + 1) % player.weapons.length;
         addFloatingText(player.x, player.y - 20, player.getWeapon().name, COLORS.hudYellow);
+    }
+    if (e.key === '`' || e.key === 'Backquote') {
+        debugMode = !debugMode;
     }
 });
 

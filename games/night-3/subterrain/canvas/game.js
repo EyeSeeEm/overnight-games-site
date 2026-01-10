@@ -64,8 +64,29 @@ const game = {
     power: { used: 0, max: 500 },
     poweredSectors: { hub: true, storage: false, medical: false, research: false, escape: false },
     tier2Unlocked: false,
-    hasKeycard: false
+    hasKeycard: false,
+    // Stats tracking
+    killCount: 0,
+    totalDamageDealt: 0,
+    totalDamageTaken: 0,
+    critCount: 0,
+    containersLooted: 0,
+    itemsUsed: 0,
+    sectorsVisited: new Set(['hub']),
+    maxKillStreak: 0,
+    killStreak: 0,
+    killStreakTimer: 0
 };
+
+// Debug mode
+let debugMode = false;
+
+// Floating text array
+let floatingTexts = [];
+
+// Screen effects
+let screenShake = 0;
+let damageFlash = 0;
 
 // Player state
 const player = {
@@ -191,6 +212,10 @@ const mouse = { x: 0, y: 0, down: false };
 document.addEventListener('keydown', e => {
     keys[e.key.toLowerCase()] = true;
     if (e.key === 'Tab') e.preventDefault();
+    // Debug mode toggle
+    if (e.key === '`' || e.key === 'q') {
+        debugMode = !debugMode;
+    }
 });
 document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 canvas.addEventListener('mousemove', e => {
@@ -478,6 +503,8 @@ function update(timestamp) {
     updateEnemies(dt);
     updateProjectiles(dt);
     updateParticles(dt);
+    updateFloatingTexts(dt);
+    updateScreenEffects(dt);
     updateSurvivalMeters(dt);
     updateCamera();
 
@@ -586,9 +613,21 @@ function checkDoorTransition() {
         // (can always enter, just can't use facilities)
 
         game.currentSector = newSector;
+        game.sectorsVisited.add(newSector);
+
         const targetSector = sectors[newSector];
         player.x = targetSector.spawnX;
         player.y = targetSector.spawnY;
+
+        // Sector transition effect
+        floatingTexts.push({
+            x: player.x,
+            y: player.y - 50,
+            text: `ENTERING: ${targetSector.name.toUpperCase()}`,
+            color: '#aaaaff',
+            life: 2.0,
+            vy: -20
+        });
 
         // Spawn enemies for new sector
         spawnEnemies(newSector);
@@ -654,22 +693,72 @@ function attack() {
     }
 }
 
-function damageEnemy(enemy, damage) {
-    enemy.hp -= damage;
+function damageEnemy(enemy, baseDamage) {
+    // Critical hit system (15% chance, 2x damage)
+    const CRIT_CHANCE = 15;
+    const CRIT_MULT = 2.0;
+    let damage = baseDamage;
+    let isCrit = false;
 
-    // Blood particles
-    for (let i = 0; i < 5; i++) {
+    if (Math.random() * 100 < CRIT_CHANCE) {
+        damage = Math.floor(damage * CRIT_MULT);
+        isCrit = true;
+        game.critCount++;
+    }
+
+    enemy.hp -= damage;
+    game.totalDamageDealt += damage;
+
+    // Screen shake
+    screenShake = isCrit ? 8 : 4;
+
+    // Blood particles (more for crit)
+    const particleCount = isCrit ? 10 : 5;
+    for (let i = 0; i < particleCount; i++) {
         particles.push({
             x: enemy.x,
             y: enemy.y,
-            vx: (Math.random() - 0.5) * 100,
-            vy: (Math.random() - 0.5) * 100,
-            life: 0.5,
+            vx: (Math.random() - 0.5) * (isCrit ? 200 : 100),
+            vy: (Math.random() - 0.5) * (isCrit ? 200 : 100),
+            life: isCrit ? 0.8 : 0.5,
             color: enemy.type === 'spitter' ? COLORS.BLOOD_GREEN : COLORS.BLOOD_FRESH
         });
     }
 
+    // Floating damage number
+    floatingTexts.push({
+        x: enemy.x,
+        y: enemy.y - 20,
+        text: isCrit ? `CRIT! -${damage}` : `-${damage}`,
+        color: isCrit ? '#ffcc00' : '#ff4444',
+        life: 1.0,
+        vy: -40
+    });
+
     if (enemy.hp <= 0) {
+        // Kill tracking
+        game.killCount++;
+        game.killStreak++;
+        game.killStreakTimer = 3;
+
+        if (game.killStreak > game.maxKillStreak) {
+            game.maxKillStreak = game.killStreak;
+        }
+
+        // Kill streak feedback
+        if (game.killStreak >= 3) {
+            const streakTexts = ['TRIPLE KILL!', 'QUAD KILL!', 'RAMPAGE!', 'UNSTOPPABLE!'];
+            const idx = Math.min(game.killStreak - 3, streakTexts.length - 1);
+            floatingTexts.push({
+                x: enemy.x,
+                y: enemy.y - 40,
+                text: streakTexts[idx],
+                color: '#ff8800',
+                life: 1.5,
+                vy: -30
+            });
+        }
+
         // Add blood splatter
         bloodSplatters.push({
             x: enemy.x,
@@ -677,6 +766,29 @@ function damageEnemy(enemy, damage) {
             size: enemy.type === 'brute' ? 40 : 25,
             color: enemy.type === 'spitter' ? COLORS.BLOOD_GREEN : COLORS.BLOOD
         });
+
+        // Random item drop (20% chance)
+        if (Math.random() < 0.2) {
+            const drops = ['scrap', 'cloth'];
+            if (enemy.type === 'spitter') drops.push('chemicals');
+            const dropType = drops[Math.floor(Math.random() * drops.length)];
+            const dropNames = { scrap: 'Scrap Metal', cloth: 'Cloth', chemicals: 'Chemicals' };
+
+            const existing = player.inventory.find(i => i.type === dropType);
+            if (existing) {
+                existing.count = (existing.count || 1) + 1;
+            } else if (player.inventory.length < player.maxInventory) {
+                player.inventory.push({ type: dropType, name: dropNames[dropType], count: 1 });
+            }
+            floatingTexts.push({
+                x: enemy.x,
+                y: enemy.y,
+                text: `+1 ${dropNames[dropType]}`,
+                color: '#88cc88',
+                life: 1.2,
+                vy: -25
+            });
+        }
     }
 }
 
@@ -741,6 +853,7 @@ function lootContainer(x, y) {
     if (!container) return;
 
     container.looted = true;
+    game.containersLooted++;
 
     // Give loot
     const loot = container.lootType;
@@ -859,20 +972,35 @@ function updateEnemies(dt) {
                     enemy.attackCooldown = enemy.attackRate;
                     player.health -= enemy.damage;
                     player.infection += enemy.infection;
+                    game.totalDamageTaken += enemy.damage;
+
+                    // Damage effects
+                    damageFlash = 10;
+                    screenShake = 6;
 
                     // Knockback
                     const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
                     player.x += Math.cos(angle) * 20;
                     player.y += Math.sin(angle) * 20;
 
+                    // Floating damage text
+                    floatingTexts.push({
+                        x: player.x,
+                        y: player.y - 20,
+                        text: `-${enemy.damage}`,
+                        color: '#ff6666',
+                        life: 1.0,
+                        vy: -40
+                    });
+
                     // Blood
-                    for (let i = 0; i < 3; i++) {
+                    for (let i = 0; i < 5; i++) {
                         particles.push({
                             x: player.x,
                             y: player.y,
-                            vx: (Math.random() - 0.5) * 100,
-                            vy: (Math.random() - 0.5) * 100,
-                            life: 0.4,
+                            vx: (Math.random() - 0.5) * 150,
+                            vy: (Math.random() - 0.5) * 150,
+                            life: 0.5,
                             color: COLORS.BLOOD_FRESH
                         });
                     }
@@ -927,16 +1055,31 @@ function updateProjectiles(dt) {
             if (dist < player.width / 2 + 5) {
                 player.health -= proj.damage;
                 if (proj.infection) player.infection += proj.infection;
+                game.totalDamageTaken += proj.damage;
                 proj.dead = true;
 
+                // Damage effects
+                damageFlash = 8;
+                screenShake = 4;
+
+                // Floating damage text
+                floatingTexts.push({
+                    x: player.x,
+                    y: player.y - 20,
+                    text: `-${proj.damage}`,
+                    color: proj.infection ? '#88ff88' : '#ff6666',
+                    life: 1.0,
+                    vy: -40
+                });
+
                 // Blood
-                for (let i = 0; i < 3; i++) {
+                for (let i = 0; i < 5; i++) {
                     particles.push({
                         x: player.x,
                         y: player.y,
-                        vx: (Math.random() - 0.5) * 100,
-                        vy: (Math.random() - 0.5) * 100,
-                        life: 0.4,
+                        vx: (Math.random() - 0.5) * 120,
+                        vy: (Math.random() - 0.5) * 120,
+                        life: 0.5,
                         color: COLORS.BLOOD_FRESH
                     });
                 }
@@ -957,6 +1100,35 @@ function updateParticles(dt) {
     });
 
     particles = particles.filter(p => p.life > 0);
+}
+
+function updateFloatingTexts(dt) {
+    floatingTexts.forEach(ft => {
+        ft.y += ft.vy * dt;
+        ft.life -= dt;
+    });
+    floatingTexts = floatingTexts.filter(ft => ft.life > 0);
+}
+
+function updateScreenEffects(dt) {
+    // Screen shake decay
+    if (screenShake > 0) {
+        screenShake *= 0.9;
+        if (screenShake < 0.5) screenShake = 0;
+    }
+
+    // Damage flash decay
+    if (damageFlash > 0) {
+        damageFlash--;
+    }
+
+    // Kill streak timer decay
+    if (game.killStreakTimer > 0) {
+        game.killStreakTimer -= dt;
+        if (game.killStreakTimer <= 0) {
+            game.killStreak = 0;
+        }
+    }
 }
 
 function updateSurvivalMeters(dt) {
@@ -1019,19 +1191,54 @@ function useItem(type) {
     if (idx < 0) return;
 
     const item = player.inventory[idx];
+    game.itemsUsed++;
+
+    // Floating text and particles for item use
+    const effectColors = {
+        food: '#ffaa66',
+        water: '#66aaff',
+        medkit: '#ff6666',
+        antidote: '#66ff66'
+    };
 
     switch (type) {
         case 'food':
             player.hunger = Math.max(0, player.hunger - 30);
+            floatingTexts.push({ x: player.x, y: player.y - 30, text: 'HUNGER -30', color: effectColors.food, life: 1.0, vy: -30 });
             break;
         case 'water':
             player.thirst = Math.max(0, player.thirst - 40);
+            floatingTexts.push({ x: player.x, y: player.y - 30, text: 'THIRST -40', color: effectColors.water, life: 1.0, vy: -30 });
             break;
         case 'medkit':
             player.health = Math.min(player.maxHealth, player.health + 30);
+            floatingTexts.push({ x: player.x, y: player.y - 30, text: '+30 HP', color: effectColors.medkit, life: 1.0, vy: -30 });
+            // Healing particles
+            for (let i = 0; i < 8; i++) {
+                particles.push({
+                    x: player.x + (Math.random() - 0.5) * 30,
+                    y: player.y + (Math.random() - 0.5) * 30,
+                    vx: (Math.random() - 0.5) * 50,
+                    vy: -50 - Math.random() * 50,
+                    life: 0.8,
+                    color: '#ff8888'
+                });
+            }
             break;
         case 'antidote':
             player.infection = Math.max(0, player.infection - 30);
+            floatingTexts.push({ x: player.x, y: player.y - 30, text: 'INFECTION -30', color: effectColors.antidote, life: 1.0, vy: -30 });
+            // Cure particles
+            for (let i = 0; i < 8; i++) {
+                particles.push({
+                    x: player.x + (Math.random() - 0.5) * 30,
+                    y: player.y + (Math.random() - 0.5) * 30,
+                    vx: (Math.random() - 0.5) * 50,
+                    vy: -50 - Math.random() * 50,
+                    life: 0.8,
+                    color: '#88ff88'
+                });
+            }
             break;
     }
 
@@ -1047,19 +1254,94 @@ function draw() {
     ctx.fillStyle = COLORS.BG;
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
+    // Apply screen shake
+    ctx.save();
+    if (screenShake > 0) {
+        const shakeX = (Math.random() - 0.5) * screenShake * 2;
+        const shakeY = (Math.random() - 0.5) * screenShake * 2;
+        ctx.translate(shakeX, shakeY);
+    }
+
     if (game.state === 'playing') {
         drawMap();
         drawBlood();
         drawEntities();
         drawProjectiles();
         drawParticles();
+        drawFloatingTexts();
         drawPlayer();
+
+        // Damage flash overlay
+        if (damageFlash > 0) {
+            ctx.fillStyle = `rgba(255, 0, 0, ${damageFlash / 30})`;
+            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+        }
+
+        // Low health vignette
+        const healthPct = player.health / player.maxHealth;
+        if (healthPct < 0.3) {
+            const alpha = (0.3 - healthPct) / 0.3 * 0.4;
+            ctx.fillStyle = `rgba(180, 0, 0, ${alpha})`;
+            ctx.fillRect(0, 0, GAME_WIDTH, 30);
+            ctx.fillRect(0, GAME_HEIGHT - 30, GAME_WIDTH, 30);
+            ctx.fillRect(0, 0, 30, GAME_HEIGHT);
+            ctx.fillRect(GAME_WIDTH - 30, 0, 30, GAME_HEIGHT);
+        }
+
         drawUI();
+        if (debugMode) drawDebugOverlay();
     } else if (game.state === 'gameover') {
         drawGameOver();
     } else if (game.state === 'victory') {
         drawVictory();
     }
+
+    ctx.restore();
+}
+
+function drawFloatingTexts() {
+    floatingTexts.forEach(ft => {
+        const screenX = ft.x - camera.x;
+        const screenY = ft.y - camera.y;
+
+        ctx.globalAlpha = Math.min(1, ft.life);
+        ctx.fillStyle = ft.color;
+        ctx.font = 'bold 14px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(ft.text, screenX, screenY);
+        ctx.textAlign = 'left';
+    });
+    ctx.globalAlpha = 1;
+}
+
+function drawDebugOverlay() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    ctx.fillRect(10, 100, 200, 220);
+
+    ctx.fillStyle = '#00ff00';
+    ctx.font = '11px monospace';
+
+    const debugInfo = [
+        `=== DEBUG (Q to toggle) ===`,
+        `Sector: ${game.currentSector}`,
+        `Player: (${Math.floor(player.x)}, ${Math.floor(player.y)})`,
+        `HP: ${player.health.toFixed(1)}/${player.maxHealth}`,
+        `Hunger: ${player.hunger.toFixed(1)}%`,
+        `Thirst: ${player.thirst.toFixed(1)}%`,
+        `Fatigue: ${player.fatigue.toFixed(1)}%`,
+        `Infection: ${player.infection.toFixed(1)}%`,
+        `Global Inf: ${game.globalInfection.toFixed(1)}%`,
+        `Kills: ${game.killCount}`,
+        `Dmg Dealt: ${game.totalDamageDealt}`,
+        `Dmg Taken: ${game.totalDamageTaken}`,
+        `Crits: ${game.critCount}`,
+        `Max Streak: ${game.maxKillStreak}`,
+        `Enemies: ${enemies.filter(e => e.hp > 0).length}`
+    ];
+
+    debugInfo.forEach((line, i) => {
+        ctx.fillText(line, 15, 115 + i * 14);
+    });
 }
 
 function drawMap() {
@@ -1439,16 +1721,52 @@ function drawGameOver() {
     ctx.fillStyle = '#aa3030';
     ctx.font = '32px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('GAME OVER', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40);
+    ctx.fillText('GAME OVER', GAME_WIDTH / 2, 80);
 
     ctx.fillStyle = '#886060';
     ctx.font = '16px monospace';
-    ctx.fillText(game.deathReason || 'You died.', GAME_WIDTH / 2, GAME_HEIGHT / 2);
+    ctx.fillText(game.deathReason || 'You died.', GAME_WIDTH / 2, 120);
+
+    // Detailed stats
+    ctx.fillStyle = '#888';
+    ctx.font = '14px monospace';
+    const hours = Math.floor(game.time / 60);
+    const mins = game.time % 60;
+
+    const stats = [
+        `Survived: ${hours}h ${mins}m`,
+        ``,
+        `Kills: ${game.killCount}`,
+        `Damage Dealt: ${game.totalDamageDealt}`,
+        `Damage Taken: ${game.totalDamageTaken}`,
+        `Critical Hits: ${game.critCount}`,
+        `Max Kill Streak: ${game.maxKillStreak}`,
+        ``,
+        `Containers Looted: ${game.containersLooted}`,
+        `Items Used: ${game.itemsUsed}`,
+        `Sectors Visited: ${game.sectorsVisited.size}/5`,
+        ``,
+        `Final Infection: ${player.infection.toFixed(1)}%`,
+        `Global Infection: ${game.globalInfection.toFixed(1)}%`
+    ];
+
+    stats.forEach((line, i) => {
+        ctx.fillText(line, GAME_WIDTH / 2, 160 + i * 20);
+    });
+
+    // Rating
+    const rating = game.killCount >= 15 ? 'SURVIVOR' :
+                  game.killCount >= 10 ? 'FIGHTER' :
+                  game.killCount >= 5 ? 'STRUGGLER' : 'VICTIM';
+    const ratingColors = { SURVIVOR: '#ffcc00', FIGHTER: '#88aa88', STRUGGLER: '#888888', VICTIM: '#664444' };
+
+    ctx.fillStyle = ratingColors[rating];
+    ctx.font = '20px monospace';
+    ctx.fillText(rating, GAME_WIDTH / 2, GAME_HEIGHT - 100);
 
     ctx.fillStyle = '#666';
     ctx.font = '14px monospace';
-    ctx.fillText(`Survived ${Math.floor(game.time / 60)} hours ${game.time % 60} minutes`, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 40);
-    ctx.fillText('Press SPACE to restart', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 80);
+    ctx.fillText('Press SPACE to restart', GAME_WIDTH / 2, GAME_HEIGHT - 50);
     ctx.textAlign = 'left';
 
     if (keys[' ']) {
@@ -1463,17 +1781,52 @@ function drawVictory() {
     ctx.fillStyle = '#30aa30';
     ctx.font = '32px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('ESCAPED!', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40);
+    ctx.fillText('ESCAPED!', GAME_WIDTH / 2, 80);
 
     ctx.fillStyle = '#60aa60';
     ctx.font = '16px monospace';
-    ctx.fillText('You made it out alive.', GAME_WIDTH / 2, GAME_HEIGHT / 2);
+    ctx.fillText('You made it out alive.', GAME_WIDTH / 2, 120);
 
-    ctx.fillStyle = '#888';
+    // Detailed stats
+    ctx.fillStyle = '#8ac8aa';
     ctx.font = '14px monospace';
-    ctx.fillText(`Time: ${Math.floor(game.time / 60)}h ${game.time % 60}m`, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 30);
-    ctx.fillText(`Global Infection: ${game.globalInfection.toFixed(1)}%`, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 50);
-    ctx.fillText('Press SPACE to play again', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 90);
+    const hours = Math.floor(game.time / 60);
+    const mins = game.time % 60;
+
+    const stats = [
+        `Escape Time: ${hours}h ${mins}m`,
+        ``,
+        `Kills: ${game.killCount}`,
+        `Damage Dealt: ${game.totalDamageDealt}`,
+        `Damage Taken: ${game.totalDamageTaken}`,
+        `Critical Hits: ${game.critCount}`,
+        `Max Kill Streak: ${game.maxKillStreak}`,
+        ``,
+        `Containers Looted: ${game.containersLooted}`,
+        `Items Used: ${game.itemsUsed}`,
+        `Sectors Visited: ${game.sectorsVisited.size}/5`,
+        ``,
+        `Final Health: ${player.health.toFixed(0)}%`,
+        `Final Infection: ${player.infection.toFixed(1)}%`,
+        `Global Infection: ${game.globalInfection.toFixed(1)}%`
+    ];
+
+    stats.forEach((line, i) => {
+        ctx.fillText(line, GAME_WIDTH / 2, 160 + i * 20);
+    });
+
+    // Efficiency rating
+    const efficiency = Math.max(0, 100 - hours * 10 - Math.floor(game.totalDamageTaken / 5) + game.killCount * 3);
+    const rating = efficiency >= 80 ? 'S' : efficiency >= 60 ? 'A' : efficiency >= 40 ? 'B' : efficiency >= 20 ? 'C' : 'D';
+    const ratingColors = { S: '#ffcc00', A: '#4aaa6a', B: '#6a8aaa', C: '#aa8a6a', D: '#aa6a6a' };
+
+    ctx.fillStyle = ratingColors[rating];
+    ctx.font = '24px monospace';
+    ctx.fillText(`RATING: ${rating}`, GAME_WIDTH / 2, GAME_HEIGHT - 100);
+
+    ctx.fillStyle = '#666';
+    ctx.font = '14px monospace';
+    ctx.fillText('Press SPACE to play again', GAME_WIDTH / 2, GAME_HEIGHT - 50);
     ctx.textAlign = 'left';
 
     if (keys[' ']) {

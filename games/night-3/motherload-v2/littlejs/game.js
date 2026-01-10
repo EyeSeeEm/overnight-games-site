@@ -62,6 +62,9 @@ let score = 0;
 let cash = 500;
 let world = [];
 
+// Debug overlay
+let debugMode = false;
+
 // Combo system
 let miningCombo = 0;
 let comboTimer = null;
@@ -347,6 +350,11 @@ function gameInit() {
 
 ///////////////////////////////////////////////////////////////////////////////
 function gameUpdate() {
+    // Toggle debug mode with Q
+    if (keyWasPressed('KeyQ')) {
+        debugMode = !debugMode;
+    }
+
     if (gameState === 'title') {
         if (keyWasPressed('Space') || mouseWasPressed(0)) {
             gameState = 'playing';
@@ -553,6 +561,7 @@ function updateDrilling() {
                 const comboText = multiplier > 1 ? ' x' + multiplier.toFixed(1) : '';
                 spawnFloatingText(x, y, mineral.name + comboText, mineral.color);
                 spawnParticles(x, y, 5, mineral.color);
+                screenShake = Math.min(screenShake + 2, 6); // Satisfying shake on mineral collect
 
                 // Combo increment
                 miningCombo++;
@@ -837,6 +846,36 @@ function gameRenderPost() {
         const screenPos = worldToScreen(vec2(ft.x, -ft.y));
         const c = new Color(ft.color.r, ft.color.g, ft.color.b, alpha);
         drawTextScreen(ft.text, screenPos, 14, c, 0, undefined, 'center');
+    }
+
+    // Debug overlay
+    if (debugMode && playerPos) {
+        const depth = Math.max(0, Math.floor((playerPos.y - 4) * 13));
+
+        // Background panel
+        mainContext.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        mainContext.fillRect(10, 60, 280, 300);
+
+        // Debug text
+        mainContext.fillStyle = '#0f0';
+        mainContext.font = '14px monospace';
+        let y = 80;
+        const line = (text) => { mainContext.fillText(text, 20, y); y += 18; };
+
+        line('=== DEBUG (Q to close) ===');
+        line(`Player Pos: (${playerPos.x.toFixed(1)}, ${playerPos.y.toFixed(1)})`);
+        line(`Player Vel: (${playerVel.x.toFixed(1)}, ${playerVel.y.toFixed(1)})`);
+        line(`Depth: ${depth} ft`);
+        line(`Hull: ${Math.ceil(hull)}/${maxHull}`);
+        line(`Fuel: ${fuel.toFixed(1)}/${maxFuel}`);
+        line(`Cargo: ${getCargoWeight()}/${cargoCapacity} kg`);
+        line(`Items: ${cargo.length}`);
+        line(`Cash: $${cash.toLocaleString()}`);
+        line(`Score: ${score.toLocaleString()}`);
+        line(`Drilling: ${drilling}`);
+        line(`Mining Combo: ${miningCombo}x`);
+        line(`Particles: ${particles.length}`);
+        line(`FloatTexts: ${floatingTexts.length}`);
     }
 }
 

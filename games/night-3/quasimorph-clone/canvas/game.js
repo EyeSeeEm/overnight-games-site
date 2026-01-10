@@ -86,8 +86,14 @@ let actionLog = [];
 let animating = false;
 let screenShake = 0;
 let corruptionFlicker = 0;
+let damageFlash = 0;
 let killCount = 0;
 let itemsCollected = 0;
+let debugMode = false;
+let killStreak = 0;
+let killStreakTimer = 0;
+let totalDamageDealt = 0;
+let totalDamageTaken = 0;
 
 // Textures cache
 const textures = {};
@@ -381,7 +387,9 @@ class Player {
     takeDamage(amount, bodyPart = null) {
         const reduced = Math.max(1, amount - this.armor * 0.3);
         this.hp -= Math.floor(reduced);
+        totalDamageTaken += Math.floor(reduced);
         screenShake = 10;
+        damageFlash = 15;
 
         if (bodyPart && Math.random() < 0.25) {
             this.wounds[bodyPart] = Math.min(3, this.wounds[bodyPart] + 1);
@@ -421,6 +429,22 @@ class Player {
             this.armor += 2;
             addLog(`Level up! Now level ${this.level}`);
             addFloatingText(this.x * TILE + TILE/2, this.y * TILE - 20, 'LEVEL UP!', COLORS.xp);
+
+            // Level up celebration effect
+            screenShake = 12;
+            for (let i = 0; i < 30; i++) {
+                const angle = (i / 30) * Math.PI * 2;
+                const speed = 4 + Math.random() * 4;
+                particles.push({
+                    x: this.x * TILE + TILE/2,
+                    y: this.y * TILE + TILE/2,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 40 + Math.random() * 20,
+                    color: ['#ffcc44', '#ffaa22', '#ff8800', '#ffff88'][Math.floor(Math.random() * 4)],
+                    size: 3 + Math.random() * 4
+                });
+            }
         }
     }
 }
@@ -454,21 +478,49 @@ class Enemy {
     takeDamage(amount) {
         this.hp -= amount;
         this.alerted = true;
+        const baseColor = this.corrupted ? '#aa22aa' : COLORS.blood;
+        const cx = this.x * TILE + TILE/2;
+        const cy = this.y * TILE + TILE/2;
 
-        // Blood particles
-        for (let i = 0; i < 6; i++) {
+        // Direction from player for splatter
+        const dx = this.x - player.x;
+        const dy = this.y - player.y;
+        const angle = Math.atan2(dy, dx);
+
+        // Enhanced blood splatter (directional spray)
+        for (let i = 0; i < 10; i++) {
+            const spreadAngle = angle + (Math.random() - 0.5) * 1.5;
+            const speed = 3 + Math.random() * 6;
             particles.push({
-                x: this.x * TILE + TILE/2,
-                y: this.y * TILE + TILE/2,
-                vx: (Math.random() - 0.5) * 6,
-                vy: (Math.random() - 0.5) * 6,
-                life: 25,
-                color: this.corrupted ? '#aa22aa' : COLORS.blood,
-                size: 2 + Math.random() * 3
+                x: cx + (Math.random() - 0.5) * 8,
+                y: cy + (Math.random() - 0.5) * 8,
+                vx: Math.cos(spreadAngle) * speed,
+                vy: Math.sin(spreadAngle) * speed,
+                life: 30 + Math.random() * 20,
+                color: baseColor,
+                size: 2 + Math.random() * 4
             });
         }
 
-        addFloatingText(this.x * TILE + TILE/2, this.y * TILE, `-${amount}`, '#ff4444');
+        // Death burst effect
+        if (this.hp <= 0) {
+            screenShake = 15;
+            // Big death explosion
+            for (let i = 0; i < 25; i++) {
+                const deathAngle = Math.random() * Math.PI * 2;
+                const deathSpeed = 2 + Math.random() * 8;
+                particles.push({
+                    x: cx, y: cy,
+                    vx: Math.cos(deathAngle) * deathSpeed,
+                    vy: Math.sin(deathAngle) * deathSpeed,
+                    life: 40 + Math.random() * 30,
+                    color: this.corrupted ? ['#aa22aa', '#cc44cc', '#8822aa'][Math.floor(Math.random() * 3)] : ['#880022', '#aa0022', '#660011'][Math.floor(Math.random() * 3)],
+                    size: 3 + Math.random() * 5
+                });
+            }
+        }
+
+        addFloatingText(cx, this.y * TILE, `-${amount}`, '#ff4444');
         return this.hp <= 0;
     }
 }
@@ -601,17 +653,23 @@ function generateMap() {
     const extY = Math.floor(endRoom.y + endRoom.h / 2);
     map[extY][extX] = TileType.EXTRACTION;
 
-    // Spawn enemies
+    // Spawn enemies - scales with floor
     enemies = [];
+    const baseEnemies = 2 + floor; // 3 on floor 1, 4 on floor 2, 5 on floor 3
+    const corruptedChance = 0.1 + floor * 0.1; // More corrupted on higher floors
+
     for (let i = 1; i < rooms.length - 1; i++) {
         const room = rooms[i];
-        const enemyCount = 1 + Math.floor(Math.random() * 3);
+        const enemyCount = baseEnemies + Math.floor(Math.random() * 2);
         for (let j = 0; j < enemyCount; j++) {
             const ex = room.x + 1 + Math.floor(Math.random() * (room.w - 2));
             const ey = room.y + 1 + Math.floor(Math.random() * (room.h - 2));
             if (map[ey][ex] === TileType.FLOOR && !hazards.some(h => h.x === ex && h.y === ey)) {
-                const types = ['guard', 'guard', 'soldier', 'soldier', 'heavy', 'sniper'];
-                const type = floor >= 2 && Math.random() < 0.2 ? 'corrupted' :
+                // More varied enemy types, weighted by floor
+                const types = floor === 1 ? ['guard', 'guard', 'guard', 'soldier', 'soldier'] :
+                              floor === 2 ? ['guard', 'soldier', 'soldier', 'heavy', 'sniper'] :
+                                           ['soldier', 'soldier', 'heavy', 'heavy', 'sniper', 'sniper'];
+                const type = Math.random() < corruptedChance ? 'corrupted' :
                             types[Math.floor(Math.random() * types.length)];
                 enemies.push(new Enemy(ex, ey, type));
             }
@@ -738,20 +796,41 @@ function playerShoot(targetX, targetY) {
     weapon.ammo--;
     corruption += 2;
 
-    // Muzzle flash
+    // Enhanced muzzle flash
+    const flashX = player.x * TILE + TILE/2;
+    const flashY = player.y * TILE + TILE/2;
+    const angleToTarget = Math.atan2(targetY * TILE - flashY, targetX * TILE - flashX);
+
+    // Main flash
     particles.push({
-        x: player.x * TILE + TILE/2,
-        y: player.y * TILE + TILE/2,
-        vx: 0, vy: 0,
-        life: 5,
+        x: flashX + Math.cos(angleToTarget) * 8,
+        y: flashY + Math.sin(angleToTarget) * 8,
+        vx: Math.cos(angleToTarget) * 2, vy: Math.sin(angleToTarget) * 2,
+        life: 8,
         color: '#ffff88',
-        size: 12
+        size: 16
     });
+    // Side sparks
+    for (let i = 0; i < 5; i++) {
+        const spreadAngle = angleToTarget + (Math.random() - 0.5) * 1.2;
+        particles.push({
+            x: flashX + Math.cos(angleToTarget) * 6,
+            y: flashY + Math.sin(angleToTarget) * 6,
+            vx: Math.cos(spreadAngle) * (3 + Math.random() * 4),
+            vy: Math.sin(spreadAngle) * (3 + Math.random() * 4),
+            life: 10 + Math.random() * 10,
+            color: ['#ffff44', '#ffaa22', '#ff8800'][Math.floor(Math.random() * 3)],
+            size: 2 + Math.random() * 3
+        });
+    }
 
     const hitChance = calculateHitChance(player, enemy, weapon, dist);
     const shots = weapon.burst || (weapon.pellets || 1);
     let totalDamage = 0;
     let hits = 0;
+    let crits = 0;
+    const CRIT_CHANCE = 15; // 15% base crit chance
+    const CRIT_MULT = 2.0; // 2x damage on crit
 
     for (let i = 0; i < shots; i++) {
         const roll = Math.random() * 100;
@@ -767,7 +846,12 @@ function playerShoot(targetX, targetY) {
         });
 
         if (roll < hitChance) {
-            const dmg = weapon.damage[0] + Math.floor(Math.random() * (weapon.damage[1] - weapon.damage[0]));
+            let dmg = weapon.damage[0] + Math.floor(Math.random() * (weapon.damage[1] - weapon.damage[0]));
+            // Critical hit check
+            if (Math.random() * 100 < CRIT_CHANCE) {
+                dmg = Math.floor(dmg * CRIT_MULT);
+                crits++;
+            }
             totalDamage += dmg;
             hits++;
         }
@@ -775,17 +859,63 @@ function playerShoot(targetX, targetY) {
 
     setTimeout(() => {
         if (totalDamage > 0) {
+            // Show crit feedback
+            if (crits > 0) {
+                addFloatingText(enemy.x * TILE + TILE/2, enemy.y * TILE - 20, 'CRIT!', '#ffff00');
+                screenShake = 8;
+            }
+            totalDamageDealt += totalDamage; // Track damage dealt
             if (enemy.takeDamage(totalDamage)) {
-                showMessage(`Enemy killed! +${enemy.xp} XP`);
-                player.gainXP(enemy.xp);
+                // Kill streak system
+                killStreak++;
+                killStreakTimer = 180; // 3 seconds to maintain streak
+                const streakBonus = Math.min(killStreak - 1, 5) * 0.2; // Up to 100% bonus at 6+ streak
+                const bonusXP = Math.floor(enemy.xp * streakBonus);
+                const totalXP = enemy.xp + bonusXP;
+
+                let killMsg = `Enemy killed! +${totalXP} XP`;
+                if (crits > 0) killMsg += ' (CRIT!)';
+                if (killStreak > 1) {
+                    killMsg += ` [${killStreak}x STREAK!]`;
+                    addFloatingText(enemy.x * TILE + TILE/2, enemy.y * TILE - 35, `${killStreak}x!`, '#ff8800');
+                }
+                showMessage(killMsg);
+
+                player.gainXP(totalXP);
                 enemies = enemies.filter(e => e !== enemy);
                 corruption += 5;
                 killCount++;
+
+                // Ammo drop from killed enemy (30% chance)
+                if (Math.random() < 0.3) {
+                    const ammoTypes = ['9mm', '7.62mm', '12ga', '.50cal'];
+                    const ammoType = ammoTypes[Math.floor(Math.random() * ammoTypes.length)];
+                    const ammoAmount = 5 + Math.floor(Math.random() * 10);
+                    player.inventory.ammo[ammoType] = (player.inventory.ammo[ammoType] || 0) + ammoAmount;
+                    addFloatingText(enemy.x * TILE + TILE/2, enemy.y * TILE + 10, `+${ammoAmount} ${ammoType}`, COLORS.xp);
+                }
+
+                // Health item drop (15% chance)
+                if (Math.random() < 0.15) {
+                    if (Math.random() < 0.3) {
+                        player.inventory.medkits++;
+                        addFloatingText(enemy.x * TILE + TILE/2, enemy.y * TILE + 25, '+Medkit', COLORS.health);
+                    } else {
+                        player.inventory.bandages++;
+                        addFloatingText(enemy.x * TILE + TILE/2, enemy.y * TILE + 25, '+Bandage', COLORS.health);
+                    }
+                }
             } else {
-                showMessage(`${hits}/${shots} hits for ${totalDamage} damage!`);
+                showMessage(`${hits}/${shots} hits for ${totalDamage} damage!${crits > 0 ? ' (CRIT!)' : ''}`);
             }
         } else {
-            showMessage(`Missed! (${Math.floor(hitChance)}% hit chance)`);
+            const tips = [
+                    'Try getting closer!',
+                    'Use cover for stability!',
+                    'Sneak stance improves aim!',
+                    'Better weapons have better accuracy!'
+                ];
+                showMessage(`Missed! (${Math.floor(hitChance)}%) - ${tips[Math.floor(Math.random() * tips.length)]}`);
         }
     }, 100);
 
@@ -814,6 +944,20 @@ function playerReload() {
     weapon.ammo += ammoToUse;
     player.inventory.ammo[weapon.ammoType] -= ammoToUse;
     showMessage(`Reloaded ${ammoToUse} rounds`);
+
+    // Reload visual effect (ejected magazine/shells)
+    for (let i = 0; i < 5; i++) {
+        particles.push({
+            x: player.x * TILE + TILE/2,
+            y: player.y * TILE + TILE/2,
+            vx: -2 + Math.random() * 4,
+            vy: 2 + Math.random() * 3,
+            life: 30 + Math.random() * 20,
+            color: '#886644',
+            size: 2 + Math.random() * 2
+        });
+    }
+    addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 10, 'RELOAD', COLORS.ap);
 }
 
 function playerHeal() {
@@ -826,6 +970,19 @@ function playerHeal() {
     }
 
     player.ap--;
+    // Healing particles
+    for (let i = 0; i < 12; i++) {
+        particles.push({
+            x: player.x * TILE + TILE/2 + (Math.random() - 0.5) * 20,
+            y: player.y * TILE + TILE/2,
+            vx: (Math.random() - 0.5) * 2,
+            vy: -2 - Math.random() * 3,
+            life: 30 + Math.random() * 20,
+            color: ['#44ff44', '#88ff88', '#22aa22'][Math.floor(Math.random() * 3)],
+            size: 3 + Math.random() * 3
+        });
+    }
+
     if (player.inventory.medkits > 0) {
         player.inventory.medkits--;
         player.heal(40);
@@ -845,6 +1002,20 @@ function useStimpack() {
     player.ap += 2;
     addFloatingText(player.x * TILE + TILE/2, player.y * TILE, '+2 AP', COLORS.ap);
     showMessage('Stimpack used! +2 AP');
+
+    // Energy surge effect
+    for (let i = 0; i < 15; i++) {
+        const angle = (i / 15) * Math.PI * 2;
+        particles.push({
+            x: player.x * TILE + TILE/2,
+            y: player.y * TILE + TILE/2,
+            vx: Math.cos(angle) * 3,
+            vy: Math.sin(angle) * 3,
+            life: 25 + Math.random() * 15,
+            color: ['#4488ff', '#66aaff', '#88ccff'][Math.floor(Math.random() * 3)],
+            size: 3 + Math.random() * 3
+        });
+    }
 }
 
 function throwGrenade(targetX, targetY) {
@@ -867,19 +1038,44 @@ function throwGrenade(targetX, targetY) {
     });
 
     setTimeout(() => {
-        // Explosion
-        for (let i = 0; i < 20; i++) {
+        // Enhanced explosion
+        const cx = targetX * TILE + TILE/2;
+        const cy = targetY * TILE + TILE/2;
+
+        // Central flash
+        particles.push({
+            x: cx, y: cy, vx: 0, vy: 0,
+            life: 10, color: '#ffffff', size: 40
+        });
+
+        // Fire particles
+        for (let i = 0; i < 35; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 5 + Math.random() * 12;
             particles.push({
-                x: targetX * TILE + TILE/2,
-                y: targetY * TILE + TILE/2,
-                vx: (Math.random() - 0.5) * 15,
-                vy: (Math.random() - 0.5) * 15,
-                life: 30 + Math.random() * 20,
-                color: Math.random() > 0.5 ? '#ff8844' : '#ffcc44',
-                size: 4 + Math.random() * 6
+                x: cx, y: cy,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                life: 30 + Math.random() * 30,
+                color: ['#ff8844', '#ffcc44', '#ff4400', '#ffaa00'][Math.floor(Math.random() * 4)],
+                size: 4 + Math.random() * 8
             });
         }
-        screenShake = 15;
+
+        // Smoke particles
+        for (let i = 0; i < 15; i++) {
+            particles.push({
+                x: cx + (Math.random() - 0.5) * 30,
+                y: cy + (Math.random() - 0.5) * 30,
+                vx: (Math.random() - 0.5) * 2,
+                vy: -1 - Math.random() * 2,
+                life: 60 + Math.random() * 40,
+                color: '#444444',
+                size: 6 + Math.random() * 8
+            });
+        }
+        screenShake = 20;
+        damageFlash = 8;
 
         // Damage enemies in radius
         let kills = 0;
@@ -907,6 +1103,19 @@ function hackTerminal() {
 
     player.ap--;
     terminal.hacked = true;
+
+    // Data particles effect
+    for (let i = 0; i < 20; i++) {
+        particles.push({
+            x: player.x * TILE + TILE/2 + (Math.random() - 0.5) * 30,
+            y: player.y * TILE + TILE/2,
+            vx: (Math.random() - 0.5) * 4,
+            vy: -3 - Math.random() * 4,
+            life: 40 + Math.random() * 30,
+            color: ['#44ffaa', '#22ff88', '#66ffcc', '#00ff66'][Math.floor(Math.random() * 4)],
+            size: 2 + Math.random() * 2
+        });
+    }
 
     const reward = Math.random();
     if (reward < 0.4) {
@@ -959,17 +1168,51 @@ function enemyTurn() {
                     corruption += 3;
                 }
             } else if (enemy.lastKnownPlayerPos) {
-                // Move toward player
-                const dx = Math.sign(enemy.lastKnownPlayerPos.x - enemy.x);
-                const dy = Math.sign(enemy.lastKnownPlayerPos.y - enemy.y);
-                const moves = [[dx, 0], [0, dy], [dx, dy]].filter(([mx, my]) => {
+                // Improved AI: Evaluate all possible moves
+                const allMoves = [[0,-1],[1,0],[0,1],[-1,0],[1,-1],[1,1],[-1,1],[-1,-1]];
+                const validMoves = allMoves.filter(([mx, my]) => {
                     const nx = enemy.x + mx, ny = enemy.y + my;
                     return canMove(nx, ny) && !enemies.some(e => e !== enemy && e.x === nx && e.y === ny);
                 });
-                if (moves.length > 0) {
-                    const [mx, my] = moves[0];
-                    enemy.x += mx;
-                    enemy.y += my;
+
+                if (validMoves.length > 0) {
+                    // Score each move
+                    let bestMove = null;
+                    let bestScore = -Infinity;
+
+                    for (const [mx, my] of validMoves) {
+                        const nx = enemy.x + mx, ny = enemy.y + my;
+                        let score = 0;
+
+                        // Get closer to player (but not too close for ranged)
+                        const newDist = Math.abs(nx - player.x) + Math.abs(ny - player.y);
+                        const optimalDist = enemy.range > 1 ? enemy.range - 1 : 1;
+                        score -= Math.abs(newDist - optimalDist) * 2;
+
+                        // Prefer positions with cover from player
+                        const coverBonus = getCoverBonus(nx, ny, player.x, player.y);
+                        score += coverBonus * 5;
+
+                        // Prefer flanking (coming from different angle than other enemies)
+                        const angle = Math.atan2(ny - player.y, nx - player.x);
+                        enemies.forEach(other => {
+                            if (other !== enemy && other.alerted) {
+                                const otherAngle = Math.atan2(other.y - player.y, other.x - player.x);
+                                const angleDiff = Math.abs(angle - otherAngle);
+                                score += angleDiff * 0.5; // Reward different angles
+                            }
+                        });
+
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMove = [mx, my];
+                        }
+                    }
+
+                    if (bestMove) {
+                        enemy.x += bestMove[0];
+                        enemy.y += bestMove[1];
+                    }
                 }
             }
         } else {
@@ -1036,6 +1279,19 @@ function playerMove(dx, dy) {
             map[newY][newX] = TileType.DOOR_OPEN;
             updateFogOfWar();
             showMessage('Door opened');
+
+            // Door opening dust particles
+            for (let i = 0; i < 8; i++) {
+                particles.push({
+                    x: newX * TILE + TILE/2,
+                    y: newY * TILE + TILE/2,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4,
+                    life: 20 + Math.random() * 15,
+                    color: '#555555',
+                    size: 2 + Math.random() * 2
+                });
+            }
             return;
         }
 
@@ -1059,6 +1315,22 @@ function playerMove(dx, dy) {
                 hazards = [];
                 terminals = [];
                 grenades = [];
+
+                // Floor transition effect
+                damageFlash = 20; // White flash
+                screenShake = 10;
+                for (let i = 0; i < 30; i++) {
+                    particles.push({
+                        x: player.x * TILE + TILE/2,
+                        y: player.y * TILE + TILE/2,
+                        vx: (Math.random() - 0.5) * 10,
+                        vy: (Math.random() - 0.5) * 10,
+                        life: 40 + Math.random() * 30,
+                        color: '#22aa44',
+                        size: 3 + Math.random() * 4
+                    });
+                }
+
                 generateMap();
                 updateFogOfWar();
                 showMessage(`Floor ${floor}/${maxFloors} - Deeper into the station...`);
@@ -1083,6 +1355,19 @@ function lootContainer() {
 
     loot.looted = true;
     itemsCollected++;
+
+    // Loot sparkle effect
+    for (let i = 0; i < 15; i++) {
+        particles.push({
+            x: player.x * TILE + TILE/2,
+            y: player.y * TILE + TILE/2,
+            vx: (Math.random() - 0.5) * 5,
+            vy: -2 - Math.random() * 4,
+            life: 30 + Math.random() * 20,
+            color: ['#ffcc44', '#ffaa22', '#ffff88', '#ffffff'][Math.floor(Math.random() * 4)],
+            size: 2 + Math.random() * 3
+        });
+    }
 
     const roll = Math.random();
     if (roll < 0.25) {
@@ -1122,6 +1407,17 @@ function endTurn() {
 
     turn++;
     corruption += 1 + Math.floor(turn / 20);
+
+    // Turn indicator
+    addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 30, `Turn ${turn}`, '#666688');
+
+    // Kill streak decay
+    if (killStreakTimer > 0) {
+        killStreakTimer -= 60; // Decrease by 1 second (60 frames) per turn
+        if (killStreakTimer <= 0) {
+            killStreak = 0;
+        }
+    }
 
     if (player.bleeding > 0) {
         player.hp -= player.bleeding;
@@ -1209,13 +1505,26 @@ document.addEventListener('keydown', e => {
         if (e.key === 'h') playerHeal();
         if (e.key === 'q') useStimpack();
         if (e.key === 't') hackTerminal();
-        if (e.key === '1') player.stance = 'sneak';
-        if (e.key === '2') player.stance = 'walk';
-        if (e.key === '3') player.stance = 'run';
+        if (e.key === '1') {
+            player.stance = 'sneak';
+            addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 5, 'SNEAK', '#88ff88');
+        }
+        if (e.key === '2') {
+            player.stance = 'walk';
+            addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 5, 'WALK', '#8888ff');
+        }
+        if (e.key === '3') {
+            player.stance = 'run';
+            addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 5, 'RUN', '#ff8888');
+        }
         if (e.key === 'Tab') {
             e.preventDefault();
             player.currentWeapon = (player.currentWeapon + 1) % player.weapons.length;
             showMessage(`Switched to ${player.getWeapon().name}`);
+            addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 10, player.getWeapon().name, COLORS.uiBright);
+        }
+        if (e.key === '`' || e.key === 'Backquote') {
+            debugMode = !debugMode;
         }
     }
 });
@@ -1318,6 +1627,10 @@ function renderGame(shakeX, shakeY) {
                     break;
                 case TileType.EXTRACTION:
                     tex = textures.extraction;
+                    // Pulsing glow effect
+                    const pulse = 0.3 + Math.sin(Date.now() / 300) * 0.2;
+                    ctx.fillStyle = `rgba(34, 170, 68, ${pulse})`;
+                    ctx.fillRect(px - 4, py - 4, TILE + 8, TILE + 8);
                     break;
             }
 
@@ -1367,6 +1680,28 @@ function renderGame(shakeX, shakeY) {
     // Render enemies
     enemies.forEach(enemy => {
         if (!fogOfWar[enemy.y][enemy.x]) {
+            const isHovered = hoverTile && hoverTile.x === enemy.x && hoverTile.y === enemy.y;
+
+            // Hover highlight (targeting indicator)
+            if (isHovered) {
+                ctx.strokeStyle = '#ff4444';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(enemy.x * TILE - 2, enemy.y * TILE - 2, TILE + 4, TILE + 4);
+
+                // Show hit chance and enemy type
+                const dist = Math.sqrt(Math.pow(enemy.x - player.x, 2) + Math.pow(enemy.y - player.y, 2));
+                const weapon = player.getWeapon();
+                const hitChance = Math.floor(calculateHitChance(player, enemy, weapon, dist));
+                ctx.fillStyle = hitChance >= 70 ? '#44ff44' : hitChance >= 40 ? '#ffaa00' : '#ff4444';
+                ctx.font = 'bold 12px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${hitChance}%`, enemy.x * TILE + TILE/2, enemy.y * TILE - 12);
+                // Enemy type
+                ctx.fillStyle = enemy.corrupted ? '#aa22aa' : '#aaaaaa';
+                ctx.font = '10px Courier New';
+                ctx.fillText(enemy.type.toUpperCase(), enemy.x * TILE + TILE/2, enemy.y * TILE - 24);
+            }
+
             let tex;
             if (enemy.corrupted) {
                 tex = enemy.type === 'corruptedElite' ? textures.corruptedElite : textures.corrupted;
@@ -1405,7 +1740,7 @@ function renderGame(shakeX, shakeY) {
         return true;
     });
 
-    // Render bullets
+    // Render bullets with trails
     bullets = bullets.filter(b => {
         b.progress += 0.25;
         if (b.progress >= 1) return false;
@@ -1413,6 +1748,21 @@ function renderGame(shakeX, shakeY) {
         const x = b.x + (b.targetX - b.x) * b.progress;
         const y = b.y + (b.targetY - b.y) * b.progress;
 
+        // Trail effect
+        const trailLength = 5;
+        for (let i = 1; i <= trailLength; i++) {
+            const trailProgress = Math.max(0, b.progress - i * 0.05);
+            const trailX = b.x + (b.targetX - b.x) * trailProgress;
+            const trailY = b.y + (b.targetY - b.y) * trailProgress;
+            ctx.globalAlpha = (1 - i / trailLength) * 0.6;
+            ctx.fillStyle = b.color;
+            ctx.beginPath();
+            ctx.arc(trailX, trailY, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Main bullet
+        ctx.globalAlpha = 1;
         ctx.fillStyle = b.color;
         ctx.beginPath();
         ctx.arc(x, y, 3, 0, Math.PI * 2);
@@ -1479,6 +1829,26 @@ function renderGame(shakeX, shakeY) {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
+    // Damage flash effect
+    if (damageFlash > 0) {
+        ctx.fillStyle = `rgba(255, 0, 0, ${damageFlash / 30})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        damageFlash--;
+    }
+
+    // Low health warning (pulsing vignette)
+    if (player && player.hp <= player.maxHp * 0.3) {
+        const pulse = 0.3 + Math.sin(Date.now() / 200) * 0.15;
+        const gradient = ctx.createRadialGradient(
+            canvas.width / 2, canvas.height / 2, canvas.height * 0.3,
+            canvas.width / 2, canvas.height / 2, canvas.height * 0.8
+        );
+        gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        gradient.addColorStop(1, `rgba(180, 0, 0, ${pulse})`);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
     renderHUD();
 }
 
@@ -1527,6 +1897,17 @@ function renderHUD() {
     ctx.fillStyle = COLORS.ui;
     ctx.fillText(`TURN: ${turn}`, canvas.width - 100, 28);
     ctx.fillText(`KILLS: ${killCount}`, canvas.width - 220, 28);
+
+    // Enemies remaining
+    ctx.fillStyle = enemies.length > 0 ? '#ff8844' : '#44ff44';
+    ctx.fillText(`ENEMIES: ${enemies.length}`, canvas.width - 350, 28);
+
+    // Kill streak display (when active)
+    if (killStreak > 1) {
+        ctx.fillStyle = '#ff8800';
+        ctx.font = 'bold 14px Courier New';
+        ctx.fillText(`${killStreak}x STREAK!`, canvas.width - 480, 28);
+    }
 
     // HP bar
     ctx.fillText('HP:', 20, hudY + 25);
@@ -1629,6 +2010,44 @@ function renderHUD() {
         ctx.fillStyle = `rgba(136, 170, 204, ${1 - i * 0.2})`;
         ctx.fillText(`[${log.turn}] ${log.msg}`, canvas.width - mapSize - 180, hudY + 20 + i * 14);
     });
+
+    // Debug overlay
+    if (debugMode) {
+        drawDebugOverlay();
+    }
+}
+
+function drawDebugOverlay() {
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    ctx.fillRect(10, 50, 280, 280);
+
+    ctx.fillStyle = '#0f0';
+    ctx.font = '14px monospace';
+    ctx.textAlign = 'left';
+    let y = 70;
+    const line = (text) => { ctx.fillText(text, 20, y); y += 18; };
+
+    line('=== DEBUG (` to close) ===');
+    line(`Player: (${player.x}, ${player.y})`);
+    line(`HP: ${player.hp}/${player.maxHp}`);
+    line(`AP: ${player.ap}/${player.getMaxAp()}`);
+    line(`Stance: ${player.stance}`);
+    line(`Turn: ${turn}`);
+    line(`Floor: ${floor}/${maxFloors}`);
+    line(`Corruption: ${corruption}/${MAX_CORRUPTION}`);
+    line(`Enemies: ${enemies.length}`);
+    line(`Kills: ${killCount}`);
+    line(`State: ${gameState}`);
+
+    // Show visible enemies
+    const visible = enemies.filter(e => !fogOfWar[e.y]?.[e.x]);
+    line(`Visible enemies: ${visible.length}`);
+    visible.slice(0, 3).forEach(e => {
+        line(`  ${e.type} @(${e.x},${e.y}) HP:${e.hp}`);
+    });
+
+    ctx.restore();
 }
 
 function renderDead() {
@@ -1638,17 +2057,36 @@ function renderDead() {
     ctx.fillStyle = COLORS.healthLow;
     ctx.font = 'bold 52px Courier New';
     ctx.textAlign = 'center';
-    ctx.fillText('CLONE TERMINATED', canvas.width / 2, 260);
+    ctx.fillText('CLONE TERMINATED', canvas.width / 2, 200);
 
     ctx.fillStyle = COLORS.ui;
-    ctx.font = '20px Courier New';
-    ctx.fillText(`Survived ${turn} turns on floor ${floor}`, canvas.width / 2, 330);
-    ctx.fillText(`Enemies killed: ${killCount}`, canvas.width / 2, 360);
-    ctx.fillText(`Items collected: ${itemsCollected}`, canvas.width / 2, 390);
+    ctx.font = '18px Courier New';
+
+    // Stats columns
+    const col1 = canvas.width / 2 - 150;
+    const col2 = canvas.width / 2 + 50;
+
+    ctx.textAlign = 'left';
+    ctx.fillText(`Floor reached: ${floor}/${maxFloors}`, col1, 280);
+    ctx.fillText(`Turns survived: ${turn}`, col1, 310);
+    ctx.fillText(`Enemies killed: ${killCount}`, col1, 340);
+    ctx.fillText(`Items collected: ${itemsCollected}`, col1, 370);
+
+    ctx.fillText(`Damage dealt: ${totalDamageDealt}`, col2, 280);
+    ctx.fillText(`Damage taken: ${totalDamageTaken}`, col2, 310);
+    ctx.fillText(`Final corruption: ${corruption}`, col2, 340);
+    ctx.fillText(`Final level: ${player.level}`, col2, 370);
+
+    // Rating based on performance
+    const rating = killCount >= 20 ? 'S' : killCount >= 15 ? 'A' : killCount >= 10 ? 'B' : killCount >= 5 ? 'C' : 'D';
+    ctx.fillStyle = rating === 'S' ? '#ffcc44' : rating === 'A' ? '#44ff44' : '#888888';
+    ctx.font = 'bold 48px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText(`RANK: ${rating}`, canvas.width / 2, 440);
 
     ctx.fillStyle = COLORS.uiBright;
     ctx.font = '22px Courier New';
-    ctx.fillText('Press SPACE to return', canvas.width / 2, 470);
+    ctx.fillText('Press SPACE to return', canvas.width / 2, 510);
 }
 
 function renderWin() {
@@ -1658,17 +2096,34 @@ function renderWin() {
     ctx.fillStyle = COLORS.extraction;
     ctx.font = 'bold 52px Courier New';
     ctx.textAlign = 'center';
-    ctx.fillText('EXTRACTION SUCCESSFUL', canvas.width / 2, 260);
+    ctx.fillText('EXTRACTION SUCCESSFUL', canvas.width / 2, 200);
 
     ctx.fillStyle = COLORS.ui;
-    ctx.font = '20px Courier New';
-    ctx.fillText(`Completed in ${turn} turns`, canvas.width / 2, 330);
-    ctx.fillText(`Final corruption: ${corruption}`, canvas.width / 2, 360);
-    ctx.fillText(`Enemies killed: ${killCount}`, canvas.width / 2, 390);
+    ctx.font = '18px Courier New';
+
+    // Stats columns
+    const col1 = canvas.width / 2 - 150;
+    const col2 = canvas.width / 2 + 50;
+
+    ctx.textAlign = 'left';
+    ctx.fillText(`Turns to complete: ${turn}`, col1, 280);
+    ctx.fillText(`Enemies killed: ${killCount}`, col1, 310);
+    ctx.fillText(`Items collected: ${itemsCollected}`, col1, 340);
+
+    ctx.fillText(`Damage dealt: ${totalDamageDealt}`, col2, 280);
+    ctx.fillText(`Damage taken: ${totalDamageTaken}`, col2, 310);
+    ctx.fillText(`Final level: ${player.level}`, col2, 340);
+
+    // Win rating
+    const efficiency = turn < 100 ? 'S' : turn < 150 ? 'A' : turn < 200 ? 'B' : 'C';
+    ctx.fillStyle = efficiency === 'S' ? '#ffcc44' : efficiency === 'A' ? '#44ff44' : '#888888';
+    ctx.font = 'bold 48px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText(`EFFICIENCY: ${efficiency}`, canvas.width / 2, 420);
 
     ctx.fillStyle = COLORS.uiBright;
     ctx.font = '22px Courier New';
-    ctx.fillText('Press SPACE to continue', canvas.width / 2, 470);
+    ctx.fillText('Press SPACE to continue', canvas.width / 2, 490);
 }
 
 // Game loop

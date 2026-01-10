@@ -36,8 +36,34 @@ const game = {
     gold: 100,
     cargo: [],
     cargoCapacity: 10,
-    messages: []
+    messages: [],
+    startTime: Date.now()
 };
+
+// Stats tracking
+const stats = {
+    shipsSunk: 0,
+    totalDamageDealt: 0,
+    totalDamageTaken: 0,
+    critCount: 0,
+    lootCollected: 0,
+    cannonsFired: 0,
+    maxKillStreak: 0,
+    goldEarned: 0
+};
+
+// Kill streak
+let killStreak = 0;
+let killStreakTimer = 0;
+
+// Visual effects
+let damageFlashAlpha = 0;
+let lowHealthPulse = 0;
+let screenShake = { x: 0, y: 0, intensity: 0 };
+let floatingTexts = [];
+
+// Debug mode
+let debugMode = false;
 
 // Player ship
 const player = {
@@ -94,6 +120,9 @@ function setupInput() {
         if (e.key === ' ') {
             e.preventDefault();
             fireCanons();
+        }
+        if (e.key === 'q') {
+            debugMode = !debugMode;
         }
     });
 
@@ -162,6 +191,9 @@ function update(delta) {
     updateCannonballs(delta);
     updateLoot(delta);
     updateParticles(delta);
+    updateVisualEffects(delta);
+    updateFloatingTexts(delta);
+    updateKillStreak(delta);
 
     // Camera follow
     camera.x = player.x - (GAME_WIDTH - UI_WIDTH) / 2;
@@ -213,7 +245,25 @@ function updatePlayer(delta) {
         const dist = Math.hypot(player.x - l.x, player.y - l.y);
         if (dist < 50) {
             game.gold += l.value;
+            stats.lootCollected++;
+            stats.goldEarned += l.value;
             addMessage("+" + l.value + " gold!");
+            createFloatingText(l.x, l.y - 20, '+' + l.value + ' GOLD', '#ffd700', 14);
+
+            // Pickup sparkle
+            for (let p = 0; p < 8; p++) {
+                const angle = (Math.PI * 2 * p) / 8;
+                particles.push({
+                    x: l.x,
+                    y: l.y,
+                    vx: Math.cos(angle) * 60,
+                    vy: Math.sin(angle) * 60,
+                    life: 0.4,
+                    color: '#ffd700',
+                    size: 4
+                });
+            }
+
             loot.splice(i, 1);
         }
     }
@@ -224,6 +274,7 @@ function fireCanons() {
     if (now - player.lastFire < player.reloadTime) return;
 
     player.lastFire = now;
+    stats.cannonsFired++;
 
     // Fire from both sides (broadside)
     const angles = [-Math.PI/2, Math.PI/2]; // Port and starboard
@@ -357,66 +408,109 @@ function updateCannonballs(delta) {
         } else {
             const dist = Math.hypot(ball.x - player.x, ball.y - player.y);
             if (dist < 30) {
-                player.armor -= ball.damage;
-                addMessage("Hit! -" + ball.damage + " armor");
+                damagePlayer(ball.damage);
                 cannonballs.splice(i, 1);
-
-                // Damage particles
-                for (let j = 0; j < 3; j++) {
-                    particles.push({
-                        x: player.x,
-                        y: player.y,
-                        vx: (Math.random() - 0.5) * 80,
-                        vy: (Math.random() - 0.5) * 80,
-                        life: 0.4,
-                        color: '#8a5030',
-                        size: 5
-                    });
-                }
             }
         }
     }
 }
 
 function damageEnemy(enemy, damage) {
+    // Critical hit system (15% chance, 2x damage)
+    const isCrit = Math.random() < 0.15;
+    if (isCrit) {
+        damage *= 2;
+        stats.critCount++;
+    }
+
     enemy.hp -= damage;
+    stats.totalDamageDealt += damage;
 
-    // Hit particles
-    particles.push({
-        x: enemy.x,
-        y: enemy.y,
-        vx: (Math.random() - 0.5) * 60,
-        vy: (Math.random() - 0.5) * 60,
-        life: 0.3,
-        color: '#606060',
-        size: 6
-    });
+    // Floating damage number
+    createFloatingText(
+        enemy.x, enemy.y - 30,
+        damage.toString() + (isCrit ? '!' : ''),
+        isCrit ? '#ffff00' : '#ff6040',
+        isCrit ? 18 : 14
+    );
 
-    if (enemy.hp <= 0) {
-        // Drop loot
-        const goldDrop = enemy.gold + Math.floor(Math.random() * 20);
-        loot.push({
+    // Screen shake
+    triggerScreenShake(isCrit ? 5 : 2);
+
+    // Hit particles (more for crits)
+    const particleCount = isCrit ? 5 : 2;
+    for (let i = 0; i < particleCount; i++) {
+        particles.push({
             x: enemy.x,
             y: enemy.y,
-            value: goldDrop,
-            life: 15
+            vx: (Math.random() - 0.5) * 80,
+            vy: (Math.random() - 0.5) * 80,
+            life: 0.4,
+            color: isCrit ? '#ffcc60' : '#606060',
+            size: isCrit ? 8 : 6
         });
-
-        // Explosion particles
-        for (let i = 0; i < 15; i++) {
-            particles.push({
-                x: enemy.x + (Math.random() - 0.5) * 40,
-                y: enemy.y + (Math.random() - 0.5) * 40,
-                vx: (Math.random() - 0.5) * 150,
-                vy: (Math.random() - 0.5) * 150,
-                life: 0.6 + Math.random() * 0.4,
-                color: Math.random() < 0.5 ? '#ff8040' : '#ffcc60',
-                size: 8 + Math.random() * 8
-            });
-        }
-
-        addMessage("Enemy sunk! Loot dropped.");
     }
+
+    if (enemy.hp <= 0) {
+        killEnemy(enemy, isCrit);
+    }
+}
+
+function killEnemy(enemy, wasCrit) {
+    stats.shipsSunk++;
+
+    // Kill streak
+    killStreak++;
+    killStreakTimer = 3;
+    if (killStreak > stats.maxKillStreak) {
+        stats.maxKillStreak = killStreak;
+    }
+
+    // Kill streak messages
+    if (killStreak >= 3) {
+        const streakMessages = { 3: 'TRIPLE SINK!', 4: 'QUAD SINK!', 5: 'RAMPAGE!', 6: 'ADMIRAL!' };
+        const msg = streakMessages[Math.min(killStreak, 6)] || 'LEGENDARY!';
+        createFloatingText(player.x, player.y - 60, msg, '#ffaa00', 20);
+    }
+
+    // Drop loot
+    const goldDrop = enemy.gold + Math.floor(Math.random() * 20);
+    loot.push({
+        x: enemy.x,
+        y: enemy.y,
+        value: goldDrop,
+        life: 15
+    });
+
+    // Explosion particles (more for bigger effect)
+    for (let i = 0; i < 20; i++) {
+        particles.push({
+            x: enemy.x + (Math.random() - 0.5) * 40,
+            y: enemy.y + (Math.random() - 0.5) * 40,
+            vx: (Math.random() - 0.5) * 180,
+            vy: (Math.random() - 0.5) * 180,
+            life: 0.6 + Math.random() * 0.4,
+            color: Math.random() < 0.5 ? '#ff8040' : '#ffcc60',
+            size: 8 + Math.random() * 10
+        });
+    }
+
+    // Death burst ring
+    for (let i = 0; i < 12; i++) {
+        const angle = (Math.PI * 2 * i) / 12;
+        particles.push({
+            x: enemy.x,
+            y: enemy.y,
+            vx: Math.cos(angle) * 100,
+            vy: Math.sin(angle) * 100,
+            life: 0.5,
+            color: '#ff6040',
+            size: 6
+        });
+    }
+
+    triggerScreenShake(8);
+    addMessage("Enemy sunk!" + (wasCrit ? " CRITICAL!" : "") + " Loot dropped.");
 }
 
 function updateLoot(delta) {
@@ -450,6 +544,91 @@ function endDay() {
     addMessage("Day " + game.day + " begins!");
 }
 
+// Helper functions for visual effects
+function damagePlayer(damage) {
+    player.armor -= damage;
+    stats.totalDamageTaken += damage;
+
+    // Damage flash
+    damageFlashAlpha = 0.4;
+
+    // Screen shake
+    triggerScreenShake(4);
+
+    // Damage particles
+    for (let i = 0; i < 4; i++) {
+        particles.push({
+            x: player.x,
+            y: player.y,
+            vx: (Math.random() - 0.5) * 100,
+            vy: (Math.random() - 0.5) * 100,
+            life: 0.4,
+            color: '#8a5030',
+            size: 6
+        });
+    }
+
+    // Floating damage text
+    createFloatingText(player.x, player.y - 30, '-' + damage, '#ff4444', 14);
+    addMessage("Hit! -" + damage + " armor");
+}
+
+function createFloatingText(x, y, text, color, size) {
+    floatingTexts.push({
+        x: x,
+        y: y,
+        text: text,
+        color: color,
+        size: size,
+        life: 1.0,
+        maxLife: 1.0,
+        vy: -40
+    });
+}
+
+function triggerScreenShake(intensity) {
+    screenShake.intensity = Math.max(screenShake.intensity, intensity);
+}
+
+function updateVisualEffects(delta) {
+    // Damage flash decay
+    if (damageFlashAlpha > 0) {
+        damageFlashAlpha = Math.max(0, damageFlashAlpha - delta * 2);
+    }
+
+    // Low armor pulsing
+    if (player.armor < 30) {
+        lowHealthPulse += delta * 4;
+    }
+
+    // Screen shake decay
+    if (screenShake.intensity > 0) {
+        screenShake.x = (Math.random() - 0.5) * screenShake.intensity;
+        screenShake.y = (Math.random() - 0.5) * screenShake.intensity;
+        screenShake.intensity = Math.max(0, screenShake.intensity - delta * 25);
+    } else {
+        screenShake.x = 0;
+        screenShake.y = 0;
+    }
+}
+
+function updateFloatingTexts(delta) {
+    floatingTexts = floatingTexts.filter(ft => {
+        ft.life -= delta;
+        ft.y += ft.vy * delta;
+        return ft.life > 0;
+    });
+}
+
+function updateKillStreak(delta) {
+    if (killStreakTimer > 0) {
+        killStreakTimer -= delta;
+        if (killStreakTimer <= 0) {
+            killStreak = 0;
+        }
+    }
+}
+
 function render() {
     // Clear
     ctx.fillStyle = COLORS.OCEAN;
@@ -457,7 +636,8 @@ function render() {
 
     // Draw game world
     ctx.save();
-    ctx.translate(-camera.x + UI_WIDTH, -camera.y);
+    // Apply screen shake
+    ctx.translate(-camera.x + UI_WIDTH + screenShake.x, -camera.y + screenShake.y);
 
     // Ocean pattern
     renderOcean();
@@ -508,6 +688,17 @@ function render() {
         ctx.fill();
     }
     ctx.globalAlpha = 1;
+
+    // Floating texts (world space)
+    for (const ft of floatingTexts) {
+        ctx.font = `bold ${ft.size}px monospace`;
+        ctx.fillStyle = ft.color;
+        ctx.globalAlpha = ft.life / ft.maxLife;
+        ctx.textAlign = 'center';
+        ctx.fillText(ft.text, ft.x, ft.y);
+    }
+    ctx.globalAlpha = 1;
+    ctx.textAlign = 'left';
 
     ctx.restore();
 
@@ -634,6 +825,101 @@ function renderUI() {
     const aliveEnemies = enemies.filter(e => e.hp > 0).length;
     ctx.fillStyle = '#ffffff';
     ctx.fillText('Ships: ' + aliveEnemies, GAME_WIDTH - 100, 25);
+
+    // Kill streak display
+    if (killStreak >= 2) {
+        ctx.font = 'bold 18px monospace';
+        ctx.fillStyle = '#ffaa00';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${killStreak}x STREAK`, GAME_WIDTH / 2 + UI_WIDTH / 2, 70);
+        ctx.textAlign = 'left';
+    }
+
+    // Damage flash overlay
+    if (damageFlashAlpha > 0) {
+        ctx.fillStyle = `rgba(200, 50, 30, ${damageFlashAlpha})`;
+        ctx.fillRect(UI_WIDTH, 0, GAME_WIDTH - UI_WIDTH, GAME_HEIGHT);
+    }
+
+    // Low armor vignette
+    if (player.armor < 30) {
+        const pulseAlpha = 0.15 + Math.sin(lowHealthPulse) * 0.1;
+        ctx.fillStyle = `rgba(100, 30, 20, ${pulseAlpha})`;
+        ctx.fillRect(UI_WIDTH, 0, GAME_WIDTH - UI_WIDTH, GAME_HEIGHT);
+    }
+
+    // Debug overlay
+    if (debugMode) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(GAME_WIDTH - 200, 50, 190, 200);
+        ctx.fillStyle = '#00ff00';
+        ctx.font = '11px monospace';
+        const lines = [
+            `SHIPS SUNK: ${stats.shipsSunk}`,
+            `DMG DEALT: ${stats.totalDamageDealt}`,
+            `DMG TAKEN: ${stats.totalDamageTaken}`,
+            `CRITS: ${stats.critCount}`,
+            `LOOT: ${stats.lootCollected}`,
+            `CANNONS: ${stats.cannonsFired}`,
+            `MAX STREAK: ${stats.maxKillStreak}`,
+            `STREAK: ${killStreak}`,
+            `GOLD EARNED: ${stats.goldEarned}`,
+            `---`,
+            `ARMOR: ${Math.floor(player.armor)}`,
+            `GOLD: ${game.gold}`,
+            `DAY: ${game.day}`
+        ];
+        for (let i = 0; i < lines.length; i++) {
+            ctx.fillText(lines[i], GAME_WIDTH - 190, 65 + i * 14);
+        }
+    }
+
+    // Day transition screen (when player is destroyed)
+    if (player.armor <= 0 && game.state === 'sailing') {
+        const timePlayed = Math.floor((Date.now() - game.startTime) / 1000);
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+        ctx.fillStyle = '#cc6040';
+        ctx.font = '40px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('SHIP DESTROYED!', GAME_WIDTH / 2, 100);
+
+        // Performance rating
+        let rating = 'DECKHAND';
+        let ratingColor = '#cc4040';
+        if (stats.shipsSunk >= 2) { rating = 'SAILOR'; ratingColor = '#aaaa40'; }
+        if (stats.shipsSunk >= 4 && stats.critCount >= 1) { rating = 'CAPTAIN'; ratingColor = '#40aa60'; }
+        if (stats.shipsSunk >= 6 && stats.critCount >= 3) { rating = 'ADMIRAL'; ratingColor = '#40aaff'; }
+
+        ctx.fillStyle = ratingColor;
+        ctx.font = '28px monospace';
+        ctx.fillText(`RATING: ${rating}`, GAME_WIDTH / 2, 150);
+
+        ctx.fillStyle = '#aaaaaa';
+        ctx.font = '16px monospace';
+        const statsLines = [
+            `TIME SAILED: ${Math.floor(timePlayed / 60)}:${(timePlayed % 60).toString().padStart(2, '0')}`,
+            ``,
+            `SHIPS SUNK: ${stats.shipsSunk}`,
+            `DAMAGE DEALT: ${stats.totalDamageDealt}`,
+            `DAMAGE TAKEN: ${stats.totalDamageTaken}`,
+            `CRITICAL HITS: ${stats.critCount}`,
+            `MAX KILL STREAK: ${stats.maxKillStreak}`,
+            ``,
+            `LOOT COLLECTED: ${stats.lootCollected}`,
+            `CANNONS FIRED: ${stats.cannonsFired}`,
+            `TOTAL GOLD EARNED: ${stats.goldEarned}`,
+            ``,
+            `DAY: ${game.day}  GOLD: ${game.gold}`
+        ];
+        for (let i = 0; i < statsLines.length; i++) {
+            ctx.fillText(statsLines[i], GAME_WIDTH / 2, 200 + i * 24);
+        }
+
+        ctx.textAlign = 'left';
+    }
 }
 
 // Start

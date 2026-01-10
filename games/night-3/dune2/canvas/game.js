@@ -720,26 +720,93 @@ function drawBuildings() {
             color = COLORS.BUILDING_HARKONNEN;
         }
 
+        // Building shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.fillRect(screenX + 6, screenY + height - 2, width - 4, 6);
+
         // Main building
         ctx.fillStyle = color;
         ctx.fillRect(screenX + 2, screenY + 2, width - 4, height - 4);
+
+        // Building type-specific details
+        const darkColor = shadeColor(color, -30);
+        const lightColor = shadeColor(color, 30);
+
+        if (building.type === 'CONSTRUCTION_YARD') {
+            // Crane structure
+            ctx.fillStyle = '#444';
+            ctx.fillRect(screenX + width - 20, screenY + 6, 4, height - 20);
+            ctx.fillRect(screenX + width - 30, screenY + 6, 20, 4);
+            // Building platform
+            ctx.fillStyle = darkColor;
+            ctx.fillRect(screenX + 8, screenY + height - 16, width - 16, 10);
+        } else if (building.type === 'REFINERY') {
+            // Silo tanks
+            ctx.fillStyle = darkColor;
+            ctx.beginPath();
+            ctx.arc(screenX + width/3, screenY + height/2, 10, 0, Math.PI * 2);
+            ctx.arc(screenX + 2*width/3, screenY + height/2, 10, 0, Math.PI * 2);
+            ctx.fill();
+            // Pipeline
+            ctx.fillStyle = '#555';
+            ctx.fillRect(screenX + width/3 - 2, screenY + 8, 4, height - 16);
+        } else if (building.type === 'WIND_TRAP') {
+            // Turbine blades (animated look)
+            ctx.fillStyle = lightColor;
+            ctx.beginPath();
+            ctx.moveTo(screenX + width/2, screenY + 8);
+            ctx.lineTo(screenX + width/2 - 10, screenY + height/2);
+            ctx.lineTo(screenX + width/2 + 10, screenY + height/2);
+            ctx.fill();
+            // Vent lines
+            for (let i = 0; i < 3; i++) {
+                ctx.fillStyle = darkColor;
+                ctx.fillRect(screenX + 8, screenY + 10 + i * 12, width - 16, 3);
+            }
+        } else if (building.type === 'BARRACKS' || building.type === 'FACTORY') {
+            // Door/entrance
+            ctx.fillStyle = '#222';
+            ctx.fillRect(screenX + width/2 - 8, screenY + height - 14, 16, 10);
+            // Roof stripes
+            for (let i = 0; i < 3; i++) {
+                ctx.fillStyle = darkColor;
+                ctx.fillRect(screenX + 6, screenY + 6 + i * 8, width - 12, 3);
+            }
+        } else if (building.type === 'TURRET') {
+            // Gun barrel
+            ctx.fillStyle = '#333';
+            ctx.fillRect(screenX + width/2 - 2, screenY - 6, 4, height/2 + 6);
+            // Turret base
+            ctx.fillStyle = darkColor;
+            ctx.beginPath();
+            ctx.arc(screenX + width/2, screenY + height/2, width/3, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // Generic building details
+            ctx.fillStyle = darkColor;
+            ctx.fillRect(screenX + 6, screenY + 6, width - 12, 4);
+        }
 
         // Building border
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 2;
         ctx.strokeRect(screenX + 2, screenY + 2, width - 4, height - 4);
 
-        // Building details
-        ctx.fillStyle = shadeColor(color, -30);
-        ctx.fillRect(screenX + 6, screenY + 6, width - 12, 4);
+        // Highlight edge
+        ctx.fillStyle = lightColor;
+        ctx.fillRect(screenX + 2, screenY + 2, width - 4, 2);
+        ctx.fillRect(screenX + 2, screenY + 2, 2, height - 4);
 
         // Health bar
         if (building.hp < building.maxHp) {
             const healthPct = building.hp / building.maxHp;
             ctx.fillStyle = COLORS.HEALTH_BG;
-            ctx.fillRect(screenX, screenY - 6, width, 4);
-            ctx.fillStyle = healthPct > 0.5 ? COLORS.HEALTH_FG : '#cc0';
-            ctx.fillRect(screenX, screenY - 6, width * healthPct, 4);
+            ctx.fillRect(screenX, screenY - 8, width, 5);
+            ctx.fillStyle = healthPct > 0.5 ? COLORS.HEALTH_FG : healthPct > 0.25 ? '#cc0' : '#c00';
+            ctx.fillRect(screenX, screenY - 8, width * healthPct, 5);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(screenX, screenY - 8, width, 5);
         }
 
         // Selection indicator

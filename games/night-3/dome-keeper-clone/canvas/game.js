@@ -44,6 +44,12 @@ let wave = 0;
 let phaseTimer = 60;
 let score = 0;
 
+// Debug overlay
+let debugMode = false;
+let fps = 0;
+let frameCount = 0;
+let fpsTimer = 0;
+
 // Resources
 const resources = { iron: 0, water: 0, cobalt: 0 };
 
@@ -792,6 +798,39 @@ function drawHUD() {
     ctx.fillText(`Dome HP: ${Math.ceil(dome.hp)}/${dome.maxHp}`, 20, 38);
 }
 
+function drawDebugOverlay() {
+    if (!debugMode) return;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    ctx.fillRect(10, 60, 280, 320);
+
+    ctx.fillStyle = '#0f0';
+    ctx.font = '14px monospace';
+    let y = 80;
+    const line = (text) => { ctx.fillText(text, 20, y); y += 18; };
+
+    line('=== DEBUG (Q to close) ===');
+    line(`Keeper Pos: (${Math.round(keeper.x)}, ${Math.round(keeper.y)})`);
+    line(`Keeper Vel: (${keeper.vx.toFixed(1)}, ${keeper.vy.toFixed(1)})`);
+    line(`Dome HP: ${Math.ceil(dome.hp)}/${dome.maxHp}`);
+    line(`Dome Shield: ${Math.ceil(dome.shield)}/${dome.maxShield}`);
+    line(`Resources: I:${resources.iron} W:${resources.water} C:${resources.cobalt}`);
+    line(`Keeper Cargo: ${keeper.cargo.length}/${keeper.carryCapacity}`);
+    line(`Mining Combo: ${miningCombo}x`);
+    line(`Wave: ${wave}`);
+    line(`Phase: ${gameState}`);
+    line(`Timer: ${phaseTimer.toFixed(1)}s`);
+    line(`Score: ${score}`);
+    line(`Enemies: ${enemies.length}`);
+    line(`Drilling: ${keeper.drilling}`);
+    line(`Camera Y: ${cameraY}`);
+    line(`FPS: ${Math.round(fps)}`);
+    line(`Particles: ${particles.length}`);
+
+    ctx.restore();
+}
+
 // Draw title screen
 function drawTitle() {
     ctx.fillStyle = '#1a0a20';
@@ -893,6 +932,15 @@ let lastTime = 0;
 function gameLoop(timestamp) {
     const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
     lastTime = timestamp;
+
+    // FPS tracking
+    frameCount++;
+    fpsTimer += dt;
+    if (fpsTimer >= 1) {
+        fps = frameCount;
+        frameCount = 0;
+        fpsTimer = 0;
+    }
 
     ctx.fillStyle = '#1a0a20';
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -1042,6 +1090,7 @@ function gameLoop(timestamp) {
         }
 
         drawHUD();
+        drawDebugOverlay();
     }
 
     requestAnimationFrame(gameLoop);
@@ -1050,6 +1099,11 @@ function gameLoop(timestamp) {
 // Input
 document.addEventListener('keydown', (e) => {
     keys[e.key.toLowerCase()] = true;
+
+    // Toggle debug mode with Q
+    if (e.key === 'q' || e.key === 'Q') {
+        debugMode = !debugMode;
+    }
 
     if (e.code === 'Space') {
         if (gameState === 'title') {

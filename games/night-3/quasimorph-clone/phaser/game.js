@@ -383,6 +383,78 @@ class GameScene extends Phaser.Scene {
 
         window.gameState = this.gameState;
         window.game = this.game;
+
+        // Debug mode toggle (press backtick)
+        this.debugMode = false;
+        this.debugText = null;
+        this.input.keyboard.on('keydown-BACKQUOTE', () => {
+            this.debugMode = !this.debugMode;
+            this.updateDebugOverlay();
+        });
+
+        // Pulsing extraction zone glow
+        this.createExtractionGlow();
+    }
+
+    createExtractionGlow() {
+        if (!this.extractionPos) return;
+
+        const ex = this.extractionPos.x * TILE_SIZE + TILE_SIZE / 2;
+        const ey = this.extractionPos.y * TILE_SIZE + TILE_SIZE / 2;
+
+        this.extractionGlow = this.add.circle(ex, ey, TILE_SIZE, 0x4aaa6a, 0);
+        this.extractionGlow.setDepth(-1);
+
+        this.tweens.add({
+            targets: this.extractionGlow,
+            alpha: 0.4,
+            scale: 1.5,
+            duration: 1500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+    }
+
+    updateDebugOverlay() {
+        if (this.debugText) {
+            this.debugText.destroy();
+            this.debugBg?.destroy();
+            this.debugText = null;
+            this.debugBg = null;
+        }
+
+        if (!this.debugMode) return;
+
+        const gs = this.gameState;
+        const p = gs.player;
+        const enemies = gs.enemies.filter(e => e.hp > 0);
+
+        const debugInfo = [
+            `=== DEBUG ===`,
+            `Turn: ${gs.turn} | Phase: ${gs.phase}`,
+            `Player: (${p.x}, ${p.y})`,
+            `HP: ${p.hp}/${p.maxHp} | AP: ${p.ap}/${p.maxAp}`,
+            `Weapon: ${p.weapon.name}`,
+            `Ammo: ${p.weapon.ammo}/${p.weapon.maxAmmo}`,
+            `Corruption: ${gs.corruption}`,
+            `Enemies: ${enemies.length}`,
+            `Kills: ${gs.killCount || 0}`,
+            `Damage Dealt: ${gs.totalDamageDealt || 0}`,
+            `Damage Taken: ${gs.totalDamageTaken || 0}`,
+            `Kill Streak: ${gs.killStreak || 0}`,
+            `Crits: ${gs.critCount || 0}`
+        ].join('\n');
+
+        this.debugBg = this.add.rectangle(145, 170, 260, 240, 0x000000, 0.85);
+        this.debugBg.setDepth(1000);
+
+        this.debugText = this.add.text(20, 55, debugInfo, {
+            fontFamily: 'monospace',
+            fontSize: '12px',
+            color: '#00ff00'
+        });
+        this.debugText.setDepth(1001);
     }
 
     initGameState() {
@@ -391,6 +463,17 @@ class GameScene extends Phaser.Scene {
             phase: 'player',
             corruption: 0,
             maxCorruption: 1000,
+            // Tracking stats
+            killCount: 0,
+            totalDamageDealt: 0,
+            totalDamageTaken: 0,
+            critCount: 0,
+            shotsHit: 0,
+            shotsMissed: 0,
+            killStreak: 0,
+            killStreakTimer: 0,
+            maxKillStreak: 0,
+            floor: 1,
             player: {
                 x: 3,
                 y: 9,
@@ -535,6 +618,7 @@ class GameScene extends Phaser.Scene {
         const ex = lastRoom.x + Math.floor(lastRoom.w / 2);
         const ey = lastRoom.y + Math.floor(lastRoom.h / 2);
         map[ey][ex] = TILE.EXTRACTION;
+        this.extractionPos = { x: ex, y: ey };
 
         for (let i = 0; i < 8; i++) {
             const room = rooms[Math.floor(Math.random() * rooms.length)];
@@ -737,6 +821,27 @@ class GameScene extends Phaser.Scene {
                 { fontFamily: 'monospace', fontSize: '10px', color: '#aa6a8a' });
         }
         this.corrLevelText.setText(corrLevel);
+
+        // Enemies remaining counter
+        const enemiesRemaining = gs.enemies.filter(e => e.hp > 0).length;
+        if (!this.enemiesText) {
+            this.enemiesText = this.add.text(GAME_WIDTH - 140, 68, '',
+                { fontFamily: 'monospace', fontSize: '11px', color: '#cc8888' });
+        }
+        this.enemiesText.setText(`Hostiles: ${enemiesRemaining}`);
+
+        // Kill streak display
+        if (!this.streakText) {
+            this.streakText = this.add.text(GAME_WIDTH / 2, 30, '',
+                { fontFamily: 'monospace', fontSize: '14px', color: '#ff8800' });
+            this.streakText.setOrigin(0.5);
+        }
+        if (gs.killStreak >= 2) {
+            this.streakText.setText(`${gs.killStreak}x KILL STREAK`);
+            this.streakText.setVisible(true);
+        } else {
+            this.streakText.setVisible(false);
+        }
     }
 
     setupInput() {
@@ -789,6 +894,28 @@ class GameScene extends Phaser.Scene {
         if (tile === TILE.DOOR_CLOSED) {
             this.map[newY][newX] = TILE.DOOR_OPEN;
             this.tiles[newY][newX].setTexture('door_open');
+
+            // Door opening dust particles
+            const doorX = newX * TILE_SIZE + TILE_SIZE / 2;
+            const doorY = newY * TILE_SIZE + TILE_SIZE / 2;
+            for (let i = 0; i < 8; i++) {
+                const dust = this.add.circle(
+                    doorX + (Math.random() - 0.5) * 20,
+                    doorY + (Math.random() - 0.5) * 20,
+                    2, 0x888866
+                );
+                this.tweens.add({
+                    targets: dust,
+                    x: dust.x + (Math.random() - 0.5) * 30,
+                    y: dust.y + Math.random() * 20,
+                    alpha: 0,
+                    scale: 0.3,
+                    duration: 600 + Math.random() * 300,
+                    onComplete: () => dust.destroy()
+                });
+            }
+            this.showFloatingText(newX, newY - 0.5, 'DOOR OPEN', 0x6a8a6a);
+
             this.updateFOW();
             return;
         }
@@ -867,11 +994,32 @@ class GameScene extends Phaser.Scene {
         this.showBulletTrail(p.x, p.y, enemy.x, enemy.y);
 
         if (roll < accuracy) {
-            const damage = weapon.damage[0] + Math.floor(Math.random() * (weapon.damage[1] - weapon.damage[0] + 1));
-            enemy.hp -= damage;
-            this.showDamageNumber(enemy.x, enemy.y, damage, 0xff4444);
+            let damage = weapon.damage[0] + Math.floor(Math.random() * (weapon.damage[1] - weapon.damage[0] + 1));
 
-            this.cameras.main.shake(100, 0.01);
+            // Critical hit system (15% chance, 2x damage)
+            const CRIT_CHANCE = 15;
+            const CRIT_MULT = 2.0;
+            let isCrit = false;
+            if (Math.random() * 100 < CRIT_CHANCE) {
+                damage = Math.floor(damage * CRIT_MULT);
+                isCrit = true;
+                this.gameState.critCount++;
+            }
+
+            enemy.hp -= damage;
+            this.gameState.totalDamageDealt += damage;
+            this.gameState.shotsHit++;
+
+            // Show damage (red for normal, yellow for crit)
+            if (isCrit) {
+                this.showDamageNumber(enemy.x, enemy.y, damage, 0xffcc00);
+                this.showFloatingText(enemy.x, enemy.y - 0.5, 'CRITICAL!', 0xffaa00);
+                this.cameras.main.shake(150, 0.02);
+            } else {
+                this.showDamageNumber(enemy.x, enemy.y, damage, 0xff4444);
+                this.cameras.main.shake(100, 0.01);
+            }
+
             this.alertEnemies(p.x, p.y, 8);
 
             if (enemy.hp <= 0) {
@@ -892,6 +1040,16 @@ class GameScene extends Phaser.Scene {
             this.gameState.corruption += 5;
         } else {
             this.showMissText(enemy.x, enemy.y);
+            this.gameState.shotsMissed++;
+            // Combat tip on miss
+            if (Math.random() < 0.3) {
+                const tips = [
+                    'Use cover for better accuracy',
+                    'Get closer for hit bonus',
+                    'Try flanking enemies'
+                ];
+                this.showFloatingText(p.x, p.y - 1, tips[Math.floor(Math.random() * tips.length)], 0x888888);
+            }
         }
 
         this.updateUI();
@@ -908,6 +1066,31 @@ class GameScene extends Phaser.Scene {
         this.gameState.player.ap -= 1;
         weapon.ammo = weapon.maxAmmo;
 
+        // Reload visual effect - shell ejection particles
+        const p = this.gameState.player;
+        const px = p.x * TILE_SIZE + TILE_SIZE / 2;
+        const py = p.y * TILE_SIZE + TILE_SIZE / 2;
+
+        for (let i = 0; i < 4; i++) {
+            this.time.delayedCall(i * 80, () => {
+                const shell = this.add.rectangle(
+                    px + 10, py,
+                    4, 2, 0xccaa44
+                );
+                this.tweens.add({
+                    targets: shell,
+                    x: px + 20 + Math.random() * 15,
+                    y: py + 10 + Math.random() * 10,
+                    angle: 180 + Math.random() * 180,
+                    alpha: 0,
+                    duration: 400,
+                    onComplete: () => shell.destroy()
+                });
+            });
+        }
+
+        this.showFloatingText(p.x, p.y - 0.5, 'RELOADING...', 0x88aacc);
+
         this.updateUI();
         this.checkAutoEndTurn();
     }
@@ -917,6 +1100,23 @@ class GameScene extends Phaser.Scene {
         if (!container || container.looted) return;
 
         container.looted = true;
+
+        // Loot collection sparkle effect
+        const lootX = x * TILE_SIZE + TILE_SIZE / 2;
+        const lootY = y * TILE_SIZE + TILE_SIZE / 2;
+        for (let i = 0; i < 12; i++) {
+            const sparkle = this.add.circle(lootX, lootY, 2, 0xffcc00);
+            const angle = (i / 12) * Math.PI * 2;
+            this.tweens.add({
+                targets: sparkle,
+                x: lootX + Math.cos(angle) * 25,
+                y: lootY + Math.sin(angle) * 25,
+                alpha: 0,
+                scale: 0.2,
+                duration: 400,
+                onComplete: () => sparkle.destroy()
+            });
+        }
 
         const lootTypes = ['ammo', 'medkit', 'grenade'];
         const loot = lootTypes[Math.floor(Math.random() * lootTypes.length)];
@@ -947,7 +1147,28 @@ class GameScene extends Phaser.Scene {
     killEnemy(enemy) {
         const idx = this.gameState.enemies.indexOf(enemy);
         const sprite = this.entitySprites[`enemy_${idx}`];
+
+        // Death burst animation
         if (sprite) {
+            // Create death particles
+            for (let i = 0; i < 8; i++) {
+                const particle = this.add.circle(
+                    enemy.x * TILE_SIZE + TILE_SIZE / 2,
+                    enemy.y * TILE_SIZE + TILE_SIZE / 2,
+                    3, 0xff4444
+                );
+                const angle = (i / 8) * Math.PI * 2;
+                this.tweens.add({
+                    targets: particle,
+                    x: particle.x + Math.cos(angle) * 30,
+                    y: particle.y + Math.sin(angle) * 30,
+                    alpha: 0,
+                    scale: 0.3,
+                    duration: 400,
+                    onComplete: () => particle.destroy()
+                });
+            }
+
             this.tweens.add({
                 targets: sprite,
                 alpha: 0,
@@ -958,22 +1179,91 @@ class GameScene extends Phaser.Scene {
             });
         }
 
+        // Screen shake on kill
+        this.cameras.main.shake(120, 0.015);
+
+        // Blood splatter
         this.gameState.bloodSplatters.push({ x: enemy.x, y: enemy.y });
         const blood = this.add.image(enemy.x * TILE_SIZE + TILE_SIZE / 2, enemy.y * TILE_SIZE + TILE_SIZE / 2, 'blood');
         blood.setAlpha(0.8);
         this.mapContainer.add(blood);
 
+        // Kill count and streak
+        this.gameState.killCount++;
+        this.gameState.killStreak++;
+        this.gameState.killStreakTimer = 180;
+
+        if (this.gameState.killStreak > this.gameState.maxKillStreak) {
+            this.gameState.maxKillStreak = this.gameState.killStreak;
+        }
+
+        // Kill streak feedback
+        if (this.gameState.killStreak >= 3) {
+            const streakTexts = ['TRIPLE KILL!', 'QUAD KILL!', 'RAMPAGE!', 'UNSTOPPABLE!'];
+            const streakIdx = Math.min(this.gameState.killStreak - 3, streakTexts.length - 1);
+            this.showFloatingText(enemy.x, enemy.y - 0.7, streakTexts[streakIdx], 0xff8800);
+        }
+
+        // Item drops (30% ammo, 15% health)
+        if (Math.random() < 0.3) {
+            this.gameState.player.weapon.ammo = Math.min(
+                this.gameState.player.weapon.ammo + 5,
+                this.gameState.player.weapon.maxAmmo
+            );
+            this.showFloatingText(enemy.x, enemy.y, '+5 AMMO', 0x88cc88);
+        }
+        if (Math.random() < 0.15) {
+            const item = Math.random() < 0.5 ? 'Medkit' : 'Bandage';
+            const existing = this.gameState.player.items.find(i => i.name === item);
+            if (existing) existing.count++;
+            else this.gameState.player.items.push({ name: item, count: 1 });
+            this.showFloatingText(enemy.x, enemy.y + 0.3, `+1 ${item.toUpperCase()}`, 0x88ccaa);
+        }
+
         this.gameState.corruption += 10;
+        this.updateDebugOverlay();
     }
 
     showBulletTrail(x1, y1, x2, y2) {
-        const bullet = this.add.image(
-            x1 * TILE_SIZE + TILE_SIZE / 2,
-            y1 * TILE_SIZE + TILE_SIZE / 2,
-            'bullet'
-        );
-
+        const startX = x1 * TILE_SIZE + TILE_SIZE / 2;
+        const startY = y1 * TILE_SIZE + TILE_SIZE / 2;
         const angle = Math.atan2(y2 - y1, x2 - x1);
+
+        // Enhanced muzzle flash
+        const muzzleFlash = this.add.circle(
+            startX + Math.cos(angle) * 15,
+            startY + Math.sin(angle) * 15,
+            10, 0xffcc44
+        );
+        muzzleFlash.setAlpha(0.9);
+        this.tweens.add({
+            targets: muzzleFlash,
+            alpha: 0,
+            scale: 2,
+            duration: 100,
+            onComplete: () => muzzleFlash.destroy()
+        });
+
+        // Directional sparks
+        for (let i = 0; i < 4; i++) {
+            const sparkAngle = angle + (Math.random() - 0.5) * 0.8;
+            const spark = this.add.circle(
+                startX + Math.cos(angle) * 12,
+                startY + Math.sin(angle) * 12,
+                2, 0xffaa22
+            );
+            this.tweens.add({
+                targets: spark,
+                x: spark.x + Math.cos(sparkAngle) * 20,
+                y: spark.y + Math.sin(sparkAngle) * 20,
+                alpha: 0,
+                duration: 150,
+                onComplete: () => spark.destroy()
+            });
+        }
+
+        // Bullet projectile
+        const bullet = this.add.image(startX, startY, 'bullet');
         bullet.setRotation(angle);
 
         this.tweens.add({
@@ -1114,6 +1404,16 @@ class GameScene extends Phaser.Scene {
     }
 
     updateSelection(tx, ty) {
+        // Clear previous hover info
+        if (this.hoverInfo) {
+            this.hoverInfo.destroy();
+            this.hoverInfo = null;
+        }
+        if (this.hoverBg) {
+            this.hoverBg.destroy();
+            this.hoverBg = null;
+        }
+
         if (tx < 0 || tx >= MAP_WIDTH || ty < 0 || ty >= MAP_HEIGHT) {
             this.selectionCursor.setVisible(false);
             return;
@@ -1130,6 +1430,40 @@ class GameScene extends Phaser.Scene {
         const enemy = this.gameState.enemies.find(e => e.x === tx && e.y === ty && e.hp > 0);
         if (enemy) {
             this.selectionCursor.setTint(0xff4444);
+
+            // Calculate and display hit chance
+            const p = this.gameState.player;
+            const weapon = p.weapon;
+            const dist = Math.abs(p.x - enemy.x) + Math.abs(p.y - enemy.y);
+
+            let hitChance = weapon.accuracy;
+            if (dist > weapon.range / 2) hitChance -= 10;
+            const cover = this.getCoverValue(enemy.x, enemy.y, p.x, p.y);
+            hitChance -= cover * 15;
+            hitChance = Math.max(0, Math.min(100, hitChance));
+
+            const inRange = dist <= weapon.range && this.hasLineOfSight(p.x, p.y, enemy.x, enemy.y);
+
+            // Display enemy info
+            const typeNames = { human: 'HOSTILE', corrupt: 'CORRUPTED', horror: 'HORROR' };
+            const infoText = [
+                `${typeNames[enemy.type] || enemy.type.toUpperCase()}`,
+                `HP: ${enemy.hp}/${enemy.maxHp}`,
+                inRange ? `HIT: ${hitChance}%` : 'OUT OF RANGE'
+            ].join('\n');
+
+            const infoX = tx * TILE_SIZE + TILE_SIZE + 5;
+            const infoY = ty * TILE_SIZE - 10;
+
+            this.hoverBg = this.add.rectangle(infoX + 40, infoY + 20, 90, 50, 0x000000, 0.8);
+            this.hoverBg.setDepth(500);
+
+            this.hoverInfo = this.add.text(infoX, infoY, infoText, {
+                fontFamily: 'monospace',
+                fontSize: '10px',
+                color: inRange ? '#ff8888' : '#888888'
+            });
+            this.hoverInfo.setDepth(501);
         } else {
             this.selectionCursor.clearTint();
         }
@@ -1214,9 +1548,13 @@ class GameScene extends Phaser.Scene {
         if (Math.random() * 100 < accuracy) {
             const damage = enemy.damage[0] + Math.floor(Math.random() * (enemy.damage[1] - enemy.damage[0] + 1));
             p.hp -= damage;
+            this.gameState.totalDamageTaken += damage;
             this.showDamageNumber(p.x, p.y, damage, 0xff8888);
 
             this.cameras.main.shake(150, 0.015);
+
+            // Damage flash effect (red tint overlay)
+            this.showDamageFlash();
 
             this.tweens.add({
                 targets: this.playerSprite,
@@ -1228,6 +1566,9 @@ class GameScene extends Phaser.Scene {
 
             this.gameState.corruption += 3;
 
+            // Update low health vignette
+            this.updateLowHealthVignette();
+
             if (p.hp <= 0) {
                 this.gameOver();
             }
@@ -1236,20 +1577,120 @@ class GameScene extends Phaser.Scene {
         }
 
         this.updateUI();
+        this.updateDebugOverlay();
+    }
+
+    showDamageFlash() {
+        if (!this.damageFlashOverlay) {
+            this.damageFlashOverlay = this.add.rectangle(
+                GAME_WIDTH / 2, GAME_HEIGHT / 2,
+                GAME_WIDTH, GAME_HEIGHT,
+                0xff0000, 0
+            );
+            this.damageFlashOverlay.setDepth(900);
+        }
+
+        this.tweens.add({
+            targets: this.damageFlashOverlay,
+            alpha: 0.3,
+            duration: 50,
+            yoyo: true,
+            onComplete: () => {
+                this.damageFlashOverlay.setAlpha(0);
+            }
+        });
+    }
+
+    updateLowHealthVignette() {
+        const healthPct = this.gameState.player.hp / this.gameState.player.maxHp;
+
+        if (!this.healthVignette) {
+            this.healthVignette = this.add.graphics();
+            this.healthVignette.setDepth(899);
+        }
+
+        this.healthVignette.clear();
+
+        if (healthPct < 0.3) {
+            const alpha = (0.3 - healthPct) / 0.3 * 0.4;
+            this.healthVignette.fillStyle(0xff0000, alpha);
+            // Draw vignette edges
+            this.healthVignette.fillRect(0, 0, GAME_WIDTH, 40);
+            this.healthVignette.fillRect(0, GAME_HEIGHT - 40, GAME_WIDTH, 40);
+            this.healthVignette.fillRect(0, 0, 40, GAME_HEIGHT);
+            this.healthVignette.fillRect(GAME_WIDTH - 40, 0, 40, GAME_HEIGHT);
+        }
     }
 
     moveEnemyToward(enemy, targetX, targetY) {
-        const dx = Math.sign(targetX - enemy.x);
-        const dy = Math.sign(targetY - enemy.y);
+        // Smart AI: Evaluate best move position
+        const validMoves = [];
+        const directions = [[0,0], [1,0], [-1,0], [0,1], [0,-1], [1,1], [-1,1], [1,-1], [-1,-1]];
 
-        if (Math.abs(targetX - enemy.x) > Math.abs(targetY - enemy.y)) {
-            if (!this.moveEnemy(enemy, dx, 0)) {
-                this.moveEnemy(enemy, 0, dy);
+        for (const [dx, dy] of directions) {
+            const newX = enemy.x + dx;
+            const newY = enemy.y + dy;
+
+            if (newX < 0 || newX >= MAP_WIDTH || newY < 0 || newY >= MAP_HEIGHT) continue;
+
+            const tile = this.map[newY]?.[newX];
+            if (tile === TILE.WALL || tile === TILE.DOOR_CLOSED ||
+                tile === TILE.COVER_HALF || tile === TILE.COVER_FULL) continue;
+
+            const blocked = this.gameState.enemies.some(e =>
+                e !== enemy && e.hp > 0 && e.x === newX && e.y === newY
+            );
+            if (blocked) continue;
+
+            if (this.gameState.player.x === newX && this.gameState.player.y === newY) continue;
+
+            validMoves.push([dx, dy, newX, newY]);
+        }
+
+        if (validMoves.length === 0) return;
+
+        // Score each move
+        let bestMove = validMoves[0];
+        let bestScore = -Infinity;
+
+        const optimalDist = enemy.range > 1 ? enemy.range - 1 : 1;
+
+        for (const [dx, dy, newX, newY] of validMoves) {
+            let score = 0;
+
+            // Distance to player
+            const newDist = Math.abs(newX - targetX) + Math.abs(newY - targetY);
+            score -= Math.abs(newDist - optimalDist) * 2;
+
+            // Prefer cover
+            const hasCoverNearby = directions.some(([cx, cy]) => {
+                const checkTile = this.map[newY + cy]?.[newX + cx];
+                return checkTile === TILE.COVER_HALF || checkTile === TILE.COVER_FULL;
+            });
+            if (hasCoverNearby) score += 5;
+
+            // Flanking bonus
+            const playerAngle = Math.atan2(targetY - enemy.y, targetX - enemy.x);
+            const moveAngle = Math.atan2(newY - enemy.y, newX - enemy.x);
+            const angleDiff = Math.abs(playerAngle - moveAngle);
+            if (angleDiff > Math.PI / 4 && angleDiff < 3 * Math.PI / 4) {
+                score += 3; // Flanking
             }
-        } else {
-            if (!this.moveEnemy(enemy, 0, dy)) {
-                this.moveEnemy(enemy, dx, 0);
+
+            // Line of sight to player
+            if (this.hasLineOfSight(newX, newY, targetX, targetY)) {
+                score += 2;
             }
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = [dx, dy, newX, newY];
+            }
+        }
+
+        const [dx, dy] = bestMove;
+        if (dx !== 0 || dy !== 0) {
+            this.moveEnemy(enemy, dx, dy);
         }
     }
 
@@ -1295,14 +1736,27 @@ class GameScene extends Phaser.Scene {
 
         this.gameState.corruption += 2;
 
+        // Kill streak timer decay
+        if (this.gameState.killStreakTimer > 0) {
+            this.gameState.killStreakTimer--;
+            if (this.gameState.killStreakTimer <= 0) {
+                this.gameState.killStreak = 0;
+            }
+        }
+
         if (this.gameState.corruption >= 400) {
             this.checkEnemyTransformation();
         }
 
         this.applyCorruptionEffects();
 
+        // Turn indicator floating text
+        const p = this.gameState.player;
+        this.showFloatingText(p.x, p.y - 1, `TURN ${this.gameState.turn}`, 0x6a8a8a);
+
         this.updateFOW();
         this.updateUI();
+        this.updateDebugOverlay();
     }
 
     checkEnemyTransformation() {
@@ -1399,21 +1853,63 @@ class GameScene extends Phaser.Scene {
     extractionSuccess() {
         this.gameState.phase = 'extraction';
 
-        this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.8);
+        this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.85);
 
-        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40, 'EXTRACTION SUCCESSFUL', {
+        // Victory particles
+        for (let i = 0; i < 20; i++) {
+            const x = Math.random() * GAME_WIDTH;
+            const y = GAME_HEIGHT + 20;
+            const particle = this.add.circle(x, y, 3, 0x4aaa6a);
+            this.tweens.add({
+                targets: particle,
+                y: -20,
+                x: x + (Math.random() - 0.5) * 100,
+                alpha: 0,
+                duration: 2000 + Math.random() * 1000,
+                onComplete: () => particle.destroy()
+            });
+        }
+
+        this.add.text(GAME_WIDTH / 2, 80, 'EXTRACTION SUCCESSFUL', {
             fontFamily: 'monospace',
             fontSize: '28px',
             color: '#4a8a6a'
         }).setOrigin(0.5);
 
-        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 10, `Turns: ${this.gameState.turn}  Corruption: ${this.gameState.corruption}`, {
+        // Calculate efficiency rating
+        const gs = this.gameState;
+        const totalShots = gs.shotsHit + gs.shotsMissed;
+        const accuracy = totalShots > 0 ? Math.round((gs.shotsHit / totalShots) * 100) : 0;
+        const efficiency = Math.max(0, 100 - gs.turn - Math.floor(gs.totalDamageTaken / 10) + gs.killCount * 5);
+        const rating = efficiency >= 80 ? 'S' : efficiency >= 60 ? 'A' : efficiency >= 40 ? 'B' : efficiency >= 20 ? 'C' : 'D';
+
+        const statsText = [
+            `Turns: ${gs.turn}`,
+            `Kills: ${gs.killCount}`,
+            `Damage Dealt: ${gs.totalDamageDealt}`,
+            `Damage Taken: ${gs.totalDamageTaken}`,
+            `Accuracy: ${accuracy}%`,
+            `Critical Hits: ${gs.critCount}`,
+            `Max Kill Streak: ${gs.maxKillStreak}`,
+            `Corruption: ${gs.corruption}`
+        ].join('\n');
+
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30, statsText, {
             fontFamily: 'monospace',
-            fontSize: '16px',
-            color: '#8ac8aa'
+            fontSize: '14px',
+            color: '#8ac8aa',
+            align: 'center'
         }).setOrigin(0.5);
 
-        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 60, 'Press SPACE to play again', {
+        // Rating display
+        const ratingColors = { S: '#ffcc00', A: '#4aaa6a', B: '#6a8aaa', C: '#aa8a6a', D: '#aa6a6a' };
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 100, `RATING: ${rating}`, {
+            fontFamily: 'monospace',
+            fontSize: '24px',
+            color: ratingColors[rating]
+        }).setOrigin(0.5);
+
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 60, 'Press SPACE to deploy new clone', {
             fontFamily: 'monospace',
             fontSize: '14px',
             color: '#6a9a8a'
@@ -1429,19 +1925,70 @@ class GameScene extends Phaser.Scene {
 
         this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x100000, 0.9);
 
-        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40, 'CLONE TERMINATED', {
+        // Death particles
+        for (let i = 0; i < 15; i++) {
+            const particle = this.add.circle(
+                GAME_WIDTH / 2 + (Math.random() - 0.5) * 200,
+                GAME_HEIGHT / 2 + (Math.random() - 0.5) * 100,
+                4, 0xaa2222
+            );
+            this.tweens.add({
+                targets: particle,
+                y: particle.y + 100,
+                alpha: 0,
+                scale: 0.2,
+                duration: 1500 + Math.random() * 1000,
+                onComplete: () => particle.destroy()
+            });
+        }
+
+        this.add.text(GAME_WIDTH / 2, 80, 'CLONE TERMINATED', {
             fontFamily: 'monospace',
             fontSize: '28px',
             color: '#aa4444'
         }).setOrigin(0.5);
 
-        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 10, `Survived ${this.gameState.turn} turns`, {
+        // Calculate stats
+        const gs = this.gameState;
+        const totalShots = gs.shotsHit + gs.shotsMissed;
+        const accuracy = totalShots > 0 ? Math.round((gs.shotsHit / totalShots) * 100) : 0;
+
+        const statsText = [
+            `Survived: ${gs.turn} turns`,
+            `Kills: ${gs.killCount}`,
+            `Damage Dealt: ${gs.totalDamageDealt}`,
+            `Damage Taken: ${gs.totalDamageTaken}`,
+            `Accuracy: ${accuracy}%`,
+            `Critical Hits: ${gs.critCount}`,
+            `Max Kill Streak: ${gs.maxKillStreak}`,
+            `Corruption: ${gs.corruption}`
+        ].join('\n');
+
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30, statsText, {
             fontFamily: 'monospace',
-            fontSize: '16px',
-            color: '#cc8888'
+            fontSize: '14px',
+            color: '#cc8888',
+            align: 'center'
         }).setOrigin(0.5);
 
-        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 60, 'Press SPACE to deploy new clone', {
+        // Death rating
+        const rating = gs.killCount >= 10 ? 'VALIANT' :
+                      gs.killCount >= 5 ? 'WORTHY' :
+                      gs.killCount >= 2 ? 'ACCEPTABLE' : 'DISAPPOINTING';
+        const ratingColors = {
+            'VALIANT': '#ffcc00',
+            'WORTHY': '#aa8866',
+            'ACCEPTABLE': '#888888',
+            'DISAPPOINTING': '#664444'
+        };
+
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 100, rating, {
+            fontFamily: 'monospace',
+            fontSize: '20px',
+            color: ratingColors[rating]
+        }).setOrigin(0.5);
+
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 60, 'Press SPACE to deploy new clone', {
             fontFamily: 'monospace',
             fontSize: '14px',
             color: '#aa6666'

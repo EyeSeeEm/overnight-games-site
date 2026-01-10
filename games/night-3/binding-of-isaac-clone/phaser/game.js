@@ -363,6 +363,14 @@ class GameScene extends Phaser.Scene {
         // HUD
         this.createHUD();
 
+        // Vignette effect for atmosphere
+        this.createVignette();
+
+        // Debug mode
+        this.debugMode = false;
+        this.debugText = null;
+        this.input.keyboard.on('keydown-BACKTICK', () => this.toggleDebug());
+
         // Game state
         this.gameState = 'playing';
         this.lastFireDir = { x: 0, y: 1 };
@@ -650,6 +658,48 @@ class GameScene extends Phaser.Scene {
         this.bossText = this.add.text(480, 75, 'MONSTRO', { fontFamily: 'monospace', fontSize: '12px', color: '#FFFFFF' }).setOrigin(0.5).setDepth(101).setVisible(false);
     }
 
+    createVignette() {
+        // Create vignette graphics for Isaac-style spotlight effect
+        this.vignetteGraphics = this.add.graphics();
+        this.vignetteGraphics.setDepth(50);
+    }
+
+    updateVignette() {
+        if (!this.vignetteGraphics) return;
+
+        this.vignetteGraphics.clear();
+
+        // Room center
+        const roomCenterX = this.roomOffsetX + (ROOM_WIDTH * TILE_SIZE) / 2;
+        const roomCenterY = this.roomOffsetY + (ROOM_HEIGHT * TILE_SIZE) / 2;
+        const roomWidth = ROOM_WIDTH * TILE_SIZE;
+        const roomHeight = ROOM_HEIGHT * TILE_SIZE;
+
+        // Corner darkening for Isaac-style atmosphere
+        const corners = [
+            [this.roomOffsetX, this.roomOffsetY],
+            [this.roomOffsetX + roomWidth, this.roomOffsetY],
+            [this.roomOffsetX, this.roomOffsetY + roomHeight],
+            [this.roomOffsetX + roomWidth, this.roomOffsetY + roomHeight]
+        ];
+
+        // Draw gradient darkness in corners
+        corners.forEach(([cx, cy]) => {
+            for (let r = 150; r > 0; r -= 10) {
+                const alpha = (1 - r / 150) * 0.3;
+                this.vignetteGraphics.fillStyle(0x000000, alpha);
+                this.vignetteGraphics.fillCircle(cx, cy, r);
+            }
+        });
+
+        // Subtle overall darkening at edges
+        this.vignetteGraphics.fillStyle(0x000000, 0.15);
+        this.vignetteGraphics.fillRect(this.roomOffsetX, this.roomOffsetY, roomWidth, 30);
+        this.vignetteGraphics.fillRect(this.roomOffsetX, this.roomOffsetY + roomHeight - 30, roomWidth, 30);
+        this.vignetteGraphics.fillRect(this.roomOffsetX, this.roomOffsetY, 30, roomHeight);
+        this.vignetteGraphics.fillRect(this.roomOffsetX + roomWidth - 30, this.roomOffsetY, 30, roomHeight);
+    }
+
     update(time, delta) {
         if (this.gameState !== 'playing') return;
 
@@ -732,8 +782,43 @@ class GameScene extends Phaser.Scene {
         // Check room cleared
         this.checkRoomCleared();
 
-        // Update HUD
+        // Update visuals
+        this.updateVignette();
         this.updateHUD();
+        this.updateDebugDisplay();
+    }
+
+    toggleDebug() {
+        this.debugMode = !this.debugMode;
+        if (this.debugMode) {
+            this.debugText = this.add.text(10, 100, '', {
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                color: '#00ff00',
+                backgroundColor: '#000000cc',
+                padding: { x: 8, y: 8 }
+            }).setScrollFactor(0).setDepth(1000);
+        } else if (this.debugText) {
+            this.debugText.destroy();
+            this.debugText = null;
+        }
+    }
+
+    updateDebugDisplay() {
+        if (!this.debugMode || !this.debugText || !this.player) return;
+        const enemyCount = this.enemies ? this.enemies.countActive() : 0;
+        this.debugText.setText([
+            '=== DEBUG (` to close) ===',
+            `Room: (${this.currentRoom.x}, ${this.currentRoom.y})`,
+            `Player: (${Math.round(this.player.x)}, ${Math.round(this.player.y)})`,
+            `HP: ${this.health}/${this.maxHealth}`,
+            `Damage: ${(this.damage || 3.5).toFixed(1)}`,
+            `Enemies: ${enemyCount}`,
+            `Tears: ${this.tears ? this.tears.countActive() : 0}`,
+            `Floor: ${this.floorNum || 1}`,
+            `Kills: ${this.kills || 0}`,
+            `FPS: ${Math.round(this.game.loop.actualFps)}`
+        ].join('\n'));
     }
 
     shoot(dx, dy) {
@@ -767,6 +852,34 @@ class GameScene extends Phaser.Scene {
         this.tears.children.iterate(tear => {
             if (!tear || !tear.active) return;
 
+            // Auto-aim assist (gentle homing)
+            if (this.enemies.children.size > 0 && tear.body) {
+                let nearest = null;
+                let nearestDist = 120;  // Max homing range
+                this.enemies.children.iterate(enemy => {
+                    if (!enemy || !enemy.active) return;
+                    const dist = Phaser.Math.Distance.Between(tear.x, tear.y, enemy.x, enemy.y);
+                    if (dist < nearestDist) {
+                        nearestDist = dist;
+                        nearest = enemy;
+                    }
+                });
+                if (nearest) {
+                    const targetAngle = Phaser.Math.Angle.Between(tear.x, tear.y, nearest.x, nearest.y);
+                    const tearAngle = Math.atan2(tear.body.velocity.y, tear.body.velocity.x);
+                    let angleDiff = targetAngle - tearAngle;
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                    // Only curve if within 30 degrees
+                    if (Math.abs(angleDiff) < Math.PI / 6) {
+                        const homeStrength = 2.0 * dt;
+                        const speed = tear.body.velocity.length();
+                        const newAngle = tearAngle + angleDiff * homeStrength;
+                        tear.body.setVelocity(Math.cos(newAngle) * speed, Math.sin(newAngle) * speed);
+                    }
+                }
+            }
+
             tear.life -= dt;
             if (tear.life <= 0) {
                 this.splashTear(tear);
@@ -787,7 +900,16 @@ class GameScene extends Phaser.Scene {
                 if (!enemy || !enemy.active) return;
                 const dist = Phaser.Math.Distance.Between(tear.x, tear.y, enemy.x, enemy.y);
                 if (dist < 20) {
-                    this.hitEnemy(enemy, tear.damage);
+                    // Critical hit chance (10%)
+                    const isCrit = Math.random() < 0.1;
+                    const finalDamage = isCrit ? tear.damage * 2 : tear.damage;
+
+                    if (isCrit) {
+                        this.showFloatingText(enemy.x, enemy.y - 30, 'CRITICAL!', '#FF4400', 1.5);
+                        this.cameras.main.shake(80, 0.005);
+                    }
+
+                    this.hitEnemy(enemy, finalDamage);
                     this.splashTear(tear);
                     tear.destroy();
                 }
@@ -1222,7 +1344,7 @@ class GameScene extends Phaser.Scene {
         for (let door of this.doors) {
             if (!door.open) continue;
             const dist = Phaser.Math.Distance.Between(door.x, door.y, this.player.x, this.player.y);
-            if (dist < 35) {
+            if (dist < 60) {
                 this.transitionRoom(door.direction);
                 break;
             }

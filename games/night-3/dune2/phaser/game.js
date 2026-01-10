@@ -472,7 +472,7 @@ function draw() {
         }
     }
 
-    // Draw buildings
+    // Draw buildings with enhanced details
     for (const building of [...state.buildings, ...state.enemyBuildings]) {
         const def = BUILDINGS[building.type];
         const screenX = building.x * TILE_SIZE - state.camera.x;
@@ -481,11 +481,72 @@ function draw() {
         const height = def.height * TILE_SIZE;
 
         const color = building.owner === 'player' ? COLORS.ATREIDES : COLORS.HARKONNEN;
+        const darkColor = Phaser.Display.Color.ValueToColor(color).darken(30).color;
+        const lightColor = Phaser.Display.Color.ValueToColor(color).lighten(30).color;
+
+        // Building shadow
+        graphics.fillStyle(0x000000, 0.3);
+        graphics.fillRect(screenX + 6, screenY + height - 2, width - 4, 6);
+
+        // Main building
         graphics.fillStyle(color);
         graphics.fillRect(screenX + 2, screenY + 2, width - 4, height - 4);
 
+        // Building-specific details
+        if (building.type === 'CONSTRUCTION_YARD') {
+            graphics.fillStyle(0x444444);
+            graphics.fillRect(screenX + width - 20, screenY + 6, 4, height - 20);
+            graphics.fillRect(screenX + width - 30, screenY + 6, 20, 4);
+            graphics.fillStyle(darkColor);
+            graphics.fillRect(screenX + 8, screenY + height - 16, width - 16, 10);
+        } else if (building.type === 'REFINERY') {
+            graphics.fillStyle(darkColor);
+            graphics.fillCircle(screenX + width/3, screenY + height/2, 10);
+            graphics.fillCircle(screenX + 2*width/3, screenY + height/2, 10);
+            graphics.fillStyle(0x555555);
+            graphics.fillRect(screenX + width/3 - 2, screenY + 8, 4, height - 16);
+        } else if (building.type === 'WIND_TRAP') {
+            graphics.fillStyle(lightColor);
+            graphics.fillTriangle(
+                screenX + width/2, screenY + 8,
+                screenX + width/2 - 10, screenY + height/2,
+                screenX + width/2 + 10, screenY + height/2
+            );
+            graphics.fillStyle(darkColor);
+            for (let i = 0; i < 3; i++) {
+                graphics.fillRect(screenX + 8, screenY + 10 + i * 12, width - 16, 3);
+            }
+        } else if (building.type === 'BARRACKS' || building.type === 'FACTORY') {
+            graphics.fillStyle(0x222222);
+            graphics.fillRect(screenX + width/2 - 8, screenY + height - 14, 16, 10);
+            graphics.fillStyle(darkColor);
+            for (let i = 0; i < 3; i++) {
+                graphics.fillRect(screenX + 6, screenY + 6 + i * 8, width - 12, 3);
+            }
+        } else if (building.type === 'TURRET') {
+            graphics.fillStyle(0x333333);
+            graphics.fillRect(screenX + width/2 - 2, screenY - 6, 4, height/2 + 6);
+            graphics.fillStyle(darkColor);
+            graphics.fillCircle(screenX + width/2, screenY + height/2, width/3);
+        }
+
+        // Border
         graphics.lineStyle(2, 0x000000);
         graphics.strokeRect(screenX + 2, screenY + 2, width - 4, height - 4);
+
+        // Highlight edge
+        graphics.fillStyle(lightColor);
+        graphics.fillRect(screenX + 2, screenY + 2, width - 4, 2);
+        graphics.fillRect(screenX + 2, screenY + 2, 2, height - 4);
+
+        // Health bar
+        if (building.hp < building.maxHp) {
+            const pct = building.hp / building.maxHp;
+            graphics.fillStyle(0x400000);
+            graphics.fillRect(screenX, screenY - 8, width, 5);
+            graphics.fillStyle(pct > 0.5 ? 0x00cc00 : pct > 0.25 ? 0xcccc00 : 0xcc0000);
+            graphics.fillRect(screenX, screenY - 8, width * pct, 5);
+        }
 
         if (state.selection.includes(building)) {
             graphics.lineStyle(2, 0x00ff00);

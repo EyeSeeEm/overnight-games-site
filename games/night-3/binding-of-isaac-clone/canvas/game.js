@@ -99,8 +99,30 @@ let totalKills = 0;
 // Input
 const keys = {};
 let lastFireDir = { x: 0, y: 1 };
-let screenShake = 0;
+let screenShakeAmount = 0;
+let screenShakeDuration = 0;
 let flashAlpha = 0;
+let floatingTexts = [];
+
+// Helper functions
+function addFloatingText(x, y, text, color, scale = 1) {
+    floatingTexts.push({
+        x, y, text, color, scale,
+        life: 1.0, maxLife: 1.0,
+        vy: -80
+    });
+}
+
+function screenShake(amount, duration) {
+    screenShakeAmount = Math.max(screenShakeAmount, amount);
+    screenShakeDuration = Math.max(screenShakeDuration, duration);
+}
+
+// Debug mode
+let debugMode = false;
+let fps = 60;
+let frameCount = 0;
+let fpsTimer = 0;
 
 // Player class
 class Player {
@@ -255,7 +277,7 @@ class Player {
         doors.forEach(door => {
             if (!door.open) return;
             const dist = Math.sqrt(Math.pow(this.x - door.x, 2) + Math.pow(this.y - door.y, 2));
-            if (dist < 35) transitionRoom(door.direction);
+            if (dist < 60) transitionRoom(door.direction);
         });
     }
 
@@ -363,6 +385,35 @@ class Tear {
     }
 
     update(dt) {
+        // Auto-aim assist (gentle homing)
+        if (enemies.length > 0) {
+            let nearest = null;
+            let nearestDist = 120;  // Max homing range
+            for (const e of enemies) {
+                const dist = Math.sqrt(Math.pow(this.x - e.x, 2) + Math.pow(this.y - e.y, 2));
+                if (dist < nearestDist) {
+                    nearestDist = dist;
+                    nearest = e;
+                }
+            }
+            if (nearest) {
+                const targetAngle = Math.atan2(nearest.y - this.y, nearest.x - this.x);
+                const tearAngle = Math.atan2(this.vy, this.vx);
+                let angleDiff = targetAngle - tearAngle;
+                // Normalize
+                while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                // Only curve if within 30 degrees
+                if (Math.abs(angleDiff) < Math.PI / 6) {
+                    const homeStrength = 2.0 * dt;
+                    const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                    const newAngle = tearAngle + angleDiff * homeStrength;
+                    this.vx = Math.cos(newAngle) * speed;
+                    this.vy = Math.sin(newAngle) * speed;
+                }
+            }
+        }
+
         const dx = this.vx * dt;
         const dy = this.vy * dt;
 
@@ -393,7 +444,16 @@ class Tear {
         for (let e of enemies) {
             const dist = Math.sqrt(Math.pow(this.x - e.x, 2) + Math.pow(this.y - e.y, 2));
             if (dist < e.width / 2 + this.size) {
-                e.takeDamage(this.damage, this.vx, this.vy);
+                // Critical hit chance (10%)
+                const isCrit = Math.random() < 0.1;
+                const finalDamage = isCrit ? this.damage * 2 : this.damage;
+
+                if (isCrit) {
+                    addFloatingText(e.x, e.y - 30, 'CRITICAL!', '#FF4400', 1.5);
+                    screenShake(5, 0.08);
+                }
+
+                e.takeDamage(finalDamage, this.vx, this.vy);
                 this.splash();
                 return false;
             }
@@ -1905,19 +1965,95 @@ function initGame() {
     gameState = 'playing';
 }
 
+// Isaac-style vignette/spotlight effect
+function drawVignette() {
+    // Get room center for the spotlight
+    const roomCenterX = ROOM_OFFSET_X + (ROOM_WIDTH * TILE_SIZE) / 2;
+    const roomCenterY = ROOM_OFFSET_Y + (ROOM_HEIGHT * TILE_SIZE) / 2;
+
+    // Create radial gradient for spotlight effect
+    const gradient = ctx.createRadialGradient(
+        roomCenterX, roomCenterY, 100,
+        roomCenterX, roomCenterY, 400
+    );
+
+    gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    gradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.1)');
+    gradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.25)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(ROOM_OFFSET_X, ROOM_OFFSET_Y, ROOM_WIDTH * TILE_SIZE, ROOM_HEIGHT * TILE_SIZE);
+
+    // Additional corner darkening for Isaac-style atmosphere
+    const corners = [
+        [ROOM_OFFSET_X, ROOM_OFFSET_Y],
+        [ROOM_OFFSET_X + ROOM_WIDTH * TILE_SIZE, ROOM_OFFSET_Y],
+        [ROOM_OFFSET_X, ROOM_OFFSET_Y + ROOM_HEIGHT * TILE_SIZE],
+        [ROOM_OFFSET_X + ROOM_WIDTH * TILE_SIZE, ROOM_OFFSET_Y + ROOM_HEIGHT * TILE_SIZE]
+    ];
+
+    corners.forEach(([cx, cy]) => {
+        const cornerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 200);
+        cornerGrad.addColorStop(0, 'rgba(0, 0, 0, 0.4)');
+        cornerGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = cornerGrad;
+        ctx.fillRect(ROOM_OFFSET_X, ROOM_OFFSET_Y, ROOM_WIDTH * TILE_SIZE, ROOM_HEIGHT * TILE_SIZE);
+    });
+}
+
+function drawDebugOverlay() {
+    if (!debugMode || !player) return;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(10, 100, 240, 200);
+
+    ctx.fillStyle = '#0f0';
+    ctx.font = '12px monospace';
+    let y = 118;
+    const line = (text) => { ctx.fillText(text, 20, y); y += 16; };
+
+    line('=== DEBUG (` to close) ===');
+    line(`Room: (${currentRoom.x}, ${currentRoom.y})`);
+    line(`Player: (${Math.round(player.x)}, ${Math.round(player.y)})`);
+    line(`HP: ${player.health}/${player.maxHealth}`);
+    line(`Damage: ${player.damage.toFixed(1)}`);
+    line(`Tear Delay: ${player.tearDelay.toFixed(2)}`);
+    line(`Enemies: ${enemies.length}`);
+    line(`Tears: ${tears.length}`);
+    line(`Floor: ${floorNum}`);
+    line(`Total Kills: ${totalKills}`);
+    line(`FPS: ${Math.round(fps)}`);
+
+    ctx.restore();
+}
+
 // Game loop
 let lastTime = 0;
 function gameLoop(timestamp) {
     const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
     lastTime = timestamp;
 
+    // FPS tracking
+    frameCount++;
+    fpsTimer += dt;
+    if (fpsTimer >= 1) {
+        fps = frameCount / fpsTimer;
+        frameCount = 0;
+        fpsTimer = 0;
+    }
+
     // Screen shake
     let shakeX = 0, shakeY = 0;
-    if (screenShake > 0) {
-        shakeX = (Math.random() - 0.5) * screenShake;
-        shakeY = (Math.random() - 0.5) * screenShake;
-        screenShake *= 0.9;
-        if (screenShake < 0.5) screenShake = 0;
+    if (screenShakeDuration > 0) {
+        shakeX = (Math.random() - 0.5) * screenShakeAmount;
+        shakeY = (Math.random() - 0.5) * screenShakeAmount;
+        screenShakeDuration -= dt;
+        if (screenShakeDuration <= 0) {
+            screenShakeAmount = 0;
+            screenShakeDuration = 0;
+        }
     }
 
     ctx.save();
@@ -1944,6 +2080,14 @@ function gameLoop(timestamp) {
         updatePickups();
         checkRoomCleared();
 
+        // Update floating texts
+        for (let i = floatingTexts.length - 1; i >= 0; i--) {
+            const ft = floatingTexts[i];
+            ft.y += ft.vy * dt;
+            ft.life -= dt;
+            if (ft.life <= 0) floatingTexts.splice(i, 1);
+        }
+
         if (flashAlpha > 0) flashAlpha -= dt * 3;
 
         drawRoom();
@@ -1951,12 +2095,30 @@ function gameLoop(timestamp) {
         tears.forEach(t => t.draw());
         player.draw();
         drawParticles();
+
+        // Draw floating texts
+        floatingTexts.forEach(ft => {
+            const alpha = ft.life / ft.maxLife;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.font = `bold ${Math.floor(14 * ft.scale)}px Arial`;
+            ctx.fillStyle = '#000';
+            ctx.fillText(ft.text, ft.x + 1, ft.y + 1);
+            ctx.fillStyle = ft.color;
+            ctx.fillText(ft.text, ft.x, ft.y);
+            ctx.restore();
+        });
+
+        // Isaac-style vignette spotlight effect
+        drawVignette();
+
         drawHUD();
 
         if (flashAlpha > 0) {
             ctx.fillStyle = `rgba(255, 0, 0, ${flashAlpha})`;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
+        drawDebugOverlay();
     } else if (gameState === 'gameover') {
         drawRoom();
         enemies.forEach(e => e.draw());
@@ -1973,6 +2135,7 @@ document.addEventListener('keydown', e => {
     keys[e.key.toLowerCase()] = true;
     if (gameState === 'title' && e.key === ' ') initGame();
     else if (gameState === 'gameover' && e.key === ' ') initGame();
+    if (e.key === '`') debugMode = !debugMode;
 });
 
 document.addEventListener('keyup', e => {

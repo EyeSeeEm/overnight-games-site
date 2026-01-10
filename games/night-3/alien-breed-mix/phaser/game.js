@@ -5,35 +5,37 @@ const TILE_SIZE = 32;
 const MAP_WIDTH = 40;
 const MAP_HEIGHT = 30;
 
-// Weapon data
+// Weapon data - IMPROVED for better feel
 const WEAPONS = {
-    pistol: { name: 'Pistol', damage: 15, fireRate: 0.25, magSize: 12, reloadTime: 1.2, spread: 0.05, bulletSpeed: 800, color: 0xFFAA00, shake: 2 },
-    shotgun: { name: 'Shotgun', damage: 10, fireRate: 0.8, magSize: 8, reloadTime: 2.5, spread: 0.35, pellets: 6, bulletSpeed: 600, color: 0xFF6600, shake: 8 },
-    smg: { name: 'SMG', damage: 8, fireRate: 0.08, magSize: 40, reloadTime: 1.5, spread: 0.12, bulletSpeed: 750, color: 0xFFCC00, shake: 2 },
-    rifle: { name: 'Assault Rifle', damage: 20, fireRate: 0.15, magSize: 30, reloadTime: 2.0, spread: 0.03, bulletSpeed: 900, color: 0xFFFF00, shake: 4 },
-    plasma: { name: 'Plasma Rifle', damage: 35, fireRate: 0.35, magSize: 20, reloadTime: 2.2, spread: 0.02, bulletSpeed: 700, color: 0x00AAFF, shake: 5 }
+    pistol: { name: 'Pistol', damage: 16, fireRate: 0.22, magSize: 12, reloadTime: 1.0, spread: 0.04, bulletSpeed: 850, color: 0xFFAA00, shake: 4 },
+    shotgun: { name: 'Shotgun', damage: 12, fireRate: 0.65, magSize: 8, reloadTime: 2.2, spread: 0.3, pellets: 8, bulletSpeed: 650, color: 0xFF6600, shake: 14 },
+    smg: { name: 'SMG', damage: 9, fireRate: 0.06, magSize: 45, reloadTime: 1.3, spread: 0.1, bulletSpeed: 800, color: 0xFFCC00, shake: 3 },
+    rifle: { name: 'Assault Rifle', damage: 24, fireRate: 0.12, magSize: 30, reloadTime: 1.8, spread: 0.02, bulletSpeed: 950, color: 0xFFFF00, shake: 6 },
+    plasma: { name: 'Plasma Rifle', damage: 45, fireRate: 0.3, magSize: 20, reloadTime: 2.0, spread: 0.01, bulletSpeed: 750, color: 0x00AAFF, shake: 8 }
 };
 
-// Enemy data
+// Enemy data - MORE AGGRESSIVE for real challenge
 const ENEMY_TYPES = {
-    drone: { health: 20, speed: 120, damage: 10, credits: 5, size: 24 },
-    spitter: { health: 30, speed: 80, damage: 15, credits: 10, size: 24, ranged: true, fireRate: 2.0 },
-    lurker: { health: 25, speed: 180, damage: 15, credits: 8, size: 20 },
-    brute: { health: 100, speed: 60, damage: 30, credits: 25, size: 40 },
-    exploder: { health: 15, speed: 100, damage: 50, credits: 12, size: 28, explodeRadius: 80 },
-    elite: { health: 150, speed: 90, damage: 25, credits: 50, size: 36, ranged: true, fireRate: 1.5 }
+    drone: { health: 22, speed: 145, damage: 12, credits: 5, size: 24 },
+    spitter: { health: 35, speed: 100, damage: 18, credits: 10, size: 24, ranged: true, fireRate: 1.5 },
+    lurker: { health: 30, speed: 220, damage: 18, credits: 8, size: 20 },
+    brute: { health: 120, speed: 80, damage: 35, credits: 25, size: 40 },
+    exploder: { health: 18, speed: 130, damage: 60, credits: 12, size: 28, explodeRadius: 100 },
+    elite: { health: 180, speed: 110, damage: 30, credits: 50, size: 36, ranged: true, fireRate: 1.2 }
 };
 
+// Darker Alien Breed style color palette
 const COLORS = {
-    floor: 0x4A3A2A,
-    floorDark: 0x2A1A0A,
-    wall: 0x5A5A5A,
-    wallLight: 0x7A7A7A,
-    wallDark: 0x3A3A3A,
+    floor: 0x2A2A2E,
+    floorDark: 0x1E1E22,
+    wall: 0x3A3A3C,
+    wallLight: 0x5A5A5C,
+    wallDark: 0x1A1A1C,
     player: 0x3A5A2A,
     playerLight: 0x4A6A3A,
     alien: 0x0A0A0A,
-    alienEye: 0x880000,
+    alienEye: 0xAA0000,
+    alienEyeGlow: 0xFF4444,
     health: 0xCC2222,
     shield: 0x3366CC,
     hudBg: 0x050505,
@@ -42,6 +44,9 @@ const COLORS = {
     barrel: 0xCC4400,
     terminal: 0x00AA44
 };
+
+// Visibility radius for atmospheric darkness
+const VISIBILITY_RADIUS = 350;
 
 class BootScene extends Phaser.Scene {
     constructor() {
@@ -81,13 +86,18 @@ class BootScene extends Phaser.Scene {
         gfx.generateTexture('plasma_bullet', 12, 12);
         gfx.destroy();
 
-        // Alien drone texture
+        // Alien drone texture - with menacing red eyes
         gfx = this.make.graphics({ add: false });
         gfx.fillStyle(COLORS.alien);
         gfx.fillCircle(16, 16, 12);
+        // Outer eye glow
         gfx.fillStyle(COLORS.alienEye);
-        gfx.fillCircle(12, 14, 2);
-        gfx.fillCircle(20, 14, 2);
+        gfx.fillCircle(12, 14, 3);
+        gfx.fillCircle(20, 14, 3);
+        // Inner eye highlight
+        gfx.fillStyle(COLORS.alienEyeGlow);
+        gfx.fillCircle(12, 14, 1.5);
+        gfx.fillCircle(20, 14, 1.5);
         gfx.lineStyle(2, 0x050505);
         for (let i = 0; i < 8; i++) {
             const angle = (i / 8) * Math.PI * 2;
@@ -402,6 +412,11 @@ class GameScene extends Phaser.Scene {
         this.input.keyboard.on('keydown-Q', () => this.switchWeapon());
         this.input.keyboard.on('keydown-ONE', () => this.useMedkit());
         this.input.keyboard.on('keydown-E', () => this.interactTerminal());
+        this.input.keyboard.on('keydown-BACKTICK', () => this.toggleDebug());
+
+        // Debug mode
+        this.debugMode = false;
+        this.debugText = null;
 
         // Camera
         this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
@@ -409,6 +424,9 @@ class GameScene extends Phaser.Scene {
 
         // HUD
         this.createHUD();
+
+        // Atmospheric darkness overlay
+        this.createDarknessOverlay();
 
         // Game state
         this.gameState = 'playing';
@@ -814,6 +832,64 @@ class GameScene extends Phaser.Scene {
         this.minimap.setScrollFactor(0).setDepth(100);
     }
 
+    createDarknessOverlay() {
+        // Create darkness overlay graphics
+        this.darknessOverlay = this.add.graphics();
+        this.darknessOverlay.setDepth(15);
+
+        // Scan line effect
+        this.scanLines = this.add.graphics();
+        this.scanLines.setScrollFactor(0).setDepth(98);
+        this.scanLines.fillStyle(0x000000, 0.03);
+        for (let y = 0; y < this.cameras.main.height; y += 3) {
+            this.scanLines.fillRect(0, y, this.cameras.main.width, 1);
+        }
+    }
+
+    updateDarknessOverlay() {
+        if (!this.darknessOverlay || !this.player) return;
+
+        this.darknessOverlay.clear();
+
+        // Get camera bounds
+        const camX = this.cameras.main.scrollX;
+        const camY = this.cameras.main.scrollY;
+        const w = this.cameras.main.width;
+        const h = this.cameras.main.height;
+
+        // Simple edge vignette effect for atmosphere
+        // Draw gradient darkness at screen edges
+        const edgeSize = 150;
+
+        // Top edge
+        for (let i = 0; i < edgeSize; i += 10) {
+            const alpha = (1 - i / edgeSize) * 0.4;
+            this.darknessOverlay.fillStyle(0x000000, alpha);
+            this.darknessOverlay.fillRect(camX, camY + i, w, 10);
+        }
+
+        // Bottom edge
+        for (let i = 0; i < edgeSize; i += 10) {
+            const alpha = (1 - i / edgeSize) * 0.4;
+            this.darknessOverlay.fillStyle(0x000000, alpha);
+            this.darknessOverlay.fillRect(camX, camY + h - edgeSize + i, w, 10);
+        }
+
+        // Left edge
+        for (let i = 0; i < edgeSize; i += 10) {
+            const alpha = (1 - i / edgeSize) * 0.3;
+            this.darknessOverlay.fillStyle(0x000000, alpha);
+            this.darknessOverlay.fillRect(camX + i, camY, 10, h);
+        }
+
+        // Right edge
+        for (let i = 0; i < edgeSize; i += 10) {
+            const alpha = (1 - i / edgeSize) * 0.3;
+            this.darknessOverlay.fillStyle(0x000000, alpha);
+            this.darknessOverlay.fillRect(camX + w - edgeSize + i, camY, 10, h);
+        }
+    }
+
     update(time, delta) {
         if (this.gameState !== 'playing') return;
 
@@ -923,6 +999,8 @@ class GameScene extends Phaser.Scene {
         // Update HUD
         this.updateHUD();
         this.updateMinimap();
+        this.updateDarknessOverlay();
+        this.updateDebugDisplay();
     }
 
     startReload() {
@@ -946,9 +1024,10 @@ class GameScene extends Phaser.Scene {
                 isPlasma ? 'plasma_bullet' : 'bullet'
             );
             bullet.rotation = bulletAngle;
-            bullet.life = 0.8;
+            bullet.life = isPlasma ? 1.5 : 0.8;  // Plasma travels longer
             bullet.damage = weapon.damage;
             bullet.tint = weapon.color;
+            bullet.piercing = isPlasma;  // Plasma pierces enemies
 
             this.physics.add.existing(bullet);
             bullet.body.setVelocity(
@@ -991,6 +1070,44 @@ class GameScene extends Phaser.Scene {
         }
     }
 
+    toggleDebug() {
+        this.debugMode = !this.debugMode;
+        if (this.debugMode) {
+            this.debugText = this.add.text(10, 60, '', {
+                fontFamily: 'monospace',
+                fontSize: '14px',
+                color: '#00ff00',
+                backgroundColor: '#000000cc',
+                padding: { x: 8, y: 8 }
+            }).setScrollFactor(0).setDepth(1000);
+        } else if (this.debugText) {
+            this.debugText.destroy();
+            this.debugText = null;
+        }
+    }
+
+    updateDebugDisplay() {
+        if (!this.debugMode || !this.debugText) return;
+        const enemyCount = this.enemies ? this.enemies.countActive() : 0;
+        const bulletCount = this.bullets ? this.bullets.countActive() : 0;
+        const pickupCount = this.pickups ? this.pickups.countActive() : 0;
+        this.debugText.setText([
+            '=== DEBUG (` to close) ===',
+            `Player: (${Math.round(this.player.x)}, ${Math.round(this.player.y)})`,
+            `Health: ${this.player.health}/${this.player.maxHealth}`,
+            `Shield: ${this.player.shield}/${this.player.maxShield}`,
+            `Stamina: ${Math.round(this.player.stamina)}/${this.player.maxStamina}`,
+            `Enemies: ${enemyCount}`,
+            `Bullets: ${bulletCount}`,
+            `Pickups: ${pickupCount}`,
+            `Deck: ${this.deck}/4`,
+            `Kills: ${this.killCount || 0}`,
+            `Combo: ${this.comboCount}`,
+            `State: ${this.gameState}`,
+            `FPS: ${Math.round(this.game.loop.actualFps)}`
+        ].join('\n'));
+    }
+
     interactTerminal() {
         this.terminals.children.iterate(terminal => {
             if (!terminal || terminal.used) return;
@@ -1019,6 +1136,36 @@ class GameScene extends Phaser.Scene {
         this.bullets.children.iterate(bullet => {
             if (!bullet || !bullet.active) return;
 
+            // Auto-aim assist for player bullets (gentle homing)
+            if (this.enemies.children.size > 0) {
+                let nearest = null;
+                let nearestDist = 150;  // Max homing range
+                this.enemies.children.iterate(enemy => {
+                    if (!enemy || !enemy.active) return;
+                    const dist = Phaser.Math.Distance.Between(bullet.x, bullet.y, enemy.x, enemy.y);
+                    if (dist < nearestDist) {
+                        nearestDist = dist;
+                        nearest = enemy;
+                    }
+                });
+                if (nearest && bullet.body) {
+                    const targetAngle = Phaser.Math.Angle.Between(bullet.x, bullet.y, nearest.x, nearest.y);
+                    const bulletAngle = Math.atan2(bullet.body.velocity.y, bullet.body.velocity.x);
+                    let angleDiff = targetAngle - bulletAngle;
+                    // Normalize angle diff
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                    // Only curve if within 45 degrees
+                    if (Math.abs(angleDiff) < Math.PI / 4) {
+                        const homeStrength = 2.5 * dt;  // Subtle homing
+                        const speed = bullet.body.velocity.length();
+                        const newAngle = bulletAngle + angleDiff * homeStrength;
+                        bullet.body.setVelocity(Math.cos(newAngle) * speed, Math.sin(newAngle) * speed);
+                        bullet.rotation = newAngle;
+                    }
+                }
+            }
+
             bullet.life -= dt;
             if (bullet.life <= 0) {
                 bullet.destroy();
@@ -1034,12 +1181,27 @@ class GameScene extends Phaser.Scene {
             }
 
             // Check enemy hits
+            let hitEnemy = false;
             this.enemies.children.iterate(enemy => {
-                if (!enemy || !enemy.active) return;
+                if (!enemy || !enemy.active || hitEnemy) return;
                 const dist = Phaser.Math.Distance.Between(bullet.x, bullet.y, enemy.x, enemy.y);
                 if (dist < ENEMY_TYPES[enemy.type].size / 2 + 6) {
-                    this.hitEnemy(enemy, bullet.damage, bullet.rotation);
-                    bullet.destroy();
+                    // Critical hit chance (15%)
+                    const isCrit = Math.random() < 0.15;
+                    const finalDamage = isCrit ? bullet.damage * 2 : bullet.damage;
+
+                    if (isCrit) {
+                        this.showFloatingText(enemy.x, enemy.y - 40, 'CRITICAL!', '#FF4400', 1.5);
+                        this.cameras.main.shake(80, 0.008);
+                    }
+
+                    this.hitEnemy(enemy, finalDamage, bullet.rotation);
+                    hitEnemy = true;
+
+                    // Piercing plasma goes through enemies
+                    if (!bullet.piercing) {
+                        bullet.destroy();
+                    }
                 }
             });
 
@@ -1204,8 +1366,14 @@ class GameScene extends Phaser.Scene {
     }
 
     hitEnemy(enemy, damage, angle) {
+        const prevHealth = enemy.health;
         enemy.health -= damage;
         enemy.hitFlash = 0.15;
+
+        // Track overkill for bonus
+        if (enemy.health <= 0 && prevHealth > 0) {
+            enemy.overkillDamage = Math.abs(enemy.health);
+        }
 
         // Knockback (except brute)
         if (enemy.type !== 'brute') {
@@ -1237,6 +1405,13 @@ class GameScene extends Phaser.Scene {
     killEnemy(enemy) {
         this.player.credits += enemy.credits;
         this.killCount++;
+
+        // Overkill bonus (10% of overkill damage as credits)
+        if (enemy.overkillDamage && enemy.overkillDamage > 10) {
+            const bonus = Math.floor(enemy.overkillDamage / 10);
+            this.player.credits += bonus;
+            this.showFloatingText(enemy.x + 30, enemy.y - 30, 'OVERKILL +$' + bonus, '#FF6600', 1.2);
+        }
 
         // Combo
         this.comboCount++;

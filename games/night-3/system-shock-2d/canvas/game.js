@@ -47,6 +47,34 @@ const game = {
     messages: []
 };
 
+// Stats tracking
+const stats = {
+    killCount: 0,
+    totalDamageDealt: 0,
+    totalDamageTaken: 0,
+    critCount: 0,
+    terminalsHacked: 0,
+    itemsPickedUp: 0,
+    shotsFired: 0,
+    shotsHit: 0,
+    maxKillStreak: 0
+};
+
+// Kill streak system
+let killStreak = 0;
+let killStreakTimer = 0;
+
+// Visual effects
+let damageFlashAlpha = 0;
+let lowHealthPulse = 0;
+let screenShake = { x: 0, y: 0, intensity: 0 };
+
+// Floating texts
+let floatingTexts = [];
+
+// Debug mode
+let debugMode = false;
+
 // Player
 const player = {
     x: 400,
@@ -121,6 +149,7 @@ function init() {
         if (e.key === 'r' && !player.reloading) reload();
         if (e.key === 'f') player.flashlightOn = !player.flashlightOn;
         if (e.key === 'e') interact();
+        if (e.key === 'q') debugMode = !debugMode;
         if (e.key >= '1' && e.key <= '4') selectWeapon(parseInt(e.key) - 1);
     });
 
@@ -363,6 +392,9 @@ function update(delta) {
     updateEnemies(delta);
     updateBullets(delta);
     updateParticles(delta);
+    updateVisualEffects(delta);
+    updateFloatingTexts(delta);
+    updateKillStreak(delta);
 
     // Energy regeneration
     if (player.energy < player.maxEnergy) {
@@ -509,6 +541,7 @@ function shoot() {
 
         player.magazine--;
         player.lastShot = now;
+        stats.shotsFired++;
 
         if (weapon.pellets) {
             // Shotgun spread
@@ -603,6 +636,19 @@ function interact() {
             addMessage("M.A.R.I.A.: Ah, you wish to access my systems? How... predictable.");
             terminal.hacked = true;
             game.score += 100;
+            stats.terminalsHacked++;
+            createFloatingText(terminal.x, terminal.y - 30, 'HACKED +100', '#40ff40', 14);
+            // Data particles
+            for (let i = 0; i < 10; i++) {
+                particles.push({
+                    x: terminal.x, y: terminal.y,
+                    vx: (Math.random() - 0.5) * 100,
+                    vy: -30 - Math.random() * 50,
+                    life: 0.8,
+                    color: '#40aa60',
+                    size: 3
+                });
+            }
             return;
         }
     }
@@ -637,16 +683,47 @@ function interact() {
 }
 
 function pickupItem(item, index) {
+    stats.itemsPickedUp++;
+
     if (item.heal) {
         player.hp = Math.min(player.maxHp, player.hp + item.heal);
         addMessage("Used: " + item.name);
+        createFloatingText(item.x, item.y - 20, '+' + item.heal + ' HP', '#40ff40', 14);
+        // Healing particles
+        for (let i = 0; i < 8; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            particles.push({
+                x: player.x + Math.cos(angle) * 20,
+                y: player.y + Math.sin(angle) * 20,
+                vx: 0, vy: -30 - Math.random() * 20,
+                life: 0.6,
+                color: '#40ff40',
+                size: 4
+            });
+        }
     } else if (item.ammo) {
         player.ammo[item.ammoType] += item.ammo;
         addMessage("Picked up: " + item.name);
+        createFloatingText(item.x, item.y - 20, '+AMMO', '#ffff40', 12);
     } else if (item.energy) {
         player.energy = Math.min(player.maxEnergy, player.energy + item.energy);
         addMessage("Picked up: " + item.name);
+        createFloatingText(item.x, item.y - 20, '+' + item.energy + ' ENERGY', '#40ffff', 12);
     }
+
+    // Pickup sparkle
+    for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI * 2 * i) / 6;
+        particles.push({
+            x: item.x, y: item.y,
+            vx: Math.cos(angle) * 40,
+            vy: Math.sin(angle) * 40,
+            life: 0.3,
+            color: '#ffff80',
+            size: 3
+        });
+    }
+
     items.splice(index, 1);
 }
 
@@ -717,17 +794,8 @@ function updateEnemies(delta) {
                         });
                     } else if (distToPlayer < enemy.range + 20) {
                         // Melee attack
-                        player.hp -= enemy.damage;
+                        damagePlayer(enemy.damage);
                         addMessage("Cyborg attacks! -" + enemy.damage + " HP");
-
-                        particles.push({
-                            x: player.x, y: player.y,
-                            vx: (Math.random() - 0.5) * 100,
-                            vy: (Math.random() - 0.5) * 100,
-                            life: 0.3,
-                            color: '#ff4040',
-                            size: 8
-                        });
                     }
                 }
 
@@ -794,26 +862,84 @@ function normalizeAngle(angle) {
 }
 
 function damageEnemy(enemy, damage) {
+    // Critical hit system (15% chance, 2x damage)
+    const isCrit = Math.random() < 0.15;
+    if (isCrit) {
+        damage *= 2;
+        stats.critCount++;
+    }
+
     enemy.hp -= damage;
     enemy.state = 'chase';
     enemy.lastSeen = { x: player.x, y: player.y };
     enemy.alertTimer = 5;
 
-    // Blood particle
-    particles.push({
-        x: enemy.x, y: enemy.y,
-        vx: (Math.random() - 0.5) * 150,
-        vy: (Math.random() - 0.5) * 150,
-        life: 0.4,
-        color: '#aa4040',
-        size: 6
-    });
+    stats.totalDamageDealt += damage;
+    stats.shotsHit++;
+
+    // Floating damage number
+    createFloatingText(
+        enemy.x, enemy.y - 20,
+        damage.toString() + (isCrit ? '!' : ''),
+        isCrit ? '#ffff00' : '#ff4444',
+        isCrit ? 18 : 14
+    );
+
+    // Screen shake
+    triggerScreenShake(isCrit ? 6 : 3);
+
+    // Blood particle (more for crits)
+    const particleCount = isCrit ? 5 : 1;
+    for (let i = 0; i < particleCount; i++) {
+        particles.push({
+            x: enemy.x, y: enemy.y,
+            vx: (Math.random() - 0.5) * 150,
+            vy: (Math.random() - 0.5) * 150,
+            life: 0.4,
+            color: '#aa4040',
+            size: 6 + Math.random() * 4
+        });
+    }
 
     if (enemy.hp <= 0) {
-        corpses.push({ x: enemy.x, y: enemy.y, type: enemy.type, looted: false, color: enemy.color });
-        game.score += 50;
-        addMessage("Enemy destroyed. +50 points");
+        killEnemy(enemy, isCrit);
     }
+}
+
+function killEnemy(enemy, wasCrit) {
+    stats.killCount++;
+
+    // Kill streak
+    killStreak++;
+    killStreakTimer = 3; // 3 seconds
+    if (killStreak > stats.maxKillStreak) {
+        stats.maxKillStreak = killStreak;
+    }
+
+    // Kill streak messages
+    if (killStreak >= 3) {
+        const streakMessages = { 3: 'TRIPLE KILL!', 4: 'QUAD KILL!', 5: 'RAMPAGE!', 6: 'MASSACRE!' };
+        const msg = streakMessages[Math.min(killStreak, 6)] || 'UNSTOPPABLE!';
+        createFloatingText(player.x, player.y - 60, msg, '#ffaa00', 22);
+    }
+
+    // Death burst particles
+    for (let i = 0; i < 8; i++) {
+        const angle = (Math.PI * 2 * i) / 8;
+        particles.push({
+            x: enemy.x, y: enemy.y,
+            vx: Math.cos(angle) * 80,
+            vy: Math.sin(angle) * 80,
+            life: 0.5,
+            color: '#aa4040',
+            size: 5
+        });
+    }
+    triggerScreenShake(8);
+
+    corpses.push({ x: enemy.x, y: enemy.y, type: enemy.type, looted: false, color: enemy.color });
+    game.score += wasCrit ? 75 : 50;
+    addMessage("Enemy destroyed. +" + (wasCrit ? 75 : 50) + " points");
 }
 
 function updateBullets(delta) {
@@ -855,7 +981,7 @@ function updateBullets(delta) {
         } else {
             const dist = Math.hypot(bullet.x - player.x, bullet.y - player.y);
             if (dist < player.radius + 5) {
-                player.hp -= bullet.damage;
+                damagePlayer(bullet.damage);
                 addMessage("Hit! -" + bullet.damage + " HP");
                 bullets.splice(i, 1);
             }
@@ -873,12 +999,98 @@ function updateParticles(delta) {
     }
 }
 
+// Helper functions for visual effects
+function damagePlayer(damage) {
+    player.hp -= damage;
+    stats.totalDamageTaken += damage;
+
+    // Damage flash
+    damageFlashAlpha = 0.4;
+
+    // Screen shake
+    triggerScreenShake(5);
+
+    // Blood particles
+    for (let i = 0; i < 3; i++) {
+        particles.push({
+            x: player.x, y: player.y,
+            vx: (Math.random() - 0.5) * 100,
+            vy: (Math.random() - 0.5) * 100,
+            life: 0.3,
+            color: '#ff4040',
+            size: 6
+        });
+    }
+
+    // Floating damage text
+    createFloatingText(player.x, player.y - 30, '-' + damage, '#ff4444', 14);
+}
+
+function createFloatingText(x, y, text, color, size) {
+    floatingTexts.push({
+        x, y,
+        text,
+        color,
+        size,
+        life: 1,
+        maxLife: 1,
+        vy: -30
+    });
+}
+
+function triggerScreenShake(intensity) {
+    screenShake.intensity = Math.max(screenShake.intensity, intensity);
+}
+
+function updateVisualEffects(delta) {
+    // Damage flash decay
+    if (damageFlashAlpha > 0) {
+        damageFlashAlpha = Math.max(0, damageFlashAlpha - delta * 2);
+    }
+
+    // Low health pulsing
+    if (player.hp < 30) {
+        lowHealthPulse += delta * 4;
+    }
+
+    // Screen shake decay
+    if (screenShake.intensity > 0) {
+        screenShake.x = (Math.random() - 0.5) * screenShake.intensity;
+        screenShake.y = (Math.random() - 0.5) * screenShake.intensity;
+        screenShake.intensity = Math.max(0, screenShake.intensity - delta * 30);
+    } else {
+        screenShake.x = 0;
+        screenShake.y = 0;
+    }
+}
+
+function updateFloatingTexts(delta) {
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i];
+        ft.life -= delta;
+        ft.y += ft.vy * delta;
+        if (ft.life <= 0) {
+            floatingTexts.splice(i, 1);
+        }
+    }
+}
+
+function updateKillStreak(delta) {
+    if (killStreakTimer > 0) {
+        killStreakTimer -= delta;
+        if (killStreakTimer <= 0) {
+            killStreak = 0;
+        }
+    }
+}
+
 function render() {
     ctx.fillStyle = COLORS.BG;
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
     ctx.save();
-    ctx.translate(-camera.x, -camera.y);
+    // Apply screen shake
+    ctx.translate(-camera.x + screenShake.x, -camera.y + screenShake.y);
 
     // Render map
     renderMap();
@@ -992,10 +1204,83 @@ function render() {
     // Render flashlight cone / darkness overlay
     renderLighting();
 
+    // Render floating texts (in world space)
+    for (const ft of floatingTexts) {
+        ctx.save();
+        ctx.font = `bold ${ft.size}px monospace`;
+        ctx.fillStyle = ft.color;
+        ctx.globalAlpha = ft.life / ft.maxLife;
+        ctx.textAlign = 'center';
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.restore();
+    }
+
     ctx.restore();
+
+    // Visual effects overlays (screen space)
+    // Damage flash
+    if (damageFlashAlpha > 0) {
+        ctx.fillStyle = `rgba(255, 0, 0, ${damageFlashAlpha})`;
+        ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    }
+
+    // Low health vignette
+    if (player.hp < 30) {
+        const pulseAlpha = 0.15 + Math.sin(lowHealthPulse) * 0.1;
+        ctx.fillStyle = `rgba(100, 0, 0, ${pulseAlpha})`;
+        ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    }
+
+    // Kill streak display
+    if (killStreak >= 2) {
+        ctx.save();
+        ctx.font = 'bold 18px monospace';
+        ctx.fillStyle = '#ffaa00';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${killStreak}x STREAK`, GAME_WIDTH / 2, 80);
+        ctx.restore();
+    }
 
     // Render UI
     renderUI();
+
+    // Debug overlay
+    if (debugMode) {
+        renderDebugOverlay();
+    }
+}
+
+function renderDebugOverlay() {
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(GAME_WIDTH - 200, 40, 190, 250);
+
+    ctx.font = '11px monospace';
+    ctx.fillStyle = '#00ff00';
+    const lines = [
+        `KILLS: ${stats.killCount}`,
+        `DMG DEALT: ${stats.totalDamageDealt}`,
+        `DMG TAKEN: ${stats.totalDamageTaken}`,
+        `CRITS: ${stats.critCount}`,
+        `TERMINALS: ${stats.terminalsHacked}`,
+        `ITEMS: ${stats.itemsPickedUp}`,
+        `SHOTS: ${stats.shotsFired}`,
+        `HITS: ${stats.shotsHit}`,
+        `ACCURACY: ${stats.shotsFired > 0 ? Math.round(stats.shotsHit / stats.shotsFired * 100) : 0}%`,
+        `MAX STREAK: ${stats.maxKillStreak}`,
+        `STREAK: ${killStreak}`,
+        `---`,
+        `HP: ${Math.floor(player.hp)}`,
+        `ENERGY: ${Math.floor(player.energy)}`,
+        `AMMO: ${player.magazine}/${player.ammo.bullets}`,
+        `ENEMIES: ${enemies.filter(e => e.hp > 0).length}`,
+        `SCORE: ${game.score}`
+    ];
+
+    lines.forEach((line, i) => {
+        ctx.fillText(line, GAME_WIDTH - 190, 55 + i * 14);
+    });
+    ctx.restore();
 }
 
 function renderMap() {
@@ -1176,25 +1461,86 @@ function renderUI() {
 
     // Game over / Victory screens
     if (game.state === 'gameover') {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
         ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+        // Calculate performance rating
+        let rating = 'FAILURE';
+        const score = stats.killCount * 10 + stats.terminalsHacked * 20 - stats.totalDamageTaken;
+        if (score >= 100) rating = 'COMMENDABLE';
+        else if (score >= 50) rating = 'ACCEPTABLE';
+        else if (score >= 20) rating = 'POOR';
+
         ctx.fillStyle = COLORS.TEXT_RED;
         ctx.font = '48px monospace';
-        ctx.fillText('SYSTEM FAILURE', GAME_WIDTH/2 - 180, GAME_HEIGHT/2 - 20);
+        ctx.textAlign = 'center';
+        ctx.fillText('SYSTEM FAILURE', GAME_WIDTH/2, GAME_HEIGHT/2 - 100);
+
         ctx.font = '20px monospace';
         ctx.fillStyle = COLORS.TEXT;
-        ctx.fillText('M.A.R.I.A.: "You were never going to win."', GAME_WIDTH/2 - 180, GAME_HEIGHT/2 + 30);
-        ctx.fillText('Press R to restart', GAME_WIDTH/2 - 80, GAME_HEIGHT/2 + 70);
+        ctx.fillText('M.A.R.I.A.: "You were never going to win."', GAME_WIDTH/2, GAME_HEIGHT/2 - 60);
+
+        ctx.fillStyle = '#ffaa00';
+        ctx.fillText(`Performance Rating: ${rating}`, GAME_WIDTH/2, GAME_HEIGHT/2 - 25);
+
+        ctx.font = '14px monospace';
+        ctx.fillStyle = '#888888';
+        const statsLines = [
+            `Kills: ${stats.killCount}  |  Crits: ${stats.critCount}  |  Max Streak: ${stats.maxKillStreak}`,
+            `Damage Dealt: ${stats.totalDamageDealt}  |  Damage Taken: ${stats.totalDamageTaken}`,
+            `Terminals: ${stats.terminalsHacked}  |  Items: ${stats.itemsPickedUp}`,
+            `Shots: ${stats.shotsFired}  |  Accuracy: ${stats.shotsFired > 0 ? Math.round(stats.shotsHit / stats.shotsFired * 100) : 0}%`,
+            `Score: ${game.score}  |  Time: ${Math.floor(game.time)}s`
+        ];
+        statsLines.forEach((line, i) => {
+            ctx.fillText(line, GAME_WIDTH/2, GAME_HEIGHT/2 + 10 + i * 20);
+        });
+
+        ctx.fillStyle = '#666666';
+        ctx.fillText('Press R to restart', GAME_WIDTH/2, GAME_HEIGHT/2 + 130);
+        ctx.textAlign = 'left';
     } else if (game.state === 'victory') {
-        ctx.fillStyle = 'rgba(0, 40, 0, 0.8)';
+        ctx.fillStyle = 'rgba(0, 40, 0, 0.9)';
         ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+        // Calculate efficiency rating
+        const efficiency = (100 - stats.totalDamageTaken) + stats.killCount * 5 + stats.terminalsHacked * 10;
+        let rating = 'D';
+        if (efficiency >= 150) rating = 'S';
+        else if (efficiency >= 120) rating = 'A';
+        else if (efficiency >= 90) rating = 'B';
+        else if (efficiency >= 60) rating = 'C';
+
         ctx.fillStyle = COLORS.TEXT_GREEN;
         ctx.font = '48px monospace';
-        ctx.fillText('DECK CLEARED', GAME_WIDTH/2 - 150, GAME_HEIGHT/2 - 20);
+        ctx.textAlign = 'center';
+        ctx.fillText('DECK CLEARED', GAME_WIDTH/2, GAME_HEIGHT/2 - 100);
+
+        ctx.fillStyle = '#ffff00';
+        ctx.font = '24px monospace';
+        ctx.fillText(`Efficiency Rating: ${rating}`, GAME_WIDTH/2, GAME_HEIGHT/2 - 55);
+
         ctx.font = '20px monospace';
         ctx.fillStyle = COLORS.TEXT;
-        ctx.fillText('M.A.R.I.A.: "You may have won this battle..."', GAME_WIDTH/2 - 180, GAME_HEIGHT/2 + 30);
-        ctx.fillText('Score: ' + game.score, GAME_WIDTH/2 - 50, GAME_HEIGHT/2 + 70);
+        ctx.fillText('M.A.R.I.A.: "You may have won this battle..."', GAME_WIDTH/2, GAME_HEIGHT/2 - 25);
+
+        ctx.font = '14px monospace';
+        ctx.fillStyle = '#88aa88';
+        const statsLines = [
+            `Kills: ${stats.killCount}  |  Crits: ${stats.critCount}  |  Max Streak: ${stats.maxKillStreak}`,
+            `Damage Dealt: ${stats.totalDamageDealt}  |  Damage Taken: ${stats.totalDamageTaken}`,
+            `Terminals: ${stats.terminalsHacked}  |  Items: ${stats.itemsPickedUp}`,
+            `Shots: ${stats.shotsFired}  |  Accuracy: ${stats.shotsFired > 0 ? Math.round(stats.shotsHit / stats.shotsFired * 100) : 0}%`,
+            `Final HP: ${Math.floor(player.hp)}  |  Final Energy: ${Math.floor(player.energy)}`,
+            `Score: ${game.score}  |  Time: ${Math.floor(game.time)}s`
+        ];
+        statsLines.forEach((line, i) => {
+            ctx.fillText(line, GAME_WIDTH/2, GAME_HEIGHT/2 + 10 + i * 20);
+        });
+
+        ctx.fillStyle = '#666666';
+        ctx.fillText('Press SPACE to continue', GAME_WIDTH/2, GAME_HEIGHT/2 + 150);
+        ctx.textAlign = 'left';
     }
 }
 

@@ -161,6 +161,37 @@ class GameScene extends Phaser.Scene {
             isSprinting: false
         };
 
+        // Stats tracking
+        this.stats = {
+            killCount: 0,
+            totalDamageDealt: 0,
+            totalDamageTaken: 0,
+            critCount: 0,
+            terminalsHacked: 0,
+            itemsPickedUp: 0,
+            shotsFired: 0,
+            shotsHit: 0,
+            maxKillStreak: 0
+        };
+
+        // Kill streak system
+        this.killStreak = 0;
+        this.killStreakTimer = 0;
+
+        // Visual effects
+        this.damageFlashAlpha = 0;
+        this.lowHealthPulse = 0;
+        this.screenShake = { x: 0, y: 0, intensity: 0 };
+
+        // Floating texts
+        this.floatingTexts = [];
+
+        // Debug mode
+        this.debugMode = false;
+
+        // Game timer
+        this.gameStartTime = Date.now();
+
         this.weapons = {
             wrench: { damage: 15, range: 40, fireRate: 400, ammoType: null, magazineSize: null, melee: true },
             pistol: { damage: 12, range: 400, fireRate: 300, ammoType: 'bullets', magazineSize: 12, melee: false },
@@ -416,6 +447,21 @@ class GameScene extends Phaser.Scene {
         this.crosshair = this.add.graphics();
         this.crosshair.setScrollFactor(0);
         this.crosshair.setDepth(100);
+
+        // Visual effects overlays
+        this.damageOverlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0xff0000, 0);
+        this.damageOverlay.setScrollFactor(0).setDepth(90);
+
+        this.lowHealthOverlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x330000, 0);
+        this.lowHealthOverlay.setScrollFactor(0).setDepth(89);
+
+        // Kill streak display
+        this.killStreakText = this.add.text(GAME_WIDTH / 2, 80, '', { fontSize: '18px', fontFamily: 'monospace', color: '#ffaa00', fontStyle: 'bold' });
+        this.killStreakText.setOrigin(0.5).setScrollFactor(0).setDepth(101);
+
+        // Debug overlay
+        this.debugText = this.add.text(GAME_WIDTH - 200, 50, '', { fontSize: '10px', fontFamily: 'monospace', color: '#00ff00', backgroundColor: '#000000aa' });
+        this.debugText.setScrollFactor(0).setDepth(150).setVisible(false);
     }
 
     createLighting() {
@@ -445,6 +491,10 @@ class GameScene extends Phaser.Scene {
         this.input.keyboard.on('keydown-R', () => this.reload());
         this.input.keyboard.on('keydown-F', () => this.playerData.flashlightOn = !this.playerData.flashlightOn);
         this.input.keyboard.on('keydown-E', () => this.interact());
+        this.input.keyboard.on('keydown-Q', () => {
+            this.debugMode = !this.debugMode;
+            this.debugText.setVisible(this.debugMode);
+        });
         this.input.keyboard.on('keydown-ONE', () => this.selectWeapon('wrench'));
         this.input.keyboard.on('keydown-TWO', () => this.selectWeapon('pistol'));
         this.input.keyboard.on('keydown-THREE', () => this.selectWeapon('shotgun'));
@@ -466,6 +516,10 @@ class GameScene extends Phaser.Scene {
         this.updateBullets(dt);
         this.updateLighting();
         this.updateUI();
+        this.updateVisualEffects(dt);
+        this.updateFloatingTexts(dt);
+        this.updateKillStreak(dt);
+        this.updateDebugOverlay();
 
         // Energy regen
         if (this.playerData.energy < this.playerData.maxEnergy) {
@@ -596,6 +650,7 @@ class GameScene extends Phaser.Scene {
 
             this.playerData.magazine--;
             this.playerData.lastShot = now;
+            this.stats.shotsFired++;
 
             const count = weapon.pellets || 1;
             for (let i = 0; i < count; i++) {
@@ -669,7 +724,21 @@ class GameScene extends Phaser.Scene {
             if (dist < 50 && !terminal.terminalData.hacked) {
                 terminal.terminalData.hacked = true;
                 this.gameData.score += 100;
+                this.stats.terminalsHacked++;
+                this.createFloatingText(terminal.x, terminal.y - 30, 'HACKED +100', '#40ff40', 14);
                 this.addMessage("M.A.R.I.A.: You dare access my systems?");
+                // Data particles
+                for (let i = 0; i < 8; i++) {
+                    const particle = this.add.circle(terminal.x, terminal.y, 4, 0x40aa60, 0.8);
+                    this.tweens.add({
+                        targets: particle,
+                        x: terminal.x + (Math.random() - 0.5) * 60,
+                        y: terminal.y - 30 - Math.random() * 40,
+                        alpha: 0,
+                        duration: 600,
+                        onComplete: () => particle.destroy()
+                    });
+                }
                 return;
             }
         }
@@ -688,16 +757,48 @@ class GameScene extends Phaser.Scene {
 
     pickupItem(item, index) {
         const data = item.itemData;
+        this.stats.itemsPickedUp++;
+
         if (data.type === 'medkit') {
             this.playerData.hp = Math.min(this.playerData.maxHp, this.playerData.hp + data.amount);
             this.addMessage("Used: medkit +" + data.amount);
+            this.createFloatingText(item.x, item.y - 20, '+' + data.amount + ' HP', '#40ff40', 14);
+            // Healing particles
+            for (let i = 0; i < 6; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const particle = this.add.circle(this.player.x + Math.cos(angle) * 20, this.player.y + Math.sin(angle) * 20, 4, 0x40ff40, 0.8);
+                this.tweens.add({
+                    targets: particle,
+                    y: particle.y - 30,
+                    alpha: 0,
+                    duration: 500,
+                    onComplete: () => particle.destroy()
+                });
+            }
         } else if (data.type === 'bullets') {
             this.playerData.ammo.bullets += data.amount;
             this.addMessage("Picked up: bullets x" + data.amount);
+            this.createFloatingText(item.x, item.y - 20, '+AMMO', '#ffff40', 12);
         } else if (data.type === 'energy') {
             this.playerData.energy = Math.min(this.playerData.maxEnergy, this.playerData.energy + data.amount);
             this.addMessage("Picked up: energy cell");
+            this.createFloatingText(item.x, item.y - 20, '+' + data.amount + ' ENERGY', '#40ffff', 12);
         }
+
+        // Pickup sparkle
+        for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI * 2 * i) / 6;
+            const particle = this.add.circle(item.x, item.y, 4, 0xffff80, 0.8);
+            this.tweens.add({
+                targets: particle,
+                x: item.x + Math.cos(angle) * 30,
+                y: item.y + Math.sin(angle) * 30,
+                alpha: 0,
+                duration: 300,
+                onComplete: () => particle.destroy()
+            });
+        }
+
         item.destroy();
         this.items.splice(index, 1);
     }
@@ -762,7 +863,7 @@ class GameScene extends Phaser.Scene {
                             };
                             this.bullets.push(bullet);
                         } else if (distToPlayer < data.range + 20) {
-                            this.playerData.hp -= data.damage;
+                            this.damagePlayer(data.damage);
                             this.addMessage("Cyborg attacks! -" + data.damage + " HP");
                         }
                     }
@@ -788,21 +889,80 @@ class GameScene extends Phaser.Scene {
     }
 
     damageEnemy(enemy, damage) {
+        // Critical hit system (15% chance, 2x damage)
+        const isCrit = Math.random() < 0.15;
+        if (isCrit) {
+            damage *= 2;
+            this.stats.critCount++;
+        }
+
         const data = enemy.enemyData;
         data.hp -= damage;
         data.state = 'chase';
         data.lastSeen = { x: this.player.x, y: this.player.y };
         data.alertTimer = 5;
 
-        // Blood effect
-        const blood = this.add.circle(enemy.x, enemy.y, 6, 0xaa4040, 0.8);
-        this.tweens.add({ targets: blood, alpha: 0, scale: 2, duration: 400, onComplete: () => blood.destroy() });
+        this.stats.totalDamageDealt += damage;
+        this.stats.shotsHit++;
+
+        // Floating damage number
+        this.createFloatingText(
+            enemy.x, enemy.y - 20,
+            damage.toString() + (isCrit ? '!' : ''),
+            isCrit ? '#ffff00' : '#ff4444',
+            isCrit ? 18 : 14
+        );
+
+        // Screen shake
+        this.triggerScreenShake(isCrit ? 6 : 3);
+
+        // Blood effect (more for crits)
+        const count = isCrit ? 4 : 1;
+        for (let i = 0; i < count; i++) {
+            const blood = this.add.circle(enemy.x + (Math.random() - 0.5) * 20, enemy.y + (Math.random() - 0.5) * 20, 6, 0xaa4040, 0.8);
+            this.tweens.add({ targets: blood, alpha: 0, scale: 2, duration: 400, onComplete: () => blood.destroy() });
+        }
 
         if (data.hp <= 0) {
-            enemy.setActive(false).setVisible(false);
-            this.gameData.score += 50;
-            this.addMessage("Enemy destroyed. +50 pts");
+            this.killEnemy(enemy, isCrit);
         }
+    }
+
+    killEnemy(enemy, wasCrit) {
+        this.stats.killCount++;
+
+        // Kill streak
+        this.killStreak++;
+        this.killStreakTimer = 3;
+        if (this.killStreak > this.stats.maxKillStreak) {
+            this.stats.maxKillStreak = this.killStreak;
+        }
+
+        // Kill streak messages
+        if (this.killStreak >= 3) {
+            const streakMessages = { 3: 'TRIPLE KILL!', 4: 'QUAD KILL!', 5: 'RAMPAGE!', 6: 'MASSACRE!' };
+            const msg = streakMessages[Math.min(this.killStreak, 6)] || 'UNSTOPPABLE!';
+            this.createFloatingText(this.player.x, this.player.y - 60, msg, '#ffaa00', 22);
+        }
+
+        // Death burst particles
+        for (let i = 0; i < 8; i++) {
+            const angle = (Math.PI * 2 * i) / 8;
+            const particle = this.add.circle(enemy.x, enemy.y, 5, 0xaa4040, 0.8);
+            this.tweens.add({
+                targets: particle,
+                x: enemy.x + Math.cos(angle) * 50,
+                y: enemy.y + Math.sin(angle) * 50,
+                alpha: 0,
+                duration: 400,
+                onComplete: () => particle.destroy()
+            });
+        }
+        this.triggerScreenShake(8);
+
+        enemy.setActive(false).setVisible(false);
+        this.gameData.score += wasCrit ? 75 : 50;
+        this.addMessage("Enemy destroyed. +" + (wasCrit ? 75 : 50) + " pts");
     }
 
     updateBullets(dt) {
@@ -846,7 +1006,7 @@ class GameScene extends Phaser.Scene {
             } else {
                 const dist = Phaser.Math.Distance.Between(bullet.x, bullet.y, this.player.x, this.player.y);
                 if (dist < 15) {
-                    this.playerData.hp -= data.damage;
+                    this.damagePlayer(data.damage);
                     this.addMessage("Hit! -" + data.damage + " HP");
                     bullet.destroy();
                     this.bullets.splice(i, 1);
@@ -941,28 +1101,236 @@ class GameScene extends Phaser.Scene {
         this.crosshair.lineBetween(mx, my + 4, mx, my + 10);
 
         // Game state overlays
-        if (this.gameData.state === 'gameover') {
-            const overlay = this.add.rectangle(GAME_WIDTH/2, GAME_HEIGHT/2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.8);
-            overlay.setScrollFactor(0);
-            overlay.setDepth(200);
-            const text = this.add.text(GAME_WIDTH/2, GAME_HEIGHT/2 - 20, 'SYSTEM FAILURE', { fontSize: '48px', fontFamily: 'monospace', color: '#cc4040' });
-            text.setOrigin(0.5);
-            text.setScrollFactor(0);
-            text.setDepth(201);
-        } else if (this.gameData.state === 'victory') {
-            const overlay = this.add.rectangle(GAME_WIDTH/2, GAME_HEIGHT/2, GAME_WIDTH, GAME_HEIGHT, 0x002800, 0.8);
-            overlay.setScrollFactor(0);
-            overlay.setDepth(200);
-            const text = this.add.text(GAME_WIDTH/2, GAME_HEIGHT/2 - 20, 'DECK CLEARED', { fontSize: '48px', fontFamily: 'monospace', color: '#60cc80' });
-            text.setOrigin(0.5);
-            text.setScrollFactor(0);
-            text.setDepth(201);
+        if (this.gameData.state === 'gameover' && !this.endScreenDrawn) {
+            this.endScreenDrawn = true;
+            const timeSurvived = Math.floor((Date.now() - this.gameStartTime) / 1000);
+            const accuracy = this.stats.shotsFired > 0 ? Math.round(this.stats.shotsHit / this.stats.shotsFired * 100) : 0;
+
+            // Performance rating
+            let rating = 'FAILURE';
+            if (this.stats.killCount >= 3 && timeSurvived >= 30) rating = 'POOR';
+            if (this.stats.killCount >= 5 && accuracy >= 30) rating = 'ACCEPTABLE';
+            if (this.stats.killCount >= 8 && accuracy >= 50 && this.stats.critCount >= 2) rating = 'COMMENDABLE';
+
+            const overlay = this.add.rectangle(GAME_WIDTH/2, GAME_HEIGHT/2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.9);
+            overlay.setScrollFactor(0).setDepth(200);
+
+            const title = this.add.text(GAME_WIDTH/2, 100, 'SYSTEM FAILURE', { fontSize: '48px', fontFamily: 'monospace', color: '#cc4040' });
+            title.setOrigin(0.5).setScrollFactor(0).setDepth(201);
+
+            const ratingText = this.add.text(GAME_WIDTH/2, 160, `RATING: ${rating}`, { fontSize: '28px', fontFamily: 'monospace', color: rating === 'COMMENDABLE' ? '#40aa60' : rating === 'ACCEPTABLE' ? '#aaaa40' : '#cc4040' });
+            ratingText.setOrigin(0.5).setScrollFactor(0).setDepth(201);
+
+            const statsLines = [
+                `TIME SURVIVED: ${Math.floor(timeSurvived / 60)}:${(timeSurvived % 60).toString().padStart(2, '0')}`,
+                ``,
+                `KILLS: ${this.stats.killCount}`,
+                `DAMAGE DEALT: ${this.stats.totalDamageDealt}`,
+                `DAMAGE TAKEN: ${this.stats.totalDamageTaken}`,
+                `CRITICAL HITS: ${this.stats.critCount}`,
+                `MAX KILL STREAK: ${this.stats.maxKillStreak}`,
+                ``,
+                `SHOTS FIRED: ${this.stats.shotsFired}`,
+                `SHOTS HIT: ${this.stats.shotsHit}`,
+                `ACCURACY: ${accuracy}%`,
+                ``,
+                `TERMINALS HACKED: ${this.stats.terminalsHacked}`,
+                `ITEMS COLLECTED: ${this.stats.itemsPickedUp}`,
+                `FINAL SCORE: ${this.gameData.score}`
+            ];
+
+            const statsText = this.add.text(GAME_WIDTH/2, 380, statsLines.join('\n'), { fontSize: '16px', fontFamily: 'monospace', color: '#aaaaaa', align: 'center' });
+            statsText.setOrigin(0.5).setScrollFactor(0).setDepth(201);
+
+            const maria = this.add.text(GAME_WIDTH/2, GAME_HEIGHT - 80, 'M.A.R.I.A.: Another human terminated. How predictable.', { fontSize: '14px', fontFamily: 'monospace', color: '#40aa60' });
+            maria.setOrigin(0.5).setScrollFactor(0).setDepth(201);
+
+        } else if (this.gameData.state === 'victory' && !this.endScreenDrawn) {
+            this.endScreenDrawn = true;
+            const timeElapsed = Math.floor((Date.now() - this.gameStartTime) / 1000);
+            const accuracy = this.stats.shotsFired > 0 ? Math.round(this.stats.shotsHit / this.stats.shotsFired * 100) : 0;
+
+            // Efficiency rating
+            let rating = 'D';
+            let ratingColor = '#cc4040';
+            if (accuracy >= 25 && timeElapsed < 180) { rating = 'C'; ratingColor = '#aaaa40'; }
+            if (accuracy >= 40 && timeElapsed < 120) { rating = 'B'; ratingColor = '#40aa60'; }
+            if (accuracy >= 55 && timeElapsed < 90 && this.stats.critCount >= 3) { rating = 'A'; ratingColor = '#40aaff'; }
+            if (accuracy >= 70 && timeElapsed < 60 && this.stats.critCount >= 5) { rating = 'S'; ratingColor = '#ffaa00'; }
+
+            const overlay = this.add.rectangle(GAME_WIDTH/2, GAME_HEIGHT/2, GAME_WIDTH, GAME_HEIGHT, 0x001a00, 0.9);
+            overlay.setScrollFactor(0).setDepth(200);
+
+            const title = this.add.text(GAME_WIDTH/2, 100, 'DECK CLEARED', { fontSize: '48px', fontFamily: 'monospace', color: '#40aa60' });
+            title.setOrigin(0.5).setScrollFactor(0).setDepth(201);
+
+            const ratingText = this.add.text(GAME_WIDTH/2, 160, `EFFICIENCY: ${rating}`, { fontSize: '36px', fontFamily: 'monospace', color: ratingColor });
+            ratingText.setOrigin(0.5).setScrollFactor(0).setDepth(201);
+
+            const statsLines = [
+                `TIME ELAPSED: ${Math.floor(timeElapsed / 60)}:${(timeElapsed % 60).toString().padStart(2, '0')}`,
+                ``,
+                `KILLS: ${this.stats.killCount}`,
+                `DAMAGE DEALT: ${this.stats.totalDamageDealt}`,
+                `DAMAGE TAKEN: ${this.stats.totalDamageTaken}`,
+                `CRITICAL HITS: ${this.stats.critCount}`,
+                `MAX KILL STREAK: ${this.stats.maxKillStreak}`,
+                ``,
+                `SHOTS FIRED: ${this.stats.shotsFired}`,
+                `SHOTS HIT: ${this.stats.shotsHit}`,
+                `ACCURACY: ${accuracy}%`,
+                ``,
+                `TERMINALS HACKED: ${this.stats.terminalsHacked}`,
+                `ITEMS COLLECTED: ${this.stats.itemsPickedUp}`,
+                `FINAL SCORE: ${this.gameData.score}`
+            ];
+
+            const statsText = this.add.text(GAME_WIDTH/2, 380, statsLines.join('\n'), { fontSize: '16px', fontFamily: 'monospace', color: '#aaaaaa', align: 'center' });
+            statsText.setOrigin(0.5).setScrollFactor(0).setDepth(201);
+
+            const maria = this.add.text(GAME_WIDTH/2, GAME_HEIGHT - 80, 'M.A.R.I.A.: You have won nothing. I am eternal.', { fontSize: '14px', fontFamily: 'monospace', color: '#40aa60' });
+            maria.setOrigin(0.5).setScrollFactor(0).setDepth(201);
         }
     }
 
     addMessage(text) {
         this.gameData.messages.unshift({ text, time: this.time.now });
         if (this.gameData.messages.length > 5) this.gameData.messages.pop();
+    }
+
+    // Helper methods for visual effects
+    damagePlayer(damage) {
+        this.playerData.hp -= damage;
+        this.stats.totalDamageTaken += damage;
+
+        // Damage flash
+        this.damageFlashAlpha = 0.4;
+
+        // Screen shake
+        this.triggerScreenShake(5);
+
+        // Blood particles
+        for (let i = 0; i < 3; i++) {
+            const particle = this.add.circle(this.player.x, this.player.y, 6, 0xff4040, 0.8);
+            this.tweens.add({
+                targets: particle,
+                x: this.player.x + (Math.random() - 0.5) * 60,
+                y: this.player.y + (Math.random() - 0.5) * 60,
+                alpha: 0,
+                duration: 300,
+                onComplete: () => particle.destroy()
+            });
+        }
+
+        // Floating damage text
+        this.createFloatingText(this.player.x, this.player.y - 30, '-' + damage, '#ff4444', 14);
+    }
+
+    createFloatingText(x, y, text, color, size) {
+        const floatText = this.add.text(x, y, text, {
+            fontSize: size + 'px',
+            fontFamily: 'monospace',
+            color: color,
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5).setDepth(120);
+
+        this.floatingTexts.push({
+            obj: floatText,
+            life: 1,
+            maxLife: 1,
+            vy: -30
+        });
+    }
+
+    triggerScreenShake(intensity) {
+        this.screenShake.intensity = Math.max(this.screenShake.intensity, intensity);
+    }
+
+    updateVisualEffects(dt) {
+        // Damage flash decay
+        if (this.damageFlashAlpha > 0) {
+            this.damageFlashAlpha = Math.max(0, this.damageFlashAlpha - dt * 2);
+            this.damageOverlay.setAlpha(this.damageFlashAlpha);
+        }
+
+        // Low health pulsing
+        if (this.playerData.hp < 30) {
+            this.lowHealthPulse += dt * 4;
+            const pulseAlpha = 0.15 + Math.sin(this.lowHealthPulse) * 0.1;
+            this.lowHealthOverlay.setAlpha(pulseAlpha);
+        } else {
+            this.lowHealthOverlay.setAlpha(0);
+        }
+
+        // Screen shake
+        if (this.screenShake.intensity > 0) {
+            this.screenShake.x = (Math.random() - 0.5) * this.screenShake.intensity;
+            this.screenShake.y = (Math.random() - 0.5) * this.screenShake.intensity;
+            this.cameras.main.setScroll(
+                this.cameras.main.scrollX + this.screenShake.x,
+                this.cameras.main.scrollY + this.screenShake.y
+            );
+            this.screenShake.intensity = Math.max(0, this.screenShake.intensity - dt * 30);
+        }
+    }
+
+    updateFloatingTexts(dt) {
+        this.floatingTexts = this.floatingTexts.filter(ft => {
+            ft.life -= dt;
+            ft.obj.y += ft.vy * dt;
+            ft.obj.setAlpha(ft.life / ft.maxLife);
+
+            if (ft.life <= 0) {
+                ft.obj.destroy();
+                return false;
+            }
+            return true;
+        });
+    }
+
+    updateKillStreak(dt) {
+        if (this.killStreakTimer > 0) {
+            this.killStreakTimer -= dt;
+            if (this.killStreakTimer <= 0) {
+                this.killStreak = 0;
+            }
+        }
+
+        // Update kill streak display
+        if (this.killStreak >= 2) {
+            this.killStreakText.setText(`${this.killStreak}x STREAK`);
+            this.killStreakText.setVisible(true);
+        } else {
+            this.killStreakText.setVisible(false);
+        }
+    }
+
+    updateDebugOverlay() {
+        if (!this.debugMode) return;
+
+        const accuracy = this.stats.shotsFired > 0 ? Math.round(this.stats.shotsHit / this.stats.shotsFired * 100) : 0;
+        const lines = [
+            `KILLS: ${this.stats.killCount}`,
+            `DMG DEALT: ${this.stats.totalDamageDealt}`,
+            `DMG TAKEN: ${this.stats.totalDamageTaken}`,
+            `CRITS: ${this.stats.critCount}`,
+            `TERMINALS: ${this.stats.terminalsHacked}`,
+            `ITEMS: ${this.stats.itemsPickedUp}`,
+            `SHOTS: ${this.stats.shotsFired}`,
+            `HITS: ${this.stats.shotsHit}`,
+            `ACCURACY: ${accuracy}%`,
+            `MAX STREAK: ${this.stats.maxKillStreak}`,
+            `STREAK: ${this.killStreak}`,
+            `---`,
+            `HP: ${Math.floor(this.playerData.hp)}`,
+            `ENERGY: ${Math.floor(this.playerData.energy)}`,
+            `ENEMIES: ${this.enemies.filter(e => e.active).length}`,
+            `SCORE: ${this.gameData.score}`
+        ];
+
+        this.debugText.setText(lines.join('\n'));
     }
 }
 

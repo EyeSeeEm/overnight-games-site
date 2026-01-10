@@ -2,8 +2,21 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
-canvas.width = 800;
-canvas.height = 600;
+// Game resolution (internal)
+canvas.width = 1280;
+canvas.height = 720;
+
+// Scale canvas to fill window while maintaining aspect ratio
+function scaleCanvas() {
+    const scale = Math.min(window.innerWidth / canvas.width, window.innerHeight / canvas.height);
+    canvas.style.width = (canvas.width * scale) + 'px';
+    canvas.style.height = (canvas.height * scale) + 'px';
+    canvas.style.position = 'absolute';
+    canvas.style.left = ((window.innerWidth - canvas.width * scale) / 2) + 'px';
+    canvas.style.top = ((window.innerHeight - canvas.height * scale) / 2) + 'px';
+}
+scaleCanvas();
+window.addEventListener('resize', scaleCanvas);
 
 // Color palette matching reference
 const COLORS = {
@@ -45,7 +58,7 @@ const COLORS = {
 
 // Game state
 const game = {
-    state: 'playing',
+    state: 'title', // ITERATION 63: Start with title screen
     camera: { x: 0, y: 0 },
     screenShake: 0,
     screenFlash: 0,
@@ -63,17 +76,29 @@ const game = {
     bossActive: false,
     paused: false,
     slowMotion: 1,
-    slowMotionTimer: 0
+    slowMotionTimer: 0,
+    debugMode: false,
+    fps: 60,
+    lastFrameTime: 0,
+    // Wave announcement
+    waveAnnounce: '',
+    waveAnnounceTimer: 0,
+    // ITERATION 59: Kill streak
+    killStreak: 0,
+    lastAnnouncedStreak: 0,
+    // ITERATION 80: Victory celebration
+    victoryTimer: 0,
+    victoryConfetti: null
 };
 
 // Input
 const keys = {};
-const mouse = { x: 400, y: 300, down: false, rightDown: false };
+const mouse = { x: 640, y: 360, down: false, rightDown: false };
 
 // Player
 const player = {
-    x: 400,
-    y: 300,
+    x: 640,
+    y: 360,
     vx: 0,
     vy: 0,
     angle: 0,
@@ -96,7 +121,8 @@ const player = {
     bulletCount: 1,
     critChance: 0.1,
     superShotCharge: 0,
-    trail: []
+    trail: [],
+    shotPulse: 0 // ITERATION 73: Visual pulse when shooting
 };
 
 // Entity arrays
@@ -118,20 +144,21 @@ let boss = null;
 function generateWorld() {
     trees = [];
 
-    // Create fluffy trees around the edges and scattered
+    // Create fluffy trees around the edges and scattered (scaled for 1280x720)
     const treePositions = [
         // Top border
-        ...Array(12).fill(0).map((_, i) => ({ x: 50 + i * 65, y: 30 + Math.random() * 40 })),
+        ...Array(18).fill(0).map((_, i) => ({ x: 50 + i * 70, y: 30 + Math.random() * 50 })),
         // Bottom border
-        ...Array(12).fill(0).map((_, i) => ({ x: 50 + i * 65, y: 530 + Math.random() * 40 })),
+        ...Array(18).fill(0).map((_, i) => ({ x: 50 + i * 70, y: 650 + Math.random() * 50 })),
         // Left border
-        ...Array(8).fill(0).map((_, i) => ({ x: 20 + Math.random() * 40, y: 80 + i * 65 })),
+        ...Array(10).fill(0).map((_, i) => ({ x: 20 + Math.random() * 50, y: 80 + i * 65 })),
         // Right border
-        ...Array(8).fill(0).map((_, i) => ({ x: 740 + Math.random() * 40, y: 80 + i * 65 })),
+        ...Array(10).fill(0).map((_, i) => ({ x: 1210 + Math.random() * 50, y: 80 + i * 65 })),
         // Scattered in play area
-        { x: 150, y: 150 }, { x: 650, y: 150 },
-        { x: 200, y: 400 }, { x: 600, y: 420 },
-        { x: 350, y: 200 }, { x: 450, y: 450 }
+        { x: 200, y: 180 }, { x: 1080, y: 180 },
+        { x: 300, y: 480 }, { x: 980, y: 500 },
+        { x: 500, y: 250 }, { x: 780, y: 550 },
+        { x: 640, y: 160 }, { x: 640, y: 560 }
     ];
 
     treePositions.forEach(pos => {
@@ -147,32 +174,49 @@ function generateWorld() {
     });
 }
 
-// EXPAND 1: More enemy types
+// EXPAND 1: More enemy types with improved difficulty curve
 function spawnEnemies() {
     enemies = [];
-    const baseCount = 3 + game.wave;
-    const enemyCount = Math.min(baseCount, 12);
+    // More enemies per wave, capped at 15
+    const baseCount = 3 + Math.floor(game.wave * 1.2);
+    const enemyCount = Math.min(baseCount, 15);
 
-    // EXPAND 14: Elite enemies appear in later waves
-    const eliteChance = game.wave >= 5 ? 0.2 : 0;
+    // Elite chance ramps up more aggressively
+    const eliteChance = game.wave >= 3 ? Math.min(0.1 + (game.wave - 3) * 0.05, 0.4) : 0;
 
+    // Wave-based composition: early waves have weaker enemies
     for (let i = 0; i < enemyCount; i++) {
-        // EXPAND 2-4: New enemy types
         const typeRoll = Math.random();
         let type;
-        if (typeRoll < 0.25) type = 'scout';
-        else if (typeRoll < 0.4) type = 'turret';
-        else if (typeRoll < 0.55) type = 'heavy';
-        else if (typeRoll < 0.7) type = 'grasshopper';
-        else if (typeRoll < 0.85) type = 'burrower';
-        else type = 'mimic';
+
+        if (game.wave <= 2) {
+            // Early waves: mostly scouts and grasshoppers
+            if (typeRoll < 0.5) type = 'scout';
+            else if (typeRoll < 0.8) type = 'grasshopper';
+            else type = 'turret';
+        } else if (game.wave <= 5) {
+            // Mid waves: introduce turrets and heavies
+            if (typeRoll < 0.25) type = 'scout';
+            else if (typeRoll < 0.45) type = 'turret';
+            else if (typeRoll < 0.65) type = 'heavy';
+            else if (typeRoll < 0.85) type = 'grasshopper';
+            else type = 'burrower';
+        } else {
+            // Late waves: full variety with more dangerous enemies
+            if (typeRoll < 0.15) type = 'scout';
+            else if (typeRoll < 0.30) type = 'turret';
+            else if (typeRoll < 0.50) type = 'heavy';
+            else if (typeRoll < 0.65) type = 'grasshopper';
+            else if (typeRoll < 0.80) type = 'burrower';
+            else type = 'mimic';
+        }
 
         const isElite = Math.random() < eliteChance;
 
         let x, y;
         do {
-            x = 100 + Math.random() * 600;
-            y = 100 + Math.random() * 400;
+            x = 100 + Math.random() * 1080;
+            y = 100 + Math.random() * 520;
         } while (Math.hypot(x - player.x, y - player.y) < 200);
 
         // EXPAND 13: Spawn warning indicators
@@ -207,12 +251,15 @@ function createEnemy(type, x, y, isElite = false) {
     // EXPAND 14: Elite multipliers
     const eliteMultiplier = isElite ? 2 : 1;
 
+    // Wave-based scaling: enemies get 10% stronger each wave after wave 3
+    const waveScaling = game.wave > 3 ? 1 + (game.wave - 3) * 0.1 : 1;
+
     return {
         type, x, y, vx: 0, vy: 0,
-        hp: cfg.hp * eliteMultiplier,
-        maxHp: cfg.hp * eliteMultiplier,
-        speed: cfg.speed,
-        fireRate: cfg.fireRate / (isElite ? 1.3 : 1),
+        hp: Math.ceil(cfg.hp * eliteMultiplier * waveScaling),
+        maxHp: Math.ceil(cfg.hp * eliteMultiplier * waveScaling),
+        speed: cfg.speed * (1 + (game.wave - 1) * 0.02), // Slightly faster each wave
+        fireRate: cfg.fireRate / (isElite ? 1.3 : 1) * (1 - (game.wave - 1) * 0.03), // Fire faster
         fireCooldown: Math.random() * 2,
         size: cfg.size * (isElite ? 1.2 : 1),
         color: isElite ? COLORS.enemyElite : cfg.color,
@@ -238,8 +285,8 @@ function spawnBoss() {
     game.bossActive = true;
     boss = {
         type: 'forestGuardian',
-        x: 400,
-        y: 200,
+        x: 640,
+        y: -100, // ITERATION 72: Start off-screen for dramatic entrance
         hp: 200 + game.wave * 50,
         maxHp: 200 + game.wave * 50,
         size: 60,
@@ -248,12 +295,49 @@ function spawnBoss() {
         attackTimer: 0,
         attackPattern: 0,
         hitFlash: 0,
-        spawnScale: 0
+        spawnScale: 0,
+        enteringArena: true, // ITERATION 72: Boss entrance state
+        entranceTimer: 0
     };
 
     // Clear enemies for boss fight
     enemies = [];
     enemyBullets = [];
+
+    // ITERATION 72: Epic boss entrance effects
+    game.screenShake = 20;
+    game.screenFlash = 0.6;
+    game.announcement = '⚠️ BOSS INCOMING ⚠️';
+    game.announcementTimer = 3;
+    game.announcementColor = '#ff3030';
+
+    // Warning particles
+    for (let i = 0; i < 30; i++) {
+        particles.push({
+            x: 640,
+            y: 150,
+            vx: (Math.random() - 0.5) * 400,
+            vy: (Math.random() - 0.5) * 400,
+            life: 1.5,
+            decay: 0.7,
+            size: 4 + Math.random() * 6,
+            color: ['#ff3030', '#ff6060', '#ff9030', '#ffffff'][Math.floor(Math.random() * 4)]
+        });
+    }
+
+    // Ring particles for dramatic effect
+    for (let i = 0; i < 3; i++) {
+        particles.push({
+            type: 'ring',
+            x: 640,
+            y: 150,
+            size: 20 + i * 30,
+            maxSize: 200 + i * 50,
+            life: 1,
+            decay: 0.5,
+            color: '#ff3030'
+        });
+    }
 }
 
 // Drawing functions
@@ -273,13 +357,13 @@ function drawBackground() {
         ctx.fill();
     }
 
-    // Draw darker forest edge
+    // Draw darker forest edge (scaled for 1280x720)
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(70, 70);
-    ctx.bezierCurveTo(200, 45, 600, 45, 730, 70);
-    ctx.lineTo(755, 530);
-    ctx.bezierCurveTo(650, 565, 150, 565, 45, 530);
+    ctx.bezierCurveTo(320, 45, 960, 45, 1210, 70);
+    ctx.lineTo(1235, 650);
+    ctx.bezierCurveTo(1050, 685, 230, 685, 45, 650);
     ctx.closePath();
     ctx.fillStyle = COLORS.forestDark;
     ctx.fill();
@@ -289,9 +373,9 @@ function drawBackground() {
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(85, 85);
-    ctx.bezierCurveTo(200, 60, 600, 60, 715, 85);
-    ctx.lineTo(735, 515);
-    ctx.bezierCurveTo(650, 545, 150, 545, 65, 515);
+    ctx.bezierCurveTo(320, 60, 960, 60, 1195, 85);
+    ctx.lineTo(1215, 635);
+    ctx.bezierCurveTo(1050, 665, 230, 665, 65, 635);
     ctx.closePath();
     ctx.fillStyle = COLORS.forestLight;
     ctx.fill();
@@ -301,13 +385,13 @@ function drawBackground() {
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(100, 100);
-    ctx.bezierCurveTo(200, 80, 600, 80, 700, 100);
-    ctx.lineTo(720, 500);
-    ctx.bezierCurveTo(650, 530, 150, 530, 80, 500);
+    ctx.bezierCurveTo(320, 80, 960, 80, 1180, 100);
+    ctx.lineTo(1200, 620);
+    ctx.bezierCurveTo(1050, 650, 230, 650, 80, 620);
     ctx.closePath();
 
     // Path gradient
-    const pathGrad = ctx.createLinearGradient(0, 100, 0, 500);
+    const pathGrad = ctx.createLinearGradient(0, 100, 0, 620);
     pathGrad.addColorStop(0, COLORS.path);
     pathGrad.addColorStop(1, COLORS.pathDark);
     ctx.fillStyle = pathGrad;
@@ -317,6 +401,64 @@ function drawBackground() {
     ctx.strokeStyle = '#8a6030';
     ctx.lineWidth = 3;
     ctx.stroke();
+    ctx.restore();
+}
+
+// ITERATION 77: Boundary warning effect when player is near edge
+function drawBoundaryWarning() {
+    if (game.state !== 'playing') return;
+
+    const warningDist = 80;
+    const minX = 100, maxX = 1180;
+    const minY = 100, maxY = 620;
+
+    const distToLeft = player.x - minX;
+    const distToRight = maxX - player.x;
+    const distToTop = player.y - minY;
+    const distToBottom = maxY - player.y;
+
+    ctx.save();
+
+    // Left edge warning
+    if (distToLeft < warningDist) {
+        const intensity = 1 - (distToLeft / warningDist);
+        const gradient = ctx.createLinearGradient(0, 0, 150, 0);
+        gradient.addColorStop(0, `rgba(255, 50, 50, ${0.4 * intensity})`);
+        gradient.addColorStop(1, 'rgba(255, 50, 50, 0)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 150, canvas.height);
+    }
+
+    // Right edge warning
+    if (distToRight < warningDist) {
+        const intensity = 1 - (distToRight / warningDist);
+        const gradient = ctx.createLinearGradient(canvas.width, 0, canvas.width - 150, 0);
+        gradient.addColorStop(0, `rgba(255, 50, 50, ${0.4 * intensity})`);
+        gradient.addColorStop(1, 'rgba(255, 50, 50, 0)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(canvas.width - 150, 0, 150, canvas.height);
+    }
+
+    // Top edge warning
+    if (distToTop < warningDist) {
+        const intensity = 1 - (distToTop / warningDist);
+        const gradient = ctx.createLinearGradient(0, 0, 0, 120);
+        gradient.addColorStop(0, `rgba(255, 50, 50, ${0.4 * intensity})`);
+        gradient.addColorStop(1, 'rgba(255, 50, 50, 0)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, 120);
+    }
+
+    // Bottom edge warning
+    if (distToBottom < warningDist) {
+        const intensity = 1 - (distToBottom / warningDist);
+        const gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 120);
+        gradient.addColorStop(0, `rgba(255, 50, 50, ${0.4 * intensity})`);
+        gradient.addColorStop(1, 'rgba(255, 50, 50, 0)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, canvas.height - 120, canvas.width, 120);
+    }
+
     ctx.restore();
 }
 
@@ -366,7 +508,49 @@ function drawTree(tree) {
 function drawPlayer() {
     const { x, y, angle, invincible, boosting, trail } = player;
 
-    if (invincible > 0 && Math.floor(invincible * 10) % 2 === 0) return;
+    // ITERATION 62: Enhanced invincibility visual
+    const isInvincible = invincible > 0;
+    const blinkOut = isInvincible && Math.floor(invincible * 10) % 2 === 0;
+
+    // Draw shield effect when invincible (even during blink)
+    if (isInvincible) {
+        ctx.save();
+        ctx.translate(x, y);
+
+        const shieldPulse = 1 + Math.sin(game.time * 20) * 0.15;
+        const shieldAlpha = Math.min(0.6, invincible * 0.5);
+
+        // Outer shield ring
+        ctx.beginPath();
+        ctx.arc(0, 0, 25 * shieldPulse, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(100, 200, 255, ${shieldAlpha})`;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = '#50c8ff';
+        ctx.shadowBlur = 15;
+        ctx.stroke();
+
+        // Inner shield glow
+        ctx.beginPath();
+        ctx.arc(0, 0, 20 * shieldPulse, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(80, 200, 255, ${shieldAlpha * 0.3})`;
+        ctx.fill();
+
+        // Rotating shield segments
+        const segmentCount = 6;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${shieldAlpha * 0.7})`;
+        ctx.lineWidth = 2;
+        for (let i = 0; i < segmentCount; i++) {
+            const segAngle = (i / segmentCount) * Math.PI * 2 + game.time * 3;
+            ctx.beginPath();
+            ctx.arc(0, 0, 22 * shieldPulse, segAngle, segAngle + 0.3);
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+
+    // Don't draw ship during blink frames
+    if (blinkOut) return;
 
     // POLISH 6: Player trail effect when moving
     if (trail.length > 1) {
@@ -387,6 +571,10 @@ function drawPlayer() {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
+
+    // ITERATION 73: Shot pulse scale effect
+    const shotScale = 1 + player.shotPulse * 0.15;
+    ctx.scale(shotScale, shotScale);
 
     // Glow effect (stronger when boosting)
     ctx.shadowColor = boosting ? '#80ffff' : COLORS.playerGlow;
@@ -486,6 +674,60 @@ function drawPlayer() {
     ctx.restore();
 }
 
+// ITERATION 76: Crosshair aim indicator
+function drawCrosshair() {
+    if (game.state !== 'playing') return;
+
+    // Calculate aim position (extended from player in facing direction)
+    const aimDist = 100;
+    const aimX = player.x + Math.cos(player.angle) * aimDist;
+    const aimY = player.y + Math.sin(player.angle) * aimDist;
+
+    ctx.save();
+    ctx.translate(aimX, aimY);
+
+    // Rotate crosshair slowly
+    const rotation = game.time * 2;
+    ctx.rotate(rotation);
+
+    // Dynamic size based on firing
+    const baseSize = 12;
+    const pulseSize = baseSize + (player.shotPulse * 8);
+
+    // Crosshair color - changes when shooting
+    const alpha = 0.6 + player.shotPulse * 0.4;
+    ctx.strokeStyle = `rgba(100, 200, 255, ${alpha})`;
+    ctx.lineWidth = 2;
+
+    // Cross lines
+    const gap = 4;
+    ctx.beginPath();
+    ctx.moveTo(-pulseSize, 0);
+    ctx.lineTo(-gap, 0);
+    ctx.moveTo(gap, 0);
+    ctx.lineTo(pulseSize, 0);
+    ctx.moveTo(0, -pulseSize);
+    ctx.lineTo(0, -gap);
+    ctx.moveTo(0, gap);
+    ctx.lineTo(0, pulseSize);
+    ctx.stroke();
+
+    // Center dot
+    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(0, 0, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Outer circle (faint)
+    ctx.strokeStyle = `rgba(100, 200, 255, ${alpha * 0.5})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(0, 0, pulseSize + 4, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
+}
+
 function drawEnemy(enemy) {
     const { x, y, type, size, color, hp, maxHp, hitFlash, angle, isElite, disguised, burrowed, spawnScale } = enemy;
 
@@ -521,10 +763,18 @@ function drawEnemy(enemy) {
         ctx.shadowBlur = 20;
     }
 
-    // Hit flash effect
+    // ITERATION 65: Enhanced hit flash effect
     if (hitFlash > 0) {
         ctx.shadowColor = '#ffffff';
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 25 + hitFlash * 10;
+
+        // Brief scale pulse
+        const flashScale = 1 + hitFlash * 0.15;
+        ctx.scale(flashScale, flashScale);
+
+        // Add white outline
+        ctx.strokeStyle = `rgba(255, 255, 255, ${hitFlash})`;
+        ctx.lineWidth = 4;
     }
 
     if (type === 'scout') {
@@ -824,6 +1074,34 @@ function drawBullet(bullet, isEnemy) {
         const bulletColor = isSuper ? COLORS.bulletSuper : COLORS.bulletPlayer;
         const bulletSize = isSuper ? size * 1.5 : size;
 
+        // ITERATION 75: Enhanced supershot visuals
+        if (isSuper) {
+            // Spinning energy ring
+            ctx.save();
+            ctx.rotate(game.time * 10);
+            ctx.strokeStyle = 'rgba(150, 200, 255, 0.6)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 4; i++) {
+                const a = (i / 4) * Math.PI * 2;
+                ctx.beginPath();
+                ctx.arc(0, 0, bulletSize + 6, a, a + 0.8);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // Star-like points
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 6; i++) {
+                const a = (i / 6) * Math.PI * 2 + game.time * 5;
+                const len = 8 + Math.sin(game.time * 15 + i) * 3;
+                ctx.beginPath();
+                ctx.moveTo(Math.cos(a) * bulletSize, Math.sin(a) * bulletSize);
+                ctx.lineTo(Math.cos(a) * (bulletSize + len), Math.sin(a) * (bulletSize + len));
+                ctx.stroke();
+            }
+        }
+
         // Trail effect
         ctx.beginPath();
         ctx.ellipse(-8, 0, 12, 4, 0, 0, Math.PI * 2);
@@ -855,18 +1133,51 @@ function drawBullet(bullet, isEnemy) {
 }
 
 function drawCrystal(crystal) {
-    const { x, y, value } = crystal;
+    const { x, y, value, magnetRange } = crystal;
     const bob = Math.sin(game.time * 5 + x) * 3;
+
+    // ITERATION 55: Distance-based excitement effect
+    const dx = player.x - x;
+    const dy = player.y - y;
+    const dist = Math.hypot(dx, dy);
+    const magnetRatio = dist < magnetRange ? 1 - (dist / magnetRange) : 0;
+
+    // Scale up when being pulled toward player
+    const exciteScale = 1 + magnetRatio * 0.4;
+    // Pulse faster when close
+    const pulseSpeed = 5 + magnetRatio * 10;
+    const pulse = 1 + Math.sin(game.time * pulseSpeed) * 0.1 * (1 + magnetRatio);
 
     ctx.save();
     ctx.translate(x, y + bob);
+    ctx.scale(exciteScale * pulse, exciteScale * pulse);
 
-    // Glow
+    // ITERATION 74: Crystal magnet beam
+    if (magnetRatio > 0.2) {
+        ctx.save();
+        ctx.resetTransform();
+        const beamAlpha = (magnetRatio - 0.2) * 0.8;
+        const gradient = ctx.createLinearGradient(x, y, player.x, player.y);
+        gradient.addColorStop(0, `rgba(255, 100, 180, ${beamAlpha})`);
+        gradient.addColorStop(1, 'rgba(255, 100, 180, 0)');
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 2 * magnetRatio;
+        ctx.setLineDash([5, 5]);
+        ctx.lineDashOffset = -game.time * 50;
+        ctx.beginPath();
+        ctx.moveTo(x, y + bob);
+        ctx.lineTo(player.x, player.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+    }
+
+    // Glow - stronger when close to player
     ctx.shadowColor = COLORS.crystalGlow;
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 15 + magnetRatio * 15;
 
-    // POLISH 13: Crystal sparkle particles
-    if (Math.random() < 0.1) {
+    // POLISH 13: Crystal sparkle particles - more frequent when pulled
+    if (Math.random() < 0.1 + magnetRatio * 0.3) {
         particles.push({
             x: x + (Math.random() - 0.5) * 10,
             y: y + bob + (Math.random() - 0.5) * 10,
@@ -902,16 +1213,30 @@ function drawCrystal(crystal) {
     ctx.restore();
 }
 
-// EXPAND 5-6: Draw pickups
+// EXPAND 5-6: Draw pickups - enhanced with pulse and sparkles
 function drawPickup(pickup) {
     const { x, y, type } = pickup;
     const bob = Math.sin(game.time * 4 + x) * 4;
+    const pulse = 1 + Math.sin(game.time * 6) * 0.15; // Scale pulse
 
     ctx.save();
     ctx.translate(x, y + bob);
+    ctx.scale(pulse, pulse);
 
+    // Stronger glow
     ctx.shadowColor = type === 'health' ? '#ff4080' : '#40ff80';
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 20 + Math.sin(game.time * 8) * 5;
+
+    // Rotating sparkle ring
+    for (let i = 0; i < 4; i++) {
+        const sparkleAngle = game.time * 3 + (i / 4) * Math.PI * 2;
+        const sparkleX = Math.cos(sparkleAngle) * 15;
+        const sparkleY = Math.sin(sparkleAngle) * 15;
+        ctx.fillStyle = type === 'health' ? 'rgba(255, 128, 200, 0.5)' : 'rgba(128, 255, 200, 0.5)';
+        ctx.beginPath();
+        ctx.arc(sparkleX, sparkleY, 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
 
     if (type === 'health') {
         // Heart shape
@@ -925,7 +1250,7 @@ function drawPickup(pickup) {
         // Shine
         ctx.beginPath();
         ctx.arc(-3, -5, 3, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
         ctx.fill();
     } else {
         // Energy diamond
@@ -953,64 +1278,174 @@ function drawPickup(pickup) {
 function drawParticle(p) {
     ctx.save();
     ctx.globalAlpha = p.life;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-    ctx.fillStyle = p.color;
-    ctx.fill();
+
+    // ITERATION 55: Support ring particles for collection effects
+    if (p.ring) {
+        const radius = p.ringRadius + (1 - p.life) * p.ringExpand;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 3 * p.life;
+        ctx.stroke();
+    } else {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+    }
     ctx.restore();
 }
 
-// POLISH 1: Muzzle flash
+// POLISH 1: Muzzle flash - enhanced for better feedback
 function drawMuzzleFlash(flash) {
     ctx.save();
     ctx.translate(flash.x, flash.y);
     ctx.rotate(flash.angle);
     ctx.globalAlpha = flash.life;
 
+    // Outer glow
+    ctx.shadowColor = flash.isSuper ? '#4080ff' : '#50c8ff';
+    ctx.shadowBlur = 20;
+
+    // Main flash - larger and more dramatic
+    const scale = flash.isSuper ? 1.5 : 1;
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.lineTo(15, -5);
-    ctx.lineTo(25, 0);
-    ctx.lineTo(15, 5);
+    ctx.lineTo(20 * scale, -8 * scale);
+    ctx.lineTo(35 * scale, 0);
+    ctx.lineTo(20 * scale, 8 * scale);
     ctx.closePath();
     ctx.fillStyle = flash.isSuper ? '#80c0ff' : '#ffffff';
+    ctx.fill();
+
+    // Inner bright core
+    ctx.beginPath();
+    ctx.moveTo(5, 0);
+    ctx.lineTo(15 * scale, -4 * scale);
+    ctx.lineTo(25 * scale, 0);
+    ctx.lineTo(15 * scale, 4 * scale);
+    ctx.closePath();
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+
+    // Side flares for extra punch
+    ctx.beginPath();
+    ctx.moveTo(0, -3);
+    ctx.lineTo(8, -12 * scale);
+    ctx.lineTo(12, -3);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(0, 3);
+    ctx.lineTo(8, 12 * scale);
+    ctx.lineTo(12, 3);
+    ctx.closePath();
     ctx.fill();
 
     ctx.restore();
 }
 
-// POLISH 3: Damage numbers
+// POLISH 3: Damage numbers - enhanced crits
 function drawDamageNumber(dn) {
     ctx.save();
     ctx.globalAlpha = dn.life;
-    ctx.font = `bold ${dn.isCrit ? 18 : 14}px Arial`;
-    ctx.fillStyle = dn.isCrit ? COLORS.critical : '#ffffff';
-    ctx.textAlign = 'center';
 
     if (dn.isCrit) {
+        // Critical hits are much more dramatic
+        const scale = 1 + (1 - dn.life) * 0.3; // Scale up as they fade
+        const shake = Math.sin(game.time * 30) * 2;
+
+        ctx.font = `bold ${Math.floor(24 * scale)}px Arial`;
+        ctx.shadowColor = '#ff8000';
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = '#ffff00';
+        ctx.textAlign = 'center';
+
+        // Double render for extra glow
+        ctx.fillText('CRIT!', dn.x + shake, dn.y - 12);
         ctx.shadowColor = COLORS.critical;
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 8;
+        ctx.fillText(dn.text, dn.x, dn.y + 8);
+    } else {
+        ctx.font = 'bold 14px Arial';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.fillText(dn.text, dn.x, dn.y);
     }
 
-    ctx.fillText(dn.text, dn.x, dn.y);
     ctx.restore();
 }
 
-// EXPAND 13: Spawn warnings
+// ITERATION 58: Enhanced spawn warnings
 function drawSpawnWarning(warning) {
+    const progress = 1 - warning.timer; // 0 to 1 as it gets closer
+    const urgency = Math.min(1, progress * 1.5);
+    const pulseSpeed = 10 + urgency * 15;
+    const pulse = Math.sin(game.time * pulseSpeed);
+
     ctx.save();
-    ctx.globalAlpha = 0.5 + Math.sin(game.time * 10) * 0.3;
+
+    // Outer expanding ring
+    const outerRadius = 40 + progress * 20 + pulse * 5;
+    ctx.globalAlpha = (0.3 + urgency * 0.3) * (1 - progress * 0.5);
     ctx.strokeStyle = '#ff0000';
     ctx.lineWidth = 2;
-    ctx.setLineDash([5, 5]);
     ctx.beginPath();
-    ctx.arc(warning.x, warning.y, 30, 0, Math.PI * 2);
+    ctx.arc(warning.x, warning.y, outerRadius, 0, Math.PI * 2);
     ctx.stroke();
 
-    ctx.font = '12px Arial';
-    ctx.fillStyle = '#ff0000';
+    // Inner filling circle (fills as spawn approaches)
+    ctx.globalAlpha = 0.2 + urgency * 0.3;
+    ctx.fillStyle = `rgba(255, 50, 50, ${0.2 + pulse * 0.1})`;
+    ctx.beginPath();
+    ctx.arc(warning.x, warning.y, 30 * progress, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pulsing warning circle
+    ctx.globalAlpha = 0.5 + pulse * 0.3;
+    ctx.strokeStyle = '#ff4040';
+    ctx.lineWidth = 3 + urgency * 2;
+    ctx.setLineDash([8 - progress * 4, 4 + progress * 4]);
+    ctx.beginPath();
+    ctx.arc(warning.x, warning.y, 30 + pulse * 3, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Progress arc showing time until spawn
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 4;
+    ctx.globalAlpha = 0.8;
+    ctx.beginPath();
+    ctx.arc(warning.x, warning.y, 25, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
+    ctx.stroke();
+
+    // Warning icon with scale pulse
+    const iconScale = 1 + pulse * 0.2 + urgency * 0.3;
+    ctx.font = `bold ${Math.floor(16 * iconScale)}px Arial`;
+    ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
-    ctx.fillText('!', warning.x, warning.y + 5);
+    ctx.globalAlpha = 0.8 + pulse * 0.2;
+    ctx.shadowColor = '#ff0000';
+    ctx.shadowBlur = 10 + urgency * 10;
+    ctx.fillText('!', warning.x, warning.y + 6 * iconScale);
+
+    // Spawn particle effects near completion
+    if (progress > 0.7 && Math.random() < 0.3) {
+        const angle = Math.random() * Math.PI * 2;
+        particles.push({
+            x: warning.x + Math.cos(angle) * 35,
+            y: warning.y + Math.sin(angle) * 35,
+            vx: -Math.cos(angle) * 50,
+            vy: -Math.sin(angle) * 50,
+            life: 0.4,
+            decay: 1,
+            size: 3,
+            color: '#ff6060'
+        });
+    }
+
     ctx.restore();
 }
 
@@ -1021,14 +1456,15 @@ function drawHUD() {
     const startX = 20;
     const startY = 20;
 
+    // ITERATION 70: Pass index for heart pulsing
     for (let i = 0; i < player.maxHealth; i++) {
-        drawHeart(startX + i * heartSpacing, startY, heartSize, i < player.health);
+        drawHeart(startX + i * heartSpacing, startY, heartSize, i < player.health, i);
     }
 
-    // Energy diamonds
+    // Energy diamonds - ITERATION 67: Pass index for regen visual
     const energyY = 48;
     for (let i = 0; i < player.maxEnergy; i++) {
-        drawEnergy(startX + i * heartSpacing, energyY, i < player.energy);
+        drawEnergy(startX + i * heartSpacing, energyY, i < player.energy, i);
     }
 
     // Crystal counter
@@ -1068,18 +1504,50 @@ function drawHUD() {
     ctx.fillStyle = '#ffffff';
     ctx.fillText(`LVL ${game.level}`, startX + xpBarWidth + 8, energyY + 60);
 
-    // EXPAND 15: Combo multiplier
+    // EXPAND 15: Combo multiplier - enhanced with scaling and glow
     if (game.combo > 0) {
-        ctx.font = 'bold 20px Arial';
-        ctx.fillStyle = COLORS.combo;
+        ctx.save();
+
+        // Pulse effect on combo updates
+        const pulse = 1 + Math.sin(game.time * 10) * 0.05;
+        const comboScale = 1 + Math.min(game.comboMultiplier - 1, 1) * 0.3; // Scale up with higher combos
+
+        // Glow for high combos
+        if (game.comboMultiplier >= 2) {
+            ctx.shadowColor = '#ff8000';
+            ctx.shadowBlur = 10 + game.comboMultiplier * 3;
+        }
+
+        // Choose color based on combo level
+        let comboColor = '#ff8000'; // Orange
+        if (game.comboMultiplier >= 3) comboColor = '#ff4000'; // Red-orange
+        if (game.comboMultiplier >= 4) comboColor = '#ff00ff'; // Magenta
+        if (game.comboMultiplier >= 5) comboColor = '#ffff00'; // Gold
+
+        ctx.font = `bold ${Math.floor(20 * comboScale * pulse)}px Arial`;
+        ctx.fillStyle = comboColor;
         ctx.textAlign = 'left';
         ctx.fillText(`COMBO x${game.comboMultiplier.toFixed(1)}`, startX, energyY + 85);
 
-        // Combo timer bar
-        ctx.fillStyle = 'rgba(255, 128, 0, 0.3)';
-        ctx.fillRect(startX, energyY + 90, 80, 4);
-        ctx.fillStyle = COLORS.combo;
-        ctx.fillRect(startX, energyY + 90, 80 * (game.comboTimer / 2), 4);
+        // Combo count
+        ctx.font = '12px Arial';
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowBlur = 0;
+        ctx.fillText(`${game.combo} hits`, startX + 110, energyY + 85);
+
+        // Combo timer bar with gradient
+        const barWidth = 100;
+        const timerRatio = game.comboTimer / 2;
+
+        ctx.fillStyle = 'rgba(255, 128, 0, 0.2)';
+        ctx.fillRect(startX, energyY + 92, barWidth, 6);
+
+        // Timer bar with color based on time left
+        const timerColor = timerRatio > 0.5 ? comboColor : (timerRatio > 0.25 ? '#ff4000' : '#ff0000');
+        ctx.fillStyle = timerColor;
+        ctx.fillRect(startX, energyY + 92, barWidth * timerRatio, 6);
+
+        ctx.restore();
     }
 
     // Ability icons at bottom center
@@ -1095,27 +1563,130 @@ function drawHUD() {
     // EXPAND 10: Minimap
     drawMinimap();
 
-    // POLISH 9: Low health warning
+    // ITERATION 57: Enhanced low health warning
     if (player.health <= 2) {
+        const urgency = 1 - (player.health / 3); // More urgent at lower health
+        const pulseSpeed = 8 + urgency * 8; // Faster pulse at lower health
+        const pulseIntensity = 0.15 + urgency * 0.15;
+        const pulse = Math.sin(game.time * pulseSpeed);
+
         ctx.save();
-        ctx.globalAlpha = 0.2 + Math.sin(game.time * 8) * 0.1;
-        ctx.fillStyle = '#ff0000';
+
+        // Red vignette effect (darker at edges)
+        const gradient = ctx.createRadialGradient(
+            canvas.width / 2, canvas.height / 2, canvas.width * 0.3,
+            canvas.width / 2, canvas.height / 2, canvas.width * 0.8
+        );
+        gradient.addColorStop(0, 'rgba(255, 0, 0, 0)');
+        gradient.addColorStop(1, `rgba(255, 0, 0, ${pulseIntensity + pulse * 0.1})`);
+        ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Pulsing red border
+        ctx.strokeStyle = `rgba(255, 50, 50, ${0.4 + pulse * 0.2})`;
+        ctx.lineWidth = 8 + pulse * 4;
+        ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+
+        // Warning heart icon at center bottom
+        if (player.health === 1) {
+            const heartScale = 1.5 + Math.sin(game.time * 12) * 0.3;
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height - 50);
+            ctx.scale(heartScale, heartScale);
+            ctx.globalAlpha = 0.5 + pulse * 0.2;
+
+            // Heart shape
+            ctx.fillStyle = '#ff3050';
+            ctx.beginPath();
+            ctx.moveTo(0, 5);
+            ctx.bezierCurveTo(-10, -5, -10, -10, 0, -5);
+            ctx.bezierCurveTo(10, -10, 10, -5, 0, 5);
+            ctx.fill();
+
+            ctx.restore();
+
+            // "DANGER" text
+            ctx.font = 'bold 14px Arial';
+            ctx.fillStyle = `rgba(255, 80, 80, ${0.6 + pulse * 0.3})`;
+            ctx.textAlign = 'center';
+            ctx.fillText('LOW HEALTH!', canvas.width / 2, canvas.height - 20);
+        }
+
         ctx.restore();
     }
 
-    // POLISH 18: Supershot charge indicator
+    // ITERATION 56: Enhanced supershot charge indicator
     if (player.superShotCharge > 0 && mouse.rightDown) {
+        const charge = Math.min(1, player.superShotCharge);
+
+        // Glowing ring that grows with charge
+        ctx.save();
+        const ringRadius = 20 + charge * 30;
+        const ringPulse = 1 + Math.sin(game.time * 15) * 0.1 * charge;
+
+        // Outer glow ring
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, ringRadius * ringPulse, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(64, 128, 255, ${0.3 + charge * 0.4})`;
+        ctx.lineWidth = 3 + charge * 4;
+        ctx.shadowColor = COLORS.bulletSuper;
+        ctx.shadowBlur = 10 + charge * 20;
+        ctx.stroke();
+
+        // Inner charging ring (partial arc)
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, ringRadius * ringPulse * 0.8, -Math.PI / 2, -Math.PI / 2 + charge * Math.PI * 2);
+        ctx.strokeStyle = COLORS.bulletSuper;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        // Energy particles swirling toward player
+        if (Math.random() < 0.5 + charge * 0.5) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 60 + Math.random() * 40;
+            particles.push({
+                x: player.x + Math.cos(angle) * dist,
+                y: player.y + Math.sin(angle) * dist,
+                vx: -Math.cos(angle) * (100 + charge * 100),
+                vy: -Math.sin(angle) * (100 + charge * 100),
+                life: 0.4,
+                decay: 1.2,
+                size: 3 + Math.random() * 3,
+                color: charge >= 0.9 ? '#ffffff' : COLORS.bulletSuper
+            });
+        }
+
+        // At full charge: visual flash indication
+        if (charge >= 1) {
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, ringRadius * 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.2 + Math.sin(game.time * 20) * 0.1})`;
+            ctx.fill();
+        }
+
+        ctx.restore();
+
+        // Bar indicator (backup)
         ctx.fillStyle = 'rgba(64, 128, 255, 0.5)';
-        ctx.fillRect(player.x - 25, player.y + 20, 50, 6);
-        ctx.fillStyle = COLORS.bulletSuper;
-        ctx.fillRect(player.x - 25, player.y + 20, 50 * Math.min(1, player.superShotCharge), 6);
+        ctx.fillRect(player.x - 25, player.y + 35, 50, 4);
+        ctx.fillStyle = charge >= 1 ? '#ffffff' : COLORS.bulletSuper;
+        ctx.fillRect(player.x - 25, player.y + 35, 50 * charge, 4);
     }
 }
 
-function drawHeart(x, y, size, filled) {
+function drawHeart(x, y, size, filled, index) {
     ctx.save();
     ctx.translate(x, y);
+
+    // ITERATION 70: Pulse hearts at low health
+    const isLowHealth = player.health <= 2;
+    const isLastHeart = filled && index === player.health - 1;
+    if (isLowHealth && isLastHeart) {
+        const pulse = 1 + Math.sin(game.time * 10) * 0.15;
+        ctx.scale(pulse, pulse);
+        ctx.shadowColor = '#ff4060';
+        ctx.shadowBlur = 10 + Math.sin(game.time * 10) * 5;
+    }
 
     ctx.beginPath();
     ctx.moveTo(0, size * 0.3);
@@ -1135,9 +1706,22 @@ function drawHeart(x, y, size, filled) {
     ctx.restore();
 }
 
-function drawEnergy(x, y, filled) {
+function drawEnergy(x, y, filled, index) {
     ctx.save();
     ctx.translate(x, y);
+
+    // ITERATION 67: Energy regen visual
+    const isRegenTarget = !player.boosting && Math.floor(player.energy) === index && player.energy < player.maxEnergy;
+    if (isRegenTarget) {
+        // Pulsing glow for currently regenerating diamond
+        const regenPulse = Math.sin(game.time * 10) * 0.3 + 0.7;
+        ctx.shadowColor = '#50d0ff';
+        ctx.shadowBlur = 10 * regenPulse;
+
+        // Scale pulse
+        const scale = 1 + Math.sin(game.time * 8) * 0.1;
+        ctx.scale(scale, scale);
+    }
 
     // Diamond shape
     ctx.beginPath();
@@ -1149,7 +1733,7 @@ function drawEnergy(x, y, filled) {
 
     ctx.fillStyle = filled ? COLORS.energyFull : COLORS.energyEmpty;
     ctx.fill();
-    ctx.strokeStyle = filled ? '#80e0ff' : '#304050';
+    ctx.strokeStyle = filled ? '#80e0ff' : (isRegenTarget ? '#60a0c0' : '#304050');
     ctx.lineWidth = 2;
     ctx.stroke();
 
@@ -1217,53 +1801,161 @@ function drawAbilityBar() {
     });
 }
 
-// EXPAND 10: Minimap
+// ITERATION 61: Enhanced Minimap
 function drawMinimap() {
-    const mapSize = 80;
-    const mapX = canvas.width - mapSize - 20;
+    const mapSize = 100;
+    const mapHeight = mapSize * (720 / 1280);
+    const mapX = canvas.width - mapSize - 15;
     const mapY = 70;
-    const scale = mapSize / canvas.width;
+    const scaleX = mapSize / canvas.width;
+    const scaleY = mapHeight / canvas.height;
 
     ctx.save();
 
-    // Background
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillRect(mapX, mapY, mapSize, mapSize * 0.75);
+    // Background with gradient
+    const bgGrad = ctx.createLinearGradient(mapX, mapY, mapX, mapY + mapHeight);
+    bgGrad.addColorStop(0, 'rgba(10, 30, 40, 0.7)');
+    bgGrad.addColorStop(1, 'rgba(5, 15, 25, 0.8)');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(mapX, mapY, mapSize, mapHeight);
+
+    // Inner glow border
+    ctx.strokeStyle = 'rgba(80, 200, 255, 0.3)';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(mapX + 2, mapY + 2, mapSize - 4, mapHeight - 4);
+
+    // Outer border
     ctx.strokeStyle = '#50c8ff';
     ctx.lineWidth = 1;
-    ctx.strokeRect(mapX, mapY, mapSize, mapSize * 0.75);
+    ctx.strokeRect(mapX, mapY, mapSize, mapHeight);
 
-    // Player dot
-    ctx.fillStyle = '#50c8ff';
-    ctx.beginPath();
-    ctx.arc(mapX + player.x * scale, mapY + player.y * scale * 0.75, 3, 0, Math.PI * 2);
-    ctx.fill();
+    // Grid lines
+    ctx.strokeStyle = 'rgba(80, 200, 255, 0.1)';
+    ctx.lineWidth = 1;
+    for (let i = 1; i < 4; i++) {
+        ctx.beginPath();
+        ctx.moveTo(mapX + (mapSize / 4) * i, mapY);
+        ctx.lineTo(mapX + (mapSize / 4) * i, mapY + mapHeight);
+        ctx.stroke();
+    }
+    for (let i = 1; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(mapX, mapY + (mapHeight / 3) * i);
+        ctx.lineTo(mapX + mapSize, mapY + (mapHeight / 3) * i);
+        ctx.stroke();
+    }
 
-    // Enemy dots
-    ctx.fillStyle = '#ff4040';
+    // Spawn warnings on minimap
+    spawnWarnings.forEach(w => {
+        const pulse = Math.sin(game.time * 10) * 0.3 + 0.7;
+        ctx.fillStyle = `rgba(255, 100, 100, ${pulse * 0.5})`;
+        ctx.beginPath();
+        ctx.arc(mapX + w.x * scaleX, mapY + w.y * scaleY, 4, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    // Crystal dots
+    ctx.fillStyle = 'rgba(255, 48, 80, 0.7)';
+    crystals.forEach(c => {
+        ctx.beginPath();
+        ctx.arc(mapX + c.x * scaleX, mapY + c.y * scaleY, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    // Pickup dots with glow
+    pickups.forEach(p => {
+        const color = p.type === 'health' ? '#ff80a0' : '#80ffb0';
+        ctx.fillStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 5;
+        ctx.beginPath();
+        ctx.arc(mapX + p.x * scaleX, mapY + p.y * scaleY, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    });
+
+    // Enemy dots with size variation
     enemies.forEach(e => {
         if (!e.disguised && !e.burrowed) {
+            const dotSize = e.isElite ? 3 : 2;
+            ctx.fillStyle = e.isElite ? '#c040ff' : '#ff4040';
             ctx.beginPath();
-            ctx.arc(mapX + e.x * scale, mapY + e.y * scale * 0.75, 2, 0, Math.PI * 2);
+            ctx.arc(mapX + e.x * scaleX, mapY + e.y * scaleY, dotSize, 0, Math.PI * 2);
             ctx.fill();
         }
     });
 
-    // Boss dot
+    // Boss dot with pulsing
     if (boss) {
+        const bossPulse = 1 + Math.sin(game.time * 8) * 0.3;
         ctx.fillStyle = '#ffff00';
+        ctx.shadowColor = '#ffff00';
+        ctx.shadowBlur = 8;
         ctx.beginPath();
-        ctx.arc(mapX + boss.x * scale, mapY + boss.y * scale * 0.75, 4, 0, Math.PI * 2);
+        ctx.arc(mapX + boss.x * scaleX, mapY + boss.y * scaleY, 5 * bossPulse, 0, Math.PI * 2);
         ctx.fill();
+        ctx.shadowBlur = 0;
     }
 
-    // Pickup dots
-    ctx.fillStyle = '#50ff80';
-    pickups.forEach(p => {
-        ctx.beginPath();
-        ctx.arc(mapX + p.x * scale, mapY + p.y * scale * 0.75, 2, 0, Math.PI * 2);
-        ctx.fill();
-    });
+    // Player dot with direction indicator
+    const px = mapX + player.x * scaleX;
+    const py = mapY + player.y * scaleY;
+
+    // Player glow
+    ctx.fillStyle = 'rgba(80, 200, 255, 0.3)';
+    ctx.beginPath();
+    ctx.arc(px, py, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Player dot
+    ctx.fillStyle = '#50c8ff';
+    ctx.beginPath();
+    ctx.arc(px, py, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Direction indicator
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(px + Math.cos(player.angle) * 8, py + Math.sin(player.angle) * 8);
+    ctx.stroke();
+
+    // Label
+    ctx.font = '9px Arial';
+    ctx.fillStyle = '#80c0ff';
+    ctx.textAlign = 'center';
+    ctx.fillText('MAP', mapX + mapSize / 2, mapY - 3);
+
+    ctx.restore();
+}
+
+// Debug overlay (press Q to toggle)
+function drawDebugOverlay() {
+    if (!game.debugMode) return;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(10, 150, 280, 240);
+
+    ctx.fillStyle = '#0f0';
+    ctx.font = '14px monospace';
+    let y = 170;
+    const line = (text) => { ctx.fillText(text, 20, y); y += 18; };
+
+    line('=== DEBUG (Q to close) ===');
+    line('Player: (' + Math.round(player.x) + ', ' + Math.round(player.y) + ')');
+    line('Health: ' + player.health + '/' + player.maxHealth);
+    line('Energy: ' + player.energy.toFixed(1) + '/' + player.maxEnergy);
+    line('Enemies: ' + enemies.length);
+    line('Wave: ' + game.wave + '/' + game.maxWave);
+    line('State: ' + game.state);
+    line('Crystals: ' + game.crystals);
+    line('Level: ' + game.level + ' (XP: ' + game.xp + '/' + game.xpToLevel + ')');
+    line('Combo: ' + game.comboMultiplier.toFixed(1) + 'x');
+    line('FPS: ' + Math.round(game.fps));
+    line('Bullets: ' + playerBullets.length + ' / ' + enemyBullets.length);
+    line('Boss: ' + (boss ? boss.hp + '/' + boss.maxHp : 'None'));
 
     ctx.restore();
 }
@@ -1290,6 +1982,22 @@ function updatePlayer(dt) {
     if (player.boosting) {
         player.energy -= 2 * dt;
         if (player.energy < 0) player.energy = 0;
+
+        // ITERATION 68: Enhanced boost trail particles
+        if (Math.random() < 0.6) {
+            const backAngle = player.angle + Math.PI;
+            const spread = (Math.random() - 0.5) * 0.8;
+            particles.push({
+                x: player.x + Math.cos(backAngle) * 15,
+                y: player.y + Math.sin(backAngle) * 15,
+                vx: Math.cos(backAngle + spread) * (80 + Math.random() * 60),
+                vy: Math.sin(backAngle + spread) * (80 + Math.random() * 60),
+                life: 0.4,
+                decay: 1.5,
+                size: 4 + Math.random() * 3,
+                color: Math.random() < 0.5 ? '#80ffff' : '#ffffff'
+            });
+        }
     }
 
     player.vx = dx * player.speed * speedMult;
@@ -1297,6 +2005,12 @@ function updatePlayer(dt) {
 
     player.x += player.vx * dt;
     player.y += player.vy * dt;
+
+    // ITERATION 73: Decay shot pulse
+    if (player.shotPulse > 0) {
+        player.shotPulse -= dt * 4;
+        if (player.shotPulse < 0) player.shotPulse = 0;
+    }
 
     // POLISH 6: Update trail
     if (Math.abs(player.vx) > 10 || Math.abs(player.vy) > 10) {
@@ -1306,9 +2020,9 @@ function updatePlayer(dt) {
         if (player.trail.length > 0) player.trail.shift();
     }
 
-    // Bounds
-    player.x = Math.max(60, Math.min(740, player.x));
-    player.y = Math.max(60, Math.min(540, player.y));
+    // Bounds (scaled for 1280x720)
+    player.x = Math.max(100, Math.min(1180, player.x));
+    player.y = Math.max(100, Math.min(620, player.y));
 
     // Aim toward mouse
     player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
@@ -1372,40 +2086,49 @@ function updatePlayer(dt) {
 }
 
 function dash() {
-    const dashDist = 120;
+    const dashDist = 150; // Increased dash distance
+    const startX = player.x;
+    const startY = player.y;
+
     player.x += Math.cos(player.angle) * dashDist;
     player.y += Math.sin(player.angle) * dashDist;
-    player.x = Math.max(60, Math.min(740, player.x));
-    player.y = Math.max(60, Math.min(540, player.y));
+    player.x = Math.max(100, Math.min(1180, player.x));
+    player.y = Math.max(100, Math.min(620, player.y));
     player.dashCooldown = 0.8;
 
-    // EXPAND 19: Dash i-frames
-    player.invincible = Math.max(player.invincible, 0.2);
+    // Dash screen effects
+    game.screenFlash = 0.15;
+    game.screenFlashColor = '#50c8ff';
 
-    // POLISH 19: Dodge afterimage effect
-    for (let i = 0; i < 5; i++) {
+    // EXPAND 19: Dash i-frames
+    player.invincible = Math.max(player.invincible, 0.25);
+
+    // POLISH 19: Dodge afterimage effect - more afterimages
+    for (let i = 0; i < 8; i++) {
+        const t = i / 8;
         particles.push({
-            x: player.x - Math.cos(player.angle) * dashDist * (i / 5),
-            y: player.y - Math.sin(player.angle) * dashDist * (i / 5),
+            x: startX + (player.x - startX) * t,
+            y: startY + (player.y - startY) * t,
             vx: 0,
             vy: 0,
-            life: 0.5,
-            decay: 1,
-            size: 12 - i * 2,
-            color: 'rgba(80, 200, 255, 0.5)'
+            life: 0.6 - t * 0.3,
+            decay: 1.5,
+            size: 15 - i * 1.5,
+            color: 'rgba(80, 200, 255, ' + (0.6 - t * 0.4) + ')'
         });
     }
 
-    // Dash particles
-    for (let i = 0; i < 10; i++) {
+    // Dash trail particles - more particles for whoosh effect
+    for (let i = 0; i < 20; i++) {
+        const t = Math.random();
         particles.push({
-            x: player.x - Math.cos(player.angle) * dashDist * Math.random(),
-            y: player.y - Math.sin(player.angle) * dashDist * Math.random(),
-            vx: (Math.random() - 0.5) * 50,
-            vy: (Math.random() - 0.5) * 50,
-            life: 1,
-            decay: 2,
-            size: 4,
+            x: startX + (player.x - startX) * t + (Math.random() - 0.5) * 20,
+            y: startY + (player.y - startY) * t + (Math.random() - 0.5) * 20,
+            vx: (Math.random() - 0.5) * 80,
+            vy: (Math.random() - 0.5) * 80,
+            life: 0.8,
+            decay: 1.5,
+            size: 3 + Math.random() * 3,
             color: COLORS.playerAccent
         });
     }
@@ -1441,9 +2164,16 @@ function firePlayerBullet() {
         life: 0.1,
         isSuper: false
     });
+
+    // ITERATION 73: Shot recoil visual
+    player.shotPulse = 0.2;
+
+    // Tiny recoil push
+    player.vx -= Math.cos(player.angle) * 10;
+    player.vy -= Math.sin(player.angle) * 10;
 }
 
-// EXPAND 1: Supershot
+// EXPAND 1: Supershot - ITERATION 56 enhanced
 function fireSupershot() {
     player.energy -= 1;
     const speed = 400;
@@ -1466,11 +2196,59 @@ function fireSupershot() {
         x: player.x + Math.cos(player.angle) * 20,
         y: player.y + Math.sin(player.angle) * 20,
         angle: player.angle,
-        life: 0.2,
+        life: 0.25,
         isSuper: true
     });
 
-    game.screenShake = 0.1;
+    // ITERATION 56: Dramatic release effect
+    game.screenShake = 0.2;
+    game.screenFlash = 0.2;
+    game.screenFlashColor = '#4080ff';
+
+    // Shockwave ring from player
+    particles.push({
+        x: player.x,
+        y: player.y,
+        vx: 0,
+        vy: 0,
+        life: 0.4,
+        decay: 1,
+        size: 0,
+        color: '#4080ff',
+        ring: true,
+        ringRadius: 20,
+        ringExpand: 200
+    });
+
+    // Burst particles in firing direction
+    for (let i = 0; i < 12; i++) {
+        const spread = (Math.random() - 0.5) * 0.8;
+        particles.push({
+            x: player.x + Math.cos(player.angle) * 25,
+            y: player.y + Math.sin(player.angle) * 25,
+            vx: Math.cos(player.angle + spread) * (150 + Math.random() * 100),
+            vy: Math.sin(player.angle + spread) * (150 + Math.random() * 100),
+            life: 0.5,
+            decay: 1.2,
+            size: 4 + Math.random() * 4,
+            color: i % 3 === 0 ? '#ffffff' : '#4080ff'
+        });
+    }
+
+    // Kickback particles behind player
+    for (let i = 0; i < 6; i++) {
+        const backAngle = player.angle + Math.PI + (Math.random() - 0.5) * 1.2;
+        particles.push({
+            x: player.x + Math.cos(backAngle) * 15,
+            y: player.y + Math.sin(backAngle) * 15,
+            vx: Math.cos(backAngle) * (80 + Math.random() * 60),
+            vy: Math.sin(backAngle) * (80 + Math.random() * 60),
+            life: 0.3,
+            decay: 1,
+            size: 3,
+            color: '#80b0ff'
+        });
+    }
 }
 
 function updateEnemies(dt) {
@@ -1695,13 +2473,91 @@ function updateBoss(dt) {
         return;
     }
 
+    // ITERATION 72: Boss entrance animation
+    if (boss.enteringArena) {
+        boss.entranceTimer += dt;
+        // Move down into arena
+        const targetY = 250;
+        boss.y += (targetY - boss.y) * dt * 2;
+
+        // Shake during entrance
+        if (Math.random() < 0.3) game.screenShake = Math.max(game.screenShake, 0.15);
+
+        // Entrance particles
+        if (Math.random() < 0.4) {
+            particles.push({
+                x: boss.x + (Math.random() - 0.5) * 60,
+                y: boss.y + 30,
+                vx: (Math.random() - 0.5) * 100,
+                vy: 50 + Math.random() * 50,
+                life: 0.5,
+                decay: 1,
+                size: 5 + Math.random() * 5,
+                color: '#ff6030'
+            });
+        }
+
+        // Entrance complete
+        if (boss.y > 240) {
+            boss.enteringArena = false;
+            boss.y = 250;
+            game.screenShake = 0.4;
+            game.announcement = '⚔️ FOREST GUARDIAN ⚔️';
+            game.announcementTimer = 2;
+            game.announcementColor = '#ffff00';
+
+            // Landing particles
+            for (let i = 0; i < 25; i++) {
+                particles.push({
+                    x: boss.x + (Math.random() - 0.5) * 80,
+                    y: boss.y + 30,
+                    vx: (Math.random() - 0.5) * 200,
+                    vy: -50 - Math.random() * 100,
+                    life: 1,
+                    decay: 0.8,
+                    size: 4 + Math.random() * 6,
+                    color: ['#ffcc00', '#ff8800', '#ffffff'][Math.floor(Math.random() * 3)]
+                });
+            }
+        }
+        return;
+    }
+
     // Rotate arms
     boss.angle += effectiveDt * 0.5;
 
-    // Phase transitions
+    // Phase transitions with dramatic feedback
     const hpPercent = boss.hp / boss.maxHp;
+    const oldPhase = boss.phase;
+
     if (hpPercent < 0.3) boss.phase = 3;
     else if (hpPercent < 0.6) boss.phase = 2;
+
+    // Phase change effects
+    if (boss.phase !== oldPhase) {
+        game.screenShake = 0.5;
+        game.screenFlash = 0.4;
+        game.screenFlashColor = boss.phase === 3 ? '#ff4040' : '#ff8000';
+
+        // Boss roar announcement
+        game.waveAnnounce = boss.phase === 3 ? 'BOSS ENRAGED!' : 'BOSS PHASE 2';
+        game.waveAnnounceTimer = 2;
+
+        // Shockwave particles
+        for (let k = 0; k < 24; k++) {
+            const angle = (k / 24) * Math.PI * 2;
+            particles.push({
+                x: boss.x,
+                y: boss.y,
+                vx: Math.cos(angle) * 300,
+                vy: Math.sin(angle) * 300,
+                life: 0.6,
+                decay: 1,
+                size: 8,
+                color: boss.phase === 3 ? '#ff4040' : '#ff8000'
+            });
+        }
+    }
 
     // Attack patterns
     boss.attackTimer -= effectiveDt;
@@ -1719,9 +2575,9 @@ function updateBoss(dt) {
         boss.y += (dy / dist) * 30 * effectiveDt;
     }
 
-    // Keep in bounds
-    boss.x = Math.max(100, Math.min(700, boss.x));
-    boss.y = Math.max(100, Math.min(400, boss.y));
+    // Keep in bounds (scaled for 1280x720)
+    boss.x = Math.max(150, Math.min(1130, boss.x));
+    boss.y = Math.max(150, Math.min(570, boss.y));
 }
 
 function bossAttack() {
@@ -1794,14 +2650,42 @@ function updateBullets(dt) {
         b.y += b.vy * dt;
         b.traveled += Math.hypot(b.vx, b.vy) * dt;
 
+        // ITERATION 60: Spawn trail particles
+        if (Math.random() < (b.isSuper ? 0.8 : 0.4)) {
+            particles.push({
+                x: b.x - b.vx * dt * 0.5,
+                y: b.y - b.vy * dt * 0.5,
+                vx: (Math.random() - 0.5) * 20,
+                vy: (Math.random() - 0.5) * 20,
+                life: 0.3,
+                decay: 1.5,
+                size: b.isSuper ? 3 : 2,
+                color: b.isSuper ? '#4080ff' : '#50c8ff'
+            });
+        }
+
         // Range check
         if (b.traveled > b.range) {
             playerBullets.splice(i, 1);
             continue;
         }
 
-        // Bounds
+        // Bounds - ITERATION 69: Add impact particles at walls
         if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) {
+            // Wall impact particles
+            for (let k = 0; k < 5; k++) {
+                const angle = Math.atan2(b.vy, b.vx) + Math.PI + (Math.random() - 0.5) * 1.5;
+                particles.push({
+                    x: Math.max(5, Math.min(canvas.width - 5, b.x)),
+                    y: Math.max(5, Math.min(canvas.height - 5, b.y)),
+                    vx: Math.cos(angle) * (50 + Math.random() * 50),
+                    vy: Math.sin(angle) * (50 + Math.random() * 50),
+                    life: 0.3,
+                    decay: 1.5,
+                    size: 2 + Math.random() * 2,
+                    color: b.isSuper ? '#4080ff' : '#50c8ff'
+                });
+            }
             playerBullets.splice(i, 1);
             continue;
         }
@@ -1932,6 +2816,20 @@ function updateBullets(dt) {
         b.x += b.vx * effectiveDt;
         b.y += b.vy * effectiveDt;
 
+        // ITERATION 60: Enemy bullet trails
+        if (Math.random() < (b.isHoming ? 0.6 : 0.3)) {
+            particles.push({
+                x: b.x - b.vx * effectiveDt * 0.5,
+                y: b.y - b.vy * effectiveDt * 0.5,
+                vx: (Math.random() - 0.5) * 15,
+                vy: (Math.random() - 0.5) * 15,
+                life: 0.25,
+                decay: 1.5,
+                size: b.isHoming ? 3 : 2,
+                color: b.isHoming ? '#ff60ff' : '#ff6030'
+            });
+        }
+
         // Bounds
         if (b.x < -20 || b.x > canvas.width + 20 || b.y < -20 || b.y > canvas.height + 20) {
             enemyBullets.splice(i, 1);
@@ -1943,27 +2841,85 @@ function updateBullets(dt) {
             player.health--;
             player.invincible = 1.5;
             enemyBullets.splice(i, 1);
-            game.screenShake = 0.3;
 
-            // POLISH 17: Blood splatter
-            for (let k = 0; k < 12; k++) {
+            // Stronger damage feedback
+            game.screenShake = 0.4;
+            game.screenFlash = 0.6;
+            game.screenFlashColor = '#ff0000';
+
+            // POLISH 17: Enhanced damage particles - more dramatic
+            for (let k = 0; k < 20; k++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 100 + Math.random() * 200;
                 particles.push({
                     x: player.x,
                     y: player.y,
-                    vx: (Math.random() - 0.5) * 200,
-                    vy: (Math.random() - 0.5) * 200,
-                    life: 1,
-                    decay: 2,
-                    size: 5,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 0.8 + Math.random() * 0.4,
+                    decay: 1.5,
+                    size: 3 + Math.random() * 4,
                     color: COLORS.healthFull
                 });
             }
 
-            // Reset combo
+            // Warning ring expanding outward
+            for (let k = 0; k < 16; k++) {
+                const angle = (k / 16) * Math.PI * 2;
+                particles.push({
+                    x: player.x,
+                    y: player.y,
+                    vx: Math.cos(angle) * 250,
+                    vy: Math.sin(angle) * 250,
+                    life: 0.5,
+                    decay: 1,
+                    size: 6,
+                    color: '#ff4040'
+                });
+            }
+
+            // Reset combo and kill streak
             game.combo = 0;
             game.comboMultiplier = 1;
+            game.killStreak = 0;
+            game.lastAnnouncedStreak = 0;
 
             if (player.health <= 0) {
+                // ITERATION 78: Player death explosion
+                game.screenShake = 1;
+                game.screenFlash = 1;
+                game.screenFlashColor = '#ff0000';
+
+                // Massive death explosion particles
+                for (let i = 0; i < 60; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 100 + Math.random() * 300;
+                    particles.push({
+                        x: player.x,
+                        y: player.y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 1 + Math.random() * 0.5,
+                        decay: 0.8,
+                        size: 4 + Math.random() * 6,
+                        color: ['#50c8ff', '#80ffff', '#ffffff', '#ff8080'][Math.floor(Math.random() * 4)]
+                    });
+                }
+
+                // Death rings
+                for (let i = 0; i < 4; i++) {
+                    particles.push({
+                        type: 'ring',
+                        x: player.x,
+                        y: player.y,
+                        size: 20 + i * 20,
+                        maxSize: 150 + i * 50,
+                        life: 1,
+                        decay: 0.6 + i * 0.1,
+                        color: i < 2 ? '#50c8ff' : '#ffffff'
+                    });
+                }
+
                 game.state = 'gameover';
             }
         }
@@ -1973,44 +2929,118 @@ function updateBullets(dt) {
 function killEnemy(index) {
     const e = enemies[index];
 
-    // POLISH 7: Death explosion particles
-    for (let i = 0; i < 15; i++) {
+    // Scale effects by enemy size for more satisfying kills
+    const sizeMult = e.size / 20;
+    const particleCount = Math.floor(20 * sizeMult);
+
+    // POLISH 7: Death explosion particles - MORE for bigger enemies
+    for (let i = 0; i < particleCount; i++) {
+        const speed = 200 + Math.random() * 150;
+        const angle = Math.random() * Math.PI * 2;
         particles.push({
             x: e.x,
             y: e.y,
-            vx: (Math.random() - 0.5) * 250,
-            vy: (Math.random() - 0.5) * 250,
-            life: 1,
-            decay: 2,
-            size: 6,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 0.8 + Math.random() * 0.4,
+            decay: 1.5,
+            size: 4 + Math.random() * 4,
             color: e.color
         });
     }
 
-    // More dramatic death ring
-    for (let i = 0; i < 12; i++) {
-        const angle = (i / 12) * Math.PI * 2;
+    // More dramatic death ring - expands outward
+    const ringCount = Math.floor(16 * sizeMult);
+    for (let i = 0; i < ringCount; i++) {
+        const angle = (i / ringCount) * Math.PI * 2;
+        const speed = 180 + Math.random() * 50;
         particles.push({
             x: e.x,
             y: e.y,
-            vx: Math.cos(angle) * 150,
-            vy: Math.sin(angle) * 150,
-            life: 0.8,
-            decay: 1.5,
-            size: 4,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 0.6,
+            decay: 1.2,
+            size: 5,
             color: '#ffffff'
         });
     }
 
-    // Drop crystals with combo bonus
+    // Inner burst for extra juiciness
+    for (let i = 0; i < 8; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        particles.push({
+            x: e.x,
+            y: e.y,
+            vx: Math.cos(angle) * 80,
+            vy: Math.sin(angle) * 80,
+            life: 0.5,
+            decay: 2,
+            size: 8,
+            color: '#ffff80'
+        });
+    }
+
+    // Elite kills get screen flash
+    if (e.isElite) {
+        game.screenFlash = 0.4;
+        game.screenFlashColor = '#c040ff';
+    }
+
+    // ITERATION 59: Kill streak announcements
+    game.killStreak = game.combo + 1; // Will be incremented after this
+    const streak = game.killStreak;
+
+    // Check for streak milestones and announce
+    const streakMilestones = {
+        2: { text: 'DOUBLE KILL!', color: '#ffff00' },
+        3: { text: 'TRIPLE KILL!', color: '#ff8000' },
+        5: { text: 'RAMPAGE!', color: '#ff4000' },
+        7: { text: 'UNSTOPPABLE!', color: '#ff00ff' },
+        10: { text: 'GODLIKE!', color: '#00ffff' },
+        15: { text: 'LEGENDARY!', color: '#ffffff' }
+    };
+
+    if (streakMilestones[streak] && streak > game.lastAnnouncedStreak) {
+        const milestone = streakMilestones[streak];
+        game.waveAnnounce = milestone.text;
+        game.waveAnnounceTimer = 1.5;
+        game.lastAnnouncedStreak = streak;
+
+        // Extra effects for big streaks
+        if (streak >= 5) {
+            game.screenShake = Math.min(0.3, streak * 0.03);
+            game.screenFlash = 0.3;
+            game.screenFlashColor = milestone.color;
+
+            // Particle burst
+            for (let i = 0; i < streak * 2; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                particles.push({
+                    x: e.x,
+                    y: e.y,
+                    vx: Math.cos(angle) * (100 + Math.random() * 100),
+                    vy: Math.sin(angle) * (100 + Math.random() * 100),
+                    life: 1,
+                    decay: 1,
+                    size: 5,
+                    color: milestone.color
+                });
+            }
+        }
+    }
+
+    // Drop crystals with combo bonus - spread them out more
     const xpValue = Math.floor(e.xp * game.comboMultiplier);
     const crystalCount = Math.ceil(xpValue / 2);
     for (let i = 0; i < crystalCount; i++) {
+        const angle = (i / crystalCount) * Math.PI * 2;
+        const dist = 20 + Math.random() * 30;
         crystals.push({
-            x: e.x + (Math.random() - 0.5) * 30,
-            y: e.y + (Math.random() - 0.5) * 30,
+            x: e.x + Math.cos(angle) * dist,
+            y: e.y + Math.sin(angle) * dist,
             value: Math.ceil(xpValue / crystalCount),
-            magnetRange: 80
+            magnetRange: 100
         });
     }
 
@@ -2024,10 +3054,35 @@ function killEnemy(index) {
     }
 
     enemies.splice(index, 1);
-    game.screenShake = 0.15;
+
+    // Screen shake scales with enemy size - bigger kills = more shake
+    game.screenShake = Math.max(game.screenShake, 0.1 + 0.15 * sizeMult);
 
     // Check wave complete
     if (enemies.length === 0 && !game.bossActive) {
+        // Wave complete celebration
+        game.screenFlash = 0.3;
+        game.screenFlashColor = '#50ff80';
+        game.waveAnnounce = 'WAVE ' + game.wave + ' CLEARED!';
+        game.waveAnnounceTimer = 1.5;
+
+        // Victory particle burst from center
+        for (let ring = 0; ring < 2; ring++) {
+            for (let i = 0; i < 16; i++) {
+                const angle = (i / 16) * Math.PI * 2;
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: Math.cos(angle) * (200 + ring * 100),
+                    vy: Math.sin(angle) * (200 + ring * 100),
+                    life: 1,
+                    decay: 1.5,
+                    size: 6 - ring * 2,
+                    color: ring === 0 ? '#50ff80' : '#80ffb0'
+                });
+            }
+        }
+
         if (game.wave >= game.maxWave) {
             // EXPAND 16: Spawn boss
             setTimeout(() => {
@@ -2037,13 +3092,88 @@ function killEnemy(index) {
             }, 2000);
         } else {
             game.wave++;
+            // Wave announcement
+            setTimeout(() => {
+                announceWave();
+            }, 1500);
             setTimeout(() => {
                 if (game.state === 'playing') {
                     spawnEnemies();
                 }
-            }, 1500);
+            }, 2500);
         }
     }
+}
+
+// Wave announcement function
+function announceWave() {
+    const waveNames = ['', 'Wave 1', 'Wave 2', 'Wave 3', 'Wave 4', 'Wave 5',
+                       'Wave 6', 'Wave 7', 'Wave 8', 'Wave 9', 'FINAL WAVE'];
+    game.waveAnnounce = waveNames[game.wave] || 'Wave ' + game.wave;
+    game.waveAnnounceTimer = 2.5;
+
+    // Special announcements
+    if (game.wave === 5) game.waveAnnounce = 'Wave 5 - ELITES INCOMING!';
+    if (game.wave === 10) {
+        game.waveAnnounce = 'FINAL WAVE - BOSS APPROACHES!';
+        game.screenFlash = 0.3;
+        game.screenFlashColor = '#ff8000';
+    }
+
+    // ITERATION 79: Wave start fanfare particles
+    const particleCount = 15 + game.wave * 3;
+    for (let i = 0; i < particleCount; i++) {
+        const side = i % 2 === 0 ? 0 : canvas.width;
+        particles.push({
+            x: side,
+            y: canvas.height / 2 + (Math.random() - 0.5) * 100,
+            vx: (side === 0 ? 1 : -1) * (200 + Math.random() * 200),
+            vy: (Math.random() - 0.5) * 150,
+            life: 1 + Math.random() * 0.5,
+            decay: 0.6,
+            size: 3 + Math.random() * 4,
+            color: ['#ff8000', '#ffcc00', '#ffffff'][Math.floor(Math.random() * 3)]
+        });
+    }
+
+    // Light screen flash for wave starts
+    if (game.wave > 1) {
+        game.screenFlash = Math.max(game.screenFlash, 0.2);
+        game.screenFlashColor = '#ffcc00';
+        game.screenShake = Math.max(game.screenShake, 0.15);
+    }
+}
+
+// Draw wave announcement
+function drawWaveAnnouncement() {
+    if (game.waveAnnounceTimer <= 0) return;
+
+    ctx.save();
+
+    // Fade in/out
+    let alpha = 1;
+    if (game.waveAnnounceTimer > 2) alpha = (2.5 - game.waveAnnounceTimer) * 2;
+    if (game.waveAnnounceTimer < 0.5) alpha = game.waveAnnounceTimer * 2;
+    ctx.globalAlpha = alpha;
+
+    // Scale animation
+    const scale = 1 + Math.sin((2.5 - game.waveAnnounceTimer) * 3) * 0.1;
+
+    // Background bar
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.fillRect(0, canvas.height / 2 - 40, canvas.width, 80);
+
+    // Glow effect
+    ctx.shadowColor = '#ff8000';
+    ctx.shadowBlur = 20;
+
+    // Text
+    ctx.font = 'bold ' + Math.floor(36 * scale) + 'px Arial';
+    ctx.fillStyle = '#ff8000';
+    ctx.textAlign = 'center';
+    ctx.fillText(game.waveAnnounce, canvas.width / 2, canvas.height / 2 + 12);
+
+    ctx.restore();
 }
 
 function defeatBoss() {
@@ -2083,7 +3213,64 @@ function defeatBoss() {
     // Victory after a delay
     setTimeout(() => {
         if (game.state === 'playing') {
+            // ITERATION 80: Victory celebration
             game.state = 'victory';
+            game.victoryTimer = 0;
+
+            // Big celebration screen flash
+            game.screenFlash = 0.8;
+            game.screenFlashColor = '#ffffff';
+            game.screenShake = 0.3;
+
+            // Firework burst from center
+            for (let i = 0; i < 80; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 150 + Math.random() * 350;
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 1.5 + Math.random(),
+                    decay: 0.5,
+                    size: 4 + Math.random() * 6,
+                    color: ['#ffff00', '#ff00ff', '#00ffff', '#ff8800', '#ffffff', '#00ff00'][Math.floor(Math.random() * 6)]
+                });
+            }
+
+            // Victory rings
+            for (let i = 0; i < 5; i++) {
+                particles.push({
+                    type: 'ring',
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    size: 30 + i * 40,
+                    maxSize: 300 + i * 100,
+                    life: 1.5,
+                    decay: 0.4,
+                    color: ['#ffff00', '#ff00ff', '#00ffff', '#ffffff', '#50ff80'][i]
+                });
+            }
+
+            // Spawn confetti particles continuously
+            game.victoryConfetti = setInterval(() => {
+                if (game.state !== 'victory') {
+                    clearInterval(game.victoryConfetti);
+                    return;
+                }
+                for (let i = 0; i < 5; i++) {
+                    particles.push({
+                        x: Math.random() * canvas.width,
+                        y: -10,
+                        vx: (Math.random() - 0.5) * 100,
+                        vy: 80 + Math.random() * 80,
+                        life: 3,
+                        decay: 0.3,
+                        size: 4 + Math.random() * 4,
+                        color: ['#ffff00', '#ff00ff', '#00ffff', '#ff0000', '#00ff00', '#ffffff'][Math.floor(Math.random() * 6)]
+                    });
+                }
+            }, 100);
         }
     }, 2000);
 }
@@ -2107,19 +3294,63 @@ function updateCrystals(dt) {
             game.crystals += c.value;
             game.xp += c.value;
 
-            // POLISH 13: Collect sparkle
-            for (let k = 0; k < 5; k++) {
+            // ITERATION 55: Enhanced crystal collection feedback
+            // Show floating value number
+            damageNumbers.push({
+                x: player.x,
+                y: player.y - 15,
+                text: '+' + c.value,
+                color: COLORS.crystal,
+                life: 0.8,
+                vy: -60,
+                scale: 1.2
+            });
+
+            // Burst of particles outward from collection point
+            const particleCount = 8 + Math.floor(c.value / 2);
+            for (let k = 0; k < particleCount; k++) {
+                const angle = (k / particleCount) * Math.PI * 2;
+                const speed = 80 + Math.random() * 60;
                 particles.push({
                     x: player.x,
                     y: player.y,
-                    vx: (Math.random() - 0.5) * 50,
-                    vy: (Math.random() - 0.5) * 50,
-                    life: 0.5,
-                    decay: 1,
-                    size: 3,
-                    color: COLORS.crystal
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 0.6,
+                    decay: 1.2,
+                    size: 4 + Math.random() * 2,
+                    color: k % 2 === 0 ? COLORS.crystal : '#ff80a0'
                 });
             }
+
+            // Inner bright sparkle burst
+            for (let k = 0; k < 6; k++) {
+                particles.push({
+                    x: player.x,
+                    y: player.y,
+                    vx: (Math.random() - 0.5) * 120,
+                    vy: (Math.random() - 0.5) * 120,
+                    life: 0.4,
+                    decay: 1,
+                    size: 2,
+                    color: '#ffffff'
+                });
+            }
+
+            // Expanding ring effect
+            particles.push({
+                x: player.x,
+                y: player.y,
+                vx: 0,
+                vy: 0,
+                life: 0.3,
+                decay: 1,
+                size: 5,
+                color: COLORS.crystal,
+                ring: true,
+                ringRadius: 10,
+                ringExpand: 150
+            });
 
             // Level up check
             while (game.xp >= game.xpToLevel) {
@@ -2138,22 +3369,47 @@ function updateCrystals(dt) {
                     player.critChance += 0.05;
                 }
 
-                // POLISH 8: Level up screen flash
-                game.screenFlash = 0.3;
+                // POLISH 8: Level up celebration
+                game.screenFlash = 0.5;
                 game.screenFlashColor = '#50ff80';
+                game.screenShake = 0.2;
 
-                // Level up effect
-                for (let k = 0; k < 30; k++) {
-                    const angle = (k / 30) * Math.PI * 2;
+                // Level up announcement
+                game.waveAnnounce = 'LEVEL UP! ' + game.level;
+                game.waveAnnounceTimer = 2;
+
+                // Multi-ring particle burst
+                for (let ring = 0; ring < 3; ring++) {
+                    const ringSize = 20 + ring * 10;
+                    for (let k = 0; k < ringSize; k++) {
+                        const angle = (k / ringSize) * Math.PI * 2 + ring * 0.3;
+                        const speed = 150 + ring * 80;
+                        particles.push({
+                            x: player.x,
+                            y: player.y,
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed,
+                            life: 1.2 - ring * 0.2,
+                            decay: 1.2,
+                            size: 6 - ring,
+                            color: ring === 0 ? '#ffffff' : (ring === 1 ? '#80ffb0' : '#50ff80')
+                        });
+                    }
+                }
+
+                // Sparkle particles around player
+                for (let s = 0; s < 15; s++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = 20 + Math.random() * 40;
                     particles.push({
-                        x: player.x,
-                        y: player.y,
-                        vx: Math.cos(angle) * 200,
-                        vy: Math.sin(angle) * 200,
-                        life: 1,
-                        decay: 1.5,
-                        size: 5,
-                        color: '#50ff80'
+                        x: player.x + Math.cos(angle) * dist,
+                        y: player.y + Math.sin(angle) * dist,
+                        vx: (Math.random() - 0.5) * 50,
+                        vy: -50 - Math.random() * 100,
+                        life: 1.5,
+                        decay: 1,
+                        size: 4,
+                        color: '#ffff80'
                     });
                 }
             }
@@ -2266,6 +3522,9 @@ function updateCombo(dt) {
         if (game.comboTimer <= 0) {
             game.combo = 0;
             game.comboMultiplier = 1;
+            // ITERATION 59: Reset kill streak
+            game.killStreak = 0;
+            game.lastAnnouncedStreak = 0;
         }
     }
 }
@@ -2287,11 +3546,31 @@ function gameLoop(timestamp) {
     const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
     lastTime = timestamp;
 
+    // Track FPS
+    if (timestamp - game.lastFrameTime >= 1000) {
+        game.lastFrameTime = timestamp;
+    }
+    game.fps = dt > 0 ? 1 / dt : 60;
+
     game.time += dt;
 
     // Screen flash decay
     if (game.screenFlash > 0) {
         game.screenFlash -= dt * 3;
+    }
+
+    // ITERATION 71: Ambient particles
+    if (game.state === 'playing' && Math.random() < 0.15) {
+        particles.push({
+            x: 100 + Math.random() * 1080,
+            y: 100 + Math.random() * 520,
+            vx: (Math.random() - 0.5) * 20,
+            vy: -15 - Math.random() * 15,
+            life: 2 + Math.random() * 2,
+            decay: 0.3,
+            size: 1 + Math.random() * 2,
+            color: ['#50ff80', '#80ffb0', '#a0ffd0', '#ffffff'][Math.floor(Math.random() * 4)]
+        });
     }
 
     // Update
@@ -2308,6 +3587,11 @@ function gameLoop(timestamp) {
         updateSpawnWarnings(dt);
         updateCombo(dt);
         updateSlowMotion(dt);
+
+        // Wave announcement timer
+        if (game.waveAnnounceTimer > 0) {
+            game.waveAnnounceTimer -= dt;
+        }
 
         if (game.screenShake > 0) {
             game.screenShake -= dt;
@@ -2328,6 +3612,9 @@ function gameLoop(timestamp) {
 
     drawBackground();
 
+    // ITERATION 77: Draw boundary warning
+    drawBoundaryWarning();
+
     // Draw spawn warnings
     spawnWarnings.forEach(drawSpawnWarning);
 
@@ -2342,6 +3629,9 @@ function gameLoop(timestamp) {
 
     // Draw player
     drawPlayer();
+
+    // ITERATION 76: Draw crosshair
+    drawCrosshair();
 
     // Draw enemies
     enemies.forEach(drawEnemy);
@@ -2376,52 +3666,186 @@ function gameLoop(timestamp) {
         ctx.restore();
     }
 
-    // Time slow visual effect
+    // ITERATION 66: Enhanced time slow visual effect
     if (game.slowMotion < 1) {
         ctx.save();
-        ctx.globalAlpha = 0.1;
-        ctx.fillStyle = '#4040ff';
+
+        // Radial vignette in blue
+        const vignette = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 100, canvas.width/2, canvas.height/2, canvas.width*0.7);
+        vignette.addColorStop(0, 'rgba(64, 64, 200, 0)');
+        vignette.addColorStop(1, 'rgba(40, 40, 150, 0.3)');
+        ctx.fillStyle = vignette;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.strokeStyle = '#8080ff';
-        ctx.lineWidth = 5;
-        ctx.strokeRect(5, 5, canvas.width - 10, canvas.height - 10);
+
+        // Pulsing border
+        const pulse = 1 + Math.sin(game.time * 8) * 0.3;
+        ctx.strokeStyle = `rgba(128, 128, 255, ${0.3 + pulse * 0.2})`;
+        ctx.lineWidth = 4 + pulse * 2;
+        ctx.strokeRect(3, 3, canvas.width - 6, canvas.height - 6);
+
+        // Timer indicator
+        const timerRatio = game.slowMotionTimer / 3;
+        ctx.fillStyle = 'rgba(128, 128, 255, 0.3)';
+        ctx.fillRect(canvas.width/2 - 100, canvas.height - 30, 200, 10);
+        ctx.fillStyle = '#8080ff';
+        ctx.fillRect(canvas.width/2 - 100, canvas.height - 30, 200 * timerRatio, 10);
+
+        // "TIME STOP" text
+        ctx.font = 'bold 14px Arial';
+        ctx.fillStyle = '#a0a0ff';
+        ctx.textAlign = 'center';
+        ctx.fillText('TIME STOP', canvas.width/2, canvas.height - 40);
+
         ctx.restore();
     }
 
     // Draw HUD (no shake)
     drawHUD();
 
-    // Game over screen
-    if (game.state === 'gameover') {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    // Draw wave announcement
+    drawWaveAnnouncement();
+
+    // Draw debug overlay
+    drawDebugOverlay();
+
+    // ITERATION 63: Title screen
+    if (game.state === 'title') {
+        ctx.fillStyle = 'rgba(0, 20, 40, 0.85)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        ctx.font = 'bold 48px Arial';
-        ctx.fillStyle = '#ff4060';
-        ctx.textAlign = 'center';
-        ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 30);
+        // Animated title
+        const titlePulse = 1 + Math.sin(game.time * 3) * 0.05;
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2 - 100);
+        ctx.scale(titlePulse, titlePulse);
 
-        ctx.font = '24px Arial';
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(`Crystals: ${game.crystals}  Level: ${game.level}  Wave: ${game.wave}`, canvas.width / 2, canvas.height / 2 + 20);
-        ctx.fillText('Press SPACE to restart', canvas.width / 2, canvas.height / 2 + 60);
+        ctx.font = 'bold 56px Arial';
+        ctx.shadowColor = '#50c8ff';
+        ctx.shadowBlur = 30;
+        ctx.fillStyle = '#50c8ff';
+        ctx.textAlign = 'center';
+        ctx.fillText('MINISHOOT', 0, 0);
+
+        ctx.font = 'bold 36px Arial';
+        ctx.shadowColor = '#ff4060';
+        ctx.fillStyle = '#ff4060';
+        ctx.fillText('ADVENTURES', 0, 45);
+        ctx.restore();
+
+        // Animated ship icon
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2 + 30);
+        ctx.rotate(Math.sin(game.time * 2) * 0.1);
+
+        // Draw a small ship icon
+        ctx.fillStyle = '#50c8ff';
+        ctx.shadowColor = '#50c8ff';
+        ctx.shadowBlur = 20;
+        ctx.beginPath();
+        ctx.moveTo(20, 0);
+        ctx.lineTo(-15, -12);
+        ctx.lineTo(-8, 0);
+        ctx.lineTo(-15, 12);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // Blinking prompt
+        if (Math.floor(game.time * 2) % 2 === 0) {
+            ctx.font = '24px Arial';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.fillText('Press SPACE to start', canvas.width / 2, canvas.height / 2 + 120);
+        }
+
+        // Controls hint
+        ctx.font = '14px Arial';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.fillText('WASD - Move  |  MOUSE - Aim & Shoot  |  RIGHT-CLICK - Supershot  |  SPACE - Dash', canvas.width / 2, canvas.height - 50);
     }
 
-    // EXPAND 20: Victory screen
-    if (game.state === 'victory') {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    // ITERATION 64: Enhanced Game over screen
+    if (game.state === 'gameover') {
+        ctx.fillStyle = 'rgba(40, 0, 0, 0.85)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        ctx.font = 'bold 48px Arial';
+        // Vignette effect
+        const vignette = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 100, canvas.width/2, canvas.height/2, canvas.width*0.7);
+        vignette.addColorStop(0, 'rgba(0,0,0,0)');
+        vignette.addColorStop(1, 'rgba(0,0,0,0.5)');
+        ctx.fillStyle = vignette;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const shake = Math.sin(game.time * 5) * 2;
+        ctx.save();
+        ctx.translate(shake, 0);
+
+        ctx.font = 'bold 56px Arial';
+        ctx.shadowColor = '#ff0000';
+        ctx.shadowBlur = 30;
+        ctx.fillStyle = '#ff4060';
+        ctx.textAlign = 'center';
+        ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 50);
+
+        ctx.shadowBlur = 0;
+        ctx.font = '20px Arial';
+        ctx.fillStyle = '#ff8080';
+        ctx.fillText(`Wave ${game.wave}  •  Level ${game.level}  •  ${game.crystals} Crystals`, canvas.width / 2, canvas.height / 2 + 10);
+
+        ctx.restore();
+
+        if (Math.floor(game.time * 2) % 2 === 0) {
+            ctx.font = '22px Arial';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('Press SPACE to try again', canvas.width / 2, canvas.height / 2 + 80);
+        }
+    }
+
+    // ITERATION 64: Enhanced Victory screen
+    if (game.state === 'victory') {
+        ctx.fillStyle = 'rgba(0, 30, 20, 0.85)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Celebratory particles
+        if (Math.random() < 0.3) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: canvas.height + 10,
+                vx: (Math.random() - 0.5) * 50,
+                vy: -150 - Math.random() * 100,
+                life: 2,
+                decay: 0.5,
+                size: 4 + Math.random() * 3,
+                color: ['#50ff80', '#ffff50', '#50c8ff', '#ff80ff'][Math.floor(Math.random() * 4)]
+            });
+        }
+
+        const pulse = 1 + Math.sin(game.time * 4) * 0.05;
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2 - 60);
+        ctx.scale(pulse, pulse);
+
+        ctx.font = 'bold 64px Arial';
+        ctx.shadowColor = '#50ff80';
+        ctx.shadowBlur = 40;
         ctx.fillStyle = '#50ff80';
         ctx.textAlign = 'center';
-        ctx.fillText('VICTORY!', canvas.width / 2, canvas.height / 2 - 50);
+        ctx.fillText('VICTORY!', 0, 0);
+        ctx.restore();
 
+        ctx.shadowBlur = 0;
         ctx.font = '24px Arial';
+        ctx.fillStyle = '#80ffb0';
+        ctx.fillText('Forest Guardian Defeated!', canvas.width / 2, canvas.height / 2 + 10);
+
+        ctx.font = '18px Arial';
         ctx.fillStyle = '#ffffff';
-        ctx.fillText('Forest Guardian Defeated!', canvas.width / 2, canvas.height / 2);
-        ctx.fillText(`Crystals: ${game.crystals}  Level: ${game.level}`, canvas.width / 2, canvas.height / 2 + 40);
-        ctx.fillText('Press SPACE to play again', canvas.width / 2, canvas.height / 2 + 80);
+        ctx.fillText(`Final Stats:  Level ${game.level}  •  ${game.crystals} Crystals Collected`, canvas.width / 2, canvas.height / 2 + 50);
+
+        if (Math.floor(game.time * 2) % 2 === 0) {
+            ctx.font = '22px Arial';
+            ctx.fillText('Press SPACE to play again', canvas.width / 2, canvas.height / 2 + 100);
+        }
     }
 
     requestAnimationFrame(gameLoop);
@@ -2431,11 +3855,23 @@ function gameLoop(timestamp) {
 window.addEventListener('keydown', (e) => {
     keys[e.key.toLowerCase()] = true;
 
+    // Toggle debug mode with Q
+    if (e.key.toLowerCase() === 'q') {
+        game.debugMode = !game.debugMode;
+    }
+
     // Handle dash on keydown for responsive feel
     if ((e.key === ' ' || e.code === 'Space') && game.state === 'playing') {
         if (player.dashCooldown <= 0 && player.hasDash) {
             dash();
         }
+    }
+
+    // ITERATION 63: Start game from title
+    if (e.key === ' ' && game.state === 'title') {
+        game.state = 'playing';
+        announceWave();
+        spawnEnemies();
     }
 
     if (e.key === ' ' && (game.state === 'gameover' || game.state === 'victory')) {
@@ -2482,6 +3918,8 @@ function resetGame() {
     game.combo = 0;
     game.comboTimer = 0;
     game.comboMultiplier = 1;
+    game.killStreak = 0;
+    game.lastAnnouncedStreak = 0;
     game.bossActive = false;
     game.slowMotion = 1;
     game.slowMotionTimer = 0;
@@ -2511,7 +3949,7 @@ function resetGame() {
 
 // Initialize
 generateWorld();
-spawnEnemies();
+// ITERATION 63: Don't spawn enemies until title screen is passed
 requestAnimationFrame(gameLoop);
 
 // Expose for testing
