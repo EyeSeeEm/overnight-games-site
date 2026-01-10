@@ -618,6 +618,11 @@
       background: #2a475e;
       color: #67c1f5;
     }
+    /* Night tags */
+    .tag.night {
+      background: rgba(138, 43, 226, 0.3);
+      color: #da70d6;
+    }
   </style>
 </head>
 <body>
@@ -1193,6 +1198,7 @@
           <div class="card-info">
             <div class="game-title">${g.name}</div>
             <div class="game-tags">
+              <span class="tag night">${g.night.replace('night-', 'Night ')}</span>
               <span class="tag framework">${g.framework}</span>
               ${variantLabel ? `<span class="tag variant">${variantLabel}</span>` : ''}
               ${g.polished && !variantLabel ? '<span class="tag polished">Polished</span>' : ''}
