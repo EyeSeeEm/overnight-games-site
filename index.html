@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Library - Steam Style</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Motiva Sans", Arial, Helvetica, sans-serif;
+      background: linear-gradient(to bottom, #1b2838 0%, #1b2838 100%);
+      color: #c7d5e0;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(to right, #171a21, #1b2838);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #000;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    .header h1 {
+      color: #fff;
+      font-size: 24px;
+      font-weight: 300;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .stats-bar {
+      display: flex;
+      gap: 20px;
+      font-size: 12px;
+      color: #8f98a0;
+    }
+    .stats-bar span {
+      background: rgba(0,0,0,0.3);
+      padding: 6px 12px;
+      border-radius: 2px;
+    }
+
+    .controls {
+      background: #16202d;
+      padding: 12px 24px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .control-group label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #8f98a0;
+    }
+    select, input[type="text"] {
+      background: #316282;
+      border: none;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 2px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    select:hover, input[type="text"]:hover {
+      background: #417a9b;
+    }
+    select:focus, input[type="text"]:focus {
+      outline: none;
+      background: #4c8caf;
+    }
+    input[type="text"] {
+      width: 200px;
+    }
+    input[type="text"]::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+
+    .content {
+      display: flex;
+      min-height: calc(100vh - 120px);
+    }
+
+    .games-grid {
+      flex: 1;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 16px;
+      align-content: start;
+    }
+
+    /* HOVER NOTE: NO transform/scale on hover - only border/highlight effects
+       Desktop app style (Steam-like) - no size/position changes */
+    .game-card {
+      background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.4));
+      border-radius: 4px;
+      overflow: hidden;
+      transition: background 0.15s, box-shadow 0.15s, border-color 0.15s;
+      cursor: pointer;
+      position: relative;
+      border: 1px solid transparent;
+    }
+    .game-card:hover {
+      /* NO transform - only visual highlight like Steam */
+      background: linear-gradient(to bottom, rgba(30,50,70,0.5), rgba(20,40,60,0.6));
+      box-shadow: 0 0 10px rgba(103, 193, 245, 0.2);
+      border-color: rgba(103, 193, 245, 0.4);
+    }
+    .game-card.played {
+      opacity: 0.6;
+    }
+    .game-card.played:hover {
+      opacity: 1;
+    }
+    .game-card.played::after {
+      content: "PLAYED";
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #4c6b22;
+      color: #a4d007;
+      font-size: 9px;
+      font-weight: bold;
+      padding: 3px 6px;
+      border-radius: 2px;
+    }
+
+    /* Broken game overlay */
+    .game-card.broken {
+      opacity: 0.5;
+    }
+    .game-card.broken::before {
+      content: "✕";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 120px;
+      color: rgba(255, 50, 50, 0.7);
+      z-index: 5;
+      pointer-events: none;
+      text-shadow: 0 0 20px rgba(0,0,0,0.8);
+    }
+    .game-card.broken:hover {
+      opacity: 0.8;
+    }
+
+    .screenshot {
+      width: 100%;
+      height: 108px;
+      object-fit: cover;
+      display: block;
+    }
+    .no-screenshot {
+      width: 100%;
+      height: 108px;
+      background: linear-gradient(135deg, #1b2838, #2a475e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #4c6b8a;
+      font-size: 32px;
+    }
+
+    .card-info {
+      padding: 10px;
+    }
+    .game-title {
+      font-size: 13px;
+      color: #c7d5e0;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .game-tags {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      background: rgba(103, 193, 245, 0.1);
+      color: #67c1f5;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 2px;
+    }
+    .tag.polished {
+      background: rgba(164, 208, 7, 0.2);
+      color: #a4d007;
+    }
+    .tag.framework {
+      background: rgba(255,255,255,0.1);
+      color: #8f98a0;
+    }
+
+    .hover-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.95));
+      padding: 40px 10px 10px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .game-card:hover .hover-info {
+      opacity: 1;
+    }
+    .play-btn {
+      background: linear-gradient(to right, #75b022, #588a1b);
+      color: #fff;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 2px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .play-btn:hover {
+      background: linear-gradient(to right, #8bc53f, #6b9d2a);
+    }
+
+    /* Notes indicator */
+    .notes-btn {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(0,0,0,0.7);
+      border: none;
+      color: #8f98a0;
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      z-index: 10;
+      transition: all 0.2s;
+    }
+    .notes-btn:hover {
+      background: #67c1f5;
+      color: #fff;
+    }
+    .notes-btn.has-notes {
+      background: #67c1f5;
+      color: #fff;
+    }
+
+    /* Broken button */
+    .broken-btn {
+      position: absolute;
+      top: 8px;
+      left: 42px;
+      background: rgba(0,0,0,0.7);
+      border: none;
+      color: #8f98a0;
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      z-index: 10;
+      transition: all 0.2s;
+    }
+    .broken-btn:hover {
+      background: #ff4444;
+      color: #fff;
+    }
+    .broken-btn.is-broken {
+      background: #ff4444;
+      color: #fff;
+    }
+
+    /* Notes modal */
+    .notes-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .notes-modal.active {
+      display: flex;
+    }
+    .notes-content {
+      background: #1b2838;
+      border: 1px solid #4c6b8a;
+      border-radius: 8px;
+      width: 500px;
+      max-width: 90%;
+      max-height: 80vh;
+      overflow: hidden;
+    }
+    .notes-header {
+      background: #16202d;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #4c6b8a;
+    }
+    .notes-header h3 {
+      color: #fff;
+      font-size: 16px;
+      font-weight: normal;
+    }
+    .notes-close {
+      background: none;
+      border: none;
+      color: #8f98a0;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .notes-close:hover {
+      color: #fff;
+    }
+    .notes-body {
+      padding: 16px;
+    }
+    .notes-body textarea {
+      width: 100%;
+      height: 200px;
+      background: #0d1117;
+      border: 1px solid #4c6b8a;
+      border-radius: 4px;
+      color: #c7d5e0;
+      padding: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
+    }
+    .notes-body textarea:focus {
+      outline: none;
+      border-color: #67c1f5;
+    }
+    .notes-footer {
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      border-top: 1px solid #2a3f5f;
+    }
+    .notes-save {
+      background: linear-gradient(to right, #75b022, #588a1b);
+      color: #fff;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .notes-save:hover {
+      background: linear-gradient(to right, #8bc53f, #6b9d2a);
+    }
+    .notes-cancel {
+      background: #4c6b8a;
+      color: #fff;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .notes-cancel:hover {
+      background: #5a7a9a;
+    }
+
+    /* Game group headers */
+    .game-group-header {
+      grid-column: 1 / -1;
+      background: linear-gradient(to right, #1e3a50, #16202d);
+      padding: 12px 20px;
+      border-radius: 4px;
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid #67c1f5;
+    }
+    .game-group-header:first-child {
+      margin-top: 0;
+    }
+    .group-name {
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+      text-transform: capitalize;
+    }
+    .group-stats {
+      font-size: 12px;
+      color: #8f98a0;
+    }
+
+    /* Variant tags */
+    .tag.variant {
+      background: #2a475e;
+      color: #67c1f5;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Game Library</h1>
+    <div class="stats-bar">
+      <span id="totalGames">0 Games</span>
+      <span id="playedGames">0 Played</span>
+      <span id="polishedGames">0 Polished</span>
+      <span id="brokenGames" style="color:#ff6666;">0 Broken</span>
+      <span style="color:#67c1f5; font-size:11px; margin-left:20px;">v2026.01.10-0352</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Sort</label>
+      <select id="sortBy">
+        <option value="grouped">By Game (Grouped)</option>
+        <option value="date-desc">Recent</option>
+        <option value="date-asc">Oldest</option>
+        <option value="name">Name</option>
+        <option value="rating">Rating</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Night</label>
+      <select id="filterNight">
+        <option value="">All Nights</option>
+        <option value="night-1">Night 1</option>
+        <option value="night-2">Night 2</option>
+        <option value="night-3">Night 3</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Framework</label>
+      <select id="filterFramework">
+        <option value="">All</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Status</label>
+      <select id="filterStatus">
+        <option value="">All Games</option>
+        <option value="unplayed">Unplayed</option>
+        <option value="played">Played</option>
+        <option value="polished">Polished</option>
+        <option value="has-notes">Has Notes</option>
+        <option value="broken">Broken</option>
+        <option value="working">Working</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <input type="text" id="search" placeholder="Search games...">
+    </div>
+    <div class="control-group">
+      <button onclick="exportNotes()" style="background:#67c1f5;border:none;color:#fff;padding:8px 12px;border-radius:2px;cursor:pointer;font-size:13px;">Export Notes</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="games-grid" id="gamesGrid"></div>
+  </div>
+
+  <!-- Notes Modal -->
+  <div class="notes-modal" id="notesModal">
+    <div class="notes-content">
+      <div class="notes-header">
+        <h3 id="notesTitle">Notes</h3>
+        <button class="notes-close" onclick="closeNotes()">&times;</button>
+      </div>
+      <div class="notes-body">
+        <textarea id="notesText" placeholder="Add your feedback, bugs found, ideas for improvement..."></textarea>
+      </div>
+      <div class="notes-footer">
+        <button class="notes-cancel" onclick="closeNotes()">Cancel</button>
+        <button class="notes-save" onclick="saveNotes()">Save Notes</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allGames = [];
+    let playedStatus = JSON.parse(localStorage.getItem('playedGames') || '{}');
+    let gameNotes = {};
+    let brokenGames = {};
+    let currentNoteGameId = null;
+
+    // Load notes and broken status from server (falls back to localStorage)
+    async function loadNotes() {
+      try {
+        const resp = await fetch('/api/notes');
+        const data = await resp.json();
+        // Support old format (just notes) and new format (notes + broken)
+        if (data._broken) {
+          brokenGames = data._broken;
+          delete data._broken;
+          gameNotes = data;
+        } else {
+          gameNotes = data;
+          brokenGames = {};
+        }
+      } catch (e) {
+        gameNotes = JSON.parse(localStorage.getItem('gameNotes') || '{}');
+        brokenGames = JSON.parse(localStorage.getItem('brokenGames') || '{}');
+      }
+    }
+
+    async function toggleBroken(e, gameId) {
+      e.stopPropagation();
+      if (brokenGames[gameId]) {
+        delete brokenGames[gameId];
+      } else {
+        brokenGames[gameId] = true;
+      }
+      await saveData();
+      renderGames();
+    }
+
+    async function saveData() {
+      const dataToSave = { ...gameNotes, _broken: brokenGames };
+      try {
+        await fetch('/api/notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dataToSave)
+        });
+      } catch (e) {
+        localStorage.setItem('gameNotes', JSON.stringify(gameNotes));
+        localStorage.setItem('brokenGames', JSON.stringify(brokenGames));
+      }
+    }
+
+    async function loadGames() {
+      try {
+        await loadNotes();
+        const resp = await fetch('games-index.json?t=' + Date.now());
+        allGames = await resp.json();
+        allGames.forEach(g => g.played = !!playedStatus[g.id]);
+        populateFilters();
+        renderGames();
+      } catch (e) {
+        document.getElementById('gamesGrid').innerHTML = '<p style="color:#c00;padding:20px;">Error loading games</p>';
+      }
+    }
+
+    function populateFilters() {
+      const frameworks = [...new Set(allGames.map(g => g.framework))].sort();
+      const select = document.getElementById('filterFramework');
+      frameworks.forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = f;
+        opt.textContent = f;
+        select.appendChild(opt);
+      });
+    }
+
+    function getFilteredGames() {
+      let games = [...allGames];
+      const search = document.getElementById('search').value.toLowerCase();
+      const night = document.getElementById('filterNight').value;
+      const framework = document.getElementById('filterFramework').value;
+      const status = document.getElementById('filterStatus').value;
+      const sortBy = document.getElementById('sortBy').value;
+
+      if (search) games = games.filter(g => g.name.toLowerCase().includes(search) || g.gameDir.toLowerCase().includes(search));
+      if (night) games = games.filter(g => g.night === night);
+      if (framework) games = games.filter(g => g.framework === framework);
+      if (status === 'unplayed') games = games.filter(g => !g.played);
+      else if (status === 'played') games = games.filter(g => g.played);
+      else if (status === 'polished') games = games.filter(g => g.polished);
+      else if (status === 'has-notes') games = games.filter(g => gameNotes[g.id]);
+      else if (status === 'broken') games = games.filter(g => brokenGames[g.id]);
+      else if (status === 'working') games = games.filter(g => !brokenGames[g.id]);
+
+      switch (sortBy) {
+        case 'date-asc': games.sort((a, b) => new Date(a.createdDate) - new Date(b.createdDate)); break;
+        case 'name': games.sort((a, b) => a.name.localeCompare(b.name)); break;
+        case 'rating': games.sort((a, b) => (b.rating || 0) - (a.rating || 0)); break;
+        case 'grouped': games.sort((a, b) => {
+          // Extract base game name (without -expanded, -polished, -v2)
+          const getBase = (g) => g.gameDir.replace(/-expanded$|-polished$|-v2$/, '');
+          const getVariant = (g) => {
+            if (g.gameDir.includes('-polished')) return 2;
+            if (g.gameDir.includes('-expanded')) return 1;
+            if (g.gameDir.includes('-v2')) return 3;
+            return 0; // base
+          };
+          const baseA = getBase(a);
+          const baseB = getBase(b);
+          if (baseA !== baseB) return baseA.localeCompare(baseB);
+          // Same base game - sort by variant (base, expanded, polished)
+          const varA = getVariant(a);
+          const varB = getVariant(b);
+          if (varA !== varB) return varA - varB;
+          // Same variant - sort by framework
+          return a.framework.localeCompare(b.framework);
+        }); break;
+        default: games.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+      }
+      return games;
+    }
+
+    function playGame(gameId, path) {
+      playedStatus[gameId] = Date.now();
+      localStorage.setItem('playedGames', JSON.stringify(playedStatus));
+      const game = allGames.find(g => g.id === gameId);
+      if (game) game.played = true;
+      window.open(path, '_blank');
+      renderGames();
+    }
+
+    function openNotes(e, gameId, gameName) {
+      e.stopPropagation();
+      currentNoteGameId = gameId;
+      document.getElementById('notesTitle').textContent = 'Notes: ' + gameName;
+      document.getElementById('notesText').value = gameNotes[gameId] || '';
+      document.getElementById('notesModal').classList.add('active');
+      document.getElementById('notesText').focus();
+    }
+
+    function closeNotes() {
+      document.getElementById('notesModal').classList.remove('active');
+      currentNoteGameId = null;
+    }
+
+    async function saveNotes() {
+      const text = document.getElementById('notesText').value.trim();
+      if (text) {
+        gameNotes[currentNoteGameId] = text;
+      } else {
+        delete gameNotes[currentNoteGameId];
+      }
+      await saveData();
+      closeNotes();
+      renderGames();
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeNotes();
+    });
+
+    function exportNotes() {
+      const exportData = { games: [], broken: [], summary: {} };
+
+      // All games with notes or broken status
+      allGames.forEach(g => {
+        const hasNotes = gameNotes[g.id];
+        const isBroken = brokenGames[g.id];
+        if (hasNotes || isBroken) {
+          exportData.games.push({
+            id: g.id,
+            name: g.name,
+            framework: g.framework,
+            path: g.path,
+            broken: isBroken || false,
+            notes: hasNotes || ''
+          });
+        }
+        if (isBroken) exportData.broken.push(g.id);
+      });
+
+      exportData.summary = {
+        total: allGames.length,
+        broken: Object.keys(brokenGames).length,
+        working: allGames.length - Object.keys(brokenGames).length,
+        withNotes: Object.keys(gameNotes).length
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'game-status.json';
+      a.click();
+    }
+
+    function renderGames() {
+      const games = getFilteredGames();
+      const sortBy = document.getElementById('sortBy').value;
+      document.getElementById('totalGames').textContent = allGames.length + ' Games';
+      document.getElementById('playedGames').textContent = allGames.filter(g => g.played).length + ' Played';
+      document.getElementById('polishedGames').textContent = allGames.filter(g => g.polished).length + ' Polished';
+      document.getElementById('brokenGames').textContent = Object.keys(brokenGames).length + ' Broken';
+
+      const getBase = (g) => g.gameDir.replace(/-expanded$|-polished$|-v2$/, '');
+      const getVariantLabel = (g) => {
+        if (g.gameDir.includes('-polished')) return '⭐ Polished';
+        if (g.gameDir.includes('-expanded')) return '📈 Expanded';
+        if (g.gameDir.includes('-v2')) return '🔄 V2';
+        return '🎮 Base';
+      };
+
+      let html = '';
+      let lastBase = '';
+
+      games.forEach((g, i) => {
+        const base = getBase(g);
+        // Add section header when game group changes (only in grouped mode)
+        if (sortBy === 'grouped' && base !== lastBase) {
+          const baseName = base.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+          const groupGames = games.filter(gg => getBase(gg) === base);
+          const workingCount = groupGames.filter(gg => !brokenGames[gg.id]).length;
+          const brokenCount = groupGames.filter(gg => brokenGames[gg.id]).length;
+          html += `<div class="game-group-header">
+            <span class="group-name">${baseName}</span>
+            <span class="group-stats">${groupGames.length} versions (${workingCount} working, ${brokenCount} broken)</span>
+          </div>`;
+          lastBase = base;
+        }
+
+        const variantLabel = sortBy === 'grouped' ? getVariantLabel(g) : '';
+
+        html += `
+        <div class="game-card ${g.played ? 'played' : ''} ${brokenGames[g.id] ? 'broken' : ''}" onclick="playGame('${g.id}', '${g.path}')">
+          <button class="notes-btn ${gameNotes[g.id] ? 'has-notes' : ''}" onclick="openNotes(event, '${g.id}', '${g.name.replace(/'/g, "\\'")}')">📝</button>
+          <button class="broken-btn ${brokenGames[g.id] ? 'is-broken' : ''}" onclick="toggleBroken(event, '${g.id}')" title="Mark as broken">✕</button>
+          ${g.screenshot
+            ? `<img class="screenshot" src="${g.screenshot}" alt="${g.name}" onerror="this.outerHTML='<div class=no-screenshot>🎮</div>'">`
+            : '<div class="no-screenshot">🎮</div>'
+          }
+          <div class="card-info">
+            <div class="game-title">${g.name}</div>
+            <div class="game-tags">
+              <span class="tag framework">${g.framework}</span>
+              ${variantLabel ? `<span class="tag variant">${variantLabel}</span>` : ''}
+              ${g.polished && !variantLabel ? '<span class="tag polished">Polished</span>' : ''}
+            </div>
+          </div>
+          <div class="hover-info">
+            <button class="play-btn">Play Now</button>
+          </div>
+        </div>`;
+      });
+
+      document.getElementById('gamesGrid').innerHTML = html;
+    }
+
+    // Persist filters to localStorage
+    const filterIds = ['sortBy', 'filterNight', 'filterFramework', 'filterStatus', 'search'];
+
+    function saveFilters() {
+      const filters = {};
+      filterIds.forEach(id => filters[id] = document.getElementById(id).value);
+      localStorage.setItem('gameFilters', JSON.stringify(filters));
+    }
+
+    function restoreFilters() {
+      try {
+        const filters = JSON.parse(localStorage.getItem('gameFilters') || '{}');
+        filterIds.forEach(id => {
+          if (filters[id]) document.getElementById(id).value = filters[id];
+        });
+      } catch(e) {}
+    }
+
+    function onFilterChange() {
+      saveFilters();
+      renderGames();
+    }
+
+    document.getElementById('sortBy').addEventListener('change', onFilterChange);
+    document.getElementById('filterNight').addEventListener('change', onFilterChange);
+    document.getElementById('filterFramework').addEventListener('change', onFilterChange);
+    document.getElementById('filterStatus').addEventListener('change', onFilterChange);
+    document.getElementById('search').addEventListener('input', onFilterChange);
+
+    restoreFilters();
+    loadGames();
+  </script>
+</body>
+</html>
+<!-- deploy 034137 -->
