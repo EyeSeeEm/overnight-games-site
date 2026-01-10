@@ -749,22 +749,47 @@
       document.getElementById('gamesGrid').innerHTML = html;
     }
 
-    // Persist filters to localStorage
+    // Persist filters to localStorage AND URL
     const filterIds = ['sortBy', 'filterNight', 'filterFramework', 'filterStatus', 'search'];
+    const urlParamMap = { sortBy: 'sort', filterNight: 'night', filterFramework: 'framework', filterStatus: 'status', search: 'q' };
 
     function saveFilters() {
       const filters = {};
       filterIds.forEach(id => filters[id] = document.getElementById(id).value);
       localStorage.setItem('gameFilters', JSON.stringify(filters));
+      updateURL();
+    }
+
+    function updateURL() {
+      const params = new URLSearchParams();
+      filterIds.forEach(id => {
+        const val = document.getElementById(id).value;
+        if (val) params.set(urlParamMap[id], val);
+      });
+      const newURL = params.toString() ? '?' + params.toString() : window.location.pathname;
+      history.replaceState(null, '', newURL);
     }
 
     function restoreFilters() {
-      try {
-        const filters = JSON.parse(localStorage.getItem('gameFilters') || '{}');
+      // URL params take priority over localStorage
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasURLParams = urlParams.toString().length > 0;
+
+      if (hasURLParams) {
         filterIds.forEach(id => {
-          if (filters[id]) document.getElementById(id).value = filters[id];
+          const urlKey = urlParamMap[id];
+          if (urlParams.has(urlKey)) {
+            document.getElementById(id).value = urlParams.get(urlKey);
+          }
         });
-      } catch(e) {}
+      } else {
+        try {
+          const filters = JSON.parse(localStorage.getItem('gameFilters') || '{}');
+          filterIds.forEach(id => {
+            if (filters[id]) document.getElementById(id).value = filters[id];
+          });
+        } catch(e) {}
+      }
     }
 
     function onFilterChange() {
