@@ -380,6 +380,136 @@
       background: #5a7a9a;
     }
 
+    /* Game Player Modal (game + notes side by side) */
+    .player-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.95);
+      z-index: 2000;
+    }
+    .player-modal.active {
+      display: flex;
+    }
+    .player-container {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+    .player-game {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #000;
+    }
+    .player-header {
+      background: #16202d;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #4c6b8a;
+    }
+    .player-title {
+      color: #fff;
+      font-size: 16px;
+    }
+    .player-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .player-btn {
+      background: #4c6b8a;
+      border: none;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .player-btn:hover {
+      background: #5a7a9a;
+    }
+    .player-btn.close-btn {
+      background: #c00;
+    }
+    .player-btn.close-btn:hover {
+      background: #e00;
+    }
+    .player-iframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+      height: 100%;
+    }
+    .player-notes {
+      width: 320px;
+      background: #1b2838;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid #4c6b8a;
+    }
+    .player-notes-header {
+      background: #16202d;
+      padding: 10px 16px;
+      border-bottom: 1px solid #4c6b8a;
+      color: #67c1f5;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .player-notes-body {
+      flex: 1;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+    .player-notes-body textarea {
+      flex: 1;
+      background: #0d1117;
+      border: 1px solid #4c6b8a;
+      border-radius: 4px;
+      color: #c7d5e0;
+      padding: 12px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: none;
+    }
+    .player-notes-body textarea:focus {
+      outline: none;
+      border-color: #67c1f5;
+    }
+    .player-notes-footer {
+      padding: 12px;
+      border-top: 1px solid #2a3f5f;
+    }
+    .player-notes-footer button {
+      width: 100%;
+      background: linear-gradient(to right, #75b022, #588a1b);
+      color: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .player-notes-footer button:hover {
+      background: linear-gradient(to right, #8bc53f, #6b9d2a);
+    }
+    .player-notes-footer .saved-msg {
+      text-align: center;
+      color: #a4d007;
+      font-size: 12px;
+      margin-top: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .player-notes-footer .saved-msg.show {
+      opacity: 1;
+    }
+
     /* Game group headers */
     .game-group-header {
       grid-column: 1 / -1;
@@ -492,12 +622,40 @@
     </div>
   </div>
 
+  <!-- Game Player Modal -->
+  <div class="player-modal" id="playerModal">
+    <div class="player-container">
+      <div class="player-game">
+        <div class="player-header">
+          <span class="player-title" id="playerTitle">Game Name</span>
+          <div class="player-actions">
+            <button class="player-btn" onclick="openInNewTab()">Open in New Tab</button>
+            <button class="player-btn" onclick="toggleBrokenFromPlayer()">Mark Broken</button>
+            <button class="player-btn close-btn" onclick="closePlayer()">Close (Esc)</button>
+          </div>
+        </div>
+        <iframe class="player-iframe" id="playerIframe" src="about:blank"></iframe>
+      </div>
+      <div class="player-notes">
+        <div class="player-notes-header">📝 Notes</div>
+        <div class="player-notes-body">
+          <textarea id="playerNotesText" placeholder="Add notes while playing...&#10;&#10;- Bugs found&#10;- Ideas for improvement&#10;- What works well"></textarea>
+        </div>
+        <div class="player-notes-footer">
+          <button onclick="savePlayerNotes()">Save Notes</button>
+          <div class="saved-msg" id="playerSavedMsg">✓ Saved!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     let allGames = [];
     let playedStatus = JSON.parse(localStorage.getItem('playedGames') || '{}');
     let gameNotes = {};
     let brokenGames = {};
     let currentNoteGameId = null;
+    let currentPlayerGame = null;
 
     // Load notes and broken status from server (falls back to localStorage)
     async function loadNotes() {
@@ -619,7 +777,52 @@
       localStorage.setItem('playedGames', JSON.stringify(playedStatus));
       const game = allGames.find(g => g.id === gameId);
       if (game) game.played = true;
-      window.open(path, '_blank');
+
+      // Open in player modal
+      currentPlayerGame = { id: gameId, path: path, game: game };
+      document.getElementById('playerTitle').textContent = game ? game.name : 'Game';
+      document.getElementById('playerIframe').src = path;
+      document.getElementById('playerNotesText').value = gameNotes[gameId] || '';
+      document.getElementById('playerModal').classList.add('active');
+      renderGames();
+    }
+
+    function closePlayer() {
+      document.getElementById('playerModal').classList.remove('active');
+      document.getElementById('playerIframe').src = 'about:blank';
+      currentPlayerGame = null;
+    }
+
+    function openInNewTab() {
+      if (currentPlayerGame) {
+        window.open(currentPlayerGame.path, '_blank');
+      }
+    }
+
+    async function savePlayerNotes() {
+      if (!currentPlayerGame) return;
+      const text = document.getElementById('playerNotesText').value.trim();
+      if (text) {
+        gameNotes[currentPlayerGame.id] = text;
+      } else {
+        delete gameNotes[currentPlayerGame.id];
+      }
+      await saveData();
+      renderGames();
+      // Show saved message
+      const msg = document.getElementById('playerSavedMsg');
+      msg.classList.add('show');
+      setTimeout(() => msg.classList.remove('show'), 2000);
+    }
+
+    async function toggleBrokenFromPlayer() {
+      if (!currentPlayerGame) return;
+      if (brokenGames[currentPlayerGame.id]) {
+        delete brokenGames[currentPlayerGame.id];
+      } else {
+        brokenGames[currentPlayerGame.id] = true;
+      }
+      await saveData();
       renderGames();
     }
 
@@ -649,9 +852,12 @@
       renderGames();
     }
 
-    // Close modal on Escape key
+    // Close modals on Escape key
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeNotes();
+      if (e.key === 'Escape') {
+        if (currentPlayerGame) closePlayer();
+        else closeNotes();
+      }
     });
 
     function exportNotes() {
