@@ -712,9 +712,29 @@
         allGames = await resp.json();
         allGames.forEach(g => g.played = !!playedStatus[g.id]);
         populateFilters();
+        restoreFilters(); // Restore AFTER filters are populated
         renderGames();
+        restorePlayingGame(); // Reopen game if ?playing= in URL
       } catch (e) {
         document.getElementById('gamesGrid').innerHTML = '<p style="color:#c00;padding:20px;">Error loading games</p>';
+      }
+    }
+
+    function restorePlayingGame() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const playingId = urlParams.get('playing');
+      if (playingId) {
+        const game = allGames.find(g => g.id === playingId);
+        if (game) {
+          // Open the game without pushing new history state
+          currentPlayerGame = { id: game.id, path: game.path, game: game };
+          document.getElementById('playerTitle').textContent = game.name;
+          document.getElementById('playerIframe').src = game.path;
+          document.getElementById('playerNotesText').value = gameNotes[game.id] || '';
+          document.getElementById('playerModal').classList.add('active');
+          // Replace current history state instead of pushing
+          history.replaceState({ playing: true, gameId: game.id }, '', '?playing=' + game.id);
+        }
       }
     }
 
@@ -1034,8 +1054,7 @@
     document.getElementById('filterStatus').addEventListener('change', onFilterChange);
     document.getElementById('search').addEventListener('input', onFilterChange);
 
-    restoreFilters();
-    loadGames();
+    loadGames(); // restoreFilters() is called inside after populateFilters()
   </script>
 </body>
 </html>
