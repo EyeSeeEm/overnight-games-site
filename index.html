@@ -729,7 +729,7 @@
           <button class="notes-btn ${gameNotes[g.id] ? 'has-notes' : ''}" onclick="openNotes(event, '${g.id}', '${g.name.replace(/'/g, "\\'")}')">📝</button>
           <button class="broken-btn ${brokenGames[g.id] ? 'is-broken' : ''}" onclick="toggleBroken(event, '${g.id}')" title="Mark as broken">✕</button>
           ${g.screenshot
-            ? `<img class="screenshot" src="${g.screenshot}" alt="${g.name}" onerror="this.outerHTML='<div class=no-screenshot>🎮</div>'">`
+            ? `<img class="screenshot" src="${g.path}${g.screenshot}" alt="${g.name}" onerror="this.outerHTML='<div class=no-screenshot>🎮</div>'">`
             : '<div class="no-screenshot">🎮</div>'
           }
           <div class="card-info">
