@@ -780,16 +780,49 @@
       localStorage.setItem('playedGames', JSON.stringify(playedStatus));
       const game = allGames.find(g => g.id === gameId);
       if (game) game.played = true;
+
+      // Open in player modal with notes panel
+      currentPlayerGame = { id: gameId, path: path, game: game };
+      document.getElementById('playerTitle').textContent = game ? game.name : 'Game';
+      document.getElementById('playerIframe').src = path;
+      document.getElementById('playerNotesText').value = gameNotes[gameId] || '';
+      document.getElementById('playerModal').classList.add('active');
+      
+      // Push history state so back button closes modal
+      history.pushState({ playing: true, gameId: gameId }, '', '?playing=' + gameId);
+      
       renderGames();
-      // Open in new tab (browser back button works)
-      window.open(path, '_blank');
     }
 
     function closePlayer() {
       document.getElementById('playerModal').classList.remove('active');
       document.getElementById('playerIframe').src = 'about:blank';
       currentPlayerGame = null;
+      // Go back in history if we pushed a state
+      if (history.state && history.state.playing) {
+        history.back();
+      }
     }
+    
+    // Handle browser back button
+    window.addEventListener('popstate', function(e) {
+      if (document.getElementById('playerModal').classList.contains('active')) {
+        document.getElementById('playerModal').classList.remove('active');
+        document.getElementById('playerIframe').src = 'about:blank';
+        currentPlayerGame = null;
+      }
+    });
+    
+    // Handle Escape key to close modals
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        if (document.getElementById('playerModal').classList.contains('active')) {
+          closePlayer();
+        } else if (document.getElementById('notesModal').classList.contains('active')) {
+          closeNotes();
+        }
+      }
+    });
 
     function openInNewTab() {
       if (currentPlayerGame) {
@@ -850,13 +883,7 @@
       renderGames();
     }
 
-    // Close modals on Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        if (currentPlayerGame) closePlayer();
-        else closeNotes();
-      }
-    });
+    // Note: Escape key handling is done in the popstate/escape listener above
 
     function exportNotes() {
       const exportData = { games: [], broken: [], summary: {} };
