@@ -618,10 +618,18 @@
       background: #2a475e;
       color: #67c1f5;
     }
-    /* Night tags */
-    .tag.night {
-      background: rgba(138, 43, 226, 0.3);
-      color: #da70d6;
+    /* Night tags - different color per night */
+    .tag.night-1 {
+      background: rgba(76, 175, 80, 0.3);
+      color: #81c784;
+    }
+    .tag.night-2 {
+      background: rgba(33, 150, 243, 0.3);
+      color: #64b5f6;
+    }
+    .tag.night-3 {
+      background: rgba(156, 39, 176, 0.3);
+      color: #ba68c8;
     }
   </style>
 </head>
@@ -1201,7 +1209,7 @@
           <div class="card-info">
             <div class="game-title">${g.name}</div>
             <div class="game-tags">
-              <span class="tag night">${g.night.replace('night-', 'Night ')}</span>
+              <span class="tag ${g.night}">${g.night.replace('night-', 'Night ')}</span>
               <span class="tag framework">${g.framework}</span>
               ${variantLabel ? `<span class="tag variant">${variantLabel}</span>` : ''}
               ${g.polished && !variantLabel ? '<span class="tag polished">Polished</span>' : ''}
