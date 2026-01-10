@@ -780,14 +780,9 @@
       localStorage.setItem('playedGames', JSON.stringify(playedStatus));
       const game = allGames.find(g => g.id === gameId);
       if (game) game.played = true;
-
-      // Open in player modal
-      currentPlayerGame = { id: gameId, path: path, game: game };
-      document.getElementById('playerTitle').textContent = game ? game.name : 'Game';
-      document.getElementById('playerIframe').src = path;
-      document.getElementById('playerNotesText').value = gameNotes[gameId] || '';
-      document.getElementById('playerModal').classList.add('active');
       renderGames();
+      // Open in new tab (browser back button works)
+      window.open(path, '_blank');
     }
 
     function closePlayer() {
