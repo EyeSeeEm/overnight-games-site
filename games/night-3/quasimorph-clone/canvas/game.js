@@ -354,8 +354,8 @@ class Player {
         this.y = y;
         this.hp = 100;
         this.maxHp = 100;
-        this.ap = 2;
-        this.maxAp = 2;
+        this.ap = 4;
+        this.maxAp = 4;
         this.stance = 'walk';
         this.xp = 0;
         this.level = 1;
@@ -379,9 +379,9 @@ class Player {
     getWeapon() { return this.weapons[this.currentWeapon]; }
 
     getMaxAp() {
-        let base = this.stance === 'sneak' ? 1 : this.stance === 'walk' ? 2 : 3;
+        let base = this.stance === 'sneak' ? 2 : this.stance === 'walk' ? 4 : 6;
         if (this.wounds.torso >= 2) base--;
-        return Math.max(1, base);
+        return Math.max(2, base);
     }
 
     takeDamage(amount, bodyPart = null) {
@@ -927,6 +927,8 @@ function playerShoot(targetX, targetY) {
             e.lastKnownPlayerPos = { x: player.x, y: player.y };
         }
     });
+
+    checkAutoEndTurn();
 }
 
 function playerReload() {
@@ -958,6 +960,7 @@ function playerReload() {
         });
     }
     addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 10, 'RELOAD', COLORS.ap);
+    checkAutoEndTurn();
 }
 
 function playerHeal() {
@@ -994,6 +997,7 @@ function playerHeal() {
         player.bleeding = Math.max(0, player.bleeding - 2);
         showMessage('Used bandage! +15 HP');
     }
+    checkAutoEndTurn();
 }
 
 function useStimpack() {
@@ -1036,6 +1040,8 @@ function throwGrenade(targetX, targetY) {
         targetY: targetY * TILE + TILE/2,
         progress: 0
     });
+
+    checkAutoEndTurn();
 
     setTimeout(() => {
         // Enhanced explosion
@@ -1129,6 +1135,7 @@ function hackTerminal() {
         showMessage('Terminal hacked: -50 corruption!');
     }
     addFloatingText(player.x * TILE + TILE/2, player.y * TILE, 'HACKED', COLORS.terminal);
+    checkAutoEndTurn();
 }
 
 // Enemy AI
@@ -1346,6 +1353,8 @@ function playerMove(dx, dy) {
         // Check terminal
         const terminal = terminals.find(t => t.x === newX && t.y === newY && !t.hacked);
         if (terminal) showMessage('Press T to hack terminal');
+
+        checkAutoEndTurn();
     }
 }
 
@@ -1400,6 +1409,23 @@ function lootContainer() {
     }
 
     addFloatingText(player.x * TILE + TILE/2, player.y * TILE, 'LOOT!', COLORS.xp);
+}
+
+// Auto-end turn when out of AP and no visible enemies
+function checkAutoEndTurn() {
+    if (player.ap <= 0 && gameState === 'playing' && !animating) {
+        // Check if any enemies are visible (not in fog of war)
+        const visibleEnemies = enemies.filter(e => !fogOfWar[e.y]?.[e.x]);
+        if (visibleEnemies.length === 0) {
+            // No visible enemies and out of AP - auto-end turn
+            setTimeout(() => {
+                if (player.ap <= 0 && gameState === 'playing') {
+                    showMessage('No enemies - turn auto-ended');
+                    endTurn();
+                }
+            }, 300); // Small delay so player sees what happened
+        }
+    }
 }
 
 function endTurn() {

@@ -50,7 +50,7 @@ const game = {
     multiplier: 1.0,
     time: 0,
     wave: 1,
-    maxWave: 5,
+    maxWave: 3, // Reduced waves per room for faster room-based progression
     combo: 0,
     comboTimer: 0,
     comboMultiplier: 1,
@@ -61,7 +61,12 @@ const game = {
     screenFlashColor: '#ffffff',
     slowMotion: 1,
     slowMotionTimer: 0,
-    victory: false
+    victory: false,
+    // Room-based exploration
+    roomCleared: false,
+    doors: [],
+    transitioning: false,
+    enemyStunTimer: 0 // Stun enemies when entering room
 };
 
 // Player
@@ -1288,17 +1293,174 @@ function killEnemy(index) {
 
     enemies.splice(index, 1);
 
-    // Wave/room check
-    if (enemies.length === 0) {
+    // Wave/room check - open doors when room is cleared
+    if (enemies.length === 0 && !game.roomCleared) {
         if (game.bossActive) {
             game.bossActive = false;
             bossDefeated();
-        } else if (game.wave < game.maxWave) {
-            game.wave++;
-            setTimeout(() => spawnWave(), 1000);
         } else {
-            roomCleared();
+            // Room cleared - open doors for exploration
+            game.roomCleared = true;
+            game.screenFlash = 0.3;
+            game.screenFlashColor = COLORS.uiGreen;
+            openRoomDoors();
         }
+    }
+}
+
+// Room-based exploration functions
+function openRoomDoors() {
+    game.doors = [];
+
+    // Create doors on room edges (exit points)
+    const doorPositions = [
+        { dir: 'north', x: 400, y: 100, dx: 0, dy: -1 },
+        { dir: 'south', x: 400, y: 480, dx: 0, dy: 1 },
+        { dir: 'east', x: 720, y: 300, dx: 1, dy: 0 },
+        { dir: 'west', x: 80, y: 300, dx: -1, dy: 0 }
+    ];
+
+    // Open 2-3 doors randomly
+    const shuffled = doorPositions.sort(() => Math.random() - 0.5);
+    const doorCount = 2 + Math.floor(Math.random() * 2);
+
+    for (let i = 0; i < doorCount; i++) {
+        game.doors.push(shuffled[i]);
+    }
+}
+
+function checkDoorTransition() {
+    if (!game.roomCleared || game.transitioning) return;
+
+    for (const door of game.doors) {
+        const doorDist = Math.sqrt((player.x - door.x) ** 2 + (player.y - door.y) ** 2);
+        if (doorDist < 50) {
+            transitionToNextRoom(door);
+            return;
+        }
+    }
+}
+
+function transitionToNextRoom(door) {
+    game.transitioning = true;
+    game.roomCleared = false;
+    game.doors = [];
+
+    // Flash screen for transition
+    game.screenFlash = 0.5;
+    game.screenFlashColor = '#000000';
+
+    // Clear bullets
+    playerBullets = [];
+    enemyBullets = [];
+
+    // Position player at opposite side of room
+    if (door.dir === 'north') {
+        player.y = 450;
+        player.x = 400;
+    } else if (door.dir === 'south') {
+        player.y = 150;
+        player.x = 400;
+    } else if (door.dir === 'east') {
+        player.x = 120;
+        player.y = 300;
+    } else if (door.dir === 'west') {
+        player.x = 680;
+        player.y = 300;
+    }
+
+    // Progress to next wave/room
+    game.wave++;
+
+    // Every maxWave waves, count as a room cleared and get salvage
+    if (game.wave > game.maxWave) {
+        game.wave = 1;
+        game.roomsCleared++;
+        game.floor = Math.floor(game.roomsCleared / 5) + 1;
+
+        // Boss every 5 rooms
+        if (game.roomsCleared > 0 && game.roomsCleared % 5 === 0) {
+            setTimeout(() => {
+                game.transitioning = false;
+                game.enemyStunTimer = 0.5; // 500ms stun
+                spawnBoss();
+            }, 500);
+            return;
+        }
+
+        // Show salvage screen after completing a room
+        setTimeout(() => {
+            game.state = 'salvage';
+            game.salvageChoices = [];
+            const shuffled = [...SALVAGES].sort(() => Math.random() - 0.5);
+            game.salvageChoices = shuffled.slice(0, 3);
+        }, 500);
+        return;
+    }
+
+    // Spawn next wave after transition
+    setTimeout(() => {
+        game.transitioning = false;
+        game.enemyStunTimer = 0.5; // 500ms stun when entering room
+        if (game.state === 'playing') {
+            spawnWave();
+        }
+    }, 500);
+}
+
+function drawDoors() {
+    if (!game.roomCleared) return;
+
+    for (const door of game.doors) {
+        ctx.save();
+        ctx.translate(door.x, door.y);
+
+        // Door glow effect
+        const pulse = Math.sin(game.time * 4) * 0.3 + 0.7;
+        ctx.fillStyle = `rgba(0, 255, 136, ${pulse * 0.4})`;
+        ctx.beginPath();
+        ctx.arc(0, 0, 40, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Door frame
+        ctx.fillStyle = '#334433';
+        if (door.dir === 'north' || door.dir === 'south') {
+            ctx.fillRect(-35, -12, 70, 24);
+        } else {
+            ctx.fillRect(-12, -35, 24, 70);
+        }
+
+        // Door opening (green glow)
+        ctx.fillStyle = COLORS.uiGreen;
+        if (door.dir === 'north' || door.dir === 'south') {
+            ctx.fillRect(-25, -8, 50, 16);
+        } else {
+            ctx.fillRect(-8, -25, 16, 50);
+        }
+
+        // Arrow indicator
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        if (door.dir === 'north') {
+            ctx.moveTo(0, -20);
+            ctx.lineTo(8, -8);
+            ctx.lineTo(-8, -8);
+        } else if (door.dir === 'south') {
+            ctx.moveTo(0, 20);
+            ctx.lineTo(8, 8);
+            ctx.lineTo(-8, 8);
+        } else if (door.dir === 'east') {
+            ctx.moveTo(20, 0);
+            ctx.lineTo(8, 8);
+            ctx.lineTo(8, -8);
+        } else {
+            ctx.moveTo(-20, 0);
+            ctx.lineTo(-8, 8);
+            ctx.lineTo(-8, -8);
+        }
+        ctx.fill();
+
+        ctx.restore();
     }
 }
 
@@ -1371,7 +1533,12 @@ function selectSalvage(index) {
     if (game.salvageChoices[index]) {
         game.salvageChoices[index].apply();
         game.state = 'playing';
-        setTimeout(() => generateRoom(), 500);
+        game.roomCleared = false;
+        game.doors = [];
+        setTimeout(() => {
+            generateRoom();
+            game.enemyStunTimer = 0.5; // 500ms stun when entering new room
+        }, 500);
     }
 }
 
@@ -1463,7 +1630,15 @@ function gameLoop(timestamp) {
 
     if (game.state === 'playing') {
         updatePlayer(dt);
-        updateEnemies(dt);
+        checkDoorTransition();
+
+        // Enemy stun timer (500ms when entering new room)
+        if (game.enemyStunTimer > 0) {
+            game.enemyStunTimer -= dt;
+        } else {
+            updateEnemies(dt);
+        }
+
         updateBullets(dt);
         updatePickups(dt);
         updateParticles(dt);
@@ -1473,6 +1648,7 @@ function gameLoop(timestamp) {
 
     // Draw
     drawRoom();
+    drawDoors();
     pickups.forEach(drawPickup);
     enemies.forEach(drawEnemy);
     drawPlayer();

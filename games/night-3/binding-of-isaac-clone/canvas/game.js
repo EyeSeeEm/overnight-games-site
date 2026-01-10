@@ -504,12 +504,12 @@ class Enemy {
         this.y = y;
         this.type = type;
         const data = ENEMY_DATA[type] || ENEMY_DATA.fly;
-        this.width = data.width;
-        this.height = data.height;
-        this.speed = data.speed;
-        this.health = data.health;
-        this.maxHealth = data.health;
-        this.damage = data.damage;
+        this.width = data.width || 24;
+        this.height = data.height || 24;
+        this.speed = data.speed || 50;
+        this.health = data.health || 10;
+        this.maxHealth = data.health || 10;
+        this.damage = data.damage || 1;
         this.isBoss = data.isBoss || false;
         this.hitFlash = 0;
         this.knockbackX = 0;
@@ -523,7 +523,8 @@ class Enemy {
         this.hideTimer = 0;
         this.jumping = false;
         this.jumpHeight = 0;
-        this.spawnAnim = 0.5;
+        this.spawnAnim = 0.6; // Increased wake-up delay (was 0.5)
+        this.alive = true; // Track alive state to prevent errors
     }
 
     update(dt) {
@@ -830,6 +831,8 @@ class Enemy {
     }
 
     die() {
+        if (!this.alive) return; // Prevent double death
+        this.alive = false;
         totalKills++;
 
         // Blood splatter
@@ -846,21 +849,36 @@ class Enemy {
         // Blood stain
         bloodStains.push({ x: this.x, y: this.y, size: 15 + Math.random() * 15 });
 
-        // Drop chance
+        // Drop chance - don't drop items in normal rooms, only pickups
         if (Math.random() < (this.isBoss ? 1.0 : 0.25)) {
-            const types = this.isBoss ? ['heart', 'heart', 'item'] : ['heart', 'coin', 'coin', 'bomb', 'key'];
+            const types = this.isBoss ? ['heart', 'heart', 'soulHeart'] : ['heart', 'coin', 'coin', 'bomb', 'key'];
             const type = types[Math.floor(Math.random() * types.length)];
             pickups.push({ x: this.x, y: this.y, type: type, bobPhase: 0 });
         }
     }
 
     draw() {
+        // Draw spawn shadow effect first
         if (this.spawnAnim > 0) {
-            ctx.globalAlpha = 1 - this.spawnAnim / 0.5;
+            const progress = 1 - this.spawnAnim / 0.6;
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.beginPath();
+            ctx.ellipse(0, 8, this.width / 2 * progress, 4 * progress, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            ctx.globalAlpha = progress;
         }
 
         ctx.save();
         ctx.translate(this.x, this.y - (this.jumpHeight || 0));
+
+        // Scale effect during spawn - enemy grows from small
+        if (this.spawnAnim > 0) {
+            const progress = 1 - this.spawnAnim / 0.6;
+            ctx.scale(0.5 + progress * 0.5, 0.5 + progress * 0.5);
+        }
 
         if (this.hitFlash > 0) ctx.fillStyle = '#FFFFFF';
 
@@ -1348,10 +1366,11 @@ function transitionRoom(dir) {
 
     generateRoom(floorMap[currentRoom.y][currentRoom.x]);
 
-    if (dir.x > 0) player.x = ROOM_OFFSET_X + 2 * TILE_SIZE;
-    if (dir.x < 0) player.x = ROOM_OFFSET_X + (ROOM_WIDTH - 2) * TILE_SIZE;
-    if (dir.y > 0) player.y = ROOM_OFFSET_Y + 2 * TILE_SIZE;
-    if (dir.y < 0) player.y = ROOM_OFFSET_Y + (ROOM_HEIGHT - 2) * TILE_SIZE;
+    // Spawn player near the door they entered from (1.2 tiles from edge instead of 2)
+    if (dir.x > 0) player.x = ROOM_OFFSET_X + 1.2 * TILE_SIZE + player.width / 2;
+    if (dir.x < 0) player.x = ROOM_OFFSET_X + (ROOM_WIDTH - 1.2) * TILE_SIZE - player.width / 2;
+    if (dir.y > 0) player.y = ROOM_OFFSET_Y + 1.2 * TILE_SIZE + player.height / 2;
+    if (dir.y < 0) player.y = ROOM_OFFSET_Y + (ROOM_HEIGHT - 1.2) * TILE_SIZE - player.height / 2;
 }
 
 // Drawing
@@ -1657,6 +1676,21 @@ function drawHUD() {
     ctx.font = '14px monospace';
     ctx.fillText('Basement ' + floorNum, 25, 85);
 
+    // Player stats (shown on left side of HUD)
+    ctx.font = '11px monospace';
+    ctx.fillStyle = '#AAAAAA';
+    const statsX = 250;
+    ctx.fillText(`DMG: ${player.damage.toFixed(1)}`, statsX, 25);
+    ctx.fillText(`SPD: ${(player.speed / 160).toFixed(1)}`, statsX, 40);
+    ctx.fillText(`TEARS: ${(1 / player.tearDelay).toFixed(1)}/s`, statsX + 80, 25);
+    ctx.fillText(`RANGE: ${(player.range / 220).toFixed(1)}`, statsX + 80, 40);
+
+    // Show collected items count
+    if (player.collectedItems && player.collectedItems.length > 0) {
+        ctx.fillStyle = '#FFCC44';
+        ctx.fillText(`Items: ${player.collectedItems.length}`, statsX, 55);
+    }
+
     // Minimap
     drawMinimap();
 
@@ -1722,6 +1756,15 @@ function drawMinimap() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
     ctx.fillRect(mapX - 8, mapY - 8, 105, 105);
 
+    // Helper to check if room is adjacent to any visited room
+    function isAdjacentToVisited(x, y) {
+        const dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+        for (const [dx, dy] of dirs) {
+            if (visitedRooms.has(`${x + dx},${y + dy}`)) return true;
+        }
+        return false;
+    }
+
     for (let y = 0; y < 9; y++) {
         for (let x = 0; x < 9; x++) {
             const room = floorMap[y]?.[x];
@@ -1731,6 +1774,10 @@ function drawMinimap() {
             const py = mapY + y * cellSize;
             const isVisited = visitedRooms.has(`${x},${y}`);
             const isCurrent = x === currentRoom.x && y === currentRoom.y;
+            const isAdjacent = isAdjacentToVisited(x, y);
+
+            // Only show visited rooms and rooms adjacent to visited ones (fog of war)
+            if (!isVisited && !isAdjacent) continue;
 
             if (isCurrent) {
                 ctx.fillStyle = '#FFFFFF';
@@ -1742,7 +1789,19 @@ function drawMinimap() {
                     default: ctx.fillStyle = '#666666';
                 }
             } else {
-                ctx.fillStyle = '#333333';
+                // Adjacent but not visited - show as dim outline
+                ctx.fillStyle = '#222222';
+                ctx.fillRect(px, py, cellSize - 1, cellSize - 1);
+                // Show special room type icons for adjacent rooms
+                if (room.type === 'boss') {
+                    ctx.fillStyle = '#662222';
+                } else if (room.type === 'treasure') {
+                    ctx.fillStyle = '#666622';
+                } else if (room.type === 'shop') {
+                    ctx.fillStyle = '#226622';
+                } else {
+                    ctx.fillStyle = '#333333';
+                }
             }
 
             ctx.fillRect(px, py, cellSize - 1, cellSize - 1);

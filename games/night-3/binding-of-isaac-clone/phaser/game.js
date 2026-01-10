@@ -398,6 +398,10 @@ class GameScene extends Phaser.Scene {
         this.invulnTimer = 0;
         this.multishot = 1;
         this.collectedItems = [];
+        // Additional stats for tears
+        this.range = 220;
+        this.shotSpeed = 320;
+        this.speed = 160;
     }
 
     generateFloor() {
@@ -615,6 +619,9 @@ class GameScene extends Phaser.Scene {
         enemy.fireTimer = 0;
         enemy.jumping = false;
         enemy.hitFlash = 0;
+        // Wake-up delay - enemies don't attack immediately
+        enemy.spawnAnim = 0.6;
+        enemy.setAlpha(0.5);
         this.physics.add.existing(enemy);
         this.enemies.add(enemy);
     }
@@ -647,6 +654,13 @@ class GameScene extends Phaser.Scene {
 
         // Floor text
         this.floorText = this.add.text(30, 80, 'Basement 1', { fontFamily: 'monospace', fontSize: '14px', color: '#FFFFFF' }).setDepth(101);
+
+        // Player stats display
+        const statsStyle = { fontFamily: 'monospace', fontSize: '11px', color: '#AAAAAA' };
+        this.statDmgText = this.add.text(250, 20, 'DMG: 3.5', statsStyle).setDepth(101);
+        this.statSpdText = this.add.text(250, 35, 'SPD: 1.0', statsStyle).setDepth(101);
+        this.statTearsText = this.add.text(330, 20, 'TEARS: 2.9/s', statsStyle).setDepth(101);
+        this.statRangeText = this.add.text(330, 35, 'RANGE: 1.0', statsStyle).setDepth(101);
 
         // Minimap
         this.minimapBg = this.add.rectangle(890, 50, 110, 100, 0x000000, 0.6).setDepth(100);
@@ -825,13 +839,17 @@ class GameScene extends Phaser.Scene {
         const spread = this.multishot > 1 ? 0.15 : 0;
         for (let i = 0; i < this.multishot; i++) {
             const angle = Math.atan2(dy, dx) + (i - (this.multishot - 1) / 2) * spread;
-            const vx = Math.cos(angle) * 320;
-            const vy = Math.sin(angle) * 320;
+            const vx = Math.cos(angle) * this.shotSpeed;
+            const vy = Math.sin(angle) * this.shotSpeed;
 
             const tear = this.add.sprite(this.player.x, this.player.y - 10, 'tear');
             tear.setDepth(8);
-            tear.life = 0.7;
             tear.damage = this.damage;
+            // Tear arc properties
+            tear.distanceTraveled = 0;
+            tear.maxRange = this.range;
+            tear.startY = this.player.y - 10;
+            tear.arcHeight = 0;
             this.physics.add.existing(tear);
             tear.body.setVelocity(vx, vy);
             this.tears.add(tear);
@@ -851,6 +869,32 @@ class GameScene extends Phaser.Scene {
     updateTears(dt) {
         this.tears.children.iterate(tear => {
             if (!tear || !tear.active) return;
+
+            // Track distance traveled for arc motion
+            if (tear.body) {
+                const speed = tear.body.velocity.length();
+                tear.distanceTraveled += speed * dt;
+
+                // Calculate arc height (parabola simulation)
+                const progress = tear.distanceTraveled / tear.maxRange;
+                tear.arcHeight = Math.sin(progress * Math.PI) * 18;
+
+                // Apply visual offset (not physics - just display)
+                tear.setY(tear.body.y - tear.arcHeight);
+
+                // Shrink tear as it reaches end of range
+                if (progress > 0.7) {
+                    const shrink = 1 - (progress - 0.7) / 0.3;
+                    tear.setScale(Math.max(0.3, shrink));
+                }
+
+                // Destroy when out of range
+                if (progress >= 1) {
+                    this.splashTear(tear);
+                    tear.destroy();
+                    return;
+                }
+            }
 
             // Auto-aim assist (gentle homing)
             if (this.enemies.children.size > 0 && tear.body) {
@@ -878,13 +922,6 @@ class GameScene extends Phaser.Scene {
                         tear.body.setVelocity(Math.cos(newAngle) * speed, Math.sin(newAngle) * speed);
                     }
                 }
-            }
-
-            tear.life -= dt;
-            if (tear.life <= 0) {
-                this.splashTear(tear);
-                tear.destroy();
-                return;
             }
 
             if (tear.x < this.roomOffsetX + TILE_SIZE ||
@@ -937,6 +974,15 @@ class GameScene extends Phaser.Scene {
     updateEnemies(dt) {
         this.enemies.children.iterate(enemy => {
             if (!enemy || !enemy.active) return;
+
+            // Wake-up animation - enemies don't move/attack during this
+            if (enemy.spawnAnim > 0) {
+                enemy.spawnAnim -= dt;
+                enemy.setAlpha(0.5 + (0.6 - enemy.spawnAnim) * 0.8);
+                return; // Skip all behavior during spawn animation
+            } else if (enemy.alpha < 1) {
+                enemy.setAlpha(1);
+            }
 
             if (enemy.hitFlash > 0) {
                 enemy.hitFlash -= dt;
@@ -1397,6 +1443,12 @@ class GameScene extends Phaser.Scene {
         this.keyText.setText(this.keys.toString().padStart(2, '0'));
         this.floorText.setText('Basement ' + this.floorNum);
 
+        // Update stats display
+        this.statDmgText.setText(`DMG: ${this.damage.toFixed(1)}`);
+        this.statSpdText.setText(`SPD: ${(this.speed / 160).toFixed(1)}`);
+        this.statTearsText.setText(`TEARS: ${(1 / this.tearDelay).toFixed(1)}/s`);
+        this.statRangeText.setText(`RANGE: ${(this.range / 220).toFixed(1)}`);
+
         // Boss health bar
         const boss = this.enemies.getChildren().find(e => e.isBoss);
         if (boss) {
@@ -1410,11 +1462,20 @@ class GameScene extends Phaser.Scene {
             this.bossText.setVisible(false);
         }
 
-        // Minimap
+        // Minimap with fog of war
         this.minimap.clear();
         const mapX = 840;
         const mapY = 5;
         const cellSize = 11;
+
+        // Helper to check if a room is adjacent to a visited room
+        const isAdjacentToVisited = (rx, ry) => {
+            const dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+            for (const [dx, dy] of dirs) {
+                if (this.visitedRooms.has(`${rx + dx},${ry + dy}`)) return true;
+            }
+            return false;
+        };
 
         for (let y = 0; y < 9; y++) {
             for (let x = 0; x < 9; x++) {
@@ -1425,6 +1486,10 @@ class GameScene extends Phaser.Scene {
                 const py = mapY + y * cellSize;
                 const isVisited = this.visitedRooms.has(`${x},${y}`);
                 const isCurrent = x === this.currentRoom.x && y === this.currentRoom.y;
+                const isAdjacent = isAdjacentToVisited(x, y);
+
+                // Fog of war: only show visited rooms and rooms adjacent to visited
+                if (!isVisited && !isAdjacent) continue;
 
                 let color = 0x333333;
                 if (isCurrent) {
@@ -1436,12 +1501,31 @@ class GameScene extends Phaser.Scene {
                         case 'shop': color = 0x44CC44; break;
                         default: color = 0x666666;
                     }
+                } else if (isAdjacent) {
+                    // Undiscovered but adjacent - show as dark silhouette
+                    color = 0x333333;
                 }
 
                 this.minimap.fillStyle(color);
                 this.minimap.fillRect(px, py, cellSize - 1, cellSize - 1);
             }
         }
+    }
+
+    showFloatingText(x, y, text, color, scale = 1) {
+        const txt = this.add.text(x, y, text, {
+            fontFamily: 'monospace',
+            fontSize: `${14 * scale}px`,
+            color: color
+        });
+        txt.setOrigin(0.5).setDepth(100);
+        this.tweens.add({
+            targets: txt,
+            y: y - 40,
+            alpha: 0,
+            duration: 800,
+            onComplete: () => txt.destroy()
+        });
     }
 
     showGameOver() {

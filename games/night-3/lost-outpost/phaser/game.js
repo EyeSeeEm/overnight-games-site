@@ -285,19 +285,44 @@ class GameScene extends Phaser.Scene {
         // Spawn enemies based on wave
         this.spawnWave();
 
-        // Spawn items
+        // Spawn items - more items for more exciting gameplay
         this.items = [];
+        // Ammo scattered around
         this.items.push({ x: 150, y: 150, type: 'ammo', amount: 30 });
+        this.items.push({ x: 1100, y: 150, type: 'ammo', amount: 30 });
+        this.items.push({ x: 150, y: 950, type: 'ammo', amount: 30 });
+        this.items.push({ x: 1100, y: 950, type: 'ammo', amount: 30 });
+        this.items.push({ x: 640, y: 300, type: 'ammo', amount: 60 }); // Center ammo cache
+
+        // Health packs
         this.items.push({ x: 600, y: 150, type: 'health', amount: 25 });
+        this.items.push({ x: 200, y: 550, type: 'health', amount: 25 });
+        this.items.push({ x: 1000, y: 550, type: 'health', amount: 25 });
+        this.items.push({ x: 600, y: 900, type: 'health', amount: 50 }); // Big health pack
+
+        // Credits (for shop)
         this.items.push({ x: 150, y: 600, type: 'credits', amount: 500 });
+        this.items.push({ x: 1100, y: 600, type: 'credits', amount: 500 });
+        this.items.push({ x: 640, y: 800, type: 'credits', amount: 1000 }); // Bonus credits
+
+        // Armor
         this.items.push({ x: 600, y: 600, type: 'armor', amount: 20 });
+        this.items.push({ x: 400, y: 200, type: 'armor', amount: 20 });
+        this.items.push({ x: 900, y: 700, type: 'armor', amount: 30 });
+
         this.items.push({ x: 400, y: 300, type: 'keycard', color: 'yellow' });
-        // EXPAND: Weapon pickups
+
+        // EXPAND: Weapon pickups - more weapons available
         this.items.push({ x: 550, y: 170, type: 'weapon', weapon: 'shotgun' });
         this.items.push({ x: 700, y: 550, type: 'weapon', weapon: 'plasma_rifle' });
-        // EXPAND: Power-ups
+        this.items.push({ x: 250, y: 800, type: 'weapon', weapon: 'smg' });
+        this.items.push({ x: 1050, y: 250, type: 'weapon', weapon: 'flamethrower' });
+
+        // EXPAND: Power-ups - more scattered around
         this.items.push({ x: 300, y: 500, type: 'speedboost' });
         this.items.push({ x: 500, y: 200, type: 'damageboost' });
+        this.items.push({ x: 800, y: 400, type: 'speedboost' });
+        this.items.push({ x: 350, y: 750, type: 'damageboost' });
 
         this.bullets = [];
         this.particles = [];
@@ -353,17 +378,18 @@ class GameScene extends Phaser.Scene {
     }
 
     getWaveConfig(wave) {
+        // More enemies per wave for more action
         const configs = [
-            [{ type: 'scorpion', count: 3 }],
-            [{ type: 'scorpion', count: 4 }, { type: 'scorpion_small', count: 2 }],
-            [{ type: 'scorpion', count: 3 }, { type: 'facehugger', count: 4 }],
-            [{ type: 'arachnid', count: 2 }, { type: 'scorpion', count: 3 }],
-            [{ type: 'spitter', count: 2 }, { type: 'scorpion', count: 4 }],
-            [{ type: 'brute', count: 1 }, { type: 'scorpion', count: 5 }],
-            [{ type: 'scorpion', count: 6 }, { type: 'facehugger', count: 6 }],
-            [{ type: 'arachnid', count: 3 }, { type: 'spitter', count: 2 }],
-            [{ type: 'brute', count: 2 }, { type: 'arachnid', count: 2 }],
-            [{ type: 'queen', count: 1 }, { type: 'scorpion', count: 4 }]
+            [{ type: 'scorpion', count: 6 }, { type: 'scorpion_small', count: 4 }], // More exciting start
+            [{ type: 'scorpion', count: 6 }, { type: 'scorpion_small', count: 4 }, { type: 'facehugger', count: 3 }],
+            [{ type: 'scorpion', count: 5 }, { type: 'facehugger', count: 6 }, { type: 'spitter', count: 2 }],
+            [{ type: 'arachnid', count: 3 }, { type: 'scorpion', count: 5 }, { type: 'scorpion_small', count: 4 }],
+            [{ type: 'spitter', count: 3 }, { type: 'scorpion', count: 6 }, { type: 'facehugger', count: 4 }],
+            [{ type: 'brute', count: 2 }, { type: 'scorpion', count: 6 }, { type: 'spitter', count: 2 }],
+            [{ type: 'scorpion', count: 8 }, { type: 'facehugger', count: 8 }, { type: 'arachnid', count: 2 }],
+            [{ type: 'arachnid', count: 4 }, { type: 'spitter', count: 4 }, { type: 'brute', count: 1 }],
+            [{ type: 'brute', count: 3 }, { type: 'arachnid', count: 4 }, { type: 'scorpion', count: 4 }],
+            [{ type: 'queen', count: 1 }, { type: 'brute', count: 2 }, { type: 'scorpion', count: 6 }]
         ];
         return configs[Math.min(wave - 1, configs.length - 1)];
     }
@@ -735,6 +761,11 @@ class GameScene extends Phaser.Scene {
                 });
             }
         }
+
+        // Update mouse position from active pointer (always track, not just on event)
+        const pointer = this.input.activePointer;
+        this.mouseX = pointer.worldX;
+        this.mouseY = pointer.worldY;
 
         // Aim at mouse
         this.playerAngle = Math.atan2(this.mouseY - this.player.y, this.mouseX - this.player.x);

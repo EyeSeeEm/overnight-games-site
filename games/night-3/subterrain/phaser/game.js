@@ -479,8 +479,15 @@ class GameScene extends Phaser.Scene {
             this.player.y = sector.spawnY * TILE_SIZE + TILE_SIZE / 2;
         }
 
-        // Camera bounds
+        // Camera bounds and follow
         this.cameras.main.setBounds(0, 0, sector.width * TILE_SIZE, sector.height * TILE_SIZE);
+
+        // Re-establish camera follow after sector load for smooth tracking
+        if (this.player) {
+            this.cameras.main.startFollow(this.player, true, 0.15, 0.15);
+            // Immediately center on player
+            this.cameras.main.centerOn(this.player.x, this.player.y);
+        }
     }
 
     spawnEnemies(sectorName) {
@@ -1270,15 +1277,16 @@ class GameScene extends Phaser.Scene {
             this.infectionOverlay.setAlpha(0);
         }
 
-        // Screen shake
+        // Screen shake using Phaser's built-in shake (doesn't interfere with follow)
         if (this.screenShake.intensity > 0) {
-            this.screenShake.x = (Math.random() - 0.5) * this.screenShake.intensity;
-            this.screenShake.y = (Math.random() - 0.5) * this.screenShake.intensity;
-            this.cameras.main.setScroll(
-                this.cameras.main.scrollX + this.screenShake.x,
-                this.cameras.main.scrollY + this.screenShake.y
-            );
+            // Use camera offset instead of setScroll to not break follow
+            const shakeX = (Math.random() - 0.5) * this.screenShake.intensity;
+            const shakeY = (Math.random() - 0.5) * this.screenShake.intensity;
+            this.cameras.main.setFollowOffset(-shakeX, -shakeY);
             this.screenShake.intensity = Math.max(0, this.screenShake.intensity - dt * 30);
+        } else {
+            // Reset offset when shake is done
+            this.cameras.main.setFollowOffset(0, 0);
         }
     }
 

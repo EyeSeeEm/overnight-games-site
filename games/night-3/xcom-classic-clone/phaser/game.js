@@ -59,7 +59,9 @@ let gameState = {
     turnAnnouncement: null,
     showHelp: false,
     endTurnConfirm: false,
-    showTitle: true
+    showTitle: true,
+    deploymentPhase: false, // New deployment phase
+    deploymentPositions: []  // Valid spawn positions
 };
 
 // Terrain types
@@ -262,22 +264,13 @@ function createTextures() {
 
 function generateMap() {
     map = [];
+    gameState.deploymentPositions = [];
+
+    // First pass: base terrain
     for (let y = 0; y < MAP_HEIGHT; y++) {
         map[y] = [];
         for (let x = 0; x < MAP_WIDTH; x++) {
             let terrain = Math.random() < 0.5 ? TERRAIN.GRASS : TERRAIN.GRASS_DARK;
-
-            if (x >= 9 && x <= 11) terrain = TERRAIN.ROAD;
-            else if (x >= 1 && x <= 6 && y >= 1 && y <= 6) terrain = TERRAIN.DIRT;
-            else if ((x === 14 && y >= 8 && y <= 14) ||
-                     (x === 18 && y >= 8 && y <= 14) ||
-                     (y === 8 && x >= 14 && x <= 18) ||
-                     (y === 14 && x >= 14 && x <= 18)) terrain = TERRAIN.WALL_BRICK;
-            else if (x > 14 && x < 18 && y > 8 && y < 14) terrain = TERRAIN.ROAD;
-            else if (Math.random() < 0.12 && terrain.type.includes('grass')) terrain = TERRAIN.BUSH;
-            else if (Math.random() < 0.08 && terrain.type.includes('grass')) terrain = TERRAIN.FLOWERS;
-            else if (y === 12 && x >= 2 && x <= 7) terrain = TERRAIN.FENCE;
-
             map[y][x] = {
                 terrain: terrain,
                 visible: false,
@@ -286,11 +279,93 @@ function generateMap() {
             };
         }
     }
+
+    // Generate procedural road (vertical or horizontal)
+    const roadType = Math.random();
+    if (roadType < 0.5) {
+        // Vertical road
+        const roadX = 8 + Math.floor(Math.random() * 4);
+        for (let y = 0; y < MAP_HEIGHT; y++) {
+            for (let rx = -1; rx <= 1; rx++) {
+                if (roadX + rx >= 0 && roadX + rx < MAP_WIDTH) {
+                    map[y][roadX + rx].terrain = TERRAIN.ROAD;
+                }
+            }
+        }
+    } else {
+        // Horizontal road
+        const roadY = 8 + Math.floor(Math.random() * 4);
+        for (let x = 0; x < MAP_WIDTH; x++) {
+            for (let ry = -1; ry <= 1; ry++) {
+                if (roadY + ry >= 0 && roadY + ry < MAP_HEIGHT) {
+                    map[roadY + ry][x].terrain = TERRAIN.ROAD;
+                }
+            }
+        }
+    }
+
+    // Generate 1-3 buildings at random positions
+    const numBuildings = 1 + Math.floor(Math.random() * 3);
+    for (let b = 0; b < numBuildings; b++) {
+        const bw = 3 + Math.floor(Math.random() * 3);
+        const bh = 3 + Math.floor(Math.random() * 3);
+        const bx = 8 + Math.floor(Math.random() * (MAP_WIDTH - bw - 10));
+        const by = 5 + Math.floor(Math.random() * (MAP_HEIGHT - bh - 8));
+
+        // Draw walls
+        for (let y = by; y <= by + bh; y++) {
+            for (let x = bx; x <= bx + bw; x++) {
+                if (x === bx || x === bx + bw || y === by || y === by + bh) {
+                    map[y][x].terrain = TERRAIN.WALL_BRICK;
+                } else {
+                    map[y][x].terrain = TERRAIN.ROAD; // Floor inside
+                }
+            }
+        }
+
+        // Add door
+        const doorSide = Math.floor(Math.random() * 4);
+        if (doorSide === 0 && by > 0) map[by][bx + Math.floor(bw / 2)].terrain = TERRAIN.ROAD;
+        else if (doorSide === 1 && by + bh < MAP_HEIGHT - 1) map[by + bh][bx + Math.floor(bw / 2)].terrain = TERRAIN.ROAD;
+        else if (doorSide === 2 && bx > 0) map[by + Math.floor(bh / 2)][bx].terrain = TERRAIN.ROAD;
+        else if (bx + bw < MAP_WIDTH - 1) map[by + Math.floor(bh / 2)][bx + bw].terrain = TERRAIN.ROAD;
+    }
+
+    // Add deployment zone (left side dirt area)
+    const deploySize = 5;
+    for (let y = 1; y < deploySize + 1; y++) {
+        for (let x = 1; x < deploySize + 1; x++) {
+            map[y][x].terrain = TERRAIN.DIRT;
+            if (map[y][x].terrain.walkable && !map[y][x].unit) {
+                gameState.deploymentPositions.push({ x, y });
+            }
+        }
+    }
+
+    // Add random bushes and flowers in grass
+    for (let y = 0; y < MAP_HEIGHT; y++) {
+        for (let x = 0; x < MAP_WIDTH; x++) {
+            if (map[y][x].terrain.type && map[y][x].terrain.type.includes('grass')) {
+                if (Math.random() < 0.12) map[y][x].terrain = TERRAIN.BUSH;
+                else if (Math.random() < 0.08) map[y][x].terrain = TERRAIN.FLOWERS;
+            }
+        }
+    }
+
+    // Add fence line
+    const fenceY = 10 + Math.floor(Math.random() * 5);
+    const fenceStartX = 1 + Math.floor(Math.random() * 3);
+    const fenceEndX = fenceStartX + 4 + Math.floor(Math.random() * 3);
+    for (let x = fenceStartX; x <= fenceEndX; x++) {
+        if (x < MAP_WIDTH && map[fenceY][x].terrain.type && map[fenceY][x].terrain.type.includes('grass')) {
+            map[fenceY][x].terrain = TERRAIN.FENCE;
+        }
+    }
 }
 
 function createUnits() {
     const names = ['Johnson', 'Williams', 'Martinez', 'Lee', 'Thompson', 'Garcia'];
-    const positions = [[3, 3], [4, 3], [5, 3], [3, 4], [4, 4], [5, 4]];
+    const positions = [[2, 2], [3, 2], [4, 2], [2, 3], [3, 3], [4, 3]];
 
     soldiers = [];
     for (let i = 0; i < 6; i++) {
@@ -315,29 +390,34 @@ function createUnits() {
             kills: 0,
             grenades: 2,
             sprite: null,
-            arrow: null
+            arrow: null,
+            deployed: false // Track if deployed during deployment phase
         };
         soldiers.push(s);
         map[s.y][s.x].unit = s;
     }
 
-    // More aliens for tactical challenge
-    const alienPositions = [
-        [15, 10], [16, 11], [17, 9],  // In building
-        [13, 16], [18, 15],            // Near building
-        [8, 14], [12, 12],             // Mid map
-        [5, 16], [7, 18]               // Far side patrol
-    ];
+    // Generate alien positions randomly across the right side of map
+    const alienCount = 7 + Math.floor(Math.random() * 4); // 7-10 aliens
     aliens = [];
-    for (let i = 0; i < alienPositions.length; i++) {
-        const pos = alienPositions[i];
-        const isFloater = i >= 5; // Last 4 aliens are Floaters
+
+    for (let i = 0; i < alienCount; i++) {
+        let ax, ay, attempts = 0;
+        do {
+            ax = 10 + Math.floor(Math.random() * (MAP_WIDTH - 12));
+            ay = Math.floor(Math.random() * MAP_HEIGHT);
+            attempts++;
+        } while (attempts < 50 && (!map[ay] || !map[ay][ax] || !map[ay][ax].terrain.walkable || map[ay][ax].unit));
+
+        if (attempts >= 50) continue;
+
+        const isFloater = i >= alienCount - 3; // Last 3 aliens are Floaters
         const a = {
             type: 'alien',
             alienType: isFloater ? 'floater' : 'sectoid',
             name: isFloater ? 'Floater' : 'Sectoid',
-            x: pos[0],
-            y: pos[1],
+            x: ax,
+            y: ay,
             facing: 6,
             stance: 'standing',
             tu: { base: isFloater ? 60 : 54, current: isFloater ? 60 : 54 },
@@ -1054,6 +1134,36 @@ function checkGameEnd() {
 
 // Input handlers
 function handleClick(pointer) {
+    // Deployment phase - allow repositioning soldiers
+    if (gameState.deploymentPhase) {
+        if (pointer.y < GAME_HEIGHT) {
+            const tile = fromIso(pointer.x, pointer.y);
+            if (tile.x >= 0 && tile.x < MAP_WIDTH && tile.y >= 0 && tile.y < MAP_HEIGHT) {
+                // Click on soldier to select
+                const clickedSoldier = soldiers.find(s => s.isAlive && s.x === tile.x && s.y === tile.y);
+                if (clickedSoldier) {
+                    gameState.selectedUnit = clickedSoldier;
+                    setMessage(`Selected ${clickedSoldier.name} - click deployment zone to reposition`);
+                    return;
+                }
+
+                // Click on deployment zone to move selected soldier
+                const isDeployZone = gameState.deploymentPositions.some(p => p.x === tile.x && p.y === tile.y);
+                if (isDeployZone && gameState.selectedUnit && !map[tile.y][tile.x].unit) {
+                    map[gameState.selectedUnit.y][gameState.selectedUnit.x].unit = null;
+                    gameState.selectedUnit.x = tile.x;
+                    gameState.selectedUnit.y = tile.y;
+                    map[tile.y][tile.x].unit = gameState.selectedUnit;
+                    setMessage(`${gameState.selectedUnit.name} deployed! SPACE to start mission.`);
+                    return;
+                } else if (isDeployZone && map[tile.y][tile.x].unit) {
+                    setMessage('Position occupied!');
+                }
+            }
+        }
+        return;
+    }
+
     if (gameState.turn !== 'player' || gameState.state !== 'playing') return;
 
     if (pointer.y < GAME_HEIGHT) {
@@ -1127,7 +1237,21 @@ function handleKeyDown(event) {
     if (gameState.showTitle) {
         if (key === ' ') {
             gameState.showTitle = false;
+            gameState.deploymentPhase = true;
+            setMessage('DEPLOYMENT: Click soldiers then click deployment zone to position them. Press SPACE when ready.');
+        }
+        return;
+    }
+
+    // Deployment phase
+    if (gameState.deploymentPhase) {
+        if (key === ' ') {
+            // End deployment and start combat
+            gameState.deploymentPhase = false;
+            for (let s of soldiers) s.deployed = true;
+            updateVisibility();
             setMessage('Mission begins! Select a soldier (1-6) and move out.');
+            showTurnAnnouncement('YOUR TURN', 0x44ff44);
         }
         return;
     }
@@ -1565,6 +1689,23 @@ function drawMap() {
         }
     }
 
+    // Draw deployment zone during deployment phase
+    if (gameState.deploymentPhase) {
+        for (let pos of gameState.deploymentPositions) {
+            const isoPos = toIso(pos.x, pos.y);
+            const isOccupied = map[pos.y][pos.x].unit !== null;
+            const pulse = Math.sin(Date.now() / 200) * 0.2 + 0.5;
+            uiGraphics.fillStyle(isOccupied ? 0x444444 : 0x00ff00, pulse);
+            uiGraphics.beginPath();
+            uiGraphics.moveTo(isoPos.x, isoPos.y - TILE_HEIGHT / 2);
+            uiGraphics.lineTo(isoPos.x + TILE_WIDTH / 2, isoPos.y);
+            uiGraphics.lineTo(isoPos.x, isoPos.y + TILE_HEIGHT / 2);
+            uiGraphics.lineTo(isoPos.x - TILE_WIDTH / 2, isoPos.y);
+            uiGraphics.closePath();
+            uiGraphics.fill();
+        }
+    }
+
     // Draw path preview
     if (pathPreview.length > 1) {
         let totalCost = 0;
@@ -1581,16 +1722,24 @@ function drawMap() {
             uiGraphics.closePath();
             uiGraphics.fill();
         }
-        // Show TU cost at end of path
+        // Show TU cost at end of path with background
         if (pathPreview.length > 0) {
             const endPos = toIso(pathPreview[pathPreview.length - 1].x, pathPreview[pathPreview.length - 1].y);
             const canAfford = totalCost <= gameState.selectedUnit.tu.current;
+            const remaining = gameState.selectedUnit.tu.current - totalCost;
+
+            // Draw background box for better visibility
+            uiGraphics.fillStyle(0x000000, 0.8);
+            uiGraphics.fillRoundedRect(endPos.x - 35, endPos.y - 40, 70, 32, 4);
+            uiGraphics.lineStyle(2, canAfford ? 0x44ff44 : 0xff4444);
+            uiGraphics.strokeRoundedRect(endPos.x - 35, endPos.y - 40, 70, 32, 4);
+
             if (!pathCostText) {
-                pathCostText = scene.add.text(0, 0, '', { font: 'bold 11px monospace', fill: '#ffffff' }).setOrigin(0.5);
+                pathCostText = scene.add.text(0, 0, '', { font: 'bold 12px monospace', fill: '#ffffff' }).setOrigin(0.5);
             }
-            pathCostText.setPosition(endPos.x, endPos.y - 25);
-            pathCostText.setText(`${totalCost} TU`);
-            pathCostText.setStyle({ font: 'bold 11px monospace', fill: canAfford ? '#44ff44' : '#ff4444' });
+            pathCostText.setPosition(endPos.x, endPos.y - 30);
+            pathCostText.setText(`${totalCost} TU\n${canAfford ? remaining + ' left' : 'TOO FAR'}`);
+            pathCostText.setStyle({ font: 'bold 12px monospace', fill: canAfford ? '#44ff44' : '#ff4444', align: 'center' });
             pathCostText.setVisible(true);
         }
     } else {

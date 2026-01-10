@@ -139,30 +139,55 @@ function generateLevel() {
     map = [];
     teleporters = [];
 
+    // Start with walls everywhere (for proper room-based layout)
     for (let y = 0; y < MAP_HEIGHT; y++) {
         map[y] = [];
         for (let x = 0; x < MAP_WIDTH; x++) {
-            map[y][x] = { terrain: TERRAIN.FLOOR, variant: (x + y) % 2 };
+            map[y][x] = { terrain: TERRAIN.WALL, variant: 0 };
         }
     }
 
-    // Border walls
-    for (let x = 0; x < MAP_WIDTH; x++) {
-        map[0][x] = { terrain: TERRAIN.WALL, variant: 0 };
-        map[MAP_HEIGHT - 1][x] = { terrain: TERRAIN.WALL, variant: 0 };
-    }
-    for (let y = 0; y < MAP_HEIGHT; y++) {
-        map[y][0] = { terrain: TERRAIN.WALL, variant: 0 };
-        map[y][MAP_WIDTH - 1] = { terrain: TERRAIN.WALL, variant: 0 };
-    }
-
-    // Main corridors
-    const corridors = [
-        { x1: 1, y1: 15, x2: MAP_WIDTH - 2, y2: 19 },
-        { x1: 10, y1: 1, x2: 14, y2: MAP_HEIGHT - 2 },
-        { x1: 25, y1: 1, x2: 29, y2: MAP_HEIGHT - 2 }
+    // Define rooms with walls and interior floors
+    const rooms = [
+        { x: 2, y: 2, w: 8, h: 8, name: 'NW' },
+        { x: 30, y: 2, w: 8, h: 8, name: 'NE' },
+        { x: 2, y: 25, w: 8, h: 8, name: 'SW' },
+        { x: 30, y: 25, w: 8, h: 8, name: 'SE' },
+        { x: 15, y: 2, w: 10, h: 7, name: 'N' },
+        { x: 15, y: 26, w: 10, h: 7, name: 'S' },
+        { x: 15, y: 11, w: 10, h: 12, name: 'Central' }  // Central hub
     ];
 
+    // Carve out room interiors (leave walls around edges)
+    for (const room of rooms) {
+        // Carve interior floor
+        for (let dy = 1; dy < room.h - 1; dy++) {
+            for (let dx = 1; dx < room.w - 1; dx++) {
+                const y = room.y + dy;
+                const x = room.x + dx;
+                if (map[y] && map[y][x]) {
+                    map[y][x] = { terrain: TERRAIN.FLOOR, variant: (x + y) % 2 };
+                }
+            }
+        }
+    }
+
+    // Define corridors connecting rooms
+    const corridors = [
+        // Horizontal main corridor (middle)
+        { x1: 9, y1: 15, x2: 31, y2: 18 },
+        // Vertical corridor left
+        { x1: 9, y1: 8, x2: 12, y2: 25 },
+        // Vertical corridor right
+        { x1: 28, y1: 8, x2: 31, y2: 25 },
+        // Connections to corner rooms
+        { x1: 9, y1: 4, x2: 16, y2: 7 },   // NW to N
+        { x1: 24, y1: 4, x2: 31, y2: 7 },  // NE to N
+        { x1: 9, y1: 28, x2: 16, y2: 31 }, // SW to S
+        { x1: 24, y1: 28, x2: 31, y2: 31 } // SE to S
+    ];
+
+    // Carve corridors
     for (const c of corridors) {
         for (let y = c.y1; y <= c.y2; y++) {
             for (let x = c.x1; x <= c.x2; x++) {
@@ -173,28 +198,8 @@ function generateLevel() {
         }
     }
 
-    // Rooms
-    const rooms = [
-        { x: 2, y: 2, w: 7, h: 7 },
-        { x: 31, y: 2, w: 7, h: 7 },
-        { x: 2, y: 26, w: 7, h: 7 },
-        { x: 31, y: 26, w: 7, h: 7 },
-        { x: 16, y: 2, w: 8, h: 6 },
-        { x: 16, y: 27, w: 8, h: 6 },
-        { x: 16, y: 12, w: 8, h: 10 }  // Central hub
-    ];
-
-    for (const room of rooms) {
-        for (let dy = 0; dy < room.h; dy++) {
-            for (let dx = 0; dx < room.w; dx++) {
-                const y = room.y + dy;
-                const x = room.x + dx;
-                if (map[y] && map[y][x]) {
-                    map[y][x] = { terrain: TERRAIN.FLOOR, variant: (x + y) % 2 };
-                }
-            }
-        }
-    }
+    // Add corridor walls (above and below horizontal corridors)
+    // This creates the feel of actual corridors, not just open space
 
     // Hazard floor stripes
     for (let x = 1; x < MAP_WIDTH - 1; x++) {
@@ -456,8 +461,10 @@ function updatePlayer(dt) {
         }
     }
 
-    // Aim at mouse
-    player.angle = Math.atan2(mouseY - canvas.height / 2, mouseX - canvas.width / 2);
+    // Aim at mouse - calculate angle from player's screen position
+    const playerScreenX = player.x - game.camera.x;
+    const playerScreenY = player.y - game.camera.y;
+    player.angle = Math.atan2(mouseY - playerScreenY, mouseX - playerScreenX);
 
     // Check tile interactions
     const tileX = Math.floor(player.x / TILE_SIZE);

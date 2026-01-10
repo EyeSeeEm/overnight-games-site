@@ -107,11 +107,11 @@ const player = {
     vx: 0,
     vy: 0,
     angle: -Math.PI / 2,
-    hp: 75,
-    maxHp: 75,
-    shield: 60,
-    maxShield: 60,
-    shieldRecharge: 5,
+    hp: 100,
+    maxHp: 100,
+    shield: 80,
+    maxShield: 80,
+    shieldRecharge: 8,
     energy: 35,
     maxEnergy: 35,
     fireTimer: 0,
@@ -1447,7 +1447,7 @@ function drawDebugOverlay() {
     let y = 80;
     const line = (text) => { ctx.fillText(text, 20, y); y += 18; };
 
-    line('=== DEBUG (Q to close) ===');
+    line('=== DEBUG (` to close) ===');
     line(`Player: (${Math.round(player.x)}, ${Math.round(player.y)})`);
     line(`Player Vel: (${Math.round(player.vx)}, ${Math.round(player.vy)})`);
     line(`Player HP: ${Math.round(player.hp)}/${player.maxHp}`);
@@ -1651,8 +1651,8 @@ function resetGame() {
 document.addEventListener('keydown', (e) => {
     keys[e.key.toLowerCase()] = true;
 
-    // Toggle debug overlay with Q
-    if (e.key === 'q' || e.key === 'Q') {
+    // Toggle debug overlay with backtick (`) key
+    if (e.key === '`' || e.key === '~') {
         debugMode = !debugMode;
     }
 

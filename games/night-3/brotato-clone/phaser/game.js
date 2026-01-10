@@ -213,9 +213,22 @@ class GameScene extends Phaser.Scene {
         super({ key: 'GameScene' });
     }
 
+    init(data) {
+        // Accept data from shop or start fresh
+        this.startWave = data.wave || 1;
+        this.startHp = data.playerHp || 10;
+        this.startMaxHp = data.maxHp || 10;
+        this.startLevel = data.level || 1;
+        this.startMaterials = data.materials || 0;
+        this.startDamage = data.damage || 5;
+        this.startAttackSpeed = data.attackSpeed || 0.6;
+        this.startXp = data.xp || 0;
+        this.startXpToLevel = data.xpToLevel || 16;
+    }
+
     create() {
         // Initialize game state
-        this.wave = 1;
+        this.wave = this.startWave;
         this.waveTimer = 0;
         this.waveDuration = 20;
         this.spawnTimer = 0;
@@ -230,17 +243,17 @@ class GameScene extends Phaser.Scene {
         this.bullets = this.physics.add.group();
         this.damageNumbers = this.add.group();
 
-        // Player
+        // Player - use saved stats or defaults
         this.player = this.physics.add.sprite(400, 300, 'player');
         this.player.setCollideWorldBounds(true);
-        this.player.hp = 10;
-        this.player.maxHp = 10;
-        this.player.xp = 0;
-        this.player.level = 1;
-        this.player.xpToLevel = 16;
-        this.player.materials = 0;
-        this.player.damage = 5;
-        this.player.attackSpeed = 1;
+        this.player.hp = this.startHp;
+        this.player.maxHp = this.startMaxHp;
+        this.player.xp = this.startXp;
+        this.player.level = this.startLevel;
+        this.player.xpToLevel = this.startXpToLevel;
+        this.player.materials = this.startMaterials;
+        this.player.damage = this.startDamage;
+        this.player.attackSpeed = this.startAttackSpeed;
         this.player.fireTimer = 0;
         this.player.invulnTimer = 0;
         this.player.setDepth(10);
@@ -467,25 +480,37 @@ class GameScene extends Phaser.Scene {
     updateWave(dt) {
         this.waveTimer += dt;
 
-        // Spawn enemies
+        // Spawn enemies - much slower at start, scales with wave
         this.spawnTimer -= dt;
-        const spawnRate = Math.max(0.3, 1.5 - this.wave * 0.05);
-        if (this.spawnTimer <= 0 && this.enemies.getLength() < 50 + this.wave * 5) {
+        const spawnRate = Math.max(0.5, 3.0 - this.wave * 0.1); // Slower spawns
+        const maxEnemies = 5 + this.wave * 3; // Start with only 5 enemies, +3 per wave
+        if (this.spawnTimer <= 0 && this.enemies.getLength() < maxEnemies) {
             this.spawnEnemy();
             this.spawnTimer = spawnRate;
         }
 
-        // Check wave end
+        // Check wave end - go to shop
         if (this.waveTimer >= this.waveDuration) {
-            this.wave++;
-            this.waveTimer = 0;
-            this.waveDuration = Math.min(60, 20 + this.wave * 2);
-            this.player.materials += this.wave * 5;
+            // Clear remaining enemies
+            this.enemies.clear(true, true);
 
-            if (this.wave > 20) {
+            if (this.wave >= 20) {
                 this.scene.start('VictoryScene', {
                     level: this.player.level,
                     materials: this.player.materials
+                });
+            } else {
+                // Go to shop between waves
+                this.scene.start('ShopScene', {
+                    wave: this.wave,
+                    playerHp: this.player.hp,
+                    maxHp: this.player.maxHp,
+                    level: this.player.level,
+                    materials: this.player.materials,
+                    damage: this.player.damage,
+                    attackSpeed: this.player.attackSpeed,
+                    xp: this.player.xp,
+                    xpToLevel: this.player.xpToLevel
                 });
             }
         }
@@ -727,6 +752,145 @@ class GameOverScene extends Phaser.Scene {
     }
 }
 
+class ShopScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'ShopScene' });
+    }
+
+    init(data) {
+        this.wave = data.wave || 1;
+        this.playerHp = data.playerHp || 10;
+        this.maxHp = data.maxHp || 10;
+        this.level = data.level || 1;
+        this.materials = data.materials || 0;
+        this.damage = data.damage || 5;
+        this.attackSpeed = data.attackSpeed || 0.6;
+        this.xp = data.xp || 0;
+        this.xpToLevel = data.xpToLevel || 16;
+    }
+
+    create() {
+        this.cameras.main.setBackgroundColor('#1A1A2A');
+
+        // Title
+        this.add.text(400, 50, `WAVE ${this.wave} COMPLETE!`, {
+            fontSize: '32px',
+            fontFamily: 'monospace',
+            fontStyle: 'bold',
+            color: '#33CC33'
+        }).setOrigin(0.5);
+
+        // Materials display
+        this.add.text(400, 100, `Materials: ${this.materials}`, {
+            fontSize: '20px',
+            fontFamily: 'monospace',
+            color: '#66FF66'
+        }).setOrigin(0.5);
+
+        // Shop items
+        const shopItems = [
+            { name: '+10 Max HP', cost: 15, stat: 'maxHp', value: 10 },
+            { name: '+3 Damage', cost: 20, stat: 'damage', value: 3 },
+            { name: '+0.2 Attack Speed', cost: 25, stat: 'attackSpeed', value: 0.2 },
+            { name: 'Heal Full HP', cost: 10, stat: 'heal', value: 0 }
+        ];
+
+        this.shopButtons = [];
+        shopItems.forEach((item, index) => {
+            const y = 180 + index * 80;
+
+            // Button background
+            const btn = this.add.rectangle(400, y, 300, 60, 0x333355);
+            btn.setInteractive();
+
+            // Item name
+            const nameText = this.add.text(260, y - 10, item.name, {
+                fontSize: '18px',
+                fontFamily: 'monospace',
+                color: '#FFFFFF'
+            });
+
+            // Cost
+            const costText = this.add.text(260, y + 10, `Cost: ${item.cost}`, {
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: '#66FF66'
+            });
+
+            btn.on('pointerover', () => btn.setFillStyle(0x444477));
+            btn.on('pointerout', () => btn.setFillStyle(0x333355));
+            btn.on('pointerdown', () => {
+                if (this.materials >= item.cost) {
+                    this.materials -= item.cost;
+                    if (item.stat === 'heal') {
+                        this.playerHp = this.maxHp;
+                    } else if (item.stat === 'maxHp') {
+                        this.maxHp += item.value;
+                        this.playerHp += item.value;
+                    } else {
+                        this[item.stat] += item.value;
+                    }
+                    this.updateMaterialsDisplay();
+                }
+            });
+
+            this.shopButtons.push({ btn, item });
+        });
+
+        // Materials text reference for updates
+        this.materialsDisplay = this.add.text(400, 100, `Materials: ${this.materials}`, {
+            fontSize: '20px',
+            fontFamily: 'monospace',
+            color: '#66FF66'
+        }).setOrigin(0.5);
+
+        // Continue button
+        const continueBtn = this.add.rectangle(400, 520, 200, 50, 0x33AA33);
+        continueBtn.setInteractive();
+        this.add.text(400, 520, 'CONTINUE', {
+            fontSize: '20px',
+            fontFamily: 'monospace',
+            fontStyle: 'bold',
+            color: '#FFFFFF'
+        }).setOrigin(0.5);
+
+        continueBtn.on('pointerover', () => continueBtn.setFillStyle(0x44CC44));
+        continueBtn.on('pointerout', () => continueBtn.setFillStyle(0x33AA33));
+        continueBtn.on('pointerdown', () => {
+            this.scene.start('GameScene', {
+                wave: this.wave + 1,
+                playerHp: this.playerHp,
+                maxHp: this.maxHp,
+                level: this.level,
+                materials: this.materials,
+                damage: this.damage,
+                attackSpeed: this.attackSpeed,
+                xp: this.xp,
+                xpToLevel: this.xpToLevel
+            });
+        });
+
+        // Space to continue
+        this.input.keyboard.once('keydown-SPACE', () => {
+            this.scene.start('GameScene', {
+                wave: this.wave + 1,
+                playerHp: this.playerHp,
+                maxHp: this.maxHp,
+                level: this.level,
+                materials: this.materials,
+                damage: this.damage,
+                attackSpeed: this.attackSpeed,
+                xp: this.xp,
+                xpToLevel: this.xpToLevel
+            });
+        });
+    }
+
+    updateMaterialsDisplay() {
+        this.materialsDisplay.setText(`Materials: ${this.materials}`);
+    }
+}
+
 class VictoryScene extends Phaser.Scene {
     constructor() {
         super({ key: 'VictoryScene' });
@@ -799,7 +963,7 @@ const config = {
             debug: false
         }
     },
-    scene: [BootScene, MenuScene, GameScene, GameOverScene, VictoryScene]
+    scene: [BootScene, MenuScene, GameScene, ShopScene, GameOverScene, VictoryScene]
 };
 
 const game = new Phaser.Game(config);

@@ -1012,7 +1012,7 @@ function isInVisionCone(x, y) {
     const angle = Math.atan2(y - player.y, x - player.x);
     const angleDiff = Math.abs(normalizeAngle(angle - player.angle));
 
-    const maxRange = player.flashlightOn ? 350 : 80;
+    const maxRange = player.flashlightOn ? 500 : 120;
     const coneAngle = Math.PI / 4; // 45 degrees half-angle (90 total)
 
     return dist < maxRange && angleDiff < coneAngle;
@@ -1025,8 +1025,8 @@ function normalizeAngle(angle) {
 }
 
 function renderLighting() {
-    // Full darkness overlay
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+    // Reduced darkness overlay for better visibility
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     ctx.fillRect(camera.x, camera.y, GAME_WIDTH, GAME_HEIGHT);
 
     // Cut out vision cone
@@ -1035,8 +1035,8 @@ function renderLighting() {
     ctx.translate(player.x, player.y);
     ctx.rotate(player.angle);
 
-    const coneLength = player.flashlightOn ? 350 : 80;
-    const coneAngle = Math.PI / 4;
+    const coneLength = player.flashlightOn ? 500 : 120;
+    const coneAngle = Math.PI / 3; // Wider cone (60 degrees)
 
     // Create cone gradient
     ctx.beginPath();
@@ -1046,7 +1046,7 @@ function renderLighting() {
 
     const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, coneLength);
     gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    gradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.8)');
+    gradient.addColorStop(0.8, 'rgba(255, 255, 255, 0.9)');
     gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
     ctx.fillStyle = gradient;
@@ -1054,12 +1054,13 @@ function renderLighting() {
 
     ctx.restore();
 
-    // Ambient light around player
+    // Larger ambient light around player
     ctx.save();
     ctx.globalCompositeOperation = 'destination-out';
-    const ambientRadius = player.flashlightOn ? 50 : 30;
+    const ambientRadius = player.flashlightOn ? 150 : 100;
     const ambientGradient = ctx.createRadialGradient(player.x, player.y, 0, player.x, player.y, ambientRadius);
-    ambientGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+    ambientGradient.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
+    ambientGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.3)');
     ambientGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
     ctx.fillStyle = ambientGradient;
     ctx.beginPath();

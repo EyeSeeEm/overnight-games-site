@@ -2,8 +2,8 @@
 // Built with Phaser 3
 
 const TILE_SIZE = 32;
-const MAP_WIDTH = 25;
-const MAP_HEIGHT = 19;
+const MAP_WIDTH = 40;  // Larger scrollable map
+const MAP_HEIGHT = 30;
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 608;
 
@@ -374,11 +374,31 @@ class GameScene extends Phaser.Scene {
         super({ key: 'Game' });
     }
 
+    init(data) {
+        // Preserve stats between floors
+        if (data && data.preservedStats) {
+            this.preservedStats = data.preservedStats;
+            this.startFloor = data.floor || 1;
+        } else {
+            this.preservedStats = null;
+            this.startFloor = 1;
+        }
+    }
+
     create() {
         this.initGameState();
         this.generateMap();
         this.createUI();
         this.setupInput();
+
+        // Set up scrollable camera
+        this.cameras.main.setBounds(0, 0, MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
+        this.cameras.main.startFollow(this.playerSprite, true, 0.1, 0.1);
+        this.cameras.main.setDeadzone(100, 100);
+
+        // Make UI fixed to camera
+        this.uiContainer.setScrollFactor(0);
+
         this.updateFOW();
 
         window.gameState = this.gameState;
@@ -458,48 +478,85 @@ class GameScene extends Phaser.Scene {
     }
 
     initGameState() {
-        this.gameState = {
-            turn: 1,
-            phase: 'player',
-            corruption: 0,
-            maxCorruption: 1000,
-            // Tracking stats
-            killCount: 0,
-            totalDamageDealt: 0,
-            totalDamageTaken: 0,
-            critCount: 0,
-            shotsHit: 0,
-            shotsMissed: 0,
-            killStreak: 0,
-            killStreakTimer: 0,
-            maxKillStreak: 0,
-            floor: 1,
-            player: {
-                x: 3,
-                y: 9,
-                hp: 100,
-                maxHp: 100,
-                ap: 3,
-                maxAp: 3,
-                weapon: {
-                    name: 'Combat Rifle',
-                    damage: [30, 40],
-                    accuracy: 70,
-                    range: 8,
-                    apCost: 1,
-                    ammo: 20,
-                    maxAmmo: 20
+        const floor = this.startFloor || 1;
+
+        // If we have preserved stats from previous floor, use them
+        if (this.preservedStats) {
+            this.gameState = {
+                turn: 1,
+                phase: 'player',
+                corruption: Math.floor(this.preservedStats.corruption * 0.5), // Carry over half corruption
+                maxCorruption: 1000,
+                // Tracking stats - cumulative
+                killCount: this.preservedStats.killCount,
+                totalDamageDealt: this.preservedStats.totalDamageDealt,
+                totalDamageTaken: this.preservedStats.totalDamageTaken,
+                critCount: this.preservedStats.critCount,
+                shotsHit: this.preservedStats.shotsHit,
+                shotsMissed: this.preservedStats.shotsMissed,
+                killStreak: 0,
+                killStreakTimer: 0,
+                maxKillStreak: this.preservedStats.maxKillStreak,
+                floor: floor,
+                player: {
+                    x: 3,
+                    y: 9,
+                    hp: this.preservedStats.player.hp,
+                    maxHp: this.preservedStats.player.maxHp,
+                    ap: 3,
+                    maxAp: 3,
+                    weapon: { ...this.preservedStats.player.weapon, ammo: this.preservedStats.player.weapon.maxAmmo },
+                    items: [...this.preservedStats.player.items],
+                    stance: 'walk'
                 },
-                items: [
-                    { name: 'Medkit', count: 2 },
-                    { name: 'Grenade', count: 1 }
-                ],
-                stance: 'walk'
-            },
-            enemies: [],
-            lootContainers: [],
-            bloodSplatters: []
-        };
+                enemies: [],
+                lootContainers: [],
+                bloodSplatters: []
+            };
+        } else {
+            this.gameState = {
+                turn: 1,
+                phase: 'player',
+                corruption: 0,
+                maxCorruption: 1000,
+                // Tracking stats
+                killCount: 0,
+                totalDamageDealt: 0,
+                totalDamageTaken: 0,
+                critCount: 0,
+                shotsHit: 0,
+                shotsMissed: 0,
+                killStreak: 0,
+                killStreakTimer: 0,
+                maxKillStreak: 0,
+                floor: floor,
+                player: {
+                    x: 3,
+                    y: 9,
+                    hp: 100,
+                    maxHp: 100,
+                    ap: 3,
+                    maxAp: 3,
+                    weapon: {
+                        name: 'Combat Rifle',
+                        damage: [30, 40],
+                        accuracy: 70,
+                        range: 8,
+                        apCost: 1,
+                        ammo: 20,
+                        maxAmmo: 20
+                    },
+                    items: [
+                        { name: 'Medkit', count: 2 },
+                        { name: 'Grenade', count: 1 }
+                    ],
+                    stance: 'walk'
+                },
+                enemies: [],
+                lootContainers: [],
+                bloodSplatters: []
+            };
+        }
 
         this.tiles = [];
         this.fowTiles = [];
@@ -579,7 +636,8 @@ class GameScene extends Phaser.Scene {
         }
 
         const rooms = [];
-        const roomCount = 6;
+        const floor = this.gameState.floor;
+        const roomCount = 8 + floor * 2; // More rooms on higher floors
 
         for (let i = 0; i < roomCount; i++) {
             const room = this.generateRoom(map, rooms);
@@ -631,21 +689,34 @@ class GameScene extends Phaser.Scene {
 
         rooms.forEach((room, i) => {
             if (i > 0) {
-                const enemyCount = Math.floor(Math.random() * 2) + 1;
+                // Scale enemies with floor
+                const baseEnemies = Math.floor(Math.random() * 2) + 1;
+                const enemyCount = baseEnemies + Math.floor(floor / 2);
                 for (let e = 0; e < enemyCount; e++) {
                     const ex = room.x + 1 + Math.floor(Math.random() * (room.w - 2));
                     const ey = room.y + 1 + Math.floor(Math.random() * (room.h - 2));
                     if (map[ey][ex] === TILE.FLOOR) {
-                        const type = Math.random() < 0.7 ? 'human' : 'corrupt';
+                        // More corrupted/horror on higher floors
+                        const typeRoll = Math.random();
+                        let type;
+                        if (floor >= 3 && typeRoll < 0.15) type = 'horror';
+                        else if (typeRoll < 0.3 + floor * 0.05) type = 'corrupt';
+                        else type = 'human';
+
+                        // Scale HP with floor
+                        const hpScale = 1 + (floor - 1) * 0.2;
+                        const baseHp = type === 'human' ? 50 : type === 'corrupt' ? 80 : 120;
+                        const hp = Math.floor(baseHp * hpScale);
+
                         this.gameState.enemies.push({
                             x: ex, y: ey,
                             type: type,
-                            hp: type === 'human' ? 50 : 80,
-                            maxHp: type === 'human' ? 50 : 80,
+                            hp: hp,
+                            maxHp: hp,
                             ap: 2,
                             maxAp: 2,
-                            damage: type === 'human' ? [10, 15] : [15, 25],
-                            range: type === 'human' ? 6 : 1,
+                            damage: type === 'human' ? [10, 15] : type === 'corrupt' ? [15, 25] : [20, 35],
+                            range: type === 'human' ? 6 : type === 'corrupt' ? 1 : 3,
                             behavior: 'patrol',
                             alertLevel: 0
                         });
@@ -724,6 +795,8 @@ class GameScene extends Phaser.Scene {
 
     createUI() {
         this.uiContainer = this.add.container(0, 0);
+        this.uiContainer.setDepth(100);
+        this.uiContainer.setScrollFactor(0);
 
         const g = this.add.graphics();
         this.uiContainer.add(g);
@@ -787,7 +860,7 @@ class GameScene extends Phaser.Scene {
 
         this.stanceText.setText(`Stance: ${p.stance.toUpperCase()}`);
 
-        this.turnText.setText(`Turn: ${gs.turn}`);
+        this.turnText.setText(`Floor ${gs.floor} - Turn ${gs.turn}`);
 
         const healthPct = p.hp / p.maxHp;
         const healthBars = Math.floor(healthPct * 20);
@@ -863,14 +936,16 @@ class GameScene extends Phaser.Scene {
         this.rKey.on('down', () => this.reloadWeapon());
 
         this.input.on('pointerdown', (pointer) => {
-            const tx = Math.floor(pointer.x / TILE_SIZE);
-            const ty = Math.floor(pointer.y / TILE_SIZE);
+            // Use world coordinates for scrolling camera
+            const tx = Math.floor(pointer.worldX / TILE_SIZE);
+            const ty = Math.floor(pointer.worldY / TILE_SIZE);
             this.handleClick(tx, ty);
         });
 
         this.input.on('pointermove', (pointer) => {
-            const tx = Math.floor(pointer.x / TILE_SIZE);
-            const ty = Math.floor(pointer.y / TILE_SIZE);
+            // Use world coordinates for scrolling camera
+            const tx = Math.floor(pointer.worldX / TILE_SIZE);
+            const ty = Math.floor(pointer.worldY / TILE_SIZE);
             this.updateSelection(tx, ty);
         });
     }
@@ -1909,14 +1984,34 @@ class GameScene extends Phaser.Scene {
             color: ratingColors[rating]
         }).setOrigin(0.5);
 
-        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 60, 'Press SPACE to deploy new clone', {
+        const nextFloor = gs.floor + 1;
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 60, `Press SPACE to proceed to Floor ${nextFloor}`, {
             fontFamily: 'monospace',
             fontSize: '14px',
             color: '#6a9a8a'
         }).setOrigin(0.5);
 
         this.input.keyboard.once('keydown-SPACE', () => {
-            this.scene.restart();
+            // Continue to next floor with preserved stats
+            this.scene.restart({
+                floor: nextFloor,
+                preservedStats: {
+                    corruption: gs.corruption,
+                    killCount: gs.killCount,
+                    totalDamageDealt: gs.totalDamageDealt,
+                    totalDamageTaken: gs.totalDamageTaken,
+                    critCount: gs.critCount,
+                    shotsHit: gs.shotsHit,
+                    shotsMissed: gs.shotsMissed,
+                    maxKillStreak: gs.maxKillStreak,
+                    player: {
+                        hp: gs.player.hp,
+                        maxHp: gs.player.maxHp,
+                        weapon: { ...gs.player.weapon },
+                        items: [...gs.player.items]
+                    }
+                }
+            });
         });
     }
 

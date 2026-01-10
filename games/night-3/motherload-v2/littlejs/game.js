@@ -473,13 +473,34 @@ function gameUpdate() {
     }
     if (canMoveY) playerPos.y = newY;
 
-    // Drilling
-    if (grounded && fuel > 0 && keyIsDown('ArrowDown')) {
-        const drillX = playerPos.x;
-        const drillY = playerPos.y + 1;
-        const tile = getTile(drillX, drillY);
-        if (tile !== TILE.EMPTY && tile !== TILE.BUILDING) {
-            startDrill(drillX, drillY);
+    // Drilling - DOWN for down, LEFT/RIGHT for sideways when grounded
+    if (grounded && fuel > 0) {
+        // Drill down
+        if (keyIsDown('ArrowDown')) {
+            const drillX = playerPos.x;
+            const drillY = playerPos.y + 1;
+            const tile = getTile(drillX, drillY);
+            if (tile !== TILE.EMPTY && tile !== TILE.BUILDING) {
+                startDrill(drillX, drillY, 'down');
+            }
+        }
+        // Drill left
+        else if (keyIsDown('ArrowLeft')) {
+            const drillX = playerPos.x - 1;
+            const drillY = playerPos.y;
+            const tile = getTile(drillX, drillY);
+            if (tile !== TILE.EMPTY && tile !== TILE.BUILDING && isSolid(tile)) {
+                startDrill(drillX, drillY, 'left');
+            }
+        }
+        // Drill right
+        else if (keyIsDown('ArrowRight')) {
+            const drillX = playerPos.x + 1;
+            const drillY = playerPos.y;
+            const tile = getTile(drillX, drillY);
+            if (tile !== TILE.EMPTY && tile !== TILE.BUILDING && isSolid(tile)) {
+                startDrill(drillX, drillY, 'right');
+            }
         }
     }
 
@@ -504,8 +525,11 @@ function gameUpdate() {
     }
 }
 
-function startDrill(x, y) {
+let drillDirection = 'down';
+
+function startDrill(x, y, direction = 'down') {
     drilling = true;
+    drillDirection = direction;
     drillTarget = vec2(Math.floor(x), Math.floor(y));
     const tile = getTile(x, y);
     const baseTime = tile === TILE.ROCK ? 1.5 : 1.0;
@@ -596,9 +620,15 @@ function updateDrilling() {
             spawnParticles(x, y, 3, COLORS.dirt);
         }
 
-        // Clear tile and move
+        // Clear tile and move in drill direction
         setTile(drillTarget.x, drillTarget.y, TILE.EMPTY);
-        playerPos.y += 1;
+        if (drillDirection === 'down') {
+            playerPos.y += 1;
+        } else if (drillDirection === 'left') {
+            playerPos.x -= 1;
+        } else if (drillDirection === 'right') {
+            playerPos.x += 1;
+        }
         drilling = false;
 
         // Check depth achievements

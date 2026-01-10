@@ -83,10 +83,12 @@ class GameScene extends Phaser.Scene {
     }
 
     init() {
+        this.showTutorial = true;
+
         this.gameState = {
             year: 1830,
-            silver: 500,
-            opium: 0,
+            silver: 1000, // Increased from 500 for easier start
+            opium: 20, // Start with some opium to trade immediately
             tea: 0,
             ships: 1,
             maxShips: 6,
@@ -95,7 +97,7 @@ class GameScene extends Phaser.Scene {
             teaShipped: 0,
             totalTeaShipped: 0,
             totalOpiumSold: 0,
-            quotaTimer: 120,
+            quotaTimer: 150, // Increased from 120 for more time
             gameOver: false,
             victory: false,
             bribeCards: 0,
@@ -163,6 +165,97 @@ class GameScene extends Phaser.Scene {
 
         // Expose for testing
         window.game = this.gameState;
+
+        // Show tutorial
+        this.createTutorialOverlay();
+    }
+
+    createTutorialOverlay() {
+        // Dark overlay
+        this.tutorialBg = this.add.rectangle(450, 300, 900, 600, 0x000000, 0.85);
+        this.tutorialBg.setDepth(400);
+
+        // Title
+        this.tutorialTitle = this.add.text(450, 60, 'HIGH TEA', {
+            fontSize: '48px',
+            fontFamily: 'Georgia',
+            fontStyle: 'bold',
+            color: '#ffd700'
+        }).setOrigin(0.5).setDepth(401);
+
+        // Subtitle
+        this.tutorialSubtitle = this.add.text(450, 110, 'Opium Trade Simulation - 1830', {
+            fontSize: '18px',
+            fontFamily: 'Georgia',
+            color: '#c0a080'
+        }).setOrigin(0.5).setDepth(401);
+
+        // How to play
+        const tutorialText = [
+            '--- HOW TO PLAY ---',
+            '',
+            '1. CLICK trade offers on the map to buy TEA or sell OPIUM',
+            '2. Use SILVER to buy OPIUM from merchants on the left',
+            '3. Sell OPIUM at ports for more SILVER and TEA',
+            '4. SHIP enough TEA to England before time runs out!',
+            '',
+            '--- TIPS ---',
+            '',
+            'Higher risk ports = Better prices (watch the colored dots)',
+            'Watch the QUOTA bar - you must ship that much tea!',
+            'The year advances as you play - prices and risks change',
+            '',
+            'You start with: 1000 Silver + 20 Opium'
+        ].join('\n');
+
+        this.tutorialText = this.add.text(450, 310, tutorialText, {
+            fontSize: '16px',
+            fontFamily: 'Georgia',
+            color: '#ffffff',
+            align: 'center',
+            lineSpacing: 6
+        }).setOrigin(0.5).setDepth(401);
+
+        // Start prompt
+        this.tutorialPrompt = this.add.text(450, 530, 'Click anywhere to begin trading!', {
+            fontSize: '24px',
+            fontFamily: 'Georgia',
+            color: '#ffaa00'
+        }).setOrigin(0.5).setDepth(401);
+
+        // Blink the prompt
+        this.tweens.add({
+            targets: this.tutorialPrompt,
+            alpha: 0.4,
+            duration: 500,
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Click to dismiss
+        this.input.once('pointerdown', () => {
+            if (this.showTutorial) {
+                this.dismissTutorial();
+            }
+        });
+    }
+
+    dismissTutorial() {
+        this.showTutorial = false;
+
+        // Fade out
+        this.tweens.add({
+            targets: [this.tutorialBg, this.tutorialTitle, this.tutorialSubtitle, this.tutorialText, this.tutorialPrompt],
+            alpha: 0,
+            duration: 400,
+            onComplete: () => {
+                this.tutorialBg.destroy();
+                this.tutorialTitle.destroy();
+                this.tutorialSubtitle.destroy();
+                this.tutorialText.destroy();
+                this.tutorialPrompt.destroy();
+            }
+        });
     }
 
     getRiskColor(risk) {
@@ -919,7 +1012,7 @@ class GameScene extends Phaser.Scene {
     }
 
     update(time, delta) {
-        if (this.gameState.gameOver || this.currentEvent) return;
+        if (this.gameState.gameOver || this.currentEvent || this.showTutorial) return;
 
         const dt = delta / 1000;
 

@@ -95,6 +95,9 @@ class GameScene extends Phaser.Scene {
     }
 
     create() {
+        // Show intro first
+        this.showIntro = true;
+
         this.gameData = {
             day: 1,
             dayTimer: 180,
@@ -106,7 +109,7 @@ class GameScene extends Phaser.Scene {
             armor: 100,
             maxArmor: 100,
             maxSpeed: 150,
-            speedLevel: 0,
+            speedLevel: 1.5, // Start at HALF speed instead of STOP
             firepower: 10,
             reloadTime: 2000,
             lastFire: 0
@@ -187,17 +190,122 @@ class GameScene extends Phaser.Scene {
         });
 
         this.addMessage("Day " + this.gameData.day + " - Set sail!");
+
+        // Create intro overlay
+        this.createIntroOverlay();
+    }
+
+    createIntroOverlay() {
+        // Semi-transparent background
+        this.introOverlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.85);
+        this.introOverlay.setScrollFactor(0).setDepth(400);
+
+        // Title
+        this.introTitle = this.add.text(GAME_WIDTH / 2, 120, 'PIRATEERS', {
+            fontSize: '64px',
+            fontFamily: 'monospace',
+            color: '#ffd700',
+            stroke: '#000000',
+            strokeThickness: 4
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(401);
+
+        // Subtitle
+        this.introSubtitle = this.add.text(GAME_WIDTH / 2, 180, 'Naval Combat', {
+            fontSize: '24px',
+            fontFamily: 'monospace',
+            color: '#c08050'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(401);
+
+        // Controls box
+        const controlsY = 320;
+        const controlsText = [
+            '--- CONTROLS ---',
+            '',
+            'W / S  -  Speed Up / Slow Down',
+            'A / D  -  Turn Left / Right',
+            'SPACE  -  Fire Cannons',
+            '',
+            '--- OBJECTIVE ---',
+            '',
+            'Hunt enemy ships for gold!',
+            'Survive until the day ends.',
+            'Collect floating loot.'
+        ].join('\n');
+
+        this.introControls = this.add.text(GAME_WIDTH / 2, controlsY, controlsText, {
+            fontSize: '18px',
+            fontFamily: 'monospace',
+            color: '#ffffff',
+            align: 'center',
+            lineSpacing: 6
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(401);
+
+        // Start prompt (blinking)
+        this.introPrompt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 100, 'Press SPACE to Set Sail!', {
+            fontSize: '28px',
+            fontFamily: 'monospace',
+            color: '#ffaa00'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(401);
+
+        // Blink the prompt
+        this.tweens.add({
+            targets: this.introPrompt,
+            alpha: 0.3,
+            duration: 500,
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Handle start
+        this.input.keyboard.once('keydown-SPACE', () => {
+            if (this.showIntro) {
+                this.dismissIntro();
+            }
+        });
+    }
+
+    dismissIntro() {
+        this.showIntro = false;
+
+        // Fade out intro elements
+        this.tweens.add({
+            targets: [this.introOverlay, this.introTitle, this.introSubtitle, this.introControls, this.introPrompt],
+            alpha: 0,
+            duration: 500,
+            onComplete: () => {
+                this.introOverlay.destroy();
+                this.introTitle.destroy();
+                this.introSubtitle.destroy();
+                this.introControls.destroy();
+                this.introPrompt.destroy();
+            }
+        });
     }
 
     spawnEnemies() {
         const count = 4 + this.gameData.day;
 
         for (let i = 0; i < count; i++) {
-            const x = 200 + Math.random() * (WORLD_WIDTH - 400);
-            const y = 200 + Math.random() * (WORLD_HEIGHT - 400);
+            let x, y;
 
-            const dist = Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y);
-            if (dist < 300) continue;
+            // Spawn some enemies closer to player for immediate action
+            if (i < 2) {
+                // First 2 enemies spawn within 400-600 units of player
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 400 + Math.random() * 200;
+                x = this.player.x + Math.cos(angle) * dist;
+                y = this.player.y + Math.sin(angle) * dist;
+                // Clamp to world bounds
+                x = Phaser.Math.Clamp(x, 100, WORLD_WIDTH - 100);
+                y = Phaser.Math.Clamp(y, 100, WORLD_HEIGHT - 100);
+            } else {
+                // Rest spawn anywhere
+                x = 200 + Math.random() * (WORLD_WIDTH - 400);
+                y = 200 + Math.random() * (WORLD_HEIGHT - 400);
+
+                const dist = Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y);
+                if (dist < 300) continue;
+            }
 
             const enemy = this.add.sprite(x, y, 'enemyShip');
             enemy.setDepth(8);
@@ -314,6 +422,7 @@ class GameScene extends Phaser.Scene {
 
     update(time, delta) {
         if (this.gameOver) return;
+        if (this.showIntro) return; // Pause game during intro
 
         const dt = delta / 1000;
 

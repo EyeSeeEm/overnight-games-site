@@ -63,6 +63,9 @@ let killCount = 0;
 let killCombo = 0;
 let comboTimer = 0;
 let debugMode = false;
+let exitPoint = null;       // Exit location when enemies are cleared
+let exitLocked = false;     // Whether exit requires a key
+let exitKeyColor = null;    // Which key is needed
 let fps = 60;
 let frameCount = 0;
 let fpsTimer = 0;
@@ -97,15 +100,28 @@ class Player {
         this.fireTimer = 0;
         this.reloading = false;
         this.reloadTimer = 0;
+        this.reloadDuration = 1.5; // Track total reload time for animation
         this.muzzleFlash = 0;
         this.invuln = 0;
         this.medkits = 0;
         this.upgrades = { damage: 0, reload: 0, armor: 0 };
+        this.dead = false;
+        this.deathTimer = 0;
+        this.respawnDelay = 2.0; // Time before respawning
     }
 
     getWeapon() { return this.weapons[this.currentWeapon]; }
 
     update(dt) {
+        // Handle death state
+        if (this.dead) {
+            this.deathTimer -= dt;
+            if (this.deathTimer <= 0) {
+                this.respawn();
+            }
+            return; // No movement while dead
+        }
+
         let dx = 0, dy = 0;
         if (keys['w'] || keys['arrowup']) dy -= 1;
         if (keys['s'] || keys['arrowdown']) dy += 1;
@@ -197,8 +213,8 @@ class Player {
             return;
         }
         this.reloading = true;
-        this.reloadTimer = 1.5;
-        addFloatingText(this.x, this.y - 20, 'RELOADING...', COLORS.hudYellow);
+        this.reloadDuration = 1.5;
+        this.reloadTimer = this.reloadDuration;
     }
 
     finishReload() {
@@ -235,17 +251,47 @@ class Player {
 
         addDamageText(this.x, this.y - 20, amount, COLORS.health);
 
-        if (this.hp <= 0) this.die();
+        if (this.hp <= 0 && !this.dead) this.die();
     }
 
     die() {
-        this.lives--;
-        if (this.lives > 0) {
-            this.hp = this.maxHp;
-            addFloatingText(this.x, this.y, 'RESPAWNING...', COLORS.hudYellow);
-        } else {
-            gameState = 'gameover';
+        this.dead = true;
+        this.hp = 0;
+        this.deathTimer = this.respawnDelay;
+
+        // Death particles
+        for (let i = 0; i < 20; i++) {
+            particles.push({
+                x: this.x, y: this.y,
+                vx: (Math.random() - 0.5) * 300,
+                vy: (Math.random() - 0.5) * 300,
+                life: 1.0, maxLife: 1.0, color: COLORS.health, size: 6
+            });
         }
+
+        screenShake(15, 0.3);
+        addFloatingText(this.x, this.y - 30, 'DEATH!', COLORS.health, 1.5);
+
+        this.lives--;
+        if (this.lives <= 0) {
+            // Delay game over by respawn delay
+            setTimeout(() => {
+                if (this.dead && this.lives <= 0) {
+                    gameState = 'gameover';
+                }
+            }, this.respawnDelay * 1000);
+        }
+    }
+
+    respawn() {
+        if (this.lives <= 0) {
+            gameState = 'gameover';
+            return;
+        }
+        this.dead = false;
+        this.hp = this.maxHp;
+        this.invuln = 2.0; // Invulnerability after respawn
+        addFloatingText(this.x, this.y - 30, `LIVES: ${this.lives}`, COLORS.hudYellow, 1.2);
     }
 
     useMedkit() {
@@ -259,6 +305,22 @@ class Player {
     draw() {
         ctx.save();
         ctx.translate(this.x - cameraX, this.y - cameraY);
+
+        // Death state - collapsed/fallen sprite
+        if (this.dead) {
+            ctx.globalAlpha = 0.7;
+            ctx.fillStyle = COLORS.playerDark;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 16, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = COLORS.health;
+            ctx.beginPath();
+            ctx.arc(-5, -2, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            return;
+        }
+
         ctx.rotate(this.angle);
 
         if (this.invuln > 0 && Math.floor(this.invuln * 10) % 2 === 0) ctx.globalAlpha = 0.5;
@@ -283,12 +345,13 @@ class Player {
         ctx.fillStyle = '#224466';
         ctx.fillRect(-4, -4, 6, 3);
 
-        // Gun
+        // Gun - with reload animation
+        const reloadOffset = this.reloading ? Math.sin(Date.now() / 100) * 4 : 0;
         ctx.fillStyle = '#2A2A2A';
-        ctx.fillRect(6, -4, 6, 8);
-        ctx.fillRect(10, -3, 14, 6);
+        ctx.fillRect(6, -4 + reloadOffset, 6, 8);
+        ctx.fillRect(10, -3 + reloadOffset, 14, 6);
         ctx.fillStyle = '#1A1A1A';
-        ctx.fillRect(18, -2, 6, 4);
+        ctx.fillRect(18, -2 + reloadOffset, 6, 4);
 
         // Muzzle flash
         if (this.muzzleFlash > 0) {
@@ -306,6 +369,35 @@ class Player {
         }
 
         ctx.restore();
+
+        // Draw reload progress bar above player
+        if (this.reloading) {
+            const progress = 1 - (this.reloadTimer / this.reloadDuration);
+            const barWidth = 40;
+            const barHeight = 6;
+            const barX = this.x - cameraX - barWidth / 2;
+            const barY = this.y - cameraY - 35;
+
+            // Background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4);
+
+            // Progress fill
+            ctx.fillStyle = COLORS.hudYellow;
+            ctx.fillRect(barX, barY, barWidth * progress, barHeight);
+
+            // Border
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(barX, barY, barWidth, barHeight);
+
+            // Text
+            ctx.fillStyle = COLORS.hudYellow;
+            ctx.font = '10px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('RELOAD', this.x - cameraX, barY - 4);
+            ctx.textAlign = 'left';
+        }
     }
 }
 
@@ -487,12 +579,12 @@ class Enemy {
             });
         }
 
-        // Screen shake on kill for satisfaction
-        screenShake(this.type === 'brute' ? 10 : 5, 0.15);
+        // Screen shake on kill - reduced for less excessive shake
+        screenShake(this.type === 'brute' ? 4 : 1.5, 0.08);
 
-        // Kill flash and hitlag for juicy kills
-        killFlash = this.type === 'brute' ? 0.4 : 0.2;
-        slowMotion = this.type === 'brute' ? 0.3 : 0.6;
+        // Kill flash and hitlag for juicy kills - reduced intensity
+        killFlash = this.type === 'brute' ? 0.15 : 0.05;
+        slowMotion = this.type === 'brute' ? 0.5 : 0.85;
 
         // Blood stain - bigger
         bloodStains.push({ x: this.x, y: this.y, size: this.width * 1.5, alpha: 0.7 });
@@ -578,6 +670,15 @@ class Enemy {
         }
 
         ctx.restore();
+    }
+
+    isInVisibleArea() {
+        if (!player) return true;
+        const dx = this.x - player.x;
+        const dy = this.y - player.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        // Enemy is visible if within visibility radius + small buffer
+        return dist < visibilityRadius + 50;
     }
 }
 
@@ -747,6 +848,11 @@ function generateLevel() {
 
     totalRooms = rooms.length;
     roomsCleared = 1;
+
+    // Reset exit state
+    exitPoint = null;
+    exitLocked = false;
+    exitKeyColor = null;
 }
 
 function carveCorridor(x1, y1, x2, y2) {
@@ -1007,10 +1113,78 @@ function drawPickups() {
                 ctx.font = 'bold 16px Arial';
                 ctx.fillText('$', -5, 6);
                 break;
+            case 'key':
+                const keyColor = COLORS[`key${p.keyColor.charAt(0).toUpperCase() + p.keyColor.slice(1)}`] || COLORS.keyGreen;
+                ctx.shadowColor = keyColor;
+                ctx.fillStyle = keyColor;
+                // Key shape
+                ctx.fillRect(-4, -10, 8, 14);
+                ctx.fillRect(-8, 2, 16, 6);
+                ctx.fillStyle = '#1A1A1A';
+                ctx.fillRect(-2, -6, 4, 8);
+                break;
         }
 
         ctx.restore();
     });
+}
+
+function drawExit() {
+    if (!exitPoint) return;
+
+    ctx.save();
+    ctx.translate(exitPoint.x - cameraX, exitPoint.y - cameraY);
+
+    const pulse = Math.sin(Date.now() / 200) * 0.3 + 0.7;
+
+    // Exit platform
+    ctx.fillStyle = exitLocked ? `rgba(136, 0, 0, ${pulse})` : `rgba(0, 200, 100, ${pulse})`;
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = exitLocked ? COLORS.doorLocked : COLORS.stamina;
+
+    // Draw exit circle
+    ctx.beginPath();
+    ctx.arc(0, 0, 30, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Inner ring
+    ctx.strokeStyle = exitLocked ? '#FF4444' : '#44FF88';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, 20, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Arrow or lock symbol
+    ctx.fillStyle = '#FFFFFF';
+    if (exitLocked && exitKeyColor && !player.keys[exitKeyColor]) {
+        // Lock symbol
+        ctx.fillRect(-5, -3, 10, 8);
+        ctx.beginPath();
+        ctx.arc(0, -5, 6, Math.PI, 0, false);
+        ctx.stroke();
+    } else {
+        // Up arrow
+        ctx.beginPath();
+        ctx.moveTo(0, -12);
+        ctx.lineTo(8, 0);
+        ctx.lineTo(3, 0);
+        ctx.lineTo(3, 10);
+        ctx.lineTo(-3, 10);
+        ctx.lineTo(-3, 0);
+        ctx.lineTo(-8, 0);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // Label
+    ctx.fillStyle = exitLocked ? COLORS.doorLocked : COLORS.stamina;
+    ctx.font = 'bold 12px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(exitLocked ? 'LOCKED EXIT' : 'EXIT', exitPoint.x - cameraX, exitPoint.y - cameraY - 45);
+    ctx.textAlign = 'left';
 }
 
 function drawBullets() {
@@ -1200,12 +1374,18 @@ function drawHUD() {
     ctx.fillStyle = COLORS.hudText;
     ctx.fillText(`KILLS: ${killCount}`, 800, canvas.height - 15);
 
-    // Reloading indicator
-    if (player.reloading) {
-        ctx.fillStyle = COLORS.hudYellow;
-        ctx.font = 'bold 16px monospace';
+    // Dead indicator
+    if (player.dead) {
+        ctx.fillStyle = COLORS.health;
+        ctx.font = 'bold 24px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('RELOADING...', canvas.width / 2, canvas.height / 2 + 50);
+        if (player.lives > 0) {
+            ctx.fillText('RESPAWNING...', canvas.width / 2, canvas.height / 2);
+            ctx.font = '16px monospace';
+            ctx.fillText(`${Math.ceil(player.deathTimer)}s`, canvas.width / 2, canvas.height / 2 + 30);
+        } else {
+            ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+        }
         ctx.textAlign = 'left';
     }
 
@@ -1497,6 +1677,11 @@ function update(dt) {
                     addFloatingText(player.x, player.y - 30, `Got ${WEAPONS[newWeapon].name}!`, COLORS.hudYellow);
                     take = true;
                     break;
+                case 'key':
+                    player.keys[p.keyColor] = true;
+                    addFloatingText(player.x, player.y - 30, `${p.keyColor.toUpperCase()} KEY!`, COLORS[`key${p.keyColor.charAt(0).toUpperCase() + p.keyColor.slice(1)}`]);
+                    take = true;
+                    break;
             }
             if (take) pickups.splice(i, 1);
         }
@@ -1546,16 +1731,82 @@ function update(dt) {
         if (shakeDuration <= 0) shakeAmount = 0;
     }
 
-    // Win condition
-    if (enemies.length === 0) {
-        if (deck < maxDecks) {
-            deck++;
-            generateLevel();
-            addFloatingText(player.x, player.y - 30, `DECK ${deck}`, COLORS.hudYellow);
-        } else {
-            gameState = 'win';
+    // Spawn exit when all enemies cleared
+    if (enemies.length === 0 && !exitPoint) {
+        spawnExit();
+    }
+
+    // Check if player reaches exit
+    if (exitPoint && !player.dead) {
+        const dx = player.x - exitPoint.x;
+        const dy = player.y - exitPoint.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 40) {
+            // Check if locked
+            if (exitLocked && exitKeyColor && !player.keys[exitKeyColor]) {
+                addFloatingText(player.x, player.y - 30, `NEED ${exitKeyColor.toUpperCase()} KEY!`, COLORS.doorLocked);
+            } else {
+                // Advance to next level
+                if (deck < maxDecks) {
+                    deck++;
+                    generateLevel();
+                    addFloatingText(player.x, player.y - 30, `DECK ${deck}`, COLORS.hudYellow);
+                } else {
+                    gameState = 'win';
+                }
+            }
         }
     }
+}
+
+function spawnExit() {
+    // Find a far point from the player to place the exit
+    let bestX = player.x + 300;
+    let bestY = player.y + 300;
+    let bestDist = 0;
+
+    // Search for a valid floor tile far from the player
+    for (let attempts = 0; attempts < 50; attempts++) {
+        const tx = Math.floor(Math.random() * (MAP_W - 4)) + 2;
+        const ty = Math.floor(Math.random() * (MAP_H - 4)) + 2;
+
+        if (map[ty] && map[ty][tx] === 1) { // Floor tile
+            const px = tx * TILE + TILE / 2;
+            const py = ty * TILE + TILE / 2;
+            const dx = px - player.x;
+            const dy = py - player.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist > bestDist && dist > 200) {
+                bestDist = dist;
+                bestX = px;
+                bestY = py;
+            }
+        }
+    }
+
+    exitPoint = { x: bestX, y: bestY };
+
+    // 40% chance exit is locked on deck 2+, requiring a key
+    if (deck >= 2 && Math.random() < 0.4) {
+        exitLocked = true;
+        const keyColors = ['green', 'blue', 'yellow'];
+        // Key color based on deck
+        exitKeyColor = keyColors[Math.min(deck - 1, keyColors.length - 1)];
+
+        // Drop the key somewhere in the level
+        const keyX = (player.x + bestX) / 2 + (Math.random() - 0.5) * 200;
+        const keyY = (player.y + bestY) / 2 + (Math.random() - 0.5) * 200;
+        pickups.push({ x: keyX, y: keyY, type: 'key', keyColor: exitKeyColor });
+
+        addFloatingText(player.x, player.y - 30, 'FIND THE EXIT!', COLORS.hudYellow);
+        addFloatingText(player.x, player.y - 50, `(${exitKeyColor.toUpperCase()} KEY REQUIRED)`, COLORS.doorLocked);
+    } else {
+        addFloatingText(player.x, player.y - 30, 'AREA CLEARED! REACH THE EXIT!', COLORS.stamina);
+    }
+
+    screenShake(3, 0.2);
 }
 
 // Game loop
@@ -1650,7 +1901,8 @@ function gameLoop(timestamp) {
         drawBarrels();
         drawTerminals();
         drawPickups();
-        enemies.forEach(e => e.draw());
+        drawExit();
+        enemies.forEach(e => { if (e.isInVisibleArea()) e.draw(); });
         player.draw();
         drawBullets();
         drawParticles();

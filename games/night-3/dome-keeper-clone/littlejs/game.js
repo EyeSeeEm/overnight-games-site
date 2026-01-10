@@ -616,6 +616,9 @@ function updateEnemies(dt) {
 
 // Reset game
 function resetGame() {
+    // CRITICAL FIX: Set gameState to start playing!
+    gameState = 'mining';
+
     generateMap();
 
     dome.hp = dome.maxHp;

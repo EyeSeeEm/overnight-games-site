@@ -240,18 +240,85 @@ class GameScene extends Phaser.Scene {
         btn.add([bg, label]);
         btn.setSize(w, h);
         btn.setInteractive();
-        btn.on('pointerdown', callback);
+
+        // Visual feedback on click
+        btn.on('pointerdown', () => {
+            // Flash effect - brighten button
+            bg.clear();
+            bg.fillStyle(0xffffff, 0.3);
+            bg.fillRoundedRect(0, 0, w, h, 4);
+            bg.fillStyle(COLORS.buttonActive);
+            bg.fillRoundedRect(2, 2, w - 4, h - 4, 3);
+            bg.lineStyle(2, 0xffffff);
+            bg.strokeRoundedRect(0, 0, w, h, 4);
+            label.setScale(0.95);
+
+            // Call the actual callback
+            callback();
+
+            // Reset after short delay
+            this.time.delayedCall(100, () => {
+                label.setScale(1);
+            });
+        });
+
+        btn.on('pointerup', () => {
+            label.setScale(1);
+        });
+
+        btn.on('pointerover', () => {
+            if (!btn.isDisabled) {
+                bg.clear();
+                bg.fillStyle(COLORS.buttonActive);
+                bg.fillRoundedRect(0, 0, w, h, 4);
+                bg.lineStyle(1, COLORS.panelBorder);
+                bg.strokeRoundedRect(0, 0, w, h, 4);
+            }
+        });
+
+        btn.on('pointerout', () => {
+            if (!btn.isDisabled && !btn.isActive) {
+                bg.clear();
+                bg.fillStyle(COLORS.button);
+                bg.fillRoundedRect(0, 0, w, h, 4);
+                bg.lineStyle(1, COLORS.panelBorder);
+                bg.strokeRoundedRect(0, 0, w, h, 4);
+            }
+        });
+
         btn.bg = bg; btn.label = label; btn.w = w; btn.h = h;
+        btn.isDisabled = false;
+        btn.isActive = false;
         return btn;
     }
 
     updateButton(btn, enabled, active = false) {
+        btn.isDisabled = !enabled;
+        btn.isActive = active;
         btn.bg.clear();
-        btn.bg.fillStyle(active ? COLORS.buttonActive : (enabled ? COLORS.button : COLORS.buttonDisabled));
-        btn.bg.fillRoundedRect(0, 0, btn.w, btn.h, 4);
-        btn.bg.lineStyle(1, enabled ? COLORS.panelBorder : 0x4a4a5a);
-        btn.bg.strokeRoundedRect(0, 0, btn.w, btn.h, 4);
-        btn.label.setColor(enabled ? '#ffffff' : '#606060');
+
+        if (active) {
+            // Active state - highlighted with bright border
+            btn.bg.fillStyle(COLORS.buttonActive);
+            btn.bg.fillRoundedRect(0, 0, btn.w, btn.h, 4);
+            btn.bg.lineStyle(2, 0xffffff);
+            btn.bg.strokeRoundedRect(0, 0, btn.w, btn.h, 4);
+            btn.label.setColor('#ffffff');
+        } else if (enabled) {
+            // Normal enabled state
+            btn.bg.fillStyle(COLORS.button);
+            btn.bg.fillRoundedRect(0, 0, btn.w, btn.h, 4);
+            btn.bg.lineStyle(1, COLORS.panelBorder);
+            btn.bg.strokeRoundedRect(0, 0, btn.w, btn.h, 4);
+            btn.label.setColor('#ffffff');
+        } else {
+            // Disabled state
+            btn.bg.fillStyle(COLORS.buttonDisabled);
+            btn.bg.fillRoundedRect(0, 0, btn.w, btn.h, 4);
+            btn.bg.lineStyle(1, 0x4a4a5a);
+            btn.bg.strokeRoundedRect(0, 0, btn.w, btn.h, 4);
+            btn.label.setColor('#606060');
+        }
     }
 
     clickOrb() {

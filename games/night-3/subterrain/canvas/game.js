@@ -258,6 +258,17 @@ function generateMaps() {
 function addInternalWalls(sector) {
     const w = sector.width;
     const h = sector.height;
+    const centerX = Math.floor(w / 2);
+    const centerY = Math.floor(h / 2);
+
+    // Define corridors to doors (3 tiles wide paths from center to each edge)
+    const isInCorridor = (x, y) => {
+        // Vertical corridor (north-south through center)
+        if (Math.abs(x - centerX) <= 1) return true;
+        // Horizontal corridor (east-west through center)
+        if (Math.abs(y - centerY) <= 1) return true;
+        return false;
+    };
 
     // Add some random wall segments
     const numWalls = Math.floor((w * h) / 50);
@@ -270,7 +281,8 @@ function addInternalWalls(sector) {
         for (let j = 0; j < length; j++) {
             const wx = horizontal ? x + j : x;
             const wy = horizontal ? y : y + j;
-            if (wx > 0 && wx < w - 1 && wy > 0 && wy < h - 1) {
+            // Don't place walls in corridors leading to doors
+            if (wx > 0 && wx < w - 1 && wy > 0 && wy < h - 1 && !isInCorridor(wx, wy)) {
                 sector.tiles[wy][wx] = TILE.WALL;
             }
         }
@@ -575,7 +587,17 @@ function checkCollision(x, y, w, h) {
 
     for (let ty = top; ty <= bottom; ty++) {
         for (let tx = left; tx <= right; tx++) {
-            if (ty < 0 || ty >= sector.height || tx < 0 || tx >= sector.width) return true;
+            // Check bounds - but allow if we're moving toward a door at the edge
+            if (ty < 0 || ty >= sector.height || tx < 0 || tx >= sector.width) {
+                // Check if the adjacent in-bounds tile is a door
+                const clampedTy = Math.max(0, Math.min(sector.height - 1, ty));
+                const clampedTx = Math.max(0, Math.min(sector.width - 1, tx));
+                const nearbyTile = sector.tiles[clampedTy][clampedTx];
+                if (nearbyTile >= TILE.DOOR_HUB && nearbyTile <= TILE.DOOR_ESCAPE) {
+                    continue; // Allow movement near doors at edges
+                }
+                return true;
+            }
             const tile = sector.tiles[ty][tx];
             if (tile === TILE.WALL) return true;
         }
@@ -602,6 +624,7 @@ function checkDoorTransition() {
 
     if (doorMap[tile] && doorMap[tile] !== game.currentSector) {
         const newSector = doorMap[tile];
+        const previousSector = game.currentSector;
 
         // Check if escape pod requires keycard
         if (newSector === 'escape' && !game.hasKeycard) {
@@ -616,8 +639,20 @@ function checkDoorTransition() {
         game.sectorsVisited.add(newSector);
 
         const targetSector = sectors[newSector];
-        player.x = targetSector.spawnX;
-        player.y = targetSector.spawnY;
+
+        // Find the door leading back to where we came from and spawn near it
+        const returnDoorType = getDoorTypeForSector(previousSector);
+        const entryPos = findDoorPosition(targetSector, returnDoorType);
+
+        if (entryPos) {
+            // Offset player by 1 tile away from door to avoid re-triggering
+            player.x = (entryPos.x + entryPos.offsetX) * TILE_SIZE + TILE_SIZE / 2;
+            player.y = (entryPos.y + entryPos.offsetY) * TILE_SIZE + TILE_SIZE / 2;
+        } else {
+            // Fallback to center spawn
+            player.x = targetSector.spawnX;
+            player.y = targetSector.spawnY;
+        }
 
         // Sector transition effect
         floatingTexts.push({
@@ -633,6 +668,44 @@ function checkDoorTransition() {
         spawnEnemies(newSector);
         bloodSplatters = [];
     }
+}
+
+// Get the door tile type that leads to a given sector
+function getDoorTypeForSector(sectorName) {
+    const doorTypes = {
+        'hub': TILE.DOOR_HUB,
+        'storage': TILE.DOOR_STORAGE,
+        'medical': TILE.DOOR_MEDICAL,
+        'research': TILE.DOOR_RESEARCH,
+        'escape': TILE.DOOR_ESCAPE
+    };
+    return doorTypes[sectorName];
+}
+
+// Find position of a door in a sector and return entry offset direction
+function findDoorPosition(sector, doorType) {
+    for (let y = 0; y < sector.height; y++) {
+        for (let x = 0; x < sector.width; x++) {
+            if (sector.tiles[y][x] === doorType) {
+                // Calculate offset based on door edge position
+                let offsetX = 0, offsetY = 0;
+
+                // Door at top edge - enter from below
+                if (y === 0) offsetY = 1;
+                // Door at bottom edge - enter from above
+                else if (y === sector.height - 1) offsetY = -1;
+                // Door at left edge - enter from right
+                else if (x === 0) offsetX = 1;
+                // Door at right edge - enter from left
+                else if (x === sector.width - 1) offsetX = -1;
+                // Door in middle - default to below
+                else offsetY = 1;
+
+                return { x, y, offsetX, offsetY };
+            }
+        }
+    }
+    return null;
 }
 
 function attack() {

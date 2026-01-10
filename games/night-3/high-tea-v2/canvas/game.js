@@ -30,12 +30,65 @@ const COLORS = {
     bribe: '#9932cc'
 };
 
+// Tutorial system
+const tutorial = {
+    active: true,
+    step: 0,
+    steps: [
+        {
+            message: "Welcome to High Tea! Britain needs TEA, and you'll get it by trading OPIUM.",
+            highlight: null,
+            waitFor: 'click'
+        },
+        {
+            message: "Step 1: Buy OPIUM with your silver. Click the '15' button to buy 15 chests.",
+            highlight: 'buyOpium15',
+            waitFor: 'buyOpium'
+        },
+        {
+            message: "Great! Now sell your opium at a port. Click one of the trade offers on the map.",
+            highlight: 'offers',
+            waitFor: 'acceptOffer'
+        },
+        {
+            message: "Your ship is sailing! Wait for it to return with silver...",
+            highlight: null,
+            waitFor: 'shipReturn'
+        },
+        {
+            message: "Excellent! You earned silver. Now buy TEA - click '15' under Buy Tea.",
+            highlight: 'buyTea15',
+            waitFor: 'buyTea'
+        },
+        {
+            message: "Perfect! Your tea will be shipped when the clipper arrives (see timer bottom).",
+            highlight: 'quota',
+            waitFor: 'click'
+        },
+        {
+            message: "Tutorial complete! Keep trading: Buy Opium → Sell at Ports → Buy Tea → Ship to Britain!",
+            highlight: null,
+            waitFor: 'click'
+        }
+    ],
+    advance: function(trigger) {
+        if (!this.active) return;
+        const currentStep = this.steps[this.step];
+        if (currentStep && currentStep.waitFor === trigger) {
+            this.step++;
+            if (this.step >= this.steps.length) {
+                this.active = false;
+            }
+        }
+    }
+};
+
 // Game state
 const game = {
     year: 1830,
     month: 1,
     silver: 500,
-    opium: 0,
+    opium: 15, // Start with some opium for immediate action
     tea: 0,
     ships: 1,
     maxShips: 6,
@@ -199,6 +252,7 @@ function buyOpium(amount) {
         showMessage(`Bought ${amount} opium chests`);
         spawnFloatingText(`-${cost}`, 100, 75, COLORS.danger);
         spawnParticles(100, 130, COLORS.opium, 5);
+        tutorial.advance('buyOpium');
     } else {
         showMessage('Not enough silver!');
         screenFlash(COLORS.danger, 0.3);
@@ -214,6 +268,7 @@ function buyTea(amount) {
         showMessage(`Bought ${amount} tea chests`);
         spawnFloatingText(`-${cost}`, 100, 75, COLORS.danger);
         spawnParticles(100, 185, COLORS.tea, 5);
+        tutorial.advance('buyTea');
     } else {
         showMessage('Not enough silver!');
         screenFlash(COLORS.danger, 0.3);
@@ -256,6 +311,7 @@ function acceptOffer(offer) {
     });
 
     game.totalOpiumSold += offer.quantity;
+    tutorial.advance('acceptOffer');
 
     // Remove offer
     offers = offers.filter(o => o !== offer);
@@ -381,6 +437,15 @@ function spawnFloatingText(text, x, y, color) {
 
 // Handle click
 function handleClick(e) {
+    // Tutorial click-to-advance
+    if (tutorial.active) {
+        const currentStep = tutorial.steps[tutorial.step];
+        if (currentStep && currentStep.waitFor === 'click') {
+            tutorial.advance('click');
+            return;
+        }
+    }
+
     if (game.currentEvent) {
         // Check event choices
         const choiceY = 300;
@@ -557,6 +622,7 @@ function update(dt) {
                 showMessage(`Ship returned with ${ship.value} silver`);
                 spawnFloatingText(`+${ship.value}`, 100, 75, COLORS.tea);
                 spawnParticles(300, 550, COLORS.highlight, 8);
+                tutorial.advance('shipReturn');
             }
             ships.splice(i, 1);
         }
@@ -758,9 +824,103 @@ function draw() {
 
     ctx.restore();
 
+    // Draw tutorial overlay
+    if (tutorial.active && tutorial.step < tutorial.steps.length) {
+        drawTutorial();
+    }
+
     // Game over / Victory
     if (game.gameOver) {
         drawEndScreen();
+    }
+}
+
+// Draw tutorial overlay
+function drawTutorial() {
+    const step = tutorial.steps[tutorial.step];
+    if (!step) return;
+
+    // Draw overlay excluding highlighted areas
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+
+    if (step.highlight === 'buyOpium15') {
+        // Draw overlay around the left panel upper section
+        ctx.fillRect(210, 0, canvas.width - 210, canvas.height); // Right side
+        ctx.fillRect(0, 350, 210, canvas.height - 350); // Below opium section
+        // Highlight buyOpium15 button (x:85, y:300, w:45, h:30)
+        ctx.strokeStyle = COLORS.highlight;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(83, 298, 49, 34);
+    } else if (step.highlight === 'buyTea15') {
+        // Draw overlay except tea section
+        ctx.fillRect(210, 0, canvas.width - 210, canvas.height); // Right side
+        ctx.fillRect(0, 0, 210, 340); // Above tea section
+        ctx.fillRect(0, 520, 210, canvas.height - 520); // Below tea section
+        // Highlight buyTea15 button (x:85, y:420, w:45, h:30)
+        ctx.strokeStyle = COLORS.highlight;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(83, 418, 49, 34);
+    } else if (step.highlight === 'offers') {
+        // Draw overlay except the map area
+        ctx.fillRect(0, 0, 210, canvas.height); // Left panel
+        ctx.fillRect(210, 0, canvas.width - 210, 100); // Top strip
+        ctx.fillRect(210, 580, canvas.width - 210, 20); // Bottom strip
+    } else if (step.highlight === 'quota') {
+        // Draw overlay except quota panel
+        ctx.fillRect(0, 0, canvas.width, 560); // Above quota
+        ctx.fillRect(0, 560, 430, 80); // Left of quota
+        ctx.fillRect(760, 560, canvas.width - 760, 80); // Right of quota
+        // Highlight quota panel
+        ctx.strokeStyle = COLORS.highlight;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(435, 568, 305, 60);
+    } else {
+        // Full overlay for steps with no highlight
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Draw tutorial message box
+    const boxWidth = 500;
+    const boxHeight = 80;
+    const boxX = (canvas.width - boxWidth) / 2;
+    const boxY = 30;
+
+    ctx.fillStyle = COLORS.panelBg;
+    ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+    ctx.strokeStyle = COLORS.highlight;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+
+    // Message text
+    ctx.fillStyle = COLORS.text;
+    ctx.font = 'bold 16px Georgia';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Word wrap message
+    const words = step.message.split(' ');
+    let line = '';
+    let y = boxY + 30;
+    const maxWidth = boxWidth - 40;
+
+    for (let word of words) {
+        const testLine = line + word + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && line !== '') {
+            ctx.fillText(line.trim(), boxX + boxWidth / 2, y);
+            line = word + ' ';
+            y += 22;
+        } else {
+            line = testLine;
+        }
+    }
+    ctx.fillText(line.trim(), boxX + boxWidth / 2, y);
+
+    // "Click to continue" for click steps
+    if (step.waitFor === 'click') {
+        ctx.font = '14px Georgia';
+        ctx.fillStyle = COLORS.textLight;
+        ctx.fillText('(Click to continue)', boxX + boxWidth / 2, boxY + boxHeight - 15);
     }
 }
 

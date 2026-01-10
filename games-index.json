@@ -2446,5 +2446,23 @@
     "createdDate": "2026-01-10",
     "played": false,
     "playedDate": null
+  },
+  {
+    "id": "night-1/phaser-drill",
+    "night": "night-1",
+    "gameDir": "phaser-drill",
+    "framework": "phaser",
+    "name": "Deep Drill (Phaser)",
+    "genre": "mining",
+    "description": "Phaser-based Motherload-style mining game",
+    "polished": false,
+    "expanded": false,
+    "playable": true,
+    "rating": 3,
+    "screenshot": "screenshot.png",
+    "path": "games/night-1/phaser-drill/",
+    "createdDate": "2026-01-08",
+    "played": false,
+    "playedDate": null
   }
 ]

@@ -68,7 +68,7 @@ const game = {
     level: 1,
     xp: 0,
     xpToLevel: 15,
-    wave: 1,
+    wave: 1, // Now represents room number
     maxWave: 10,
     combo: 0,
     comboTimer: 0,
@@ -80,7 +80,7 @@ const game = {
     debugMode: false,
     fps: 60,
     lastFrameTime: 0,
-    // Wave announcement
+    // Room/wave announcement
     waveAnnounce: '',
     waveAnnounceTimer: 0,
     // ITERATION 59: Kill streak
@@ -88,7 +88,13 @@ const game = {
     lastAnnouncedStreak: 0,
     // ITERATION 80: Victory celebration
     victoryTimer: 0,
-    victoryConfetti: null
+    victoryConfetti: null,
+    // Room-based exploration (Feedback fix)
+    roomCleared: false,
+    doors: [],
+    roomGrid: { x: 0, y: 0 }, // Current room coordinates
+    visitedRooms: new Set(),
+    transitioning: false
 };
 
 // Input
@@ -1553,11 +1559,11 @@ function drawHUD() {
     // Ability icons at bottom center
     drawAbilityBar();
 
-    // EXPAND 9: Wave indicator
+    // EXPAND 9: Room indicator (changed from Wave for exploration mode)
     ctx.font = 'bold 14px Arial';
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'right';
-    ctx.fillText(`Wave ${game.wave}/${game.maxWave}`, canvas.width - 20, 30);
+    ctx.fillText(`Room ${game.wave}/${game.maxWave}`, canvas.width - 20, 30);
     ctx.fillText(`Enemies: ${enemies.length}${game.bossActive ? ' + BOSS' : ''}`, canvas.width - 20, 50);
 
     // EXPAND 10: Minimap
@@ -3058,12 +3064,13 @@ function killEnemy(index) {
     // Screen shake scales with enemy size - bigger kills = more shake
     game.screenShake = Math.max(game.screenShake, 0.1 + 0.15 * sizeMult);
 
-    // Check wave complete
-    if (enemies.length === 0 && !game.bossActive) {
-        // Wave complete celebration
+    // Check room complete
+    if (enemies.length === 0 && !game.bossActive && !game.roomCleared) {
+        // Room complete - open doors for exploration
+        game.roomCleared = true;
         game.screenFlash = 0.3;
         game.screenFlashColor = '#50ff80';
-        game.waveAnnounce = 'WAVE ' + game.wave + ' CLEARED!';
+        game.waveAnnounce = 'ROOM CLEARED!';
         game.waveAnnounceTimer = 1.5;
 
         // Victory particle burst from center
@@ -3083,25 +3090,175 @@ function killEnemy(index) {
             }
         }
 
+        // Open doors when room is cleared
+        openRoomDoors();
+
         if (game.wave >= game.maxWave) {
-            // EXPAND 16: Spawn boss
-            setTimeout(() => {
-                if (game.state === 'playing') {
-                    spawnBoss();
-                }
-            }, 2000);
-        } else {
-            game.wave++;
-            // Wave announcement
-            setTimeout(() => {
-                announceWave();
-            }, 1500);
-            setTimeout(() => {
-                if (game.state === 'playing') {
-                    spawnEnemies();
-                }
-            }, 2500);
+            // Final room leads to boss
+            game.waveAnnounce = 'BOSS DOOR OPENED!';
         }
+    }
+}
+
+// Room-based exploration functions
+function openRoomDoors() {
+    game.doors = [];
+
+    // Determine which doors to open based on room position
+    const canGoNorth = game.roomGrid.y > 0 || Math.random() > 0.3;
+    const canGoSouth = game.roomGrid.y < 3 || Math.random() > 0.3;
+    const canGoEast = game.roomGrid.x < 3 || Math.random() > 0.3;
+    const canGoWest = game.roomGrid.x > 0 || Math.random() > 0.3;
+
+    // At least 2 doors in early rooms, 1 door for final room
+    const doorCount = game.wave >= game.maxWave ? 1 : Math.max(2, Math.floor(Math.random() * 3) + 1);
+    const possibleDoors = [];
+
+    if (canGoNorth) possibleDoors.push({ dir: 'north', x: canvas.width / 2, y: 30, dx: 0, dy: -1 });
+    if (canGoSouth) possibleDoors.push({ dir: 'south', x: canvas.width / 2, y: canvas.height - 30, dx: 0, dy: 1 });
+    if (canGoEast) possibleDoors.push({ dir: 'east', x: canvas.width - 30, y: canvas.height / 2, dx: 1, dy: 0 });
+    if (canGoWest) possibleDoors.push({ dir: 'west', x: 30, y: canvas.height / 2, dx: -1, dy: 0 });
+
+    // Shuffle and pick doors
+    possibleDoors.sort(() => Math.random() - 0.5);
+    for (let i = 0; i < Math.min(doorCount, possibleDoors.length); i++) {
+        game.doors.push(possibleDoors[i]);
+    }
+
+    // Ensure at least one exit (for progression)
+    if (game.doors.length === 0 && possibleDoors.length > 0) {
+        game.doors.push(possibleDoors[0]);
+    }
+}
+
+function checkDoorTransition() {
+    if (!game.roomCleared || game.transitioning) return;
+
+    for (const door of game.doors) {
+        const doorDist = Math.sqrt((player.x - door.x) ** 2 + (player.y - door.y) ** 2);
+        if (doorDist < 60) {
+            transitionToNextRoom(door);
+            return;
+        }
+    }
+}
+
+function transitionToNextRoom(door) {
+    game.transitioning = true;
+    game.roomCleared = false;
+
+    // Move to next room in grid
+    game.roomGrid.x += door.dx;
+    game.roomGrid.y += door.dy;
+    game.visitedRooms.add(`${game.roomGrid.x},${game.roomGrid.y}`);
+
+    // Flash screen
+    game.screenFlash = 0.5;
+    game.screenFlashColor = '#000000';
+
+    // Clear bullets
+    playerBullets = [];
+    enemyBullets = [];
+    game.doors = [];
+
+    // Position player at opposite side
+    if (door.dir === 'north') {
+        player.y = canvas.height - 80;
+        player.x = canvas.width / 2;
+    } else if (door.dir === 'south') {
+        player.y = 80;
+        player.x = canvas.width / 2;
+    } else if (door.dir === 'east') {
+        player.x = 80;
+        player.y = canvas.height / 2;
+    } else if (door.dir === 'west') {
+        player.x = canvas.width - 80;
+        player.y = canvas.height / 2;
+    }
+
+    // Increment room counter
+    game.wave++;
+
+    // Spawn new enemies after transition
+    setTimeout(() => {
+        game.transitioning = false;
+        if (game.state === 'playing') {
+            if (game.wave > game.maxWave) {
+                spawnBoss();
+            } else {
+                announceRoom();
+                spawnEnemies();
+            }
+        }
+    }, 500);
+}
+
+function announceRoom() {
+    const roomNames = ['', 'Entrance', 'Forest Path', 'Clearing', 'Dense Woods', 'Ancient Grove',
+                       'Hidden Path', 'Crystal Cave', 'Dark Hollow', 'Boss Approach', 'Final Chamber'];
+    game.waveAnnounce = `Room ${game.wave}: ${roomNames[game.wave] || 'Unknown'}`;
+    game.waveAnnounceTimer = 2;
+
+    if (game.wave === game.maxWave) {
+        game.waveAnnounce = 'FINAL ROOM - BOSS AHEAD!';
+        game.screenFlash = 0.2;
+        game.screenFlashColor = '#ff8000';
+    }
+}
+
+function drawDoors() {
+    if (!game.roomCleared) return;
+
+    for (const door of game.doors) {
+        ctx.save();
+        ctx.translate(door.x, door.y);
+
+        // Door glow
+        const pulse = Math.sin(game.time * 4) * 0.3 + 0.7;
+        ctx.fillStyle = `rgba(80, 255, 128, ${pulse * 0.5})`;
+        ctx.beginPath();
+        ctx.arc(0, 0, 45, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Door frame
+        ctx.fillStyle = '#3a5a4a';
+        if (door.dir === 'north' || door.dir === 'south') {
+            ctx.fillRect(-40, -15, 80, 30);
+        } else {
+            ctx.fillRect(-15, -40, 30, 80);
+        }
+
+        // Door opening
+        ctx.fillStyle = '#1a2a35';
+        if (door.dir === 'north' || door.dir === 'south') {
+            ctx.fillRect(-30, -10, 60, 20);
+        } else {
+            ctx.fillRect(-10, -30, 20, 60);
+        }
+
+        // Arrow indicator
+        ctx.fillStyle = '#50ff80';
+        ctx.beginPath();
+        if (door.dir === 'north') {
+            ctx.moveTo(0, -25);
+            ctx.lineTo(10, -10);
+            ctx.lineTo(-10, -10);
+        } else if (door.dir === 'south') {
+            ctx.moveTo(0, 25);
+            ctx.lineTo(10, 10);
+            ctx.lineTo(-10, 10);
+        } else if (door.dir === 'east') {
+            ctx.moveTo(25, 0);
+            ctx.lineTo(10, 10);
+            ctx.lineTo(10, -10);
+        } else {
+            ctx.moveTo(-25, 0);
+            ctx.lineTo(-10, 10);
+            ctx.lineTo(-10, -10);
+        }
+        ctx.fill();
+
+        ctx.restore();
     }
 }
 
@@ -3576,6 +3733,7 @@ function gameLoop(timestamp) {
     // Update
     if (game.state === 'playing') {
         updatePlayer(dt);
+        checkDoorTransition();
         updateEnemies(dt);
         updateBoss(dt);
         updateBullets(dt);
@@ -3611,6 +3769,7 @@ function gameLoop(timestamp) {
     }
 
     drawBackground();
+    drawDoors();
 
     // ITERATION 77: Draw boundary warning
     drawBoundaryWarning();
@@ -3790,7 +3949,7 @@ function gameLoop(timestamp) {
         ctx.shadowBlur = 0;
         ctx.font = '20px Arial';
         ctx.fillStyle = '#ff8080';
-        ctx.fillText(`Wave ${game.wave}  •  Level ${game.level}  •  ${game.crystals} Crystals`, canvas.width / 2, canvas.height / 2 + 10);
+        ctx.fillText(`Room ${game.wave}  •  Level ${game.level}  •  ${game.crystals} Crystals`, canvas.width / 2, canvas.height / 2 + 10);
 
         ctx.restore();
 

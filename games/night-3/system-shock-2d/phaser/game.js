@@ -1018,8 +1018,15 @@ class GameScene extends Phaser.Scene {
     updateLighting() {
         this.darkness.clear();
 
-        // Draw darkness overlay
-        this.darkness.fillStyle(0x000000, 0.85);
+        // Much lighter ambient darkness (0.35 instead of 0.85)
+        const baseDarkness = 0.35;
+
+        // Create gradual darkness effect - darker at edges, lighter near player
+        const playerScreenX = this.player.x - this.cameras.main.scrollX;
+        const playerScreenY = this.player.y - this.cameras.main.scrollY;
+
+        // Draw base darkness overlay (much lighter than before)
+        this.darkness.fillStyle(0x000000, baseDarkness);
         this.darkness.fillRect(
             this.cameras.main.scrollX,
             this.cameras.main.scrollY,
@@ -1027,34 +1034,60 @@ class GameScene extends Phaser.Scene {
             GAME_HEIGHT
         );
 
-        // Cut out flashlight cone
+        // If flashlight is on, draw a bright cone
         if (this.playerData.flashlightOn) {
-            this.darkness.fillStyle(0x000000, 0);
-            this.darkness.beginPath();
-            this.darkness.moveTo(this.player.x, this.player.y);
+            // Draw flashlight cone with graduated light (multiple layers)
+            const coneLength = 400;
+            const coneWidth = Math.PI / 2.5; // Wider cone
 
-            const coneLength = 350;
-            const coneWidth = Math.PI / 3;
-            const startAngle = this.player.rotation - coneWidth / 2;
-            const endAngle = this.player.rotation + coneWidth / 2;
+            // Outer dim light
+            this.darkness.fillStyle(0x1a1a1a, 0.5);
+            this.drawLightCone(coneLength, coneWidth);
 
-            for (let a = startAngle; a <= endAngle; a += 0.05) {
-                const x = this.player.x + Math.cos(a) * coneLength;
-                const y = this.player.y + Math.sin(a) * coneLength;
-                this.darkness.lineTo(x, y);
-            }
+            // Middle light
+            this.darkness.fillStyle(0x2a2a2a, 0.4);
+            this.drawLightCone(coneLength * 0.8, coneWidth * 0.85);
 
-            this.darkness.closePath();
+            // Inner bright light
+            this.darkness.fillStyle(0x3a3a3a, 0.35);
+            this.drawLightCone(coneLength * 0.6, coneWidth * 0.7);
 
-            // Use blend mode to cut out light
-            const savedComposite = this.darkness.defaultFillAlpha;
-            this.darkness.fillStyle(0x000000, 0);
-            this.darkness.fill();
+            // Core light (brightest)
+            this.darkness.fillStyle(0x4a4a4a, 0.3);
+            this.drawLightCone(coneLength * 0.4, coneWidth * 0.5);
         }
 
-        // Ambient light around player
-        this.darkness.fillStyle(0x000000, 0);
-        this.darkness.fillCircle(this.player.x, this.player.y, this.playerData.flashlightOn ? 60 : 40);
+        // Large ambient light around player (always visible)
+        const ambientRadius = this.playerData.flashlightOn ? 120 : 80;
+
+        // Outer ambient glow
+        this.darkness.fillStyle(0x1a1a1a, 0.3);
+        this.darkness.fillCircle(this.player.x, this.player.y, ambientRadius);
+
+        // Inner ambient glow
+        this.darkness.fillStyle(0x2a2a2a, 0.25);
+        this.darkness.fillCircle(this.player.x, this.player.y, ambientRadius * 0.7);
+
+        // Core ambient light
+        this.darkness.fillStyle(0x3a3a3a, 0.2);
+        this.darkness.fillCircle(this.player.x, this.player.y, ambientRadius * 0.4);
+    }
+
+    drawLightCone(length, width) {
+        this.darkness.beginPath();
+        this.darkness.moveTo(this.player.x, this.player.y);
+
+        const startAngle = this.player.rotation - width / 2;
+        const endAngle = this.player.rotation + width / 2;
+
+        for (let a = startAngle; a <= endAngle; a += 0.05) {
+            const x = this.player.x + Math.cos(a) * length;
+            const y = this.player.y + Math.sin(a) * length;
+            this.darkness.lineTo(x, y);
+        }
+
+        this.darkness.closePath();
+        this.darkness.fill();
     }
 
     updateUI() {

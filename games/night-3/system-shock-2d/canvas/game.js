@@ -35,7 +35,7 @@ const COLORS = {
     TEXT_RED: '#cc6060',
     TEXT_CYAN: '#60cccc',
     FLASHLIGHT: 'rgba(255, 240, 200, 0.15)',
-    DARKNESS: 'rgba(0, 0, 0, 0.85)'
+    DARKNESS: 'rgba(0, 0, 0, 0.55)'
 };
 
 // Game state
@@ -1332,15 +1332,15 @@ function renderLighting() {
         // Cone shape
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        const coneLength = 350;
-        const coneWidth = Math.PI / 3; // 60 degrees
+        const coneLength = 500;
+        const coneWidth = Math.PI / 2.5; // 72 degrees (wider cone)
         ctx.arc(0, 0, coneLength, -coneWidth/2, coneWidth/2);
         ctx.closePath();
 
         // Gradient for soft edge
         const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, coneLength);
         gradient.addColorStop(0, 'rgba(255,255,255,1)');
-        gradient.addColorStop(0.7, 'rgba(255,255,255,0.8)');
+        gradient.addColorStop(0.8, 'rgba(255,255,255,0.9)');
         gradient.addColorStop(1, 'rgba(255,255,255,0)');
 
         ctx.fillStyle = gradient;
@@ -1348,27 +1348,29 @@ function renderLighting() {
 
         ctx.restore();
 
-        // Small ambient light around player
+        // Larger ambient light around player
         ctx.save();
         ctx.globalCompositeOperation = 'destination-out';
-        const ambientGradient = ctx.createRadialGradient(player.x, player.y, 0, player.x, player.y, 60);
-        ambientGradient.addColorStop(0, 'rgba(255,255,255,0.5)');
+        const ambientGradient = ctx.createRadialGradient(player.x, player.y, 0, player.x, player.y, 150);
+        ambientGradient.addColorStop(0, 'rgba(255,255,255,0.7)');
+        ambientGradient.addColorStop(0.5, 'rgba(255,255,255,0.3)');
         ambientGradient.addColorStop(1, 'rgba(255,255,255,0)');
         ctx.fillStyle = ambientGradient;
         ctx.beginPath();
-        ctx.arc(player.x, player.y, 60, 0, Math.PI * 2);
+        ctx.arc(player.x, player.y, 150, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
     } else {
-        // Just small ambient light when flashlight off
+        // Larger ambient light when flashlight off
         ctx.save();
         ctx.globalCompositeOperation = 'destination-out';
-        const ambientGradient = ctx.createRadialGradient(player.x, player.y, 0, player.x, player.y, 40);
-        ambientGradient.addColorStop(0, 'rgba(255,255,255,0.3)');
+        const ambientGradient = ctx.createRadialGradient(player.x, player.y, 0, player.x, player.y, 100);
+        ambientGradient.addColorStop(0, 'rgba(255,255,255,0.5)');
+        ambientGradient.addColorStop(0.5, 'rgba(255,255,255,0.2)');
         ambientGradient.addColorStop(1, 'rgba(255,255,255,0)');
         ctx.fillStyle = ambientGradient;
         ctx.beginPath();
-        ctx.arc(player.x, player.y, 40, 0, Math.PI * 2);
+        ctx.arc(player.x, player.y, 100, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
     }

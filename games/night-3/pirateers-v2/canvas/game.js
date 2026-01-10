@@ -30,7 +30,7 @@ const COLORS = {
 
 // Game state
 const game = {
-    state: 'sailing', // sailing, base
+    state: 'title', // title, sailing, base
     day: 1,
     dayTimer: 180, // 3 minutes
     gold: 100,
@@ -109,14 +109,101 @@ const keys = {};
 // Initialize
 function init() {
     setupInput();
-    spawnEnemies();
-    addMessage("Day " + game.day + " - Set sail!");
+    // Don't spawn enemies yet - wait for title screen to be dismissed
     requestAnimationFrame(gameLoop);
+}
+
+// Title screen
+function renderTitleScreen() {
+    // Ocean background
+    ctx.fillStyle = COLORS.OCEAN;
+    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    // Ocean pattern
+    ctx.strokeStyle = COLORS.OCEAN_DARK;
+    ctx.lineWidth = 2;
+    const time = Date.now() * 0.001;
+    for (let y = 0; y < GAME_HEIGHT; y += 150) {
+        for (let x = 0; x < GAME_WIDTH; x += 150) {
+            ctx.beginPath();
+            ctx.arc(x + Math.sin(time + y * 0.01) * 20, y, 40, 0, Math.PI * 1.5);
+            ctx.stroke();
+        }
+    }
+
+    // Title
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 72px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('PIRATEERS', GAME_WIDTH / 2, 150);
+
+    // Subtitle
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '24px serif';
+    ctx.fillText('Naval Combat on the High Seas', GAME_WIDTH / 2, 210);
+
+    // Draw a decorative ship
+    ctx.save();
+    ctx.translate(GAME_WIDTH / 2, 350);
+    ctx.scale(2, 2);
+    // Hull
+    ctx.fillStyle = COLORS.PLAYER_HULL;
+    ctx.beginPath();
+    ctx.moveTo(40, 0);
+    ctx.lineTo(-30, -20);
+    ctx.lineTo(-40, 0);
+    ctx.lineTo(-30, 20);
+    ctx.closePath();
+    ctx.fill();
+    // Sail
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(-10, -35);
+    ctx.lineTo(-10, 35);
+    ctx.lineTo(20, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // Controls box
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(GAME_WIDTH / 2 - 200, 450, 400, 180);
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(GAME_WIDTH / 2 - 200, 450, 400, 180);
+
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 20px monospace';
+    ctx.fillText('CONTROLS', GAME_WIDTH / 2, 480);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '18px monospace';
+    ctx.fillText('W / ↑  -  Increase Speed', GAME_WIDTH / 2, 515);
+    ctx.fillText('S / ↓  -  Decrease Speed', GAME_WIDTH / 2, 545);
+    ctx.fillText('A / ←  -  Turn Left', GAME_WIDTH / 2, 575);
+    ctx.fillText('D / →  -  Turn Right', GAME_WIDTH / 2, 605);
+    ctx.fillText('SPACE  -  Fire Cannons', GAME_WIDTH / 2, 635);
+
+    // Start prompt (pulsing)
+    const pulse = Math.sin(Date.now() * 0.005) * 0.3 + 0.7;
+    ctx.fillStyle = `rgba(255, 215, 0, ${pulse})`;
+    ctx.font = 'bold 28px serif';
+    ctx.fillText('Press any key or click to start', GAME_WIDTH / 2, GAME_HEIGHT - 50);
 }
 
 function setupInput() {
     document.addEventListener('keydown', (e) => {
         keys[e.key.toLowerCase()] = true;
+
+        // Start game from title screen
+        if (game.state === 'title') {
+            game.state = 'sailing';
+            spawnEnemies();
+            addMessage("Day " + game.day + " - Set sail!");
+            return;
+        }
+
         if (e.key === ' ') {
             e.preventDefault();
             fireCanons();
@@ -128,6 +215,15 @@ function setupInput() {
 
     document.addEventListener('keyup', (e) => {
         keys[e.key.toLowerCase()] = false;
+    });
+
+    // Also start on click
+    canvas.addEventListener('click', () => {
+        if (game.state === 'title') {
+            game.state = 'sailing';
+            spawnEnemies();
+            addMessage("Day " + game.day + " - Set sail!");
+        }
     });
 }
 
@@ -170,11 +266,15 @@ function gameLoop(currentTime) {
     const delta = Math.min((currentTime - lastTime) / 1000, 0.1);
     lastTime = currentTime;
 
-    if (game.state === 'sailing') {
+    if (game.state === 'title') {
+        renderTitleScreen();
+    } else if (game.state === 'sailing') {
         update(delta);
+        render();
+    } else {
+        render();
     }
 
-    render();
     requestAnimationFrame(gameLoop);
 }
 

@@ -7,6 +7,7 @@ const ctx = canvas.getContext('2d');
 const TILE_SIZE = 16;
 const MAP_WIDTH = 50;
 const MAP_HEIGHT = 50;
+const CAMERA_ZOOM = 1.5; // Zoom in for better visibility
 
 // Colors - Dark fantasy palette (Stoneshard inspired)
 const COLORS = {
@@ -375,15 +376,28 @@ function updatePlayer(dt) {
         dx /= len;
         dy /= len;
 
-        const newX = player.x + dx * speed * dt;
-        const newY = player.y + dy * speed * dt;
+        // Move player with circular collision and sliding
+        let newX = player.x + dx * speed * dt;
+        let newY = player.y + dy * speed * dt;
 
-        if (canMove(newX, player.y, player.width, player.height)) {
-            player.x = newX;
+        // Use circular collider centered on player
+        const playerRadius = 6; // Smaller than player.width/2 for easier navigation
+        const centerX = newX + player.width / 2;
+        const centerY = newY + player.height / 2;
+
+        const collision = canMoveCircular(centerX, centerY, playerRadius);
+        if (collision.blocked) {
+            // Apply push-out for sliding effect
+            newX += collision.pushX;
+            newY += collision.pushY;
         }
-        if (canMove(player.x, newY, player.width, player.height)) {
-            player.y = newY;
-        }
+
+        // Final bounds check
+        newX = Math.max(playerRadius, Math.min(MAP_WIDTH * TILE_SIZE - playerRadius - player.width, newX));
+        newY = Math.max(playerRadius, Math.min(MAP_HEIGHT * TILE_SIZE - playerRadius - player.height, newY));
+
+        player.x = newX;
+        player.y = newY;
 
         // Stamina drain while sprinting
         if (keys.shift && player.stamina > 0) {
@@ -408,13 +422,68 @@ function updatePlayer(dt) {
         player.attackCooldown -= dt;
     }
 
-    // Update camera
-    game.camera.x = player.x - canvas.width / 2;
-    game.camera.y = player.y - canvas.height / 2;
-    game.camera.x = Math.max(0, Math.min(MAP_WIDTH * TILE_SIZE - canvas.width, game.camera.x));
-    game.camera.y = Math.max(0, Math.min(MAP_HEIGHT * TILE_SIZE - canvas.height, game.camera.y));
+    // Update camera (with zoom - smaller viewport means zoomed in)
+    const viewWidth = canvas.width / CAMERA_ZOOM;
+    const viewHeight = canvas.height / CAMERA_ZOOM;
+    game.camera.x = player.x - viewWidth / 2;
+    game.camera.y = player.y - viewHeight / 2;
+    game.camera.x = Math.max(0, Math.min(MAP_WIDTH * TILE_SIZE - viewWidth, game.camera.x));
+    game.camera.y = Math.max(0, Math.min(MAP_HEIGHT * TILE_SIZE - viewHeight, game.camera.y));
 }
 
+// Circular collision check with push-out for sliding
+function canMoveCircular(cx, cy, radius) {
+    // Check center tile and surrounding tiles
+    const checkRadius = Math.ceil(radius / TILE_SIZE) + 1;
+    const centerTileX = Math.floor(cx / TILE_SIZE);
+    const centerTileY = Math.floor(cy / TILE_SIZE);
+
+    for (let ty = centerTileY - checkRadius; ty <= centerTileY + checkRadius; ty++) {
+        for (let tx = centerTileX - checkRadius; tx <= centerTileX + checkRadius; tx++) {
+            if (tx < 0 || tx >= MAP_WIDTH || ty < 0 || ty >= MAP_HEIGHT) {
+                // Check distance to map boundary
+                const nearestX = Math.max(0, Math.min(MAP_WIDTH * TILE_SIZE, cx));
+                const nearestY = Math.max(0, Math.min(MAP_HEIGHT * TILE_SIZE, cy));
+                if (Math.hypot(cx - nearestX, cy - nearestY) < radius) {
+                    return { blocked: true, pushX: 0, pushY: 0 };
+                }
+                continue;
+            }
+
+            const t = map[ty][tx].terrain;
+            if (t === TERRAIN.WALL || t === TERRAIN.WATER || t === TERRAIN.TREE ||
+                t === TERRAIN.ROCK || t === TERRAIN.BUILDING || t === TERRAIN.ROOF || t === TERRAIN.FENCE) {
+                // Tile rectangle
+                const tileLeft = tx * TILE_SIZE;
+                const tileRight = (tx + 1) * TILE_SIZE;
+                const tileTop = ty * TILE_SIZE;
+                const tileBottom = (ty + 1) * TILE_SIZE;
+
+                // Find nearest point on tile to circle center
+                const nearestX = Math.max(tileLeft, Math.min(tileRight, cx));
+                const nearestY = Math.max(tileTop, Math.min(tileBottom, cy));
+
+                const dist = Math.hypot(cx - nearestX, cy - nearestY);
+                if (dist < radius) {
+                    // Calculate push direction
+                    const overlap = radius - dist;
+                    if (dist > 0) {
+                        const pushX = (cx - nearestX) / dist * overlap;
+                        const pushY = (cy - nearestY) / dist * overlap;
+                        return { blocked: true, pushX, pushY };
+                    } else {
+                        // Circle center inside tile, push out in most open direction
+                        return { blocked: true, pushX: 0, pushY: -overlap };
+                    }
+                }
+            }
+        }
+    }
+
+    return { blocked: false, pushX: 0, pushY: 0 };
+}
+
+// Legacy function for enemies (keep rectangular)
 function canMove(x, y, w, h) {
     const tiles = [
         { x: Math.floor(x / TILE_SIZE), y: Math.floor(y / TILE_SIZE) },
@@ -572,11 +641,18 @@ function draw() {
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Apply camera zoom for game world rendering
+    ctx.save();
+    ctx.scale(CAMERA_ZOOM, CAMERA_ZOOM);
+
     drawMap();
     drawItems();
     drawEntities();
     drawPlayer();
     drawDamageNumbers();
+
+    ctx.restore(); // Restore to draw UI at normal scale
+
     drawUI();
 
     if (game.dialogueActive) {
@@ -589,10 +665,12 @@ function draw() {
 }
 
 function drawMap() {
+    const viewWidth = canvas.width / CAMERA_ZOOM;
+    const viewHeight = canvas.height / CAMERA_ZOOM;
     const startX = Math.floor(game.camera.x / TILE_SIZE);
     const startY = Math.floor(game.camera.y / TILE_SIZE);
-    const endX = Math.min(MAP_WIDTH, startX + Math.ceil(canvas.width / TILE_SIZE) + 2);
-    const endY = Math.min(MAP_HEIGHT, startY + Math.ceil(canvas.height / TILE_SIZE) + 2);
+    const endX = Math.min(MAP_WIDTH, startX + Math.ceil(viewWidth / TILE_SIZE) + 2);
+    const endY = Math.min(MAP_HEIGHT, startY + Math.ceil(viewHeight / TILE_SIZE) + 2);
 
     // First pass: ground tiles
     for (let y = Math.max(0, startY); y < endY; y++) {
@@ -1341,6 +1419,23 @@ function drawUI() {
     ctx.fillStyle = '#fff';
     ctx.fillRect(mmX + player.x * mmScale, mmY + player.y * mmScale, 3, 3);
 
+    // Quest target markers on minimap and screen arrow
+    for (const quest of game.quests) {
+        if (quest.current >= quest.count) continue; // Quest complete
+
+        // Find enemies matching quest target
+        for (const enemy of enemies) {
+            if (enemy.type === quest.target) {
+                // Draw on minimap (yellow dot)
+                ctx.fillStyle = COLORS.GOLD;
+                ctx.fillRect(mmX + enemy.x * mmScale - 1, mmY + enemy.y * mmScale - 1, 4, 4);
+            }
+        }
+    }
+
+    // Draw arrow pointing to nearest quest target (edge of screen indicator)
+    drawQuestArrow();
+
     // Message popup
     if (messageTimer > 0) {
         const msgWidth = ctx.measureText(messageText).width + 40;
@@ -1361,6 +1456,86 @@ function drawUI() {
     ctx.fillStyle = '#444';
     ctx.font = '9px Arial';
     ctx.fillText('WASD: Move | Space: Attack | E: Interact', 145, panelY + 62);
+}
+
+// Quest arrow indicator pointing toward nearest quest target
+function drawQuestArrow() {
+    if (game.quests.length === 0) return;
+
+    let nearestTarget = null;
+    let nearestDist = Infinity;
+
+    // Find nearest quest target enemy
+    for (const quest of game.quests) {
+        if (quest.current >= quest.count) continue;
+
+        for (const enemy of enemies) {
+            if (enemy.type === quest.target) {
+                const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
+                if (dist < nearestDist) {
+                    nearestDist = dist;
+                    nearestTarget = enemy;
+                }
+            }
+        }
+    }
+
+    if (!nearestTarget) return;
+
+    // Check if target is off screen
+    const viewWidth = canvas.width / CAMERA_ZOOM;
+    const viewHeight = canvas.height / CAMERA_ZOOM;
+    const screenX = (nearestTarget.x - game.camera.x) * CAMERA_ZOOM;
+    const screenY = (nearestTarget.y - game.camera.y) * CAMERA_ZOOM;
+
+    // If on screen, don't show arrow
+    if (screenX > 50 && screenX < canvas.width - 50 &&
+        screenY > 100 && screenY < canvas.height - 150) {
+        return;
+    }
+
+    // Calculate arrow position at edge of screen
+    const angle = Math.atan2(nearestTarget.y - player.y, nearestTarget.x - player.x);
+    const arrowDist = 120;
+    const centerX = canvas.width / 2;
+    const centerY = (canvas.height - 70) / 2; // Account for UI panel
+
+    let arrowX = centerX + Math.cos(angle) * arrowDist;
+    let arrowY = centerY + Math.sin(angle) * arrowDist;
+
+    // Clamp to screen edges
+    arrowX = Math.max(40, Math.min(canvas.width - 40, arrowX));
+    arrowY = Math.max(100, Math.min(canvas.height - 130, arrowY));
+
+    // Draw arrow
+    ctx.save();
+    ctx.translate(arrowX, arrowY);
+    ctx.rotate(angle);
+
+    // Arrow shape
+    ctx.fillStyle = COLORS.GOLD;
+    ctx.beginPath();
+    ctx.moveTo(15, 0);
+    ctx.lineTo(-8, -10);
+    ctx.lineTo(-4, 0);
+    ctx.lineTo(-8, 10);
+    ctx.closePath();
+    ctx.fill();
+
+    // Arrow outline
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.restore();
+
+    // Distance indicator
+    const distText = Math.floor(nearestDist / TILE_SIZE) + 'm';
+    ctx.fillStyle = COLORS.GOLD;
+    ctx.font = 'bold 10px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(distText, arrowX, arrowY + 25);
+    ctx.textAlign = 'left';
 }
 
 function drawDialogue() {

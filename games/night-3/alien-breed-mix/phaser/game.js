@@ -458,16 +458,25 @@ class GameScene extends Phaser.Scene {
         this.player.keys = { green: false, blue: false, yellow: false, red: false };
         this.player.weapons = ['pistol'];
         this.player.currentWeapon = 'pistol';
-        this.player.ammo = WEAPONS.pistol.magSize;
+        // Track ammo per weapon instead of globally
+        this.player.weaponAmmo = {
+            pistol: WEAPONS.pistol.magSize,
+            shotgun: WEAPONS.shotgun.magSize,
+            smg: WEAPONS.smg.magSize,
+            rifle: WEAPONS.rifle.magSize,
+            plasma: WEAPONS.plasma.magSize
+        };
+        this.player.ammo = this.player.weaponAmmo.pistol;
         this.player.maxAmmo = WEAPONS.pistol.magSize;
         this.player.fireTimer = 0;
         this.player.reloading = false;
         this.player.reloadTimer = 0;
+        this.player.reloadProgress = 0;
         this.player.invulnTimer = 0;
     }
 
     generateLevel() {
-        // Initialize with void
+        // Initialize with void (all walls)
         for (let y = 0; y < MAP_HEIGHT; y++) {
             this.levelMap[y] = [];
             for (let x = 0; x < MAP_WIDTH; x++) {
@@ -475,52 +484,54 @@ class GameScene extends Phaser.Scene {
             }
         }
 
-        // Generate rooms procedurally
+        // Generate rooms procedurally with better constraints
         const numRooms = 6 + this.deck * 2;
         this.rooms = [];
+        const maxAttempts = 100;
 
-        for (let i = 0; i < numRooms; i++) {
+        for (let attempt = 0; attempt < maxAttempts && this.rooms.length < numRooms; attempt++) {
             const w = 5 + Math.floor(Math.random() * 4);
             const h = 4 + Math.floor(Math.random() * 3);
-            const x = 2 + Math.floor(Math.random() * (MAP_WIDTH - w - 4));
-            const y = 2 + Math.floor(Math.random() * (MAP_HEIGHT - h - 4));
+            // Ensure rooms are well within bounds (leaving margin for walls)
+            const x = 3 + Math.floor(Math.random() * (MAP_WIDTH - w - 6));
+            const y = 3 + Math.floor(Math.random() * (MAP_HEIGHT - h - 6));
+
+            // Clamp to safe bounds
+            const safeX = Math.max(3, Math.min(x, MAP_WIDTH - w - 3));
+            const safeY = Math.max(3, Math.min(y, MAP_HEIGHT - h - 3));
 
             let overlaps = false;
             for (const room of this.rooms) {
-                if (x < room.x + room.w + 2 && x + w + 2 > room.x &&
-                    y < room.y + room.h + 2 && y + h + 2 > room.y) {
+                // Check with larger buffer to ensure corridors have room
+                if (safeX < room.x + room.w + 3 && safeX + w + 3 > room.x &&
+                    safeY < room.y + room.h + 3 && safeY + h + 3 > room.y) {
                     overlaps = true;
                     break;
                 }
             }
 
             if (!overlaps) {
-                this.rooms.push({ x, y, w, h });
+                this.rooms.push({ x: safeX, y: safeY, w, h });
             }
         }
 
-        // Carve rooms
+        // Ensure at least one room exists
+        if (this.rooms.length === 0) {
+            this.rooms.push({ x: 5, y: 5, w: 8, h: 6 });
+        }
+
+        // Carve rooms FIRST (set floor tiles)
         this.rooms.forEach(room => {
-            for (let y = room.y; y < room.y + room.h; y++) {
-                for (let x = room.x; x < room.x + room.w; x++) {
-                    if (y >= 0 && y < MAP_HEIGHT && x >= 0 && x < MAP_WIDTH) {
-                        this.levelMap[y][x] = 1;
-                    }
-                }
-            }
-            // Walls
-            for (let y = room.y - 1; y <= room.y + room.h; y++) {
-                for (let x = room.x - 1; x <= room.x + room.w; x++) {
-                    if (y >= 0 && y < MAP_HEIGHT && x >= 0 && x < MAP_WIDTH) {
-                        if (this.levelMap[y][x] === 0) {
-                            this.levelMap[y][x] = 2;
-                        }
+            for (let ry = room.y; ry < room.y + room.h; ry++) {
+                for (let rx = room.x; rx < room.x + room.w; rx++) {
+                    if (ry >= 0 && ry < MAP_HEIGHT && rx >= 0 && rx < MAP_WIDTH) {
+                        this.levelMap[ry][rx] = 1; // Floor
                     }
                 }
             }
         });
 
-        // Connect rooms with corridors
+        // Connect rooms with corridors (carve floor for corridors)
         for (let i = 1; i < this.rooms.length; i++) {
             const r1 = this.rooms[i - 1];
             const r2 = this.rooms[i];
@@ -531,47 +542,85 @@ class GameScene extends Phaser.Scene {
             this.createCorridor(x1, y1, x2, y2);
         }
 
-        // Spawn point in first room
+        // Now add walls around all floor tiles
+        this.addWallsAroundFloors();
+
+        // Spawn point in first room - ensure it's on a valid floor tile
+        const firstRoom = this.rooms[0];
         this.spawnPoint = {
-            x: this.rooms[0].x * TILE_SIZE + this.rooms[0].w * TILE_SIZE / 2,
-            y: this.rooms[0].y * TILE_SIZE + this.rooms[0].h * TILE_SIZE / 2
+            x: (firstRoom.x + Math.floor(firstRoom.w / 2)) * TILE_SIZE + TILE_SIZE / 2,
+            y: (firstRoom.y + Math.floor(firstRoom.h / 2)) * TILE_SIZE + TILE_SIZE / 2
         };
 
         // Exit point in last room
         const lastRoom = this.rooms[this.rooms.length - 1];
         this.exitPoint = {
-            x: lastRoom.x * TILE_SIZE + lastRoom.w * TILE_SIZE / 2,
-            y: lastRoom.y * TILE_SIZE + lastRoom.h * TILE_SIZE / 2
+            x: (lastRoom.x + Math.floor(lastRoom.w / 2)) * TILE_SIZE + TILE_SIZE / 2,
+            y: (lastRoom.y + Math.floor(lastRoom.h / 2)) * TILE_SIZE + TILE_SIZE / 2
         };
     }
 
+    addWallsAroundFloors() {
+        // Add walls around all floor tiles
+        for (let y = 0; y < MAP_HEIGHT; y++) {
+            for (let x = 0; x < MAP_WIDTH; x++) {
+                if (this.levelMap[y][x] === 1) {
+                    // This is a floor tile - add walls around it where there's void
+                    for (let dy = -1; dy <= 1; dy++) {
+                        for (let dx = -1; dx <= 1; dx++) {
+                            if (dx === 0 && dy === 0) continue;
+                            const nx = x + dx;
+                            const ny = y + dy;
+                            if (ny >= 0 && ny < MAP_HEIGHT && nx >= 0 && nx < MAP_WIDTH) {
+                                if (this.levelMap[ny][nx] === 0) {
+                                    this.levelMap[ny][nx] = 2; // Wall
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     createCorridor(x1, y1, x2, y2) {
+        // Carve a 2-tile wide corridor between two points
+        // Uses L-shaped path for cleaner corridors
         let x = x1, y = y1;
-        while (x !== x2 || y !== y2) {
-            for (let ox = -1; ox <= 0; ox++) {
-                for (let oy = -1; oy <= 0; oy++) {
-                    const tx = x + ox;
-                    const ty = y + oy;
-                    if (ty >= 0 && ty < MAP_HEIGHT && tx >= 0 && tx < MAP_WIDTH) {
-                        if (this.levelMap[ty][tx] !== 1) {
-                            this.levelMap[ty][tx] = 1;
-                        }
-                    }
+
+        // First go horizontal, then vertical
+        while (x !== x2) {
+            // Carve 2-tile wide horizontal corridor
+            for (let oy = 0; oy <= 1; oy++) {
+                const ty = y + oy;
+                if (ty >= 0 && ty < MAP_HEIGHT && x >= 0 && x < MAP_WIDTH) {
+                    this.levelMap[ty][x] = 1; // Floor
                 }
             }
-            for (let ox = -2; ox <= 1; ox++) {
-                for (let oy = -2; oy <= 1; oy++) {
-                    const tx = x + ox;
-                    const ty = y + oy;
-                    if (ty >= 0 && ty < MAP_HEIGHT && tx >= 0 && tx < MAP_WIDTH) {
-                        if (this.levelMap[ty][tx] === 0) {
-                            this.levelMap[ty][tx] = 2;
-                        }
-                    }
+            x += x2 > x1 ? 1 : -1;
+        }
+
+        // Then go vertical
+        while (y !== y2) {
+            // Carve 2-tile wide vertical corridor
+            for (let ox = 0; ox <= 1; ox++) {
+                const tx = x + ox;
+                if (y >= 0 && y < MAP_HEIGHT && tx >= 0 && tx < MAP_WIDTH) {
+                    this.levelMap[y][tx] = 1; // Floor
                 }
             }
-            if (x !== x2) x += x2 > x1 ? 1 : -1;
-            else if (y !== y2) y += y2 > y1 ? 1 : -1;
+            y += y2 > y1 ? 1 : -1;
+        }
+
+        // Carve the final position too
+        for (let ox = 0; ox <= 1; ox++) {
+            for (let oy = 0; oy <= 1; oy++) {
+                const tx = x + ox;
+                const ty = y + oy;
+                if (ty >= 0 && ty < MAP_HEIGHT && tx >= 0 && tx < MAP_WIDTH) {
+                    this.levelMap[ty][tx] = 1; // Floor
+                }
+            }
         }
     }
 
@@ -825,6 +874,15 @@ class GameScene extends Phaser.Scene {
             fontFamily: 'monospace', fontSize: '24px', color: '#FF8800'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(101).setAlpha(0);
 
+        // Reload bar (shows during reload animation)
+        this.reloadBarBg = this.add.rectangle(w / 2, h / 2 + 50, 100, 10, 0x222222);
+        this.reloadBarBg.setScrollFactor(0).setDepth(102).setVisible(false);
+        this.reloadBarFill = this.add.rectangle(w / 2 - 49, h / 2 + 50, 98, 8, 0xFFAA00);
+        this.reloadBarFill.setScrollFactor(0).setDepth(103).setOrigin(0, 0.5).setVisible(false);
+        this.reloadText = this.add.text(w / 2, h / 2 + 35, 'RELOADING', {
+            fontFamily: 'monospace', fontSize: '12px', color: '#FFAA00'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(102).setVisible(false);
+
         // Minimap
         this.minimapBg = this.add.rectangle(w - 70, 80, 120, 100, 0x000000, 0.7);
         this.minimapBg.setScrollFactor(0).setDepth(99);
@@ -851,42 +909,41 @@ class GameScene extends Phaser.Scene {
 
         this.darknessOverlay.clear();
 
-        // Get camera bounds
-        const camX = this.cameras.main.scrollX;
-        const camY = this.cameras.main.scrollY;
+        // Subtle vignette effect using fixed screen coordinates
+        // Only draw corner shadows, not edge bands
+        const cornerSize = 80;
+        const alpha = 0.2;
+
+        // Just draw subtle corner darkening (no bands)
+        // This creates atmosphere without blocking gameplay view
+        this.darknessOverlay.fillStyle(0x000000, alpha);
+
+        // Top-left corner (circular gradient simulation)
+        for (let i = 0; i < cornerSize; i += 20) {
+            const a = alpha * (1 - i / cornerSize);
+            this.darknessOverlay.fillStyle(0x000000, a);
+            const offsetX = this.cameras.main.scrollX;
+            const offsetY = this.cameras.main.scrollY;
+            this.darknessOverlay.fillTriangle(
+                offsetX, offsetY,
+                offsetX + cornerSize - i, offsetY,
+                offsetX, offsetY + cornerSize - i
+            );
+        }
+
+        // Top-right corner
         const w = this.cameras.main.width;
         const h = this.cameras.main.height;
-
-        // Simple edge vignette effect for atmosphere
-        // Draw gradient darkness at screen edges
-        const edgeSize = 150;
-
-        // Top edge
-        for (let i = 0; i < edgeSize; i += 10) {
-            const alpha = (1 - i / edgeSize) * 0.4;
-            this.darknessOverlay.fillStyle(0x000000, alpha);
-            this.darknessOverlay.fillRect(camX, camY + i, w, 10);
-        }
-
-        // Bottom edge
-        for (let i = 0; i < edgeSize; i += 10) {
-            const alpha = (1 - i / edgeSize) * 0.4;
-            this.darknessOverlay.fillStyle(0x000000, alpha);
-            this.darknessOverlay.fillRect(camX, camY + h - edgeSize + i, w, 10);
-        }
-
-        // Left edge
-        for (let i = 0; i < edgeSize; i += 10) {
-            const alpha = (1 - i / edgeSize) * 0.3;
-            this.darknessOverlay.fillStyle(0x000000, alpha);
-            this.darknessOverlay.fillRect(camX + i, camY, 10, h);
-        }
-
-        // Right edge
-        for (let i = 0; i < edgeSize; i += 10) {
-            const alpha = (1 - i / edgeSize) * 0.3;
-            this.darknessOverlay.fillStyle(0x000000, alpha);
-            this.darknessOverlay.fillRect(camX + w - edgeSize + i, camY, 10, h);
+        for (let i = 0; i < cornerSize; i += 20) {
+            const a = alpha * (1 - i / cornerSize);
+            this.darknessOverlay.fillStyle(0x000000, a);
+            const offsetX = this.cameras.main.scrollX;
+            const offsetY = this.cameras.main.scrollY;
+            this.darknessOverlay.fillTriangle(
+                offsetX + w, offsetY,
+                offsetX + w - cornerSize + i, offsetY,
+                offsetX + w, offsetY + cornerSize - i
+            );
         }
     }
 
@@ -926,12 +983,28 @@ class GameScene extends Phaser.Scene {
         const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, worldPoint.x, worldPoint.y);
         this.player.rotation = angle;
 
-        // Reload
+        // Reload with animation
         if (this.player.reloading) {
             this.player.reloadTimer -= dt;
+            const weapon = WEAPONS[this.player.currentWeapon];
+            const totalReloadTime = weapon.reloadTime;
+            this.player.reloadProgress = 1 - (this.player.reloadTimer / totalReloadTime);
+
+            // Update reload bar visual
+            this.reloadBarBg.setVisible(true);
+            this.reloadBarFill.setVisible(true);
+            this.reloadText.setVisible(true);
+            this.reloadBarFill.scaleX = this.player.reloadProgress;
+
             if (this.player.reloadTimer <= 0) {
-                this.player.ammo = WEAPONS[this.player.currentWeapon].magSize;
+                this.player.ammo = weapon.magSize;
+                this.player.weaponAmmo[this.player.currentWeapon] = this.player.ammo;
                 this.player.reloading = false;
+                this.player.reloadProgress = 0;
+                // Hide reload bar
+                this.reloadBarBg.setVisible(false);
+                this.reloadBarFill.setVisible(false);
+                this.reloadText.setVisible(false);
             }
         }
 
@@ -1006,7 +1079,8 @@ class GameScene extends Phaser.Scene {
     startReload() {
         this.player.reloading = true;
         this.player.reloadTimer = WEAPONS[this.player.currentWeapon].reloadTime;
-        this.showFloatingText(this.player.x, this.player.y - 20, 'RELOADING...', '#AAAAAA');
+        this.player.reloadProgress = 0;
+        // Visual reload bar is shown in update loop
     }
 
     shoot(angle) {
@@ -1056,9 +1130,22 @@ class GameScene extends Phaser.Scene {
     switchWeapon() {
         const weapons = this.player.weapons;
         const idx = weapons.indexOf(this.player.currentWeapon);
+
+        // Save current weapon's ammo before switching
+        this.player.weaponAmmo[this.player.currentWeapon] = this.player.ammo;
+
+        // Switch to next weapon
         this.player.currentWeapon = weapons[(idx + 1) % weapons.length];
-        this.player.ammo = WEAPONS[this.player.currentWeapon].magSize;
+
+        // Restore that weapon's ammo (don't reload!)
+        this.player.ammo = this.player.weaponAmmo[this.player.currentWeapon];
+        this.player.maxAmmo = WEAPONS[this.player.currentWeapon].magSize;
+
+        // Cancel any reload in progress
         this.player.reloading = false;
+        this.player.reloadTimer = 0;
+        this.player.reloadProgress = 0;
+
         this.showFloatingText(this.player.x, this.player.y - 30, WEAPONS[this.player.currentWeapon].name, '#FFFFFF');
     }
 

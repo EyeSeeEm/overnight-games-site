@@ -242,38 +242,50 @@ class GameScene extends Phaser.Scene {
         super('GameScene');
     }
 
-    init() {
-        this.gameState = {
-            floor: 1,
-            roomsCleared: 0,
-            debris: 0,
-            multiplier: 1.0,
-            wave: 1,
-            maxWave: 5,
-            combo: 0,
-            comboTimer: 0,
-            comboMultiplier: 1,
-            bossActive: false,
-            salvageChoices: [],
-            state: 'playing'
-        };
+    init(data) {
+        // Preserve stats across rooms if provided
+        if (data && data.playerStats) {
+            this.playerStats = data.playerStats;
+            this.gameState = data.gameState;
+            // Start new room
+            this.gameState.wave = 1;
+            this.gameState.state = 'playing';
+        } else {
+            this.gameState = {
+                floor: 1,
+                roomsCleared: 0,
+                debris: 0,
+                multiplier: 1.0,
+                wave: 1,
+                maxWave: 5,
+                combo: 0,
+                comboTimer: 0,
+                comboMultiplier: 1,
+                bossActive: false,
+                salvageChoices: [],
+                state: 'playing',
+                roomsVisited: [[true]], // Minimap tracking - start at 0,0
+                currentRoomX: 0,
+                currentRoomY: 0
+            };
 
-        this.playerStats = {
-            hp: 4,
-            maxHp: 4,
-            bombs: 2,
-            maxBombs: 3,
-            speed: 250,
-            focusSpeed: 100,
-            fireRate: 10,
-            damage: 1,
-            bulletCount: 1,
-            critChance: 0.1,
-            lifesteal: 0,
-            shield: 0,
-            hasHoming: false,
-            hasPiercing: false
-        };
+            this.playerStats = {
+                hp: 4,
+                maxHp: 4,
+                bombs: 2,
+                maxBombs: 3,
+                speed: 250,
+                focusSpeed: 100,
+                fireRate: 10,
+                damage: 1,
+                bulletCount: 1,
+                critChance: 0.1,
+                lifesteal: 0,
+                shield: 0,
+                hasHoming: false,
+                hasPiercing: false
+            };
+        }
 
         this.fireCooldown = 0;
         this.dashCooldown = 0;
@@ -282,6 +294,7 @@ class GameScene extends Phaser.Scene {
         this.isDashing = false;
         this.superShotCharge = 0;
         this.damageNumbers = [];
+        this.roomClearing = false;
     }
 
     create() {
@@ -682,6 +695,70 @@ class GameScene extends Phaser.Scene {
         this.add.text(15, 590, 'WASD:Move | LMB:Shoot | RMB:Focus | Z:Dash | E:Bomb', {
             fontSize: '10px', fontFamily: 'monospace', color: '#444444'
         }).setDepth(100);
+
+        // Minimap
+        this.minimapContainer = this.add.container(730, 85).setDepth(100);
+        const minimapBg = this.add.rectangle(0, 0, 60, 60, 0x000000, 0.7);
+        const minimapBorder = this.add.graphics();
+        minimapBorder.lineStyle(2, COLORS.uiGreen);
+        minimapBorder.strokeRect(-30, -30, 60, 60);
+        this.minimapContainer.add([minimapBg, minimapBorder]);
+
+        this.minimapRooms = this.add.graphics();
+        this.minimapContainer.add(this.minimapRooms);
+
+        this.updateMinimap();
+    }
+
+    updateMinimap() {
+        if (!this.minimapRooms) return;
+        this.minimapRooms.clear();
+
+        const cellSize = 10;
+        const centerX = 0;
+        const centerY = 0;
+
+        // Draw visited rooms
+        const visited = this.gameState.roomsVisited || [[true]];
+        const currentX = this.gameState.currentRoomX || 0;
+        const currentY = this.gameState.currentRoomY || 0;
+
+        for (let y = 0; y < visited.length; y++) {
+            for (let x = 0; x < (visited[y] ? visited[y].length : 0); x++) {
+                if (visited[y] && visited[y][x]) {
+                    const rx = centerX + (x - currentX) * (cellSize + 2);
+                    const ry = centerY + (y - currentY) * (cellSize + 2);
+
+                    // Check if room is in visible area
+                    if (Math.abs(rx) < 25 && Math.abs(ry) < 25) {
+                        if (x === currentX && y === currentY) {
+                            // Current room - bright green
+                            this.minimapRooms.fillStyle(COLORS.uiGreen);
+                        } else {
+                            // Visited room - dim green
+                            this.minimapRooms.fillStyle(COLORS.uiGreenDark);
+                        }
+                        this.minimapRooms.fillRect(rx - cellSize/2, ry - cellSize/2, cellSize, cellSize);
+                    }
+                }
+            }
+        }
+
+        // Draw potential next rooms (adjacent to current)
+        const directions = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+        directions.forEach(([dx, dy]) => {
+            const nx = currentX + dx;
+            const ny = currentY + dy;
+            if (nx >= 0 && ny >= 0) {
+                const isVisited = visited[ny] && visited[ny][nx];
+                if (!isVisited) {
+                    const rx = centerX + dx * (cellSize + 2);
+                    const ry = centerY + dy * (cellSize + 2);
+                    this.minimapRooms.fillStyle(0x333333);
+                    this.minimapRooms.fillRect(rx - cellSize/2, ry - cellSize/2, cellSize, cellSize);
+                }
+            }
+        });
     }
 
     drawHeart(graphics, x, y, filled) {
@@ -745,6 +822,9 @@ class GameScene extends Phaser.Scene {
                 this.bossHealthFill.width = 396 * (boss.hp / boss.maxHp);
             }
         }
+
+        // Update minimap
+        this.updateMinimap();
     }
 
     update(time, delta) {
@@ -1272,8 +1352,26 @@ class GameScene extends Phaser.Scene {
             case 'shield': this.playerStats.shield++; break;
         }
 
-        // Clear UI and continue
-        this.scene.restart();
+        // Update room position for next room (move "forward" - down on minimap)
+        this.gameState.currentRoomY++;
+
+        // Ensure visited array has room for new position
+        while (this.gameState.roomsVisited.length <= this.gameState.currentRoomY) {
+            this.gameState.roomsVisited.push([]);
+        }
+        while ((this.gameState.roomsVisited[this.gameState.currentRoomY] || []).length <= this.gameState.currentRoomX) {
+            if (!this.gameState.roomsVisited[this.gameState.currentRoomY]) {
+                this.gameState.roomsVisited[this.gameState.currentRoomY] = [];
+            }
+            this.gameState.roomsVisited[this.gameState.currentRoomY].push(false);
+        }
+        this.gameState.roomsVisited[this.gameState.currentRoomY][this.gameState.currentRoomX] = true;
+
+        // Transition to new room with preserved stats
+        this.scene.restart({
+            playerStats: this.playerStats,
+            gameState: this.gameState
+        });
     }
 
     gameOver() {

@@ -446,15 +446,36 @@ function updatePlayer(dt) {
     }
     if (canMoveY) player.y = newY;
 
-    // Start drilling
-    if (player.grounded && player.fuel > 0) {
-        if (keys['arrowdown'] || keys['s']) {
+    // Start drilling - DOWN, LEFT, or RIGHT
+    if (player.fuel > 0) {
+        // Drill DOWN (must be grounded)
+        if (player.grounded && (keys['arrowdown'] || keys['s'])) {
             const drillX = player.x;
             const drillY = player.y + player.height / 2 + TILE_SIZE / 2;
             const tile = getTileAt(drillX, drillY);
 
             if (tile !== TILE.EMPTY && tile !== TILE.BUILDING) {
                 startDrill('down', drillX, drillY);
+            }
+        }
+        // Drill LEFT (can drill while in air or grounded)
+        else if ((keys['arrowleft'] || keys['a']) && player.grounded) {
+            const drillX = player.x - player.width / 2 - TILE_SIZE / 2;
+            const drillY = player.y;
+            const tile = getTileAt(drillX, drillY);
+
+            if (tile !== TILE.EMPTY && tile !== TILE.BUILDING && isSolid(tile)) {
+                startDrill('left', drillX, drillY);
+            }
+        }
+        // Drill RIGHT (can drill while in air or grounded)
+        else if ((keys['arrowright'] || keys['d']) && player.grounded) {
+            const drillX = player.x + player.width / 2 + TILE_SIZE / 2;
+            const drillY = player.y;
+            const tile = getTileAt(drillX, drillY);
+
+            if (tile !== TILE.EMPTY && tile !== TILE.BUILDING && isSolid(tile)) {
+                startDrill('right', drillX, drillY);
             }
         }
     }
@@ -579,9 +600,13 @@ function updateDrilling(dt) {
         // Clear tile
         setTileAt(player.drillTarget.x, player.drillTarget.y, TILE.EMPTY);
 
-        // Move player
+        // Move player based on drill direction
         if (player.drillDir === 'down') {
             player.y += TILE_SIZE;
+        } else if (player.drillDir === 'left') {
+            player.x -= TILE_SIZE;
+        } else if (player.drillDir === 'right') {
+            player.x += TILE_SIZE;
         }
 
         player.drilling = false;
@@ -764,8 +789,17 @@ function drawPlayer() {
     // Drill animation
     if (player.drilling) {
         ctx.fillStyle = '#FF8800';
-        const sparkX = (Math.random() - 0.5) * 10;
-        const sparkY = 14 + Math.random() * 6;
+        let sparkX, sparkY;
+        if (player.drillDir === 'down') {
+            sparkX = (Math.random() - 0.5) * 10;
+            sparkY = 14 + Math.random() * 6;
+        } else if (player.drillDir === 'left') {
+            sparkX = -12 - Math.random() * 6;
+            sparkY = (Math.random() - 0.5) * 10;
+        } else if (player.drillDir === 'right') {
+            sparkX = 12 + Math.random() * 6;
+            sparkY = (Math.random() - 0.5) * 10;
+        }
         ctx.fillRect(sparkX - 2, sparkY - 2, 4, 4);
     }
 
@@ -835,7 +869,7 @@ function drawHUD() {
     // Controls hint
     ctx.textAlign = 'center';
     ctx.fillStyle = '#666';
-    ctx.fillText('Arrow Keys: Move/Drill | Land on buildings to interact', WIDTH / 2, HEIGHT - 8);
+    ctx.fillText('Arrow/WASD: Move | Hold direction to drill (LEFT/RIGHT/DOWN) | Land on buildings', WIDTH / 2, HEIGHT - 8);
 
     // Combo display
     if (miningCombo > 1) {
@@ -1003,7 +1037,7 @@ function drawTitleScreen() {
 
     ctx.fillStyle = '#AAA';
     ctx.font = '14px Arial';
-    ctx.fillText('Arrow Keys: Move & Drill', WIDTH / 2, 420);
+    ctx.fillText('Arrow Keys / WASD: Move & Drill LEFT, RIGHT, DOWN', WIDTH / 2, 420);
     ctx.fillText('Dig minerals, return to surface, sell & upgrade!', WIDTH / 2, 450);
 }
 

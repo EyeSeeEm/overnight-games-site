@@ -168,10 +168,11 @@ class Player {
             }
         }
 
-        // Clamp to room bounds
+        // Clamp to room bounds - allow reaching doors when room is cleared
         const roomBounds = currentRoom.getBounds();
-        this.x = Math.max(roomBounds.x + 30, Math.min(roomBounds.x + roomBounds.w - 30, this.x));
-        this.y = Math.max(roomBounds.y + 30, Math.min(roomBounds.y + roomBounds.h - 30, this.y));
+        const edgeBuffer = currentRoom.cleared ? 10 : 30; // Can get closer to doors when room cleared
+        this.x = Math.max(roomBounds.x + edgeBuffer, Math.min(roomBounds.x + roomBounds.w - edgeBuffer, this.x));
+        this.y = Math.max(roomBounds.y + edgeBuffer, Math.min(roomBounds.y + roomBounds.h - edgeBuffer, this.y));
 
         // Shooting
         this.fireTimer -= dt;
@@ -904,31 +905,32 @@ function checkDoorTransition() {
     if (!currentRoom.cleared) return;
 
     const bounds = currentRoom.getBounds();
-    const doorWidth = 40;
+    const doorWidth = 50; // Increased from 40 for easier door hitting
+    const doorZone = 25;  // How close to edge to trigger transition
 
     // North door
-    if (currentRoom.doors.north && player.y < bounds.y + 20) {
+    if (currentRoom.doors.north && player.y < bounds.y + doorZone) {
         if (Math.abs(player.x - (bounds.x + bounds.w / 2)) < doorWidth / 2) {
             transitionToRoom(currentRoom.doors.north, 'south');
         }
     }
 
     // South door
-    if (currentRoom.doors.south && player.y > bounds.y + bounds.h - 20) {
+    if (currentRoom.doors.south && player.y > bounds.y + bounds.h - doorZone) {
         if (Math.abs(player.x - (bounds.x + bounds.w / 2)) < doorWidth / 2) {
             transitionToRoom(currentRoom.doors.south, 'north');
         }
     }
 
     // East door
-    if (currentRoom.doors.east && player.x > bounds.x + bounds.w - 20) {
+    if (currentRoom.doors.east && player.x > bounds.x + bounds.w - doorZone) {
         if (Math.abs(player.y - (bounds.y + bounds.h / 2)) < doorWidth / 2) {
             transitionToRoom(currentRoom.doors.east, 'west');
         }
     }
 
     // West door
-    if (currentRoom.doors.west && player.x < bounds.x + 20) {
+    if (currentRoom.doors.west && player.x < bounds.x + doorZone) {
         if (Math.abs(player.y - (bounds.y + bounds.h / 2)) < doorWidth / 2) {
             transitionToRoom(currentRoom.doors.west, 'east');
         }

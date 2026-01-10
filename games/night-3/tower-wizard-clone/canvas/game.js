@@ -164,6 +164,11 @@ const BLESSING_COSTS = {
     magic: 1, knowledge: 1, forest: 1, research: 2, dragon: 2, alchemy: 2, doubling: 3
 };
 
+// Orb position constants (moved right to avoid Resources panel overlap)
+const ORB_X = 300;
+const ORB_Y = 150;
+const ORB_RADIUS = 45;
+
 // Input handling
 let mouseX = 0, mouseY = 0, mouseDown = false;
 
@@ -173,8 +178,7 @@ canvas.addEventListener('mouseup', () => { mouseDown = false; game.orbHeld = fal
 
 function handleClick(x, y) {
     // Orb click
-    const orbX = 200, orbY = 120, orbRadius = 50;
-    if (Math.hypot(x - orbX, y - orbY) < orbRadius) {
+    if (Math.hypot(x - ORB_X, y - ORB_Y) < ORB_RADIUS + 5) {
         clickOrb();
         game.orbHeld = true;
         return;
@@ -199,11 +203,11 @@ function clickOrb() {
     game.orbClickCooldown = 0.05;
 
     // POLISH: Enhanced particles
-    createMagicParticle(200, 120);
+    createMagicParticle(ORB_X, ORB_Y);
     for (let i = 0; i < 5; i++) {
         game.particles.push({
-            x: 200 + (Math.random() - 0.5) * 80,
-            y: 120 + (Math.random() - 0.5) * 80,
+            x: ORB_X + (Math.random() - 0.5) * 80,
+            y: ORB_Y + (Math.random() - 0.5) * 80,
             vx: (Math.random() - 0.5) * 150,
             vy: -Math.random() * 150 - 50,
             life: 1,
@@ -729,7 +733,7 @@ function drawTowerRoof(x, y) {
 }
 
 function drawOrb() {
-    const orbX = 200, orbY = 120, orbRadius = 45;
+    const orbX = ORB_X, orbY = ORB_Y, orbRadius = ORB_RADIUS;
 
     // POLISH: Enhanced glow
     const glowGradient = ctx.createRadialGradient(orbX, orbY, orbRadius * 0.3, orbX, orbY, orbRadius * 2.5);

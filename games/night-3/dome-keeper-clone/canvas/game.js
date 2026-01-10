@@ -79,8 +79,8 @@ const keeper = {
     x: WIDTH / 2,
     y: SURFACE_Y * TILE_SIZE + 20,
     vx: 0, vy: 0,
-    speed: 56,
-    drillStrength: 2,
+    speed: 80,
+    drillStrength: 4,
     carryCapacity: 3,
     cargo: [],
     drilling: false,
@@ -360,8 +360,18 @@ function updateKeeper(dt) {
         if (canMoveX) keeper.x = newX;
         if (canMoveY) keeper.y = newY;
 
-        // Start drilling if pressing into a tile
-        if (!canMoveX || !canMoveY) {
+        // Start drilling if pressing into a tile (only if not already drilling)
+        if ((!canMoveX || !canMoveY) && !keeper.drilling) {
+            // Snap keeper to tile center when starting to drill
+            if (!canMoveY && moveY !== 0) {
+                // Drilling vertically - snap X to tile center
+                keeper.x = Math.floor(keeper.x / TILE_SIZE) * TILE_SIZE + TILE_SIZE / 2;
+            } else if (!canMoveX && moveX !== 0) {
+                // Drilling horizontally - snap Y to tile center
+                keeper.y = Math.floor(keeper.y / TILE_SIZE) * TILE_SIZE + TILE_SIZE / 2;
+            }
+
+            // Calculate drill target
             const drillX = keeper.x + moveX * TILE_SIZE;
             const drillY = keeper.y + moveY * TILE_SIZE;
             const tile = getTileAt(drillX, drillY);
@@ -1136,6 +1146,9 @@ window.gameState = {
     get resources() { return resources; },
     get enemies() { return enemies.length; }
 };
+window.keeper = keeper;
+window.getTileAt = getTileAt;
+window.map = map;
 
 window.startGame = () => {
     if (gameState === 'title' || gameState === 'gameover') {

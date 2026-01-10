@@ -45,6 +45,20 @@ let waveTimer = 0;
 let waveDuration = 20;
 let spawnTimer = 0;
 
+// Shop system
+let shopItems = [];
+let selectedShopItem = 0;
+
+// Shop item templates
+const SHOP_ITEMS = [
+    { name: 'Damage Up', stat: 'damage', value: 2, cost: 15, desc: '+2 Damage' },
+    { name: 'Fire Rate Up', stat: 'attackSpeed', value: 0.5, cost: 20, desc: '+0.5 Fire Rate' },
+    { name: 'Speed Up', stat: 'speed', value: 30, cost: 10, desc: '+30 Speed' },
+    { name: 'Max HP Up', stat: 'maxHp', value: 2, cost: 12, desc: '+2 Max HP' },
+    { name: 'Heal', stat: 'heal', value: 5, cost: 8, desc: 'Restore 5 HP' },
+    { name: 'Range Up', stat: 'range', value: 50, cost: 10, desc: '+50 Range' }
+];
+
 // Ground details - scattered rocks and grass like in Brotato
 const groundDetails = [];
 // More rocks for rocky terrain feel
@@ -133,10 +147,11 @@ class Player {
         this.xpToLevel = 16;
         this.materials = 0;
         this.damage = 5;
-        this.attackSpeed = 1; // Attacks per second
+        this.attackSpeed = 2.5; // Attacks per second (was 1, increased for faster combat)
         this.fireTimer = 0;
         this.invulnTimer = 0;
-        this.weapons = [{ type: 'pistol', damage: 5, rate: 1, range: 300 }];
+        this.range = 400; // Attack range
+        this.weapons = [{ type: 'pistol', damage: 5, rate: 2.5, range: 400 }];
     }
 
     update(dt) {
@@ -197,7 +212,7 @@ class Player {
         let nearestDist = Infinity;
         for (let e of enemies) {
             const dist = Math.sqrt((this.x - e.x) ** 2 + (this.y - e.y) ** 2);
-            if (dist < nearestDist && dist < 400) {
+            if (dist < nearestDist && dist < this.range) {
                 nearest = e;
                 nearestDist = dist;
             }
@@ -208,10 +223,10 @@ class Player {
             projectiles.push({
                 x: this.x,
                 y: this.y,
-                vx: Math.cos(angle) * 500,
-                vy: Math.sin(angle) * 500,
+                vx: Math.cos(angle) * 600, // Faster bullets
+                vy: Math.sin(angle) * 600,
                 damage: this.damage,
-                range: 400,
+                range: this.range,
                 traveled: 0
             });
 
@@ -610,27 +625,93 @@ function spawnEnemy() {
 function updateWave(dt) {
     waveTimer += dt;
 
-    // Spawn enemies
+    // Spawn enemies - faster spawn rate at start (was 1.5, now 0.8)
     spawnTimer -= dt;
-    const spawnRate = 1.5 - wave * 0.05; // Faster spawns each wave
-    if (spawnTimer <= 0 && enemies.length < 50 + wave * 5) {
+    const baseSpawnRate = 0.8; // More enemies at start
+    const spawnRate = Math.max(0.2, baseSpawnRate - wave * 0.03);
+    if (spawnTimer <= 0 && enemies.length < 15 + wave * 8) { // More enemies allowed
         spawnEnemy();
-        spawnTimer = Math.max(0.3, spawnRate);
+        spawnTimer = spawnRate;
+
+        // Spawn extra enemy occasionally (20% chance)
+        if (Math.random() < 0.2) {
+            spawnEnemy();
+        }
     }
 
     // Check wave end
     if (waveTimer >= waveDuration) {
+        // Wave complete - go to shop
         wave++;
         waveTimer = 0;
-        waveDuration = Math.min(60, 20 + wave * 2);
+        waveDuration = Math.min(45, 20 + wave * 1.5);
 
         // Wave bonus
-        player.materials += wave * 5;
+        player.materials += wave * 8;
 
         // Victory check
         if (wave > 20) {
             gameState = 'victory';
+        } else {
+            // Open shop between waves
+            gameState = 'shop';
+            generateShopItems();
         }
+    }
+}
+
+function generateShopItems() {
+    shopItems = [];
+    selectedShopItem = 0;
+
+    // Generate 4 random shop items
+    const shuffled = [...SHOP_ITEMS].sort(() => Math.random() - 0.5);
+    for (let i = 0; i < 4; i++) {
+        shopItems.push({
+            ...shuffled[i],
+            // Scale cost with wave
+            cost: Math.floor(shuffled[i].cost * (1 + (wave - 1) * 0.1))
+        });
+    }
+}
+
+function buyShopItem(index) {
+    if (index < 0 || index >= shopItems.length) return false;
+
+    const item = shopItems[index];
+    if (player.materials < item.cost) return false;
+
+    player.materials -= item.cost;
+
+    // Apply stat
+    if (item.stat === 'heal') {
+        player.hp = Math.min(player.hp + item.value, player.maxHp);
+    } else if (item.stat === 'maxHp') {
+        player.maxHp += item.value;
+        player.hp += item.value;
+    } else {
+        player[item.stat] += item.value;
+    }
+
+    // Remove bought item
+    shopItems.splice(index, 1);
+    if (selectedShopItem >= shopItems.length) selectedShopItem = Math.max(0, shopItems.length - 1);
+
+    return true;
+}
+
+function startNextWave() {
+    gameState = 'playing';
+    enemies = [];
+    projectiles = [];
+    pickups = [];
+    particles = [];
+    deathMarkers = [];
+    spawnTimer = 0;
+
+    // Spawn initial wave of enemies
+    for (let i = 0; i < 3 + wave; i++) {
+        spawnEnemy();
     }
 }
 
@@ -936,6 +1017,77 @@ function drawVictory() {
     ctx.textAlign = 'left';
 }
 
+function drawShop() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    ctx.fillRect(0, 0, 800, 600);
+
+    // Title
+    ctx.fillStyle = '#FFCC44';
+    ctx.font = 'bold 36px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('SHOP - Wave ' + wave, 400, 60);
+
+    // Materials
+    ctx.fillStyle = COLORS.material;
+    ctx.font = '20px monospace';
+    ctx.fillText('Materials: ' + player.materials, 400, 100);
+
+    // Stats display
+    ctx.fillStyle = '#AAAAAA';
+    ctx.font = '14px monospace';
+    ctx.fillText(`HP: ${player.hp}/${player.maxHp}  DMG: ${player.damage.toFixed(1)}  SPD: ${player.speed.toFixed(0)}  Fire Rate: ${player.attackSpeed.toFixed(1)}/s`, 400, 130);
+
+    // Shop items
+    const itemStartY = 180;
+    const itemHeight = 80;
+
+    for (let i = 0; i < shopItems.length; i++) {
+        const item = shopItems[i];
+        const y = itemStartY + i * itemHeight;
+        const isSelected = i === selectedShopItem;
+        const canAfford = player.materials >= item.cost;
+
+        // Item box
+        ctx.fillStyle = isSelected ? 'rgba(100, 100, 50, 0.5)' : 'rgba(50, 50, 50, 0.5)';
+        ctx.fillRect(150, y, 500, itemHeight - 10);
+
+        if (isSelected) {
+            ctx.strokeStyle = '#FFCC44';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(150, y, 500, itemHeight - 10);
+        }
+
+        // Item name
+        ctx.fillStyle = canAfford ? '#FFFFFF' : '#666666';
+        ctx.font = 'bold 18px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(item.name, 170, y + 28);
+
+        // Description
+        ctx.fillStyle = canAfford ? '#AAAAAA' : '#555555';
+        ctx.font = '14px monospace';
+        ctx.fillText(item.desc, 170, y + 50);
+
+        // Cost
+        ctx.fillStyle = canAfford ? COLORS.material : '#AA3333';
+        ctx.font = 'bold 16px monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(item.cost + ' MAT', 630, y + 38);
+    }
+
+    // Instructions
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#888888';
+    ctx.font = '16px monospace';
+    ctx.fillText('W/S or UP/DOWN to select, ENTER to buy, SPACE to start wave', 400, 540);
+
+    ctx.fillStyle = Math.sin(Date.now() / 300) > 0 ? COLORS.xp : '#88FF88';
+    ctx.font = 'bold 18px monospace';
+    ctx.fillText('Press SPACE to Start Wave ' + wave, 400, 570);
+
+    ctx.textAlign = 'left';
+}
+
 // Game initialization
 function initGame() {
     player = new Player();
@@ -949,7 +1101,14 @@ function initGame() {
     waveTimer = 0;
     waveDuration = 20;
     spawnTimer = 0;
+    shopItems = [];
+    selectedShopItem = 0;
     gameState = 'playing';
+
+    // Spawn initial enemies
+    for (let i = 0; i < 5; i++) {
+        spawnEnemy();
+    }
 }
 
 // Game loop
@@ -1000,6 +1159,8 @@ function gameLoop(timestamp) {
         player.draw();
         drawHUD();
         drawVictory();
+    } else if (gameState === 'shop') {
+        drawShop();
     }
 
     requestAnimationFrame(gameLoop);
@@ -1012,6 +1173,21 @@ document.addEventListener('keydown', e => {
     if (e.key === ' ') {
         if (gameState === 'title' || gameState === 'gameover' || gameState === 'victory') {
             initGame();
+        } else if (gameState === 'shop') {
+            startNextWave();
+        }
+    }
+
+    // Shop navigation
+    if (gameState === 'shop') {
+        if (e.key === 'w' || e.key === 'ArrowUp') {
+            selectedShopItem = Math.max(0, selectedShopItem - 1);
+        }
+        if (e.key === 's' || e.key === 'ArrowDown') {
+            selectedShopItem = Math.min(shopItems.length - 1, selectedShopItem + 1);
+        }
+        if (e.key === 'Enter') {
+            buyShopItem(selectedShopItem);
         }
     }
 });

@@ -316,7 +316,9 @@ class GameScene extends Phaser.Scene {
             bossActive: false,
             slowMotion: 1,
             slowMotionTimer: 0,
-            victory: false
+            victory: false,
+            waveInProgress: false,  // Prevents false wave completion detection
+            enemiesSpawnedThisWave: 0
         };
 
         this.playerStats = {
@@ -513,6 +515,10 @@ class GameScene extends Phaser.Scene {
     }
 
     spawnWave() {
+        // Mark wave as in progress - prevents false wave completion detection
+        this.gameState.waveInProgress = true;
+        this.gameState.enemiesSpawnedThisWave = 0;
+
         // Show wave indicator
         const waveText = this.add.text(400, 300, `WAVE ${this.gameState.wave}`, {
             fontSize: '36px',
@@ -531,7 +537,10 @@ class GameScene extends Phaser.Scene {
 
         // Spawn boss at wave 5 and 10
         if (this.gameState.wave === 5 || this.gameState.wave === 10) {
-            this.time.delayedCall(1000, () => this.spawnBoss());
+            this.time.delayedCall(1000, () => {
+                this.spawnBoss();
+                this.gameState.enemiesSpawnedThisWave = 1;
+            });
             return;
         }
 
@@ -557,6 +566,7 @@ class GameScene extends Phaser.Scene {
                     onComplete: () => {
                         warning.destroy();
                         this.spawnEnemy(x, y);
+                        this.gameState.enemiesSpawnedThisWave++;
                     }
                 });
             });
@@ -1177,8 +1187,15 @@ class GameScene extends Phaser.Scene {
         this.updateHUD();
         this.updateMinimap();
 
-        // Check wave complete
-        if (this.enemies.countActive() === 0 && !this.gameState.bossActive) {
+        // Check wave complete - only if wave has started and enemies have spawned
+        if (this.gameState.waveInProgress &&
+            this.gameState.enemiesSpawnedThisWave > 0 &&
+            this.enemies.countActive() === 0 &&
+            !this.gameState.bossActive) {
+
+            // Reset wave state
+            this.gameState.waveInProgress = false;
+
             if (this.gameState.wave >= this.gameState.maxWave) {
                 this.victory();
             } else {

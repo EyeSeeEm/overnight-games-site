@@ -132,6 +132,24 @@
       padding: 3px 6px;
       border-radius: 2px;
     }
+    .game-card.updated::after {
+      content: "UPDATED";
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #c97f00;
+      color: #ffd700;
+      font-size: 9px;
+      font-weight: bold;
+      padding: 3px 6px;
+      border-radius: 2px;
+    }
+    /* Updated takes priority over played when both apply */
+    .game-card.played.updated::after {
+      content: "UPDATED";
+      background: #c97f00;
+      color: #ffd700;
+    }
 
     /* Broken game overlay */
     .game-card.broken {
@@ -610,8 +628,9 @@
       <span id="playedGames">0 Played</span>
       <span id="polishedGames">0 Polished</span>
       <span id="ratedGames" style="color:#ffd700;">0 Rated</span>
+      <span id="updatedGamesCount" style="color:#ffd700;">0 Updated</span>
       <span id="brokenGames" style="color:#ff6666;">0 Broken</span>
-      <span style="color:#67c1f5; font-size:11px; margin-left:20px;">v2026.01.10-ratings</span>
+      <span style="color:#67c1f5; font-size:11px; margin-left:20px;">v2026.01.11</span>
     </div>
   </div>
 
@@ -732,6 +751,7 @@
     let gameNotes = {};
     let brokenGames = {};
     let finalRatings = {};
+    let updatedGames = JSON.parse(localStorage.getItem('updatedGames') || '{}');
     let currentNoteGameId = null;
     let currentPlayerGame = null;
 
@@ -1066,6 +1086,63 @@
       a.click();
     }
 
+    // Mark games as updated (call from console: markUpdated(['game-id-1', 'game-id-2']))
+    // Also clears notes for those games by default
+    window.markUpdated = function(gameIds, clearNotes = true) {
+      const now = Date.now();
+      let updated = 0;
+      let cleared = 0;
+      gameIds.forEach(id => {
+        updatedGames[id] = now;
+        updated++;
+        if (clearNotes && gameNotes[id]) {
+          delete gameNotes[id];
+          cleared++;
+        }
+      });
+      localStorage.setItem('updatedGames', JSON.stringify(updatedGames));
+      if (clearNotes) saveData();
+      renderGames();
+      console.log(`✅ Marked ${updated} games as updated, cleared ${cleared} notes`);
+      return { updated, cleared };
+    };
+
+    // Mark ALL games with notes as updated (clears all notes)
+    window.markAllNotedAsUpdated = function() {
+      const ids = Object.keys(gameNotes);
+      return markUpdated(ids, true);
+    };
+
+    // Clear notes for specific games without marking as updated
+    window.clearNotes = function(gameIds) {
+      let cleared = 0;
+      gameIds.forEach(id => {
+        if (gameNotes[id]) {
+          delete gameNotes[id];
+          cleared++;
+        }
+      });
+      saveData();
+      renderGames();
+      console.log(`✅ Cleared ${cleared} notes`);
+      return cleared;
+    };
+
+    // Get list of games with notes (for piping to markUpdated)
+    window.getGamesWithNotes = function() {
+      const ids = Object.keys(gameNotes);
+      console.log(`Games with notes (${ids.length}):`, ids);
+      return ids;
+    };
+
+    // Check if game should show "updated" badge
+    function isGameUpdated(gameId) {
+      const updateTime = updatedGames[gameId];
+      const playTime = playedStatus[gameId];
+      // Show "updated" if: game was updated AND (never played OR played before update)
+      return updateTime && (!playTime || updateTime > playTime);
+    }
+
     function renderGames() {
       const games = getFilteredGames();
       const sortBy = document.getElementById('sortBy').value;
@@ -1073,6 +1150,7 @@
       document.getElementById('playedGames').textContent = allGames.filter(g => g.played).length + ' Played';
       document.getElementById('polishedGames').textContent = allGames.filter(g => g.polished).length + ' Polished';
       document.getElementById('ratedGames').textContent = Object.keys(finalRatings).length + ' Rated';
+      document.getElementById('updatedGamesCount').textContent = allGames.filter(g => isGameUpdated(g.id)).length + ' Updated';
       document.getElementById('brokenGames').textContent = Object.keys(brokenGames).length + ' Broken';
 
       const getBase = (g) => g.gameDir.replace(/-expanded$|-polished$|-v2$/, '');
@@ -1104,7 +1182,7 @@
         const variantLabel = sortBy === 'grouped' ? getVariantLabel(g) : '';
 
         html += `
-        <div class="game-card ${g.played ? 'played' : ''} ${brokenGames[g.id] ? 'broken' : ''}" onclick="playGame('${g.id}', '${g.path}')">
+        <div class="game-card ${g.played && !isGameUpdated(g.id) ? 'played' : ''} ${isGameUpdated(g.id) ? 'updated' : ''} ${brokenGames[g.id] ? 'broken' : ''}" onclick="playGame('${g.id}', '${g.path}')">
           <button class="notes-btn ${gameNotes[g.id] ? 'has-notes' : ''}" onclick="openNotes(event, '${g.id}', '${g.name.replace(/'/g, "\\'")}')">📝</button>
           <button class="broken-btn ${brokenGames[g.id] ? 'is-broken' : ''}" onclick="toggleBroken(event, '${g.id}')" title="Mark as broken">✕</button>
           ${finalRatings[g.id] ? `<div class="final-rating">${'<span class="star">★</span>'.repeat(finalRatings[g.id])}${'<span class="star empty">★</span>'.repeat(5-finalRatings[g.id])}</div>` : ''}

@@ -226,9 +226,13 @@ class GameScene extends Phaser.Scene {
     create() {
         // Game state
         this.floor = 1;
+        this.roomNum = 1;
+        this.roomCleared = false;
+        this.doorsOpen = false;
         this.roomBounds = { x: 200, y: 150, w: 400, h: 300 };
 
         // Create room background
+        this.roomGraphics = null;
         this.createRoom();
 
         // Groups
@@ -278,6 +282,11 @@ class GameScene extends Phaser.Scene {
     createRoom() {
         const b = this.roomBounds;
 
+        // Destroy old graphics if exists
+        if (this.roomGraphics) {
+            this.roomGraphics.destroy();
+        }
+
         // Background
         const bg = this.add.graphics();
         bg.fillStyle(COLORS.floor);
@@ -299,14 +308,15 @@ class GameScene extends Phaser.Scene {
         bg.fillRect(b.x - 20, b.y, 20, b.h);
         bg.fillRect(b.x + b.w, b.y, 20, b.h);
 
-        // Doors
-        bg.fillStyle(COLORS.doorOpen);
+        // Doors (closed by default - red color)
+        bg.fillStyle(COLORS.door);
         bg.fillRect(b.x + b.w / 2 - 20, b.y - 20, 40, 20);
         bg.fillRect(b.x + b.w / 2 - 20, b.y + b.h, 40, 20);
         bg.fillRect(b.x - 20, b.y + b.h / 2 - 20, 20, 40);
         bg.fillRect(b.x + b.w, b.y + b.h / 2 - 20, 20, 40);
 
         bg.setDepth(-1);
+        this.roomGraphics = bg;
     }
 
     createPlayer() {
@@ -740,6 +750,13 @@ class GameScene extends Phaser.Scene {
     checkRoomClear() {
         if (this.enemies.getLength() === 0 && !this.roomCleared) {
             this.roomCleared = true;
+            this.doorsOpen = true;
+
+            // Update room graphics to show open doors
+            this.updateDoorGraphics();
+
+            // Show message
+            this.showRoomClearMessage();
 
             // Bonus drops
             if (Math.random() < 0.3) {
@@ -753,6 +770,131 @@ class GameScene extends Phaser.Scene {
                 pickup.setDepth(2);
             }
         }
+
+        // Check for door transitions (only when room is cleared)
+        if (this.doorsOpen) {
+            this.checkDoorTransition();
+        }
+    }
+
+    showRoomClearMessage() {
+        const msg = this.add.text(400, 300, 'ROOM CLEARED!', {
+            fontSize: '28px',
+            fontFamily: 'monospace',
+            fontStyle: 'bold',
+            color: '#33FF33'
+        }).setOrigin(0.5).setDepth(150);
+
+        this.tweens.add({
+            targets: msg,
+            y: 250,
+            alpha: 0,
+            duration: 1500,
+            onComplete: () => msg.destroy()
+        });
+    }
+
+    updateDoorGraphics() {
+        const b = this.roomBounds;
+
+        // Add green door indicators
+        const doorIndicators = this.add.graphics();
+        doorIndicators.fillStyle(0x33FF33);
+        doorIndicators.fillRect(b.x + b.w / 2 - 20, b.y - 20, 40, 20); // Top
+        doorIndicators.fillRect(b.x + b.w / 2 - 20, b.y + b.h, 40, 20); // Bottom
+        doorIndicators.fillRect(b.x - 20, b.y + b.h / 2 - 20, 20, 40); // Left
+        doorIndicators.fillRect(b.x + b.w, b.y + b.h / 2 - 20, 20, 40); // Right
+        doorIndicators.setDepth(50);
+    }
+
+    checkDoorTransition() {
+        const p = this.player;
+        const b = this.roomBounds;
+
+        // Door hitboxes (slightly extended beyond room)
+        const doorW = 40, doorH = 40;
+
+        // Top door
+        if (p.x > b.x + b.w / 2 - doorW / 2 && p.x < b.x + b.w / 2 + doorW / 2 && p.y < b.y + 10) {
+            this.transitionRoom('up');
+        }
+        // Bottom door
+        if (p.x > b.x + b.w / 2 - doorW / 2 && p.x < b.x + b.w / 2 + doorW / 2 && p.y > b.y + b.h - 10) {
+            this.transitionRoom('down');
+        }
+        // Left door
+        if (p.y > b.y + b.h / 2 - doorH / 2 && p.y < b.y + b.h / 2 + doorH / 2 && p.x < b.x + 10) {
+            this.transitionRoom('left');
+        }
+        // Right door
+        if (p.y > b.y + b.h / 2 - doorH / 2 && p.y < b.y + b.h / 2 + doorH / 2 && p.x > b.x + b.w - 10) {
+            this.transitionRoom('right');
+        }
+    }
+
+    transitionRoom(direction) {
+        // Increment room number
+        this.roomNum++;
+
+        // Every 5 rooms, go to next floor
+        if (this.roomNum > 5) {
+            this.floor++;
+            this.roomNum = 1;
+            this.showFloorMessage();
+        }
+
+        // Clear current room
+        this.enemyBullets.clear(true, true);
+        this.playerBullets.clear(true, true);
+        this.pickups.clear(true, true);
+
+        // Reset room state
+        this.roomCleared = false;
+        this.doorsOpen = false;
+
+        // Recreate room graphics
+        if (this.roomGraphics) this.roomGraphics.destroy();
+        this.createRoom();
+
+        // Move player to opposite side
+        const b = this.roomBounds;
+        switch (direction) {
+            case 'up':
+                this.player.setPosition(b.x + b.w / 2, b.y + b.h - 40);
+                break;
+            case 'down':
+                this.player.setPosition(b.x + b.w / 2, b.y + 40);
+                break;
+            case 'left':
+                this.player.setPosition(b.x + b.w - 40, b.y + b.h / 2);
+                break;
+            case 'right':
+                this.player.setPosition(b.x + 40, b.y + b.h / 2);
+                break;
+        }
+
+        // Spawn new enemies
+        this.spawnEnemies();
+
+        // Update floor text
+        this.floorText.setText(`Floor ${this.floor}`);
+    }
+
+    showFloorMessage() {
+        const msg = this.add.text(400, 300, `FLOOR ${this.floor}`, {
+            fontSize: '36px',
+            fontFamily: 'monospace',
+            fontStyle: 'bold',
+            color: '#FFFF44'
+        }).setOrigin(0.5).setDepth(150);
+
+        this.tweens.add({
+            targets: msg,
+            scale: 1.5,
+            alpha: 0,
+            duration: 2000,
+            onComplete: () => msg.destroy()
+        });
     }
 
     updateUI() {

@@ -808,8 +808,8 @@ class GameScene extends Phaser.Scene {
     updateLighting() {
         this.darkness.clear();
 
-        // Full darkness
-        this.darkness.fillStyle(0x000000, 0.9);
+        // Much lighter base darkness (0.4 instead of 0.9)
+        this.darkness.fillStyle(0x000000, 0.4);
         this.darkness.fillRect(
             this.cameras.main.scrollX,
             this.cameras.main.scrollY,
@@ -817,27 +817,100 @@ class GameScene extends Phaser.Scene {
             GAME_HEIGHT
         );
 
-        // Vision cone cut-out
-        const coneLength = this.playerData.flashlightOn ? 350 : 80;
-        const coneAngle = Math.PI / 4;
+        // Vision cone settings
+        const coneLength = this.playerData.flashlightOn ? 450 : 150;
+        const coneAngle = this.playerData.flashlightOn ? Math.PI / 2.5 : Math.PI / 3;
 
-        this.darkness.fillStyle(0x000000, 0);
+        // Draw graduated light cone (multiple layers for smooth effect)
+        // Outer dim light
+        this.darkness.fillStyle(0x1a1a1a, 0.5);
+        this.drawVisionCone(coneLength, coneAngle);
+
+        // Middle light
+        this.darkness.fillStyle(0x2a2a2a, 0.4);
+        this.drawVisionCone(coneLength * 0.75, coneAngle * 0.85);
+
+        // Inner bright light
+        this.darkness.fillStyle(0x3a3a3a, 0.35);
+        this.drawVisionCone(coneLength * 0.5, coneAngle * 0.7);
+
+        // Core light
+        this.darkness.fillStyle(0x4a4a4a, 0.3);
+        this.drawVisionCone(coneLength * 0.3, coneAngle * 0.5);
+
+        // Ambient light around player (larger radius)
+        const ambientRadius = this.playerData.flashlightOn ? 100 : 70;
+
+        this.darkness.fillStyle(0x1a1a1a, 0.35);
+        this.darkness.fillCircle(this.player.x, this.player.y, ambientRadius);
+
+        this.darkness.fillStyle(0x2a2a2a, 0.3);
+        this.darkness.fillCircle(this.player.x, this.player.y, ambientRadius * 0.7);
+
+        this.darkness.fillStyle(0x3a3a3a, 0.25);
+        this.darkness.fillCircle(this.player.x, this.player.y, ambientRadius * 0.4);
+
+        // Update enemy visibility based on line of sight
+        this.updateEntityVisibility(coneLength, coneAngle);
+    }
+
+    drawVisionCone(length, angle) {
         this.darkness.beginPath();
         this.darkness.moveTo(this.player.x, this.player.y);
 
-        for (let a = -coneAngle; a <= coneAngle; a += 0.05) {
-            const x = this.player.x + Math.cos(this.player.rotation + a) * coneLength;
-            const y = this.player.y + Math.sin(this.player.rotation + a) * coneLength;
+        for (let a = -angle; a <= angle; a += 0.05) {
+            const x = this.player.x + Math.cos(this.player.rotation + a) * length;
+            const y = this.player.y + Math.sin(this.player.rotation + a) * length;
             this.darkness.lineTo(x, y);
         }
 
         this.darkness.closePath();
-        this.darkness.fillStyle(0x000000, 0);
         this.darkness.fill();
+    }
 
-        // Ambient light
-        this.darkness.fillStyle(0x000000, 0);
-        this.darkness.fillCircle(this.player.x, this.player.y, this.playerData.flashlightOn ? 50 : 30);
+    updateEntityVisibility(coneLength, coneAngle) {
+        // Check each enemy and item for visibility
+        const playerAngle = this.player.rotation;
+
+        for (const enemy of this.enemies) {
+            if (!enemy.active) continue;
+
+            const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.x, enemy.y);
+            const angleToEnemy = Phaser.Math.Angle.Between(this.player.x, this.player.y, enemy.x, enemy.y);
+
+            // Normalize angle difference to [-PI, PI]
+            let angleDiff = angleToEnemy - playerAngle;
+            while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+            while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+            // Check if enemy is within vision cone OR within ambient light
+            const inCone = Math.abs(angleDiff) <= coneAngle && dist <= coneLength;
+            const inAmbient = dist <= (this.playerData.flashlightOn ? 100 : 70);
+            const isVisible = inCone || inAmbient;
+
+            // Set visibility with smooth fade
+            const targetAlpha = isVisible ? 1 : 0.15;
+            enemy.setAlpha(enemy.alpha + (targetAlpha - enemy.alpha) * 0.2);
+        }
+
+        // Items fade based on visibility too (but less dramatic)
+        for (const item of this.items) {
+            if (!item.active) continue;
+
+            const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, item.x, item.y);
+            const angleToItem = Phaser.Math.Angle.Between(this.player.x, this.player.y, item.x, item.y);
+
+            let angleDiff = angleToItem - playerAngle;
+            while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+            while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+            const inCone = Math.abs(angleDiff) <= coneAngle && dist <= coneLength;
+            const inAmbient = dist <= (this.playerData.flashlightOn ? 100 : 70);
+            const isVisible = inCone || inAmbient;
+
+            const targetAlpha = isVisible ? 1 : 0.3;
+            item.setAlpha(item.alpha + (targetAlpha - item.alpha) * 0.2);
+        }
     }
 
     updateUI() {

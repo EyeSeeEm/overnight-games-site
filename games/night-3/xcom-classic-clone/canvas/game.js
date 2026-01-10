@@ -7,8 +7,8 @@ const ctx = canvas.getContext('2d');
 // Constants - Match classic X-COM dimensions
 const TILE_WIDTH = 32;
 const TILE_HEIGHT = 16;
-const MAP_WIDTH = 20;
-const MAP_HEIGHT = 20;
+const MAP_WIDTH = 30;
+const MAP_HEIGHT = 30;
 const UI_HEIGHT = 160;
 const GAME_HEIGHT = canvas.height - UI_HEIGHT;
 
@@ -176,36 +176,13 @@ function generateMap() {
         for (let x = 0; x < MAP_WIDTH; x++) {
             let terrain = Math.random() < 0.5 ? TERRAIN.GRASS : TERRAIN.GRASS_DARK;
 
-            // Road through middle
-            if (x >= 9 && x <= 11) {
+            // Road through middle (now wider map)
+            if (x >= 13 && x <= 16) {
                 terrain = TERRAIN.ROAD;
             }
-            // Dirt landing zone
+            // Dirt landing zone (player spawn area)
             else if (x >= 1 && x <= 6 && y >= 1 && y <= 6) {
                 terrain = TERRAIN.DIRT;
-            }
-            // Building 1 (brick)
-            else if ((x === 14 && y >= 8 && y <= 14) ||
-                     (x === 18 && y >= 8 && y <= 14) ||
-                     (y === 8 && x >= 14 && x <= 18) ||
-                     (y === 14 && x >= 14 && x <= 18)) {
-                terrain = TERRAIN.WALL_BRICK;
-            }
-            // Building interior floor
-            else if (x > 14 && x < 18 && y > 8 && y < 14) {
-                terrain = TERRAIN.ROAD;
-            }
-            // Bushes around map
-            else if (Math.random() < 0.12 && terrain.type.includes('grass')) {
-                terrain = TERRAIN.BUSH;
-            }
-            // Flowers (orange)
-            else if (Math.random() < 0.08 && terrain.type.includes('grass')) {
-                terrain = TERRAIN.FLOWERS;
-            }
-            // Fence along property
-            else if (y === 12 && x >= 2 && x <= 7) {
-                terrain = TERRAIN.FENCE;
             }
 
             map[y][x] = {
@@ -217,19 +194,74 @@ function generateMap() {
         }
     }
 
-    // Add lamp posts along the road (like in reference)
-    decorations.push({ type: 'lamppost', x: 10, y: 3 });
-    decorations.push({ type: 'lamppost', x: 10, y: 8 });
-    decorations.push({ type: 'lamppost', x: 10, y: 13 });
-    decorations.push({ type: 'lamppost', x: 10, y: 18 });
+    // Generate random buildings
+    const numBuildings = 2 + Math.floor(Math.random() * 3); // 2-4 buildings
+    for (let b = 0; b < numBuildings; b++) {
+        // Random building position (away from spawn)
+        const bx = 12 + Math.floor(Math.random() * 14); // x: 12-25
+        const by = 5 + Math.floor(Math.random() * 20);  // y: 5-24
+        const bw = 4 + Math.floor(Math.random() * 3);   // width: 4-6
+        const bh = 4 + Math.floor(Math.random() * 3);   // height: 4-6
 
-    // Add some crates near the building
-    decorations.push({ type: 'crate', x: 13, y: 10 });
-    decorations.push({ type: 'crate', x: 13, y: 11 });
+        // Check bounds
+        if (bx + bw >= MAP_WIDTH || by + bh >= MAP_HEIGHT) continue;
 
-    // Add debris/rubble
-    decorations.push({ type: 'debris', x: 7, y: 5 });
-    decorations.push({ type: 'debris', x: 15, y: 3 });
+        // Draw building walls and interior
+        for (let dy = 0; dy <= bh; dy++) {
+            for (let dx = 0; dx <= bw; dx++) {
+                const tx = bx + dx;
+                const ty = by + dy;
+                if (ty >= MAP_HEIGHT || tx >= MAP_WIDTH) continue;
+
+                // Walls on edges
+                if (dx === 0 || dx === bw || dy === 0 || dy === bh) {
+                    map[ty][tx].terrain = TERRAIN.WALL_BRICK;
+                }
+                // Interior floor
+                else {
+                    map[ty][tx].terrain = TERRAIN.ROAD;
+                }
+            }
+        }
+        // Add door opening
+        const doorSide = Math.floor(Math.random() * 4);
+        if (doorSide === 0 && bx > 0) map[by + Math.floor(bh/2)][bx].terrain = TERRAIN.ROAD;
+        else if (doorSide === 1 && bx + bw < MAP_WIDTH) map[by + Math.floor(bh/2)][bx + bw].terrain = TERRAIN.ROAD;
+        else if (doorSide === 2 && by > 0) map[by][bx + Math.floor(bw/2)].terrain = TERRAIN.ROAD;
+        else if (doorSide === 3 && by + bh < MAP_HEIGHT) map[by + bh][bx + Math.floor(bw/2)].terrain = TERRAIN.ROAD;
+    }
+
+    // Add random bushes
+    for (let y = 0; y < MAP_HEIGHT; y++) {
+        for (let x = 0; x < MAP_WIDTH; x++) {
+            if (map[y][x].terrain.type && map[y][x].terrain.type.includes('grass')) {
+                if (Math.random() < 0.1) map[y][x].terrain = TERRAIN.BUSH;
+                else if (Math.random() < 0.06) map[y][x].terrain = TERRAIN.FLOWERS;
+            }
+        }
+    }
+
+    // Add fence sections
+    const fenceY = 10 + Math.floor(Math.random() * 5);
+    for (let x = 2; x <= 8; x++) {
+        if (map[fenceY][x].terrain.type && map[fenceY][x].terrain.type.includes('grass')) {
+            map[fenceY][x].terrain = TERRAIN.FENCE;
+        }
+    }
+
+    // Add lamp posts along the road
+    for (let y = 3; y < MAP_HEIGHT - 3; y += 6) {
+        decorations.push({ type: 'lamppost', x: 14, y: y });
+    }
+
+    // Add random crates and debris
+    for (let i = 0; i < 6; i++) {
+        const dx = 10 + Math.floor(Math.random() * 15);
+        const dy = 5 + Math.floor(Math.random() * 20);
+        if (map[dy][dx].terrain.walkable) {
+            decorations.push({ type: Math.random() < 0.5 ? 'crate' : 'debris', x: dx, y: dy });
+        }
+    }
 }
 
 // Units arrays
@@ -334,17 +366,22 @@ function initGame() {
     }
 
     aliens = [];
-    // More aliens for challenging tactical combat
+    // Aliens start farther from soldiers across the larger map
     const alienPositions = [
-        [15, 10], [16, 11], [17, 9],  // In building
-        [13, 16], [18, 15],            // Near building
-        [8, 14], [12, 12],             // Mid map
-        [5, 16], [7, 18]               // Far side patrol
+        [20, 15], [22, 16], [21, 18],  // Far side of road
+        [25, 10], [26, 12],            // Far right
+        [18, 22], [20, 25],            // Bottom area
+        [24, 20], [27, 15],            // More distant
+        [15, 26], [22, 28]             // Very far
     ];
     for (let pos of alienPositions) {
-        const a = createAlien(pos[0], pos[1], Math.random() < 0.7 ? 'sectoid' : 'floater');
-        aliens.push(a);
-        map[a.y][a.x].unit = a;
+        // Ensure position is valid and walkable
+        if (pos[0] < MAP_WIDTH && pos[1] < MAP_HEIGHT &&
+            map[pos[1]][pos[0]].terrain.walkable && !map[pos[1]][pos[0]].unit) {
+            const a = createAlien(pos[0], pos[1], Math.random() < 0.7 ? 'sectoid' : 'floater');
+            aliens.push(a);
+            map[a.y][a.x].unit = a;
+        }
     }
 
     game.selectedUnit = soldiers[0];
@@ -355,6 +392,10 @@ function initGame() {
     game.combatLog = [];
     game.smoke = [];  // Clear any smoke from previous game
     updateVisibility();
+
+    // Show initial instructions
+    setMessage('MISSION START! Click soldiers to select, click tiles to move, click enemies to shoot. Press E to end turn.');
+    createFloatingText(canvas.width / 2, GAME_HEIGHT / 2, 'YOUR TURN', '#44ff44');
 }
 
 function updateVisibility() {
