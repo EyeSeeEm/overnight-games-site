@@ -767,6 +767,7 @@
       <select id="sortBy">
         <option value="grouped">By Game</option>
         <option value="final-rating">By Rating</option>
+        <option value="framework">By Framework</option>
         <option value="date-desc">Recent</option>
         <option value="date-asc">Oldest</option>
         <option value="name">Name</option>
@@ -1042,6 +1043,10 @@
         case 'date-asc': games.sort((a, b) => new Date(a.createdDate) - new Date(b.createdDate)); break;
         case 'name': games.sort((a, b) => a.name.localeCompare(b.name)); break;
         case 'final-rating': games.sort((a, b) => (finalRatings[b.id] || 0) - (finalRatings[a.id] || 0)); break;
+        case 'framework': games.sort((a, b) => {
+          if (a.framework !== b.framework) return a.framework.localeCompare(b.framework);
+          return a.name.localeCompare(b.name);
+        }); break;
         case 'grouped': games.sort((a, b) => {
           // Extract base game name (without -expanded, -polished, -v2)
           const getBase = (g) => g.gameDir.replace(/-expanded$|-polished$|-v2$/, '');
