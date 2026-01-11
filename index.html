@@ -727,6 +727,7 @@
         <hr>
         <button id="markUpdatedMenuBtn" onclick="confirmMarkUpdated()">🔄 Mark Noted → Updated</button>
         <hr>
+        <button id="resetUpdatedBtn" onclick="confirmResetUpdated()">↩️ Reset Updated → Played</button>
         <button id="purgeNotesBtn" onclick="confirmPurgeNotes()" style="color:#ff6b6b;">🗑️ Purge All Notes</button>
       </div>
     </div>
@@ -1553,6 +1554,50 @@
         btn.style.background = '#4c6b22';
         setTimeout(() => {
           btn.textContent = '🗑️ Purge All Notes';
+          btn.style.background = '';
+          toggleMenu();
+        }, 2000);
+      }
+    }
+
+    // Reset all updated games back to played
+    let resetUpdatedPending = false;
+    let resetUpdatedTimeout = null;
+
+    function confirmResetUpdated() {
+      const btn = document.getElementById('resetUpdatedBtn');
+      const updatedCount = Object.keys(updatedGames).length;
+
+      if (updatedCount === 0) {
+        btn.textContent = 'No updated games!';
+        btn.style.background = '#666';
+        setTimeout(() => {
+          btn.textContent = '↩️ Reset Updated → Played';
+          btn.style.background = '';
+        }, 2000);
+        return;
+      }
+
+      if (!resetUpdatedPending) {
+        resetUpdatedPending = true;
+        btn.textContent = `Confirm? (${updatedCount} games)`;
+        btn.style.background = '#cc0000';
+        resetUpdatedTimeout = setTimeout(() => {
+          resetUpdatedPending = false;
+          btn.textContent = '↩️ Reset Updated → Played';
+          btn.style.background = '';
+        }, 3000);
+      } else {
+        clearTimeout(resetUpdatedTimeout);
+        resetUpdatedPending = false;
+        // Clear all updated status
+        updatedGames = {};
+        localStorage.setItem('updatedGames', JSON.stringify(updatedGames));
+        renderGames();
+        btn.textContent = `✓ Reset ${updatedCount} games!`;
+        btn.style.background = '#4c6b22';
+        setTimeout(() => {
+          btn.textContent = '↩️ Reset Updated → Played';
           btn.style.background = '';
           toggleMenu();
         }, 2000);
