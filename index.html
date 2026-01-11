@@ -1117,6 +1117,20 @@
       }
     });
     
+    // Block ALL keyboard scrolling when player modal is open (capture phase)
+    window.addEventListener('keydown', function(e) {
+      const playerOpen = document.getElementById('playerModal').classList.contains('active');
+
+      if (playerOpen && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) {
+        // Only allow if typing in notes textarea
+        if (document.activeElement?.id !== 'playerNotesText') {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }
+    }, { capture: true });
+
     // Handle Escape key to close modals
     document.addEventListener('keydown', function(e) {
       const playerOpen = document.getElementById('playerModal').classList.contains('active');
@@ -1127,14 +1141,6 @@
           closePlayer();
         } else if (notesOpen) {
           closeNotes();
-        }
-      }
-
-      // Block arrow keys and space from scrolling the background when modal is open
-      if (playerOpen && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
-        // Only prevent if not focused on notes textarea
-        if (document.activeElement?.id !== 'playerNotesText') {
-          e.preventDefault();
         }
       }
     });
@@ -1153,7 +1159,7 @@
       }
     }
 
-    async function savePlayerNotes() {
+    async function savePlayerNotes(showMessage = true) {
       if (!currentPlayerGame) return;
       const text = document.getElementById('playerNotesText').value.trim();
       if (text) {
@@ -1164,10 +1170,31 @@
       await saveData();
       renderGames();
       // Show saved message
-      const msg = document.getElementById('playerSavedMsg');
-      msg.classList.add('show');
-      setTimeout(() => msg.classList.remove('show'), 2000);
+      if (showMessage) {
+        const msg = document.getElementById('playerSavedMsg');
+        msg.classList.add('show');
+        setTimeout(() => msg.classList.remove('show'), 2000);
+      }
     }
+
+    // Auto-save notes with debounce
+    let autoSaveTimeout = null;
+    document.getElementById('playerNotesText').addEventListener('input', function() {
+      // Clear previous timeout
+      if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+      // Show "saving..." indicator
+      document.getElementById('playerSavedMsg').textContent = 'Saving...';
+      document.getElementById('playerSavedMsg').classList.add('show');
+      // Save after 1 second of no typing
+      autoSaveTimeout = setTimeout(async () => {
+        await savePlayerNotes(false);
+        document.getElementById('playerSavedMsg').textContent = '✓ Saved!';
+        setTimeout(() => {
+          document.getElementById('playerSavedMsg').classList.remove('show');
+          document.getElementById('playerSavedMsg').textContent = '✓ Saved!';
+        }, 1500);
+      }, 1000);
+    });
 
     async function toggleBrokenFromPlayer() {
       if (!currentPlayerGame) return;
