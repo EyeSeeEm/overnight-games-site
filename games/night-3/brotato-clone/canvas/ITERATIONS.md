@@ -85,3 +85,44 @@
 
 ### Difficulty Rating
 Easy-Medium - Core loop is simple but balancing waves requires iteration
+
+---
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "No real wave mechanics with shops inbetween" → Added shop system between waves with upgradable items
+2. [x] "Too few enemies at start" → Increased spawn rate from 1.5s to 0.8s, spawn 5 enemies immediately on game start
+3. [x] "Too low fire rate at start" → Increased attackSpeed from 1 to 2.5 shots/second
+
+### Implementation Details:
+
+**Shop System:**
+- Shop appears between waves
+- 4 randomly selected items per shop
+- Items: Damage Up, Fire Rate Up, Speed Up, Max HP Up, Heal, Range Up
+- Navigation with W/S or Arrow keys
+- ENTER to buy, SPACE to start next wave
+- Cost scales with wave number (+10% per wave)
+- Shows player stats (HP, DMG, SPD, Fire Rate)
+
+**Enemy Spawning:**
+- Base spawn rate: 0.8 seconds (was 1.5)
+- 20% chance to spawn extra enemy per spawn event
+- Max enemies: 15 + wave * 8 (more enemies allowed)
+- 5 enemies spawn immediately when game starts
+- 3 + wave enemies spawn at start of each new wave
+
+**Fire Rate:**
+- Player attackSpeed: 2.5/s (was 1.0)
+- Bullet speed: 600 (was 500)
+- Player range: 400 (was 300 implicit)
+
+### Verification:
+- Tested 60+ seconds with no errors
+- Shop appears after wave 1 ends
+- More enemies on screen from the start
+- Player fires much faster
+- Shop upgrades work correctly
+
+**Total Iterations Logged:** 46+ (20 expand + 20 polish + 6 feedback fixes)

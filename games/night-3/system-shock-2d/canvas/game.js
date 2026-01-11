@@ -1316,31 +1316,62 @@ function renderMap() {
     }
 }
 
+function castRay(startX, startY, angle, maxDist) {
+    // Cast a ray and return distance to wall
+    const stepSize = 4;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+
+    for (let d = 0; d < maxDist; d += stepSize) {
+        const x = startX + cos * d;
+        const y = startY + sin * d;
+        const tx = Math.floor(x / TILE_SIZE);
+        const ty = Math.floor(y / TILE_SIZE);
+
+        if (tx < 0 || tx >= MAP_WIDTH || ty < 0 || ty >= MAP_HEIGHT) {
+            return d;
+        }
+        if (map[ty][tx] === 1) {
+            return d;
+        }
+    }
+    return maxDist;
+}
+
 function renderLighting() {
     // Create darkness overlay
     ctx.fillStyle = COLORS.DARKNESS;
     ctx.fillRect(camera.x, camera.y, GAME_WIDTH, GAME_HEIGHT);
 
-    // Cut out flashlight cone
+    // Cut out flashlight cone with raycasting (walls block light)
     if (player.flashlightOn) {
         ctx.save();
         ctx.globalCompositeOperation = 'destination-out';
 
-        ctx.translate(player.x, player.y);
-        ctx.rotate(player.angle);
-
-        // Cone shape
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
         const coneLength = 500;
-        const coneWidth = Math.PI / 2.5; // 72 degrees (wider cone)
-        ctx.arc(0, 0, coneLength, -coneWidth/2, coneWidth/2);
+        const coneWidth = Math.PI / 2.5; // 72 degrees
+        const rayCount = 60; // Number of rays to cast
+        const startAngle = player.angle - coneWidth / 2;
+        const angleStep = coneWidth / rayCount;
+
+        // Build cone polygon with raycasting
+        ctx.beginPath();
+        ctx.moveTo(player.x, player.y);
+
+        for (let i = 0; i <= rayCount; i++) {
+            const rayAngle = startAngle + angleStep * i;
+            const dist = castRay(player.x, player.y, rayAngle, coneLength);
+            const px = player.x + Math.cos(rayAngle) * dist;
+            const py = player.y + Math.sin(rayAngle) * dist;
+            ctx.lineTo(px, py);
+        }
+
         ctx.closePath();
 
         // Gradient for soft edge
-        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, coneLength);
+        const gradient = ctx.createRadialGradient(player.x, player.y, 0, player.x, player.y, coneLength);
         gradient.addColorStop(0, 'rgba(255,255,255,1)');
-        gradient.addColorStop(0.8, 'rgba(255,255,255,0.9)');
+        gradient.addColorStop(0.7, 'rgba(255,255,255,0.8)');
         gradient.addColorStop(1, 'rgba(255,255,255,0)');
 
         ctx.fillStyle = gradient;

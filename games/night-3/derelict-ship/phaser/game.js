@@ -8,19 +8,19 @@ const MAP_WIDTH = 50;
 const MAP_HEIGHT = 40;
 
 const COLORS = {
-    BG: 0x0a0808,
-    FLOOR: 0x2a2a2a,
-    FLOOR_ALT: 0x252525,
-    WALL: 0x1a1a1a,
-    WALL_LIGHT: 0x3a3a3a,
-    DOOR: 0x4a4040,
-    PLAYER: 0x6a8a8a,
-    CRAWLER: 0x5a4a3a,
-    SHAMBLER: 0x4a5a4a,
-    BLOOD: 0x6a2020,
-    O2_ITEM: 0x4080cc,
-    MEDKIT: 0x40aa60,
-    EXIT: 0x40aa40
+    BG: 0x151515,
+    FLOOR: 0x404040,
+    FLOOR_ALT: 0x3a3a3a,
+    WALL: 0x303030,
+    WALL_LIGHT: 0x505050,
+    DOOR: 0x5a5050,
+    PLAYER: 0x7a9a9a,
+    CRAWLER: 0x6a5a4a,
+    SHAMBLER: 0x5a6a5a,
+    BLOOD: 0x7a3030,
+    O2_ITEM: 0x50a0ee,
+    MEDKIT: 0x50cc70,
+    EXIT: 0x50cc50
 };
 
 class BootScene extends Phaser.Scene {
@@ -39,7 +39,7 @@ class BootScene extends Phaser.Scene {
         // Floor
         g.fillStyle(COLORS.FLOOR);
         g.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        g.lineStyle(1, 0x1a1a1a);
+        g.lineStyle(1, 0x2a2a2a);
         g.strokeRect(0, 0, TILE_SIZE, TILE_SIZE);
         g.generateTexture('floor', TILE_SIZE, TILE_SIZE);
 
@@ -47,7 +47,7 @@ class BootScene extends Phaser.Scene {
         g.clear();
         g.fillStyle(COLORS.FLOOR_ALT);
         g.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        g.lineStyle(1, 0x1a1a1a);
+        g.lineStyle(1, 0x2a2a2a);
         g.strokeRect(0, 0, TILE_SIZE, TILE_SIZE);
         g.generateTexture('floorAlt', TILE_SIZE, TILE_SIZE);
 
@@ -124,16 +124,25 @@ class GameScene extends Phaser.Scene {
         super({ key: 'Game' });
     }
 
+    init(data) {
+        // Store init data for spaceship phase transitions
+        this.initData = data || {};
+    }
+
     create() {
+        // Use init data from spaceship phase if available
+        const startingHp = this.initData.playerHp || 100;
+        const sector = this.initData.sector || 1;
+
         this.gameData = {
             state: 'playing',
-            sector: 1,
+            sector: sector,
             integrity: 100,
             messages: []
         };
 
         this.playerData = {
-            hp: 100,
+            hp: startingHp,
             maxHp: 100,
             o2: 100,
             maxO2: 100,
@@ -152,13 +161,8 @@ class GameScene extends Phaser.Scene {
             totalDamageTaken: 0,
             critCount: 0,
             itemsPickedUp: 0,
-            attacksMade: 0,
-            maxKillStreak: 0
+            attacksMade: 0
         };
-
-        // Kill streak system
-        this.killStreak = 0;
-        this.killStreakTimer = 0;
 
         // Visual effects
         this.damageFlashAlpha = 0;
@@ -427,10 +431,6 @@ class GameScene extends Phaser.Scene {
         this.lowHealthOverlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x330000, 0);
         this.lowHealthOverlay.setScrollFactor(0).setDepth(89);
 
-        // Kill streak display
-        this.killStreakText = this.add.text(GAME_WIDTH / 2, 80, '', { fontSize: '18px', fontFamily: 'monospace', color: '#ffaa00', fontStyle: 'bold' });
-        this.killStreakText.setOrigin(0.5).setScrollFactor(0).setDepth(101);
-
         // Debug overlay
         this.debugText = this.add.text(GAME_WIDTH - 200, 80, '', { fontSize: '10px', fontFamily: 'monospace', color: '#00ff00', backgroundColor: '#000000aa' });
         this.debugText.setScrollFactor(0).setDepth(150).setVisible(false);
@@ -474,7 +474,6 @@ class GameScene extends Phaser.Scene {
         this.updateUI();
         this.updateVisualEffects(dt);
         this.updateFloatingTexts(dt);
-        this.updateKillStreak(dt);
         this.updateDebugOverlay();
 
         // Integrity decay
@@ -484,10 +483,16 @@ class GameScene extends Phaser.Scene {
             this.addMessage("The ship tears itself apart.");
         }
 
-        // Victory
+        // Victory - transition to Spaceship phase
         const distToExit = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.exitX, this.exitY);
         if (distToExit < 40) {
-            this.gameData.state = 'victory';
+            // Transition to spaceship phase instead of ending
+            this.scene.start('Spaceship', {
+                kills: this.stats.killCount,
+                playerHp: this.playerData.hp,
+                totalKills: this.initData?.totalKills || 0,
+                shipsExplored: this.initData?.shipsExplored || 0
+            });
         }
 
         // Death
@@ -640,20 +645,6 @@ class GameScene extends Phaser.Scene {
 
     killEnemy(enemy, wasCrit) {
         this.stats.killCount++;
-
-        // Kill streak
-        this.killStreak++;
-        this.killStreakTimer = 3;
-        if (this.killStreak > this.stats.maxKillStreak) {
-            this.stats.maxKillStreak = this.killStreak;
-        }
-
-        // Kill streak messages
-        if (this.killStreak >= 3) {
-            const streakMessages = { 3: 'TRIPLE KILL!', 4: 'QUAD KILL!', 5: 'RAMPAGE!', 6: 'MASSACRE!' };
-            const msg = streakMessages[Math.min(this.killStreak, 6)] || 'UNSTOPPABLE!';
-            this.createFloatingText(this.player.x, this.player.y - 50, msg, '#ffaa00', 20);
-        }
 
         // Death burst particles
         for (let i = 0; i < 8; i++) {
@@ -808,69 +799,89 @@ class GameScene extends Phaser.Scene {
     updateLighting() {
         this.darkness.clear();
 
-        // Much lighter base darkness (0.4 instead of 0.9)
-        this.darkness.fillStyle(0x000000, 0.4);
-        this.darkness.fillRect(
-            this.cameras.main.scrollX,
-            this.cameras.main.scrollY,
-            GAME_WIDTH,
-            GAME_HEIGHT
-        );
-
-        // Vision cone settings
+        // Vision cone settings - the cone REVEALS what the player can see
         const coneLength = this.playerData.flashlightOn ? 450 : 150;
         const coneAngle = this.playerData.flashlightOn ? Math.PI / 2.5 : Math.PI / 3;
-
-        // Draw graduated light cone (multiple layers for smooth effect)
-        // Outer dim light
-        this.darkness.fillStyle(0x1a1a1a, 0.5);
-        this.drawVisionCone(coneLength, coneAngle);
-
-        // Middle light
-        this.darkness.fillStyle(0x2a2a2a, 0.4);
-        this.drawVisionCone(coneLength * 0.75, coneAngle * 0.85);
-
-        // Inner bright light
-        this.darkness.fillStyle(0x3a3a3a, 0.35);
-        this.drawVisionCone(coneLength * 0.5, coneAngle * 0.7);
-
-        // Core light
-        this.darkness.fillStyle(0x4a4a4a, 0.3);
-        this.drawVisionCone(coneLength * 0.3, coneAngle * 0.5);
-
-        // Ambient light around player (larger radius)
         const ambientRadius = this.playerData.flashlightOn ? 100 : 70;
 
-        this.darkness.fillStyle(0x1a1a1a, 0.35);
-        this.darkness.fillCircle(this.player.x, this.player.y, ambientRadius);
+        // Get camera viewport
+        const camX = this.cameras.main.scrollX;
+        const camY = this.cameras.main.scrollY;
 
-        this.darkness.fillStyle(0x2a2a2a, 0.3);
-        this.darkness.fillCircle(this.player.x, this.player.y, ambientRadius * 0.7);
+        // Draw darkness with a hole for the vision cone (proper reveal system)
+        // The cone is where the player CAN see - darkness fills everywhere else
+        this.darkness.fillStyle(0x000000, 0.85);
 
-        this.darkness.fillStyle(0x3a3a3a, 0.25);
-        this.darkness.fillCircle(this.player.x, this.player.y, ambientRadius * 0.4);
+        // Start with the outer rectangle (clockwise)
+        this.darkness.beginPath();
+        this.darkness.moveTo(camX, camY);
+        this.darkness.lineTo(camX + GAME_WIDTH, camY);
+        this.darkness.lineTo(camX + GAME_WIDTH, camY + GAME_HEIGHT);
+        this.darkness.lineTo(camX, camY + GAME_HEIGHT);
+        this.darkness.lineTo(camX, camY);
+
+        // Cut out the vision cone (counter-clockwise to create hole)
+        // First, draw ambient circle around player
+        for (let a = Math.PI * 2; a >= 0; a -= 0.1) {
+            const x = this.player.x + Math.cos(a) * ambientRadius;
+            const y = this.player.y + Math.sin(a) * ambientRadius;
+            this.darkness.lineTo(x, y);
+        }
+
+        this.darkness.closePath();
+        this.darkness.fillPath();
+
+        // Now draw the vision cone as a separate revealed area
+        // Use lighter darkness to indicate partial visibility at edges
+        this.darkness.fillStyle(0x000000, 0.7);
+        this.drawDarknessWithConeHole(camX, camY, coneLength * 0.8, coneAngle * 0.9);
+
+        this.darkness.fillStyle(0x000000, 0.5);
+        this.drawDarknessWithConeHole(camX, camY, coneLength * 0.6, coneAngle * 0.8);
+
+        this.darkness.fillStyle(0x000000, 0.25);
+        this.drawDarknessWithConeHole(camX, camY, coneLength * 0.4, coneAngle * 0.6);
 
         // Update enemy visibility based on line of sight
         this.updateEntityVisibility(coneLength, coneAngle);
     }
 
-    drawVisionCone(length, angle) {
+    drawDarknessWithConeHole(camX, camY, length, angle) {
+        // Draw darkness everywhere except inside the cone
         this.darkness.beginPath();
+
+        // Outer rectangle (clockwise)
+        this.darkness.moveTo(camX, camY);
+        this.darkness.lineTo(camX + GAME_WIDTH, camY);
+        this.darkness.lineTo(camX + GAME_WIDTH, camY + GAME_HEIGHT);
+        this.darkness.lineTo(camX, camY + GAME_HEIGHT);
+        this.darkness.lineTo(camX, camY);
+
+        // Cone hole (counter-clockwise)
+        const startAngle = this.player.rotation + angle;
+        const endAngle = this.player.rotation - angle;
+
+        // Start at player
         this.darkness.moveTo(this.player.x, this.player.y);
 
-        for (let a = -angle; a <= angle; a += 0.05) {
-            const x = this.player.x + Math.cos(this.player.rotation + a) * length;
-            const y = this.player.y + Math.sin(this.player.rotation + a) * length;
+        // Draw cone edge backwards (CCW)
+        for (let a = startAngle; a >= endAngle; a -= 0.05) {
+            const x = this.player.x + Math.cos(a) * length;
+            const y = this.player.y + Math.sin(a) * length;
             this.darkness.lineTo(x, y);
         }
 
+        // Back to player
+        this.darkness.lineTo(this.player.x, this.player.y);
+
         this.darkness.closePath();
-        this.darkness.fill();
+        this.darkness.fillPath();
     }
 
     updateEntityVisibility(coneLength, coneAngle) {
         // Check each enemy and item for visibility
         const playerAngle = this.player.rotation;
+        const ambientRadius = this.playerData.flashlightOn ? 100 : 70;
 
         for (const enemy of this.enemies) {
             if (!enemy.active) continue;
@@ -885,15 +896,15 @@ class GameScene extends Phaser.Scene {
 
             // Check if enemy is within vision cone OR within ambient light
             const inCone = Math.abs(angleDiff) <= coneAngle && dist <= coneLength;
-            const inAmbient = dist <= (this.playerData.flashlightOn ? 100 : 70);
+            const inAmbient = dist <= ambientRadius;
             const isVisible = inCone || inAmbient;
 
-            // Set visibility with smooth fade
-            const targetAlpha = isVisible ? 1 : 0.15;
-            enemy.setAlpha(enemy.alpha + (targetAlpha - enemy.alpha) * 0.2);
+            // Enemies are ONLY visible inside viewcone - completely hidden otherwise
+            const targetAlpha = isVisible ? 1 : 0;
+            enemy.setAlpha(enemy.alpha + (targetAlpha - enemy.alpha) * 0.3);
         }
 
-        // Items fade based on visibility too (but less dramatic)
+        // Items also only visible in viewcone (but slightly faster fade for better gameplay)
         for (const item of this.items) {
             if (!item.active) continue;
 
@@ -905,11 +916,12 @@ class GameScene extends Phaser.Scene {
             while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
 
             const inCone = Math.abs(angleDiff) <= coneAngle && dist <= coneLength;
-            const inAmbient = dist <= (this.playerData.flashlightOn ? 100 : 70);
+            const inAmbient = dist <= ambientRadius;
             const isVisible = inCone || inAmbient;
 
-            const targetAlpha = isVisible ? 1 : 0.3;
-            item.setAlpha(item.alpha + (targetAlpha - item.alpha) * 0.2);
+            // Items also hidden outside viewcone
+            const targetAlpha = isVisible ? 1 : 0;
+            item.setAlpha(item.alpha + (targetAlpha - item.alpha) * 0.3);
         }
     }
 
@@ -971,7 +983,6 @@ class GameScene extends Phaser.Scene {
                 `DAMAGE DEALT: ${this.stats.totalDamageDealt}`,
                 `DAMAGE TAKEN: ${this.stats.totalDamageTaken}`,
                 `CRITICAL HITS: ${this.stats.critCount}`,
-                `MAX KILL STREAK: ${this.stats.maxKillStreak}`,
                 ``,
                 `ATTACKS MADE: ${this.stats.attacksMade}`,
                 `ITEMS USED: ${this.stats.itemsPickedUp}`
@@ -1008,7 +1019,6 @@ class GameScene extends Phaser.Scene {
                 `DAMAGE DEALT: ${this.stats.totalDamageDealt}`,
                 `DAMAGE TAKEN: ${this.stats.totalDamageTaken}`,
                 `CRITICAL HITS: ${this.stats.critCount}`,
-                `MAX KILL STREAK: ${this.stats.maxKillStreak}`,
                 ``,
                 `ATTACKS MADE: ${this.stats.attacksMade}`,
                 `ITEMS USED: ${this.stats.itemsPickedUp}`,
@@ -1120,23 +1130,6 @@ class GameScene extends Phaser.Scene {
         });
     }
 
-    updateKillStreak(dt) {
-        if (this.killStreakTimer > 0) {
-            this.killStreakTimer -= dt;
-            if (this.killStreakTimer <= 0) {
-                this.killStreak = 0;
-            }
-        }
-
-        // Update kill streak display
-        if (this.killStreak >= 2) {
-            this.killStreakText.setText(`${this.killStreak}x STREAK`);
-            this.killStreakText.setVisible(true);
-        } else {
-            this.killStreakText.setVisible(false);
-        }
-    }
-
     updateDebugOverlay() {
         if (!this.debugMode) return;
 
@@ -1147,8 +1140,6 @@ class GameScene extends Phaser.Scene {
             `CRITS: ${this.stats.critCount}`,
             `ITEMS: ${this.stats.itemsPickedUp}`,
             `ATTACKS: ${this.stats.attacksMade}`,
-            `MAX STREAK: ${this.stats.maxKillStreak}`,
-            `STREAK: ${this.killStreak}`,
             `---`,
             `HP: ${Math.floor(this.playerData.hp)}`,
             `O2: ${Math.floor(this.playerData.o2)}`,
@@ -1160,13 +1151,196 @@ class GameScene extends Phaser.Scene {
     }
 }
 
+// Spaceship Phase - Flying between derelict ships
+class SpaceshipScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'Spaceship' });
+    }
+
+    init(data) {
+        // Carry over player stats from previous runs
+        this.totalKills = (data.totalKills || 0) + (data.kills || 0);
+        this.shipsExplored = (data.shipsExplored || 0) + 1;
+        this.playerHp = Math.min(100, (data.playerHp || 100) + 20); // Heal some HP between ships
+        this.playerO2 = 100; // Full O2 in spaceship
+    }
+
+    create() {
+        // Create starfield background
+        for (let i = 0; i < 200; i++) {
+            const star = this.add.circle(
+                Math.random() * GAME_WIDTH * 2,
+                Math.random() * GAME_HEIGHT * 2,
+                Math.random() * 2 + 0.5,
+                0xffffff,
+                Math.random() * 0.5 + 0.3
+            );
+            this.tweens.add({
+                targets: star,
+                alpha: star.alpha * 0.5,
+                duration: 1000 + Math.random() * 2000,
+                yoyo: true,
+                repeat: -1
+            });
+        }
+
+        // Player spaceship
+        this.playerShip = this.add.graphics();
+        this.playerShip.fillStyle(0x6a9a9a);
+        this.playerShip.fillTriangle(0, -20, -15, 15, 15, 15);
+        this.playerShip.fillStyle(0x4080cc);
+        this.playerShip.fillRect(-5, 5, 10, 10);
+        this.playerShip.x = GAME_WIDTH / 2;
+        this.playerShip.y = GAME_HEIGHT / 2;
+
+        this.shipVelX = 0;
+        this.shipVelY = 0;
+        this.shipAngle = -Math.PI / 2;
+
+        // Generate derelict ships to explore
+        this.derelicts = [];
+        for (let i = 0; i < 4; i++) {
+            const angle = (Math.PI * 2 * i) / 4 + Math.random() * 0.5;
+            const dist = 300 + Math.random() * 200;
+            const derelict = {
+                x: GAME_WIDTH / 2 + Math.cos(angle) * dist,
+                y: GAME_HEIGHT / 2 + Math.sin(angle) * dist,
+                size: 40 + Math.random() * 30,
+                difficulty: i + 1,
+                explored: false
+            };
+
+            // Draw derelict ship
+            const g = this.add.graphics();
+            g.fillStyle(0x3a3a3a);
+            g.fillRect(-derelict.size/2, -derelict.size/3, derelict.size, derelict.size * 0.66);
+            g.fillStyle(0x2a2a2a);
+            g.fillRect(-derelict.size/4, -derelict.size/2, derelict.size/2, derelict.size/6);
+            g.lineStyle(1, 0x5a5a5a);
+            g.strokeRect(-derelict.size/2, -derelict.size/3, derelict.size, derelict.size * 0.66);
+            g.x = derelict.x;
+            g.y = derelict.y;
+            derelict.sprite = g;
+
+            // Warning indicators
+            const label = this.add.text(derelict.x, derelict.y + derelict.size/2 + 10,
+                `DERELICT ${i + 1}\nDanger: ${'*'.repeat(derelict.difficulty)}`,
+                { fontSize: '10px', fontFamily: 'monospace', color: '#cc6060', align: 'center' }
+            ).setOrigin(0.5);
+            derelict.label = label;
+
+            this.derelicts.push(derelict);
+        }
+
+        // UI
+        this.titleText = this.add.text(GAME_WIDTH / 2, 30, 'SPACESHIP PHASE',
+            { fontSize: '24px', fontFamily: 'monospace', color: '#50cc70' }).setOrigin(0.5);
+
+        this.statsText = this.add.text(20, 20,
+            `Ships Explored: ${this.shipsExplored}\nTotal Kills: ${this.totalKills}\nHP: ${Math.floor(this.playerHp)}`,
+            { fontSize: '12px', fontFamily: 'monospace', color: '#aaaaaa' });
+
+        this.instructionText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 30,
+            'WASD to fly | Approach a derelict ship to board',
+            { fontSize: '12px', fontFamily: 'monospace', color: '#808080' }).setOrigin(0.5);
+
+        // Docking prompt
+        this.dockText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 60, '',
+            { fontSize: '16px', fontFamily: 'monospace', color: '#50cc70' }).setOrigin(0.5);
+
+        // Input
+        this.cursors = this.input.keyboard.addKeys({
+            up: Phaser.Input.Keyboard.KeyCodes.W,
+            down: Phaser.Input.Keyboard.KeyCodes.S,
+            left: Phaser.Input.Keyboard.KeyCodes.A,
+            right: Phaser.Input.Keyboard.KeyCodes.D,
+            dock: Phaser.Input.Keyboard.KeyCodes.E
+        });
+
+        this.nearestDerelict = null;
+    }
+
+    update(time, delta) {
+        const dt = delta / 1000;
+
+        // Ship rotation
+        if (this.cursors.left.isDown) this.shipAngle -= 3 * dt;
+        if (this.cursors.right.isDown) this.shipAngle += 3 * dt;
+
+        // Thrust
+        if (this.cursors.up.isDown) {
+            this.shipVelX += Math.cos(this.shipAngle) * 200 * dt;
+            this.shipVelY += Math.sin(this.shipAngle) * 200 * dt;
+        }
+        if (this.cursors.down.isDown) {
+            this.shipVelX -= Math.cos(this.shipAngle) * 100 * dt;
+            this.shipVelY -= Math.sin(this.shipAngle) * 100 * dt;
+        }
+
+        // Apply velocity with drag
+        this.playerShip.x += this.shipVelX * dt;
+        this.playerShip.y += this.shipVelY * dt;
+        this.shipVelX *= 0.98;
+        this.shipVelY *= 0.98;
+
+        // Clamp to bounds
+        this.playerShip.x = Phaser.Math.Clamp(this.playerShip.x, 50, GAME_WIDTH - 50);
+        this.playerShip.y = Phaser.Math.Clamp(this.playerShip.y, 50, GAME_HEIGHT - 50);
+
+        // Rotate ship graphic
+        this.playerShip.rotation = this.shipAngle + Math.PI / 2;
+
+        // Check proximity to derelicts
+        this.nearestDerelict = null;
+        let nearestDist = Infinity;
+
+        for (const derelict of this.derelicts) {
+            const dist = Phaser.Math.Distance.Between(
+                this.playerShip.x, this.playerShip.y,
+                derelict.x, derelict.y
+            );
+
+            if (dist < derelict.size + 40 && dist < nearestDist) {
+                nearestDist = dist;
+                this.nearestDerelict = derelict;
+            }
+        }
+
+        // Show dock prompt
+        if (this.nearestDerelict) {
+            this.dockText.setText('Press E to BOARD');
+            this.dockText.x = this.nearestDerelict.x;
+            this.dockText.y = this.nearestDerelict.y - this.nearestDerelict.size - 20;
+            this.dockText.setVisible(true);
+
+            // Dock action
+            if (Phaser.Input.Keyboard.JustDown(this.cursors.dock)) {
+                this.boardDerelict(this.nearestDerelict);
+            }
+        } else {
+            this.dockText.setVisible(false);
+        }
+    }
+
+    boardDerelict(derelict) {
+        // Transition back to game with new level
+        this.scene.start('Game', {
+            sector: derelict.difficulty,
+            fromSpaceship: true,
+            playerHp: this.playerHp,
+            totalKills: this.totalKills,
+            shipsExplored: this.shipsExplored
+        });
+    }
+}
+
 const config = {
     type: Phaser.CANVAS,
     width: GAME_WIDTH,
     height: GAME_HEIGHT,
     parent: 'game-container',
-    backgroundColor: '#0a0808',
-    scene: [BootScene, GameScene]
+    backgroundColor: '#151515',
+    scene: [BootScene, GameScene, SpaceshipScene]
 };
 
 const game = new Phaser.Game(config);

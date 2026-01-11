@@ -26,13 +26,31 @@ const COLORS = {
 // Visibility radius for atmospheric darkness
 let visibilityRadius = 350;
 
+// Persistent upgrade storage (survives across runs)
+function saveUpgrades(upgrades) {
+    try {
+        localStorage.setItem('stationBreach_upgrades', JSON.stringify(upgrades));
+    } catch (e) { /* localStorage not available */ }
+}
+
+function loadUpgrades() {
+    try {
+        const saved = localStorage.getItem('stationBreach_upgrades');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            return { damage: parsed.damage || 0, reload: parsed.reload || 0, armor: parsed.armor || 0 };
+        }
+    } catch (e) { /* localStorage not available */ }
+    return { damage: 0, reload: 0, armor: 0 };
+}
+
 // Weapons database
 const WEAPONS = {
-    pistol: { name: 'Pistol', damage: 15, fireRate: 0.25, magSize: 12, spread: 0.05, bulletSpeed: 800, ammoType: '9mm', shake: 4 },
-    shotgun: { name: 'Shotgun', damage: 12, fireRate: 0.7, magSize: 8, spread: 0.3, pellets: 8, bulletSpeed: 600, ammoType: 'shells', shake: 12 },
-    smg: { name: 'SMG', damage: 9, fireRate: 0.07, magSize: 40, spread: 0.1, bulletSpeed: 700, ammoType: '9mm', shake: 2 },
-    rifle: { name: 'Assault Rifle', damage: 22, fireRate: 0.12, magSize: 30, spread: 0.04, bulletSpeed: 900, ammoType: 'rifle', shake: 5 },
-    plasma: { name: 'Plasma Rifle', damage: 45, fireRate: 0.4, magSize: 20, spread: 0, bulletSpeed: 550, ammoType: 'plasma', shake: 8, color: '#44AAFF' }
+    pistol: { name: 'Pistol', damage: 15, fireRate: 0.25, magSize: 12, spread: 0.05, bulletSpeed: 800, ammoType: '9mm', shake: 2 },
+    shotgun: { name: 'Shotgun', damage: 12, fireRate: 0.7, magSize: 8, spread: 0.3, pellets: 8, bulletSpeed: 600, ammoType: 'shells', shake: 6 },
+    smg: { name: 'SMG', damage: 9, fireRate: 0.07, magSize: 40, spread: 0.1, bulletSpeed: 700, ammoType: '9mm', shake: 1 },
+    rifle: { name: 'Assault Rifle', damage: 22, fireRate: 0.12, magSize: 30, spread: 0.04, bulletSpeed: 900, ammoType: 'rifle', shake: 2.5 },
+    plasma: { name: 'Plasma Rifle', damage: 45, fireRate: 0.4, magSize: 20, spread: 0, bulletSpeed: 550, ammoType: 'plasma', shake: 4, color: '#44AAFF' }
 };
 
 // Game state
@@ -45,6 +63,8 @@ let pickups = [];
 let doors = [];
 let terminals = [];
 let barrels = [];
+let crates = [];        // Destructible crates (smaller than barrels)
+let pillars = [];       // Vision-blocking pillars
 let bloodStains = [];
 let floatingTexts = [];
 let map = [];
@@ -60,8 +80,6 @@ let maxDecks = 4;
 let roomsCleared = 0;
 let totalRooms = 0;
 let killCount = 0;
-let killCombo = 0;
-let comboTimer = 0;
 let debugMode = false;
 let exitPoint = null;       // Exit location when enemies are cleared
 let exitLocked = false;     // Whether exit requires a key
@@ -100,14 +118,17 @@ class Player {
         this.fireTimer = 0;
         this.reloading = false;
         this.reloadTimer = 0;
-        this.reloadDuration = 1.5; // Track total reload time for animation
+        this.reloadDuration = 1.25; // Track total reload time for animation
         this.muzzleFlash = 0;
         this.invuln = 0;
         this.medkits = 0;
-        this.upgrades = { damage: 0, reload: 0, armor: 0 };
+        // Load persisted upgrades from localStorage
+        this.upgrades = loadUpgrades();
         this.dead = false;
         this.deathTimer = 0;
         this.respawnDelay = 2.0; // Time before respawning
+        this.noAmmoPopupCooldown = 0; // Cooldown for "NO AMMO!" popup
+        this.meleeCooldown = 0; // Cooldown for melee attack
     }
 
     getWeapon() { return this.weapons[this.currentWeapon]; }
@@ -161,12 +182,20 @@ class Player {
 
         if (this.muzzleFlash > 0) this.muzzleFlash -= dt;
         if (this.invuln > 0) this.invuln -= dt;
+        if (this.noAmmoPopupCooldown > 0) this.noAmmoPopupCooldown -= dt;
+        if (this.meleeCooldown > 0) this.meleeCooldown -= dt;
     }
 
     shoot() {
         const weapon = this.getWeapon();
         if (weapon.ammo <= 0) {
-            this.startReload();
+            // Check if we have reserve ammo to reload
+            if (this.ammo[weapon.ammoType] > 0) {
+                this.startReload();
+                return;
+            }
+            // No ammo at all - use melee attack
+            this.meleeAttack();
             return;
         }
 
@@ -193,6 +222,9 @@ class Player {
         this.muzzleFlash = 0.05;
         screenShake(weapon.shake, 0.05);
 
+        // Alert nearby enemies with gunshot sound
+        alertEnemiesFromSound(this.x, this.y);
+
         // Muzzle particles
         for (let i = 0; i < 4; i++) {
             particles.push({
@@ -205,15 +237,72 @@ class Player {
         }
     }
 
+    meleeAttack() {
+        if (this.meleeCooldown > 0) return;
+
+        const meleeDamage = 25 * (1 + this.upgrades.damage * 0.1);
+        const meleeRange = 50;
+        const meleeArc = Math.PI / 3; // 60 degree arc
+
+        // Find enemies in melee range and arc
+        let hitAny = false;
+        for (const enemy of enemies) {
+            const dx = enemy.x - this.x;
+            const dy = enemy.y - this.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < meleeRange) {
+                // Check if enemy is in front arc
+                const angleToEnemy = Math.atan2(dy, dx);
+                let angleDiff = angleToEnemy - this.angle;
+                while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+                if (Math.abs(angleDiff) < meleeArc) {
+                    enemy.takeDamage(meleeDamage, this.angle);
+                    hitAny = true;
+                }
+            }
+        }
+
+        // Melee swing visual effect
+        const swingX = this.x + Math.cos(this.angle) * 25;
+        const swingY = this.y + Math.sin(this.angle) * 25;
+
+        // Swing particles
+        for (let i = 0; i < 5; i++) {
+            const swingAngle = this.angle + (i - 2) * 0.3;
+            particles.push({
+                x: this.x + Math.cos(swingAngle) * 20,
+                y: this.y + Math.sin(swingAngle) * 20,
+                vx: Math.cos(swingAngle) * 150,
+                vy: Math.sin(swingAngle) * 150,
+                life: 0.15, maxLife: 0.15, color: '#AAAAAA', size: 4
+            });
+        }
+
+        if (hitAny) {
+            addFloatingText(swingX, swingY - 15, 'MELEE!', '#FFAA00');
+            screenShake(2, 0.05);
+        }
+
+        this.meleeCooldown = 0.4; // Melee attack cooldown
+        this.fireTimer = 0.4; // Also use fire timer to prevent instant switch to shooting
+    }
+
     startReload() {
         const weapon = this.getWeapon();
         if (weapon.ammo >= weapon.magSize) return;
         if (this.ammo[weapon.ammoType] <= 0) {
-            addFloatingText(this.x, this.y - 20, 'NO AMMO!', COLORS.health);
+            // Only show popup every 1 second
+            if (this.noAmmoPopupCooldown <= 0) {
+                addFloatingText(this.x, this.y - 20, 'NO AMMO!', COLORS.health);
+                this.noAmmoPopupCooldown = 1.0; // 1 second cooldown
+            }
             return;
         }
         this.reloading = true;
-        this.reloadDuration = 1.5;
+        this.reloadDuration = 1.25;
         this.reloadTimer = this.reloadDuration;
     }
 
@@ -239,7 +328,7 @@ class Player {
 
         this.hp -= amount;
         this.invuln = 0.5;
-        screenShake(5, 0.1);
+        screenShake(2.5, 0.1);
 
         for (let i = 0; i < 6; i++) {
             particles.push({
@@ -269,7 +358,7 @@ class Player {
             });
         }
 
-        screenShake(15, 0.3);
+        screenShake(7.5, 0.3);
         addFloatingText(this.x, this.y - 30, 'DEATH!', COLORS.health, 1.5);
 
         this.lives--;
@@ -414,6 +503,11 @@ class Enemy {
         this.legPhase = Math.random() * Math.PI * 2;
         this.attackTimer = 0;
 
+        // AI state
+        this.alerted = false;
+        this.lastKnownPlayerPos = null;
+        this.alertTimer = 0; // How long to stay alerted after losing sight
+
         const stats = {
             drone: { hp: 22, speed: 140, damage: 12, cooldown: 0.9, range: 350, size: 24, credits: 5 },
             spitter: { hp: 35, speed: 100, damage: 18, cooldown: 1.5, range: 450, size: 28, credits: 10, preferDist: 180 },
@@ -427,10 +521,41 @@ class Enemy {
         this.hp = s.hp; this.maxHp = s.hp;
         this.speed = s.speed; this.damage = s.damage;
         this.attackCooldown = s.cooldown; this.detectionRange = s.range;
+        this.soundRange = s.range * 1.5; // Hear sounds from 1.5x detection range
         this.width = s.size; this.height = s.size;
         this.credits = s.credits;
         this.preferredDistance = s.preferDist || 0;
         this.explodes = s.explodes || false;
+    }
+
+    // Check if enemy can see the player
+    canSeePlayer() {
+        if (!player) return false;
+        const dx = player.x - this.x;
+        const dy = player.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > this.detectionRange) return false;
+
+        // Use raycasting to check line of sight
+        const myTileX = Math.floor(this.x / TILE);
+        const myTileY = Math.floor(this.y / TILE);
+        const playerTileX = Math.floor(player.x / TILE);
+        const playerTileY = Math.floor(player.y / TILE);
+
+        return hasLineOfSight(myTileX, myTileY, playerTileX, playerTileY);
+    }
+
+    // Alert enemy from sound (called when player shoots)
+    alertFromSound(soundX, soundY) {
+        const dx = soundX - this.x;
+        const dy = soundY - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < this.soundRange) {
+            this.alerted = true;
+            this.lastKnownPlayerPos = { x: soundX, y: soundY };
+            this.alertTimer = 5.0; // Stay alerted for 5 seconds
+        }
     }
 
     update(dt) {
@@ -450,17 +575,71 @@ class Enemy {
             if (Math.abs(this.knockbackY) < 1) this.knockbackY = 0;
         }
 
-        if (dist < this.detectionRange) {
-            this.angle = Math.atan2(dy, dx);
+        // Vision-based detection
+        const canSee = this.canSeePlayer();
+        if (canSee) {
+            this.alerted = true;
+            this.lastKnownPlayerPos = { x: player.x, y: player.y };
+            this.alertTimer = 5.0;
+        }
+
+        // Alert timer countdown
+        if (this.alertTimer > 0) {
+            this.alertTimer -= dt;
+            if (this.alertTimer <= 0 && !canSee) {
+                this.alerted = false;
+                this.lastKnownPlayerPos = null;
+            }
+        }
+
+        // Only chase if alerted
+        if (this.alerted && this.lastKnownPlayerPos) {
+            const targetX = canSee ? player.x : this.lastKnownPlayerPos.x;
+            const targetY = canSee ? player.y : this.lastKnownPlayerPos.y;
+
+            const tdx = targetX - this.x;
+            const tdy = targetY - this.y;
+            const tdist = Math.sqrt(tdx * tdx + tdy * tdy);
+
+            this.angle = Math.atan2(tdy, tdx);
 
             let move = true;
-            if (this.preferredDistance && dist < this.preferredDistance) move = false;
+            if (this.preferredDistance && dist < this.preferredDistance && canSee) move = false;
 
-            if (move && dist > 30) {
-                const mx = (dx / dist) * this.speed * dt;
-                const my = (dy / dist) * this.speed * dt;
-                if (!isColliding(this.x + mx, this.y, this.width, this.height)) this.x += mx;
-                if (!isColliding(this.x, this.y + my, this.width, this.height)) this.y += my;
+            // Move toward target with smooth wall sliding
+            if (move && tdist > 30) {
+                const mx = (tdx / tdist) * this.speed * dt;
+                const my = (tdy / tdist) * this.speed * dt;
+
+                // Try full diagonal movement first
+                const canMoveX = !isColliding(this.x + mx, this.y, this.width, this.height);
+                const canMoveY = !isColliding(this.x, this.y + my, this.width, this.height);
+
+                if (canMoveX && canMoveY) {
+                    // Can move diagonally
+                    this.x += mx;
+                    this.y += my;
+                } else if (canMoveX) {
+                    // Slide along Y wall
+                    this.x += mx;
+                } else if (canMoveY) {
+                    // Slide along X wall
+                    this.y += my;
+                } else {
+                    // Stuck - try small offset movement to unstick
+                    const offsetX = (Math.random() - 0.5) * 4;
+                    const offsetY = (Math.random() - 0.5) * 4;
+                    if (!isColliding(this.x + offsetX, this.y + offsetY, this.width, this.height)) {
+                        this.x += offsetX;
+                        this.y += offsetY;
+                    }
+                }
+            }
+
+            // If reached last known position and can't see player, stop being alerted
+            if (!canSee && tdist < 30) {
+                this.alerted = false;
+                this.lastKnownPlayerPos = null;
             }
 
             this.attackTimer -= dt;
@@ -509,7 +688,7 @@ class Enemy {
                 life: 0.5, maxLife: 0.5, color: COLORS.explosion, size: 8
             });
         }
-        screenShake(10, 0.2);
+        screenShake(5, 0.2);
         this.hp = 0;
     }
 
@@ -552,18 +731,12 @@ class Enemy {
         // Base credits
         player.credits += this.credits;
         killCount++;
-        killCombo++;
-        comboTimer = 3;
 
         // Overkill bonus (10% of overkill damage as credits)
         if (this.overkillDamage && this.overkillDamage > 10) {
             const bonus = Math.floor(this.overkillDamage / 10);
             player.credits += bonus;
             addFloatingText(this.x + 30, this.y - 30, `OVERKILL +$${bonus}`, '#FF6600', 1.2);
-        }
-
-        if (killCombo > 1) {
-            addFloatingText(this.x, this.y - 30, `x${killCombo} COMBO!`, COLORS.hudYellow);
         }
 
         // Death particles - MORE for satisfying kills
@@ -580,7 +753,7 @@ class Enemy {
         }
 
         // Screen shake on kill - reduced for less excessive shake
-        screenShake(this.type === 'brute' ? 4 : 1.5, 0.08);
+        screenShake(this.type === 'brute' ? 2 : 0.75, 0.08);
 
         // Kill flash and hitlag for juicy kills - reduced intensity
         killFlash = this.type === 'brute' ? 0.15 : 0.05;
@@ -669,6 +842,33 @@ class Enemy {
             ctx.fill();
         }
 
+        // Facing direction indicator - small arrow showing which way enemy is looking
+        const indicatorDist = size + 12;
+        const arrowLen = 8;
+        const arrowWidth = 4;
+        const dirX = Math.cos(this.angle);
+        const dirY = Math.sin(this.angle);
+        const tipX = dirX * indicatorDist;
+        const tipY = dirY * indicatorDist;
+
+        // Arrow color based on alert state
+        if (this.alerted) {
+            ctx.fillStyle = '#FF4444'; // Red when alerted
+            ctx.strokeStyle = '#FF0000';
+        } else {
+            ctx.fillStyle = '#FFFF00'; // Yellow when idle
+            ctx.strokeStyle = '#AAAA00';
+        }
+
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(tipX, tipY);
+        ctx.lineTo(tipX - dirX * arrowLen - dirY * arrowWidth, tipY - dirY * arrowLen + dirX * arrowWidth);
+        ctx.lineTo(tipX - dirX * arrowLen + dirY * arrowWidth, tipY - dirY * arrowLen - dirX * arrowWidth);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
         ctx.restore();
     }
 
@@ -677,9 +877,44 @@ class Enemy {
         const dx = this.x - player.x;
         const dy = this.y - player.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        // Enemy is visible if within visibility radius + small buffer
-        return dist < visibilityRadius + 50;
+        // Enemy is visible if within visibility radius AND has line of sight
+        if (dist > visibilityRadius + 50) return false;
+
+        // Use raycasting to check if enemy is actually visible
+        const playerTileX = Math.floor(player.x / TILE);
+        const playerTileY = Math.floor(player.y / TILE);
+        const enemyTileX = Math.floor(this.x / TILE);
+        const enemyTileY = Math.floor(this.y / TILE);
+
+        return hasLineOfSight(playerTileX, playerTileY, enemyTileX, enemyTileY);
     }
+}
+
+// Raycasting visibility - hasLineOfSight (needs to be before Enemy class usage)
+function hasLineOfSight(x1, y1, x2, y2) {
+    // Bresenham's line algorithm to check for blocking tiles
+    const dx = Math.abs(x2 - x1), dy = Math.abs(y2 - y1);
+    const sx = x1 < x2 ? 1 : -1, sy = y1 < y2 ? 1 : -1;
+    let err = dx - dy, x = x1, y = y1;
+
+    while (x !== x2 || y !== y2) {
+        // Skip the starting point
+        if (x !== x1 || y !== y1) {
+            // Check if tile blocks vision
+            const tile = map[y]?.[x];
+            if (tile === 2 || tile === 0) return false; // Wall or void blocks vision
+
+            // Check if closed door blocks vision
+            for (const door of doors) {
+                if (!door.open && door.x === x && door.y === y) return false;
+            }
+        }
+
+        const e2 = 2 * err;
+        if (e2 > -dy) { err -= dy; x += sx; }
+        if (e2 < dx) { err += dx; y += sy; }
+    }
+    return true;
 }
 
 // Helper functions
@@ -707,6 +942,13 @@ function screenShake(amount, duration) {
     shakeDuration = Math.max(shakeDuration, duration);
 }
 
+// Alert enemies from sound (gunfire, explosions)
+function alertEnemiesFromSound(soundX, soundY) {
+    for (const enemy of enemies) {
+        enemy.alertFromSound(soundX, soundY);
+    }
+}
+
 function isColliding(x, y, w, h) {
     const left = Math.floor((x - w/2) / TILE);
     const right = Math.floor((x + w/2) / TILE);
@@ -729,6 +971,14 @@ function isColliding(x, y, w, h) {
         }
     }
 
+    // Pillar collision (vision blockers)
+    for (const pillar of pillars) {
+        if (Math.abs(x - pillar.x) < w/2 + 14 &&
+            Math.abs(y - pillar.y) < h/2 + 14) {
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -741,6 +991,8 @@ function generateLevel() {
     doors = [];
     terminals = [];
     barrels = [];
+    crates = [];
+    pillars = [];
     bloodStains = [];
 
     const rooms = [];
@@ -782,7 +1034,8 @@ function generateLevel() {
         }
     }
 
-    // Connect rooms
+    // Connect rooms and place doors
+    const doorPositions = [];
     for (let i = 1; i < rooms.length; i++) {
         const r1 = rooms[i - 1];
         const r2 = rooms[i];
@@ -791,56 +1044,161 @@ function generateLevel() {
         const x2 = Math.floor(r2.x + r2.w / 2);
         const y2 = Math.floor(r2.y + r2.h / 2);
 
-        carveCorridor(x1, y1, x2, y1);
-        carveCorridor(x2, y1, x2, y2);
+        // Carve corridors and track potential door positions
+        const corridor1End = carveCorridor(x1, y1, x2, y1, true);
+        const corridor2End = carveCorridor(x2, y1, x2, y2, true);
+
+        // Add door at corridor entrance (95% chance - most rooms have doors)
+        if (Math.random() < 0.95) {
+            doorPositions.push({
+                x: corridor1End.doorX,
+                y: corridor1End.doorY,
+                horizontal: y1 === y2
+            });
+        }
     }
 
-    // Spawn player in first room
+    // Place doors with keycard requirements
+    const keyColors = ['green', 'blue', 'yellow', 'red'];
+    const requiredKeys = Math.min(deck, 3); // 1-3 keys needed based on deck
+
+    for (let i = 0; i < doorPositions.length; i++) {
+        const pos = doorPositions[i];
+        const requiresKey = i < requiredKeys; // First few doors require keys
+        const keyColor = requiresKey ? keyColors[i % keyColors.length] : null;
+
+        doors.push({
+            x: pos.x,
+            y: pos.y,
+            open: false,
+            requiresKey: requiresKey,
+            keyColor: keyColor,
+            horizontal: pos.horizontal
+        });
+
+        // Spawn the keycard for locked doors in earlier rooms
+        if (requiresKey && i > 0) {
+            const keyRoom = rooms[Math.max(1, i - 1)]; // Place key in previous room
+            pickups.push({
+                x: keyRoom.x * TILE + keyRoom.w * TILE / 2 + (Math.random() - 0.5) * 40,
+                y: keyRoom.y * TILE + keyRoom.h * TILE / 2 + (Math.random() - 0.5) * 40,
+                type: 'key',
+                keyColor: keyColor
+            });
+        }
+    }
+
+    // Spawn player in first room (rooms[0] is always empty - safe start zone)
     const startRoom = rooms[0];
     player = new Player(
         startRoom.x * TILE + startRoom.w * TILE / 2,
         startRoom.y * TILE + startRoom.h * TILE / 2
     );
 
-    // Spawn enemies in other rooms
+    // Spawn enemies in other rooms (starting from i=1, so room 0 stays empty)
+    // Difficulty scales with deck: more enemies, tougher types
+    const baseEnemyCount = 2 + deck; // Deck 1: 3-6, Deck 2: 4-7, etc.
+    const enemyVariance = 3 + Math.floor(deck / 2);
+    const difficultyMult = 1 + (deck - 1) * 0.15; // 15% harder per deck
+
     for (let i = 1; i < rooms.length; i++) {
         const room = rooms[i];
-        const enemyCount = 2 + Math.floor(Math.random() * 4);
-        const types = ['drone', 'drone', 'drone', 'spitter', 'lurker', 'brute', 'exploder', 'elite'];
+        const enemyCount = baseEnemyCount + Math.floor(Math.random() * enemyVariance);
+        // Enemy pool shifts toward tougher types on higher decks
+        const types = deck === 1
+            ? ['drone', 'drone', 'drone', 'spitter', 'lurker']
+            : deck === 2
+            ? ['drone', 'drone', 'spitter', 'spitter', 'lurker', 'brute']
+            : deck === 3
+            ? ['drone', 'spitter', 'lurker', 'brute', 'exploder', 'elite']
+            : ['spitter', 'lurker', 'brute', 'brute', 'exploder', 'elite', 'elite'];
+
         for (let j = 0; j < enemyCount; j++) {
             const ex = room.x * TILE + Math.random() * room.w * TILE;
             const ey = room.y * TILE + Math.random() * room.h * TILE;
-            const type = types[Math.floor(Math.random() * (4 + deck))]; // More enemy variety in later decks
-            enemies.push(new Enemy(ex, ey, type));
+            const type = types[Math.floor(Math.random() * types.length)];
+            const enemy = new Enemy(ex, ey, type);
+            // Scale enemy stats with deck
+            enemy.hp = Math.floor(enemy.hp * difficultyMult);
+            enemy.maxHp = enemy.hp;
+            enemy.damage = Math.floor(enemy.damage * difficultyMult);
+            enemies.push(enemy);
         }
 
-        // Add terminal
-        if (i === Math.floor(rooms.length / 2)) {
+        // Add stations in various rooms
+        // Heal station in early rooms, upgrade station in mid rooms, ammo station later
+        if (i === 2 || (i > 2 && Math.random() < 0.2)) {
+            const stationTypes = ['heal', 'heal', 'upgrade', 'ammo'];
             terminals.push({
                 x: room.x + Math.floor(room.w / 2),
                 y: room.y + Math.floor(room.h / 2),
-                used: false
+                used: false,
+                type: stationTypes[Math.floor(Math.random() * stationTypes.length)]
+            });
+        } else if (i === Math.floor(rooms.length / 2)) {
+            // Guaranteed upgrade station in middle room
+            terminals.push({
+                x: room.x + Math.floor(room.w / 2),
+                y: room.y + Math.floor(room.h / 2),
+                used: false,
+                type: 'upgrade'
             });
         }
 
-        // Add barrels
-        if (Math.random() < 0.3) {
+        // Add destructibles and vision blockers for room variety
+        // Barrels (explosive)
+        if (Math.random() < 0.35) {
             barrels.push({
-                x: room.x * TILE + Math.random() * room.w * TILE,
-                y: room.y * TILE + Math.random() * room.h * TILE,
+                x: room.x * TILE + 24 + Math.random() * (room.w * TILE - 48),
+                y: room.y * TILE + 24 + Math.random() * (room.h * TILE - 48),
                 hp: 20
+            });
+        }
+
+        // Crates (destructible, smaller)
+        const crateCount = Math.floor(Math.random() * 3);
+        for (let c = 0; c < crateCount; c++) {
+            crates.push({
+                x: room.x * TILE + 20 + Math.random() * (room.w * TILE - 40),
+                y: room.y * TILE + 20 + Math.random() * (room.h * TILE - 40),
+                hp: 15,
+                type: Math.random() < 0.3 ? 'ammo' : (Math.random() < 0.5 ? 'health' : 'credits') // Contains loot
+            });
+        }
+
+        // Pillars (vision blockers, indestructible)
+        if (room.w >= 6 && room.h >= 6 && Math.random() < 0.5) {
+            // Add 1-2 pillars in larger rooms
+            const pillarCount = Math.random() < 0.5 ? 1 : 2;
+            for (let p = 0; p < pillarCount; p++) {
+                pillars.push({
+                    x: room.x * TILE + TILE * 2 + Math.random() * (room.w * TILE - TILE * 4),
+                    y: room.y * TILE + TILE * 2 + Math.random() * (room.h * TILE - TILE * 4)
+                });
+            }
+        }
+
+        // Pickups in room corners and edges
+        if (Math.random() < 0.5) {
+            const types = ['ammo', 'health', 'credits'];
+            const cornerX = Math.random() < 0.5 ? room.x * TILE + 20 : (room.x + room.w) * TILE - 20;
+            const cornerY = Math.random() < 0.5 ? room.y * TILE + 20 : (room.y + room.h) * TILE - 20;
+            pickups.push({
+                x: cornerX,
+                y: cornerY,
+                type: types[Math.floor(Math.random() * types.length)]
             });
         }
     }
 
-    // Add pickup in some rooms
+    // Add pickup in some rooms (main pickups)
     for (let i = 1; i < rooms.length; i++) {
-        if (Math.random() < 0.4) {
+        if (Math.random() < 0.5) {
             const room = rooms[i];
-            const types = ['ammo', 'health', 'shield', 'medkit', 'weapon'];
+            const types = ['ammo', 'health', 'shield', 'medkit', 'weapon', 'credits'];
             pickups.push({
-                x: room.x * TILE + room.w * TILE / 2,
-                y: room.y * TILE + room.h * TILE / 2,
+                x: room.x * TILE + room.w * TILE / 2 + (Math.random() - 0.5) * 40,
+                y: room.y * TILE + room.h * TILE / 2 + (Math.random() - 0.5) * 40,
                 type: types[Math.floor(Math.random() * types.length)]
             });
         }
@@ -855,10 +1213,12 @@ function generateLevel() {
     exitKeyColor = null;
 }
 
-function carveCorridor(x1, y1, x2, y2) {
+function carveCorridor(x1, y1, x2, y2, trackDoorPosition = false) {
     const dx = x2 > x1 ? 1 : x2 < x1 ? -1 : 0;
     const dy = y2 > y1 ? 1 : y2 < y1 ? -1 : 0;
     let x = x1, y = y1;
+    let doorX = x1, doorY = y1;
+    let stepCount = 0;
 
     while (x !== x2 || y !== y2) {
         for (let ox = -1; ox <= 0; ox++) {
@@ -877,9 +1237,19 @@ function carveCorridor(x1, y1, x2, y2) {
                 }
             }
         }
+
+        // Track midpoint for door placement
+        stepCount++;
+        if (stepCount === 3) {
+            doorX = x;
+            doorY = y;
+        }
+
         if (x !== x2) x += dx;
         else if (y !== y2) y += dy;
     }
+
+    return { doorX, doorY };
 }
 
 // Drawing
@@ -1037,20 +1407,179 @@ function drawBarrels() {
     });
 }
 
+function drawCrates() {
+    crates.forEach(c => {
+        ctx.save();
+        ctx.translate(c.x - cameraX, c.y - cameraY);
+
+        // Crate base - wooden/metallic color
+        ctx.fillStyle = '#5A4A3A';
+        ctx.fillRect(-12, -12, 24, 24);
+
+        // Crate detail - planks
+        ctx.fillStyle = '#4A3A2A';
+        ctx.fillRect(-12, -4, 24, 2);
+        ctx.fillRect(-12, 4, 24, 2);
+        ctx.fillRect(-4, -12, 2, 24);
+        ctx.fillRect(4, -12, 2, 24);
+
+        // Crate highlight
+        ctx.fillStyle = '#6A5A4A';
+        ctx.fillRect(-12, -12, 24, 2);
+        ctx.fillRect(-12, -12, 2, 24);
+
+        // Loot indicator glow
+        const glowColor = c.type === 'ammo' ? COLORS.hudYellow :
+                          c.type === 'health' ? COLORS.health : COLORS.hudYellow;
+        ctx.fillStyle = glowColor;
+        ctx.globalAlpha = 0.4 + Math.sin(Date.now() / 300) * 0.2;
+        ctx.fillRect(-6, -6, 12, 12);
+        ctx.globalAlpha = 1;
+
+        ctx.restore();
+    });
+}
+
+function drawPillars() {
+    pillars.forEach(p => {
+        ctx.save();
+        ctx.translate(p.x - cameraX, p.y - cameraY);
+
+        // Pillar shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.fillRect(-12, 4, 28, 12);
+
+        // Pillar base
+        ctx.fillStyle = '#4A4A4C';
+        ctx.fillRect(-14, -14, 28, 28);
+
+        // Pillar face
+        ctx.fillStyle = '#5A5A5C';
+        ctx.fillRect(-12, -12, 24, 24);
+
+        // Pillar highlight
+        ctx.fillStyle = '#6A6A6C';
+        ctx.fillRect(-12, -12, 24, 3);
+        ctx.fillRect(-12, -12, 3, 24);
+
+        // Pillar detail - industrial rivets
+        ctx.fillStyle = '#3A3A3C';
+        ctx.fillRect(-8, -8, 4, 4);
+        ctx.fillRect(4, -8, 4, 4);
+        ctx.fillRect(-8, 4, 4, 4);
+        ctx.fillRect(4, 4, 4, 4);
+
+        ctx.restore();
+    });
+}
+
 function drawTerminals() {
+    // Station type colors and labels
+    const stationConfig = {
+        heal: { color: COLORS.stamina, label: 'HEAL', cost: 25, icon: '+' },
+        upgrade: { color: COLORS.hudYellow, label: 'UPGRADE', cost: 100, icon: '^' },
+        ammo: { color: '#FFAA00', label: 'AMMO', cost: 15, icon: 'A' }
+    };
+
     terminals.forEach(t => {
         const screenX = t.x * TILE - cameraX;
         const screenY = t.y * TILE - cameraY;
+        const config = stationConfig[t.type] || stationConfig.upgrade;
 
         ctx.fillStyle = '#2A2A2A';
         ctx.fillRect(screenX + 4, screenY + 4, TILE - 8, TILE - 8);
-        ctx.fillStyle = t.used ? '#1A1A1A' : COLORS.terminal;
+        ctx.fillStyle = t.used ? '#1A1A1A' : config.color;
         ctx.fillRect(screenX + 6, screenY + 6, TILE - 12, TILE - 16);
 
         if (!t.used) {
-            ctx.fillStyle = '#00FF00';
-            ctx.font = '10px monospace';
-            ctx.fillText('>', screenX + 8, screenY + 16);
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 14px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(config.icon, screenX + TILE/2, screenY + 18);
+            ctx.textAlign = 'left';
+
+            // Show station type label
+            ctx.fillStyle = config.color;
+            ctx.font = '8px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(config.label, screenX + TILE/2, screenY + TILE + 8);
+            ctx.textAlign = 'left';
+
+            // Show [E] prompt and cost when player is near
+            if (player) {
+                const dx = player.x - (t.x * TILE + TILE/2);
+                const dy = player.y - (t.y * TILE + TILE/2);
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 50) {
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = '10px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`[E] ${config.label} ($${config.cost})`, screenX + TILE/2, screenY - 10);
+                    ctx.textAlign = 'left';
+                }
+            }
+        }
+    });
+}
+
+function drawDoors() {
+    doors.forEach(door => {
+        if (door.open) return; // Don't draw open doors
+
+        const screenX = door.x * TILE - cameraX;
+        const screenY = door.y * TILE - cameraY;
+
+        // Door frame
+        ctx.fillStyle = '#4A4A4A';
+        ctx.fillRect(screenX - 4, screenY - 4, TILE + 8, TILE + 8);
+
+        // Door panel
+        const doorColor = door.requiresKey ?
+            (COLORS[`key${door.keyColor.charAt(0).toUpperCase() + door.keyColor.slice(1)}`] || '#880000') :
+            '#666666';
+
+        ctx.fillStyle = doorColor;
+        ctx.fillRect(screenX, screenY, TILE, TILE);
+
+        // Door details
+        ctx.fillStyle = '#2A2A2A';
+        ctx.fillRect(screenX + TILE/2 - 2, screenY + 4, 4, TILE - 8);
+
+        // Lock indicator for locked doors
+        if (door.requiresKey) {
+            ctx.fillStyle = '#1A1A1A';
+            ctx.beginPath();
+            ctx.arc(screenX + TILE/2, screenY + TILE/2, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = doorColor;
+            ctx.fillRect(screenX + TILE/2 - 4, screenY + TILE/2 - 2, 8, 6);
+
+            // Keyhole
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(screenX + TILE/2, screenY + TILE/2 - 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillRect(screenX + TILE/2 - 1, screenY + TILE/2 - 1, 2, 5);
+        }
+
+        // "PRESS SPACE" prompt if player is near
+        if (player) {
+            const dx = player.x - (door.x * TILE + TILE/2);
+            const dy = player.y - (door.y * TILE + TILE/2);
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < 60) {
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = '10px monospace';
+                ctx.textAlign = 'center';
+                if (door.requiresKey && !player.keys[door.keyColor]) {
+                    ctx.fillStyle = doorColor;
+                    ctx.fillText(`[${door.keyColor.toUpperCase()} KEY]`, screenX + TILE/2, screenY - 10);
+                } else {
+                    ctx.fillText('[E] OPEN', screenX + TILE/2, screenY - 10);
+                }
+                ctx.textAlign = 'left';
+            }
         }
     });
 }
@@ -1184,6 +1713,18 @@ function drawExit() {
     ctx.font = 'bold 12px monospace';
     ctx.textAlign = 'center';
     ctx.fillText(exitLocked ? 'LOCKED EXIT' : 'EXIT', exitPoint.x - cameraX, exitPoint.y - cameraY - 45);
+
+    // Show [E] prompt when player is near and exit is unlocked
+    if (player && !exitLocked) {
+        const dx = player.x - exitPoint.x;
+        const dy = player.y - exitPoint.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 60) {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '10px monospace';
+            ctx.fillText('[E] ESCAPE', exitPoint.x - cameraX, exitPoint.y - cameraY - 60);
+        }
+    }
     ctx.textAlign = 'left';
 }
 
@@ -1323,13 +1864,6 @@ function drawHUD() {
     // Deck
     ctx.fillStyle = COLORS.hudText;
     ctx.fillText(`DECK ${deck}/${maxDecks}`, 780, 20);
-
-    // Kill combo
-    if (killCombo > 1 && comboTimer > 0) {
-        ctx.fillStyle = COLORS.hudYellow;
-        ctx.font = 'bold 20px monospace';
-        ctx.fillText(`x${killCombo} COMBO!`, canvas.width / 2 - 60, 80);
-    }
 
     // Bottom bar
     ctx.fillStyle = 'rgba(10, 10, 10, 0.9)';
@@ -1499,12 +2033,6 @@ function drawWin() {
 function update(dt) {
     player.update(dt);
 
-    // Combo timer
-    if (comboTimer > 0) {
-        comboTimer -= dt;
-        if (comboTimer <= 0) killCombo = 0;
-    }
-
     // Enemies
     for (let i = enemies.length - 1; i >= 0; i--) {
         if (!enemies[i].update(dt)) enemies.splice(i, 1);
@@ -1572,7 +2100,7 @@ function update(dt) {
 
                     if (isCrit) {
                         addFloatingText(e.x, e.y - 40, 'CRITICAL!', '#FF4400', 1.5);
-                        screenShake(8, 0.1);
+                        screenShake(4, 0.1);
                     }
 
                     e.takeDamage(finalDamage, Math.atan2(b.vy, b.vx));
@@ -1601,7 +2129,7 @@ function update(dt) {
                                 life: 0.6, maxLife: 0.6, color: COLORS.explosion, size: 8
                             });
                         }
-                        screenShake(12, 0.2);
+                        screenShake(6, 0.2);
                         // Damage nearby
                         enemies.forEach(e => {
                             const edx = e.x - bar.x, edy = e.y - bar.y;
@@ -1612,6 +2140,35 @@ function update(dt) {
                         const pdist = Math.sqrt(pdx * pdx + pdy * pdy);
                         if (pdist < 100) player.takeDamage(40 * (1 - pdist / 100));
                         barrels.splice(j, 1);
+                    }
+                    bullets.splice(i, 1);
+                    break;
+                }
+            }
+
+            // Hit crates
+            for (let j = crates.length - 1; j >= 0; j--) {
+                const crate = crates[j];
+                const dx = b.x - crate.x, dy = b.y - crate.y;
+                if (Math.sqrt(dx * dx + dy * dy) < 15) {
+                    crate.hp -= b.damage;
+                    if (crate.hp <= 0) {
+                        // Destroy crate - spawn particles
+                        for (let k = 0; k < 10; k++) {
+                            particles.push({
+                                x: crate.x, y: crate.y,
+                                vx: (Math.random() - 0.5) * 200, vy: (Math.random() - 0.5) * 200,
+                                life: 0.4, maxLife: 0.4, color: '#6A5A4A', size: 5
+                            });
+                        }
+                        // Drop loot from crate
+                        pickups.push({
+                            x: crate.x,
+                            y: crate.y,
+                            type: crate.type
+                        });
+                        addFloatingText(crate.x, crate.y - 20, 'LOOT!', COLORS.hudYellow);
+                        crates.splice(j, 1);
                     }
                     bullets.splice(i, 1);
                     break;
@@ -1656,19 +2213,33 @@ function update(dt) {
             let take = false;
             switch (p.type) {
                 case 'health':
-                    if (player.hp < player.maxHp) { player.hp = Math.min(player.maxHp, player.hp + 25); take = true; }
+                    if (player.hp < player.maxHp) {
+                        player.hp = Math.min(player.maxHp, player.hp + 25);
+                        addFloatingText(player.x, player.y - 30, '+25 HP', COLORS.stamina);
+                        take = true;
+                    }
                     break;
                 case 'ammo':
-                    player.ammo['9mm'] += 30; take = true;
+                    player.ammo['9mm'] += 30;
+                    addFloatingText(player.x, player.y - 30, '+30 AMMO', COLORS.hudYellow);
+                    take = true;
                     break;
                 case 'shield':
-                    if (player.shield < player.maxShield) { player.shield = Math.min(player.maxShield, player.shield + 25); take = true; }
+                    if (player.shield < player.maxShield) {
+                        player.shield = Math.min(player.maxShield, player.shield + 25);
+                        addFloatingText(player.x, player.y - 30, '+25 SHIELD', '#00AAFF');
+                        take = true;
+                    }
                     break;
                 case 'medkit':
-                    player.medkits++; take = true;
+                    player.medkits++;
+                    addFloatingText(player.x, player.y - 30, '+1 MEDKIT', COLORS.stamina);
+                    take = true;
                     break;
                 case 'credits':
-                    player.credits += 25; take = true;
+                    player.credits += 25;
+                    addFloatingText(player.x, player.y - 30, '+$25', COLORS.hudYellow);
+                    take = true;
                     break;
                 case 'weapon':
                     const weaponKeys = Object.keys(WEAPONS).filter(w => w !== 'pistol');
@@ -1687,34 +2258,77 @@ function update(dt) {
         }
     }
 
-    // Terminal interaction
+    // Station interaction (heal, upgrade, ammo stations)
     if (keys['e']) {
         for (const t of terminals) {
             const dx = player.x - (t.x * TILE + TILE/2), dy = player.y - (t.y * TILE + TILE/2);
             if (Math.sqrt(dx * dx + dy * dy) < 40 && !t.used) {
-                t.used = true;
-                // Shop menu (simplified: just give stuff)
-                const options = ['health', 'ammo', 'upgrade'];
-                const choice = options[Math.floor(Math.random() * options.length)];
-                if (choice === 'health' && player.credits >= 25) {
-                    player.credits -= 25;
-                    player.hp = Math.min(player.maxHp, player.hp + 50);
-                    addFloatingText(t.x * TILE, t.y * TILE, '+50 HP', COLORS.stamina);
-                } else if (choice === 'ammo' && player.credits >= 15) {
-                    player.credits -= 15;
-                    player.ammo['9mm'] += 60;
-                    addFloatingText(t.x * TILE, t.y * TILE, '+60 Ammo', COLORS.hudYellow);
-                } else if (choice === 'upgrade' && player.credits >= 100) {
-                    player.credits -= 100;
-                    player.upgrades.damage++;
-                    addFloatingText(t.x * TILE, t.y * TILE, 'DAMAGE UP!', COLORS.hudYellow);
+                const stationType = t.type || 'upgrade';
+                const costs = { heal: 25, upgrade: 100, ammo: 15 };
+                const cost = costs[stationType];
+
+                if (player.credits >= cost) {
+                    player.credits -= cost;
+                    t.used = true;
+
+                    switch (stationType) {
+                        case 'heal':
+                            const healAmount = 50;
+                            player.hp = Math.min(player.maxHp, player.hp + healAmount);
+                            addFloatingText(t.x * TILE, t.y * TILE, `+${healAmount} HP`, COLORS.stamina);
+                            break;
+                        case 'ammo':
+                            player.ammo['9mm'] += 60;
+                            addFloatingText(t.x * TILE, t.y * TILE, '+60 AMMO', '#FFAA00');
+                            break;
+                        case 'upgrade':
+                            // Randomly upgrade one stat
+                            const statTypes = ['damage', 'reload', 'armor'];
+                            const stat = statTypes[Math.floor(Math.random() * statTypes.length)];
+                            player.upgrades[stat]++;
+                            saveUpgrades(player.upgrades); // Persist upgrades
+                            const statNames = { damage: 'DAMAGE', reload: 'RELOAD', armor: 'ARMOR' };
+                            addFloatingText(t.x * TILE, t.y * TILE, `${statNames[stat]} UP!`, COLORS.hudYellow);
+                            break;
+                    }
+                    screenShake(0.5, 0.1);
                 } else {
-                    addFloatingText(t.x * TILE, t.y * TILE, 'NOT ENOUGH $', COLORS.health);
-                    t.used = false;
+                    addFloatingText(t.x * TILE, t.y * TILE, `NEED $${cost}`, COLORS.health);
                 }
             }
         }
         keys['e'] = false;
+    }
+
+    // Door interaction (E key - same as other interactions)
+    if (keys['e']) {
+        for (const door of doors) {
+            if (door.open) continue;
+
+            const dx = player.x - (door.x * TILE + TILE/2);
+            const dy = player.y - (door.y * TILE + TILE/2);
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < 60) {
+                if (door.requiresKey && door.keyColor) {
+                    if (player.keys[door.keyColor]) {
+                        // Has key, open door
+                        door.open = true;
+                        addFloatingText(door.x * TILE, door.y * TILE, 'DOOR OPENED!', COLORS.stamina);
+                        screenShake(1, 0.1);
+                    } else {
+                        // Missing key
+                        addFloatingText(door.x * TILE, door.y * TILE - 20, `NEED ${door.keyColor.toUpperCase()} KEY!`, COLORS.doorLocked);
+                    }
+                } else {
+                    // Regular door, open it
+                    door.open = true;
+                    addFloatingText(door.x * TILE, door.y * TILE, 'DOOR OPENED!', COLORS.hudText);
+                }
+                keys['e'] = false;
+                break; // Only interact with one door at a time
+            }
+        }
     }
 
     // Camera
@@ -1736,13 +2350,13 @@ function update(dt) {
         spawnExit();
     }
 
-    // Check if player reaches exit
-    if (exitPoint && !player.dead) {
+    // Check if player reaches exit (E to interact)
+    if (exitPoint && !player.dead && keys['e']) {
         const dx = player.x - exitPoint.x;
         const dy = player.y - exitPoint.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (dist < 40) {
+        if (dist < 60) {
             // Check if locked
             if (exitLocked && exitKeyColor && !player.keys[exitKeyColor]) {
                 addFloatingText(player.x, player.y - 30, `NEED ${exitKeyColor.toUpperCase()} KEY!`, COLORS.doorLocked);
@@ -1756,6 +2370,7 @@ function update(dt) {
                     gameState = 'win';
                 }
             }
+            keys['e'] = false;
         }
     }
 }
@@ -1788,49 +2403,120 @@ function spawnExit() {
 
     exitPoint = { x: bestX, y: bestY };
 
-    // 40% chance exit is locked on deck 2+, requiring a key
-    if (deck >= 2 && Math.random() < 0.4) {
+    // Exit keycard progression system:
+    // Deck 1: Exit unlocked (tutorial, easy start)
+    // Deck 2+: Exit always locked, requiring a keycard
+    if (deck >= 2) {
         exitLocked = true;
-        const keyColors = ['green', 'blue', 'yellow'];
-        // Key color based on deck
-        exitKeyColor = keyColors[Math.min(deck - 1, keyColors.length - 1)];
+        const keyColors = ['green', 'blue', 'yellow', 'red'];
+        // Key color based on deck (green -> blue -> yellow -> red)
+        exitKeyColor = keyColors[Math.min(deck - 2, keyColors.length - 1)];
 
-        // Drop the key somewhere in the level
-        const keyX = (player.x + bestX) / 2 + (Math.random() - 0.5) * 200;
-        const keyY = (player.y + bestY) / 2 + (Math.random() - 0.5) * 200;
+        // Place key in a cleared room (far from exit, near player)
+        const keyX = player.x + (Math.random() - 0.5) * 300;
+        const keyY = player.y + (Math.random() - 0.5) * 300;
         pickups.push({ x: keyX, y: keyY, type: 'key', keyColor: exitKeyColor });
 
-        addFloatingText(player.x, player.y - 30, 'FIND THE EXIT!', COLORS.hudYellow);
-        addFloatingText(player.x, player.y - 50, `(${exitKeyColor.toUpperCase()} KEY REQUIRED)`, COLORS.doorLocked);
+        addFloatingText(player.x, player.y - 30, 'AREA CLEARED!', COLORS.hudYellow);
+        addFloatingText(player.x, player.y - 50, `FIND ${exitKeyColor.toUpperCase()} KEY TO ESCAPE`, COLORS.doorLocked);
     } else {
+        // Deck 1: Unlocked exit
         addFloatingText(player.x, player.y - 30, 'AREA CLEARED! REACH THE EXIT!', COLORS.stamina);
     }
 
-    screenShake(3, 0.2);
+    screenShake(1.5, 0.2);
 }
 
 // Game loop
 let lastTime = 0;
 // Atmospheric darkness overlay - Alien Breed style limited visibility
+// Check if a world position is visible to the player (pixel coords)
+function isPositionVisible(worldX, worldY) {
+    if (!player) return false;
+
+    const dx = worldX - player.x;
+    const dy = worldY - player.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    // Outside visibility radius
+    if (dist > visibilityRadius) return false;
+
+    // Convert to tile coords for raycasting
+    const playerTileX = Math.floor(player.x / TILE);
+    const playerTileY = Math.floor(player.y / TILE);
+    const targetTileX = Math.floor(worldX / TILE);
+    const targetTileY = Math.floor(worldY / TILE);
+
+    // Same tile is always visible
+    if (playerTileX === targetTileX && playerTileY === targetTileY) return true;
+
+    // Check pillars blocking vision
+    for (const pillar of pillars) {
+        // Check if pillar is between player and target
+        const pillarTileX = Math.floor(pillar.x / TILE);
+        const pillarTileY = Math.floor(pillar.y / TILE);
+
+        // Simple check: pillar on the line blocks vision
+        const t1 = (pillar.x - player.x) / (worldX - player.x);
+        const t2 = (pillar.y - player.y) / (worldY - player.y);
+
+        if (t1 > 0.1 && t1 < 0.9 && t2 > 0.1 && t2 < 0.9) {
+            const lineX = player.x + t1 * (worldX - player.x);
+            const lineY = player.y + t1 * (worldY - player.y);
+            const pillarDist = Math.sqrt((pillar.x - lineX) ** 2 + (pillar.y - lineY) ** 2);
+            if (pillarDist < 20) return false;
+        }
+    }
+
+    return hasLineOfSight(playerTileX, playerTileY, targetTileX, targetTileY);
+}
+
 function drawDarknessOverlay() {
     if (!player) return;
 
     const playerScreenX = player.x - cameraX;
     const playerScreenY = player.y - cameraY;
 
-    // Create radial gradient for visibility cone
+    // Draw darkness tile by tile with raycasting
+    const startX = Math.max(0, Math.floor(cameraX / TILE) - 1);
+    const startY = Math.max(0, Math.floor(cameraY / TILE) - 1);
+    const endX = Math.min(MAP_W, Math.floor((cameraX + canvas.width) / TILE) + 2);
+    const endY = Math.min(MAP_H, Math.floor((cameraY + canvas.height) / TILE) + 2);
+
+    // First pass: draw base darkness gradient (for smooth falloff)
     const gradient = ctx.createRadialGradient(
         playerScreenX, playerScreenY, 0,
         playerScreenX, playerScreenY, visibilityRadius
     );
-
     gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    gradient.addColorStop(0.6, 'rgba(0, 0, 0, 0.2)');
-    gradient.addColorStop(0.85, 'rgba(0, 0, 0, 0.5)');
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.75)');
-
+    gradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.1)');
+    gradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.3)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Second pass: darken tiles with no line of sight (raycasting)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    for (let ty = startY; ty < endY; ty++) {
+        for (let tx = startX; tx < endX; tx++) {
+            const worldX = tx * TILE + TILE / 2;
+            const worldY = ty * TILE + TILE / 2;
+
+            // Check if this tile is blocked from view
+            const dx = worldX - player.x;
+            const dy = worldY - player.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // Only apply raycasting within visibility range
+            if (dist < visibilityRadius) {
+                if (!isPositionVisible(worldX, worldY)) {
+                    const screenX = tx * TILE - cameraX;
+                    const screenY = ty * TILE - cameraY;
+                    ctx.fillRect(screenX, screenY, TILE, TILE);
+                }
+            }
+        }
+    }
 
     // Add a subtle scan line effect for retro feel
     ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
@@ -1861,7 +2547,6 @@ function drawDebugOverlay() {
     line(`Pickups: ${pickups.length}`);
     line(`Deck: ${deck}/${maxDecks}`);
     line(`Kills: ${killCount}`);
-    line(`Combo: ${killCombo}`);
     line(`State: ${gameState}`);
     line(`FPS: ${Math.round(fps)}`);
 
@@ -1899,7 +2584,10 @@ function gameLoop(timestamp) {
         drawTiles();
         drawBloodStains();
         drawBarrels();
+        drawCrates();
+        drawPillars();
         drawTerminals();
+        drawDoors();
         drawPickups();
         drawExit();
         enemies.forEach(e => { if (e.isInVisibleArea()) e.draw(); });

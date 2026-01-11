@@ -728,3 +728,63 @@ Medium - The core mechanics were already in place, so iterations focused on visu
 
 ## Final Notes
 This game has received 40 polish iterations focusing on "game juice" - the small visual and audio feedback elements that make games feel satisfying. Every interaction from shooting to collecting crystals now has visual feedback, making the gameplay feel responsive and rewarding.
+
+---
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "Wave-based but should be exploration-based like Isaac clones" → Converted to room-based exploration
+
+### Implementation Details:
+
+**Room-Based Exploration System:**
+- Changed all UI text from "Wave" to "Room" (HUD, game over screen)
+- Added room clearing detection: when all enemies killed, `game.roomCleared = true`
+- Added `openRoomDoors()` function that creates 1-3 doors on room edges
+- Added `drawDoors()` function with glowing green doors and arrow indicators
+- Added `checkDoorTransition()` to detect player entering door
+- Added `transitionToNextRoom()` to handle room transitions with screen flash
+- Added `announceRoom()` with themed room names (Entrance, Forest Path, etc.)
+
+**Door System:**
+- Doors appear at room edges (north, south, east, west) when room is cleared
+- Each door has: glow effect, frame, opening, and directional arrow
+- Player walks into door (within 60px) to transition to next room
+- Next room spawns new enemies after 500ms transition
+
+**Room Grid Tracking:**
+- Added `roomGrid: { x: 0, y: 0 }` to track player position in dungeon
+- Added `visitedRooms` Set to track explored areas
+- Doors respect grid boundaries (don't go below 0 or above 3)
+
+### Code Changes:
+```javascript
+// Added state variables
+roomCleared: false,
+doors: [],
+roomGrid: { x: 0, y: 0 },
+visitedRooms: new Set(),
+transitioning: false
+
+// Room clearing triggers doors
+if (enemies.length === 0 && !game.bossActive && !game.roomCleared) {
+    game.roomCleared = true;
+    openRoomDoors();
+}
+
+// Door transition in update loop
+checkDoorTransition();
+
+// Draw doors after background
+drawDoors();
+```
+
+### Verification:
+- "Room 1/10" displays in HUD (instead of Wave)
+- Doors open when all enemies are killed
+- Player can walk through doors to next room
+- Room announcement shows themed names
+- Boss room accessible after Room 10
+
+**Total Iterations Logged:** 80+ (40 expand + 40 polish + feedback fixes)

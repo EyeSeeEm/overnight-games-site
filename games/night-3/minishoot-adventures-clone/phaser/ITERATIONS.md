@@ -321,3 +321,32 @@ Game captures Minishoot Adventures' core aesthetic:
 
 ### Difficulty Rating
 Medium - Phaser abstractions helped but learning its specific patterns took time
+
+
+---
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "CRITICAL: Instant victory bug - you win without playing"
+   → Root cause: Wave completion check ran BEFORE enemies spawned
+   → enemies.countActive() === 0 was true at game start
+   → This cascaded: wave++, spawnWave(), wave++, etc until wave 10
+
+### Fix Implementation:
+- Added `waveInProgress` flag to track spawning state
+- Added `enemiesSpawnedThisWave` counter
+- Wave completion now requires:
+  - waveInProgress === true (wave has started)
+  - enemiesSpawnedThisWave > 0 (at least one enemy spawned)
+  - enemies.countActive() === 0 (all killed)
+  - !bossActive (no boss phase)
+- Flag is reset when wave completes
+
+### Verification:
+- Game loads without instant victory
+- Wave stays at 1 after 3 seconds
+- 5 enemies spawn in wave 1
+- Player can kill enemies and collect crystals
+- Victory only possible after wave 10
+

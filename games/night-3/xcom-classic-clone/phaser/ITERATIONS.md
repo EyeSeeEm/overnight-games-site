@@ -437,3 +437,204 @@ Game achieves authentic X-COM tactical combat with Phaser 3:
 
 ### Difficulty Rating
 Hard - Same isometric complexity as Canvas version, with added Phaser patterns to learn. Turn-based flow in Phaser requires careful state management.
+
+
+---
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "Movement indicator"
+   → Enhanced TU cost display with background box
+   → Shows both cost and remaining TU
+   → Green/red color coding for affordable/too far
+   → Path tiles highlighted in green or red
+
+2. [x] "Deployment phase"
+   → Added deployment phase before combat starts
+   → After title screen, players enter deployment mode
+   → Green pulsing tiles show valid deployment positions
+   → Click soldier then click zone to reposition
+   → Press SPACE to start mission when ready
+
+3. [x] "Map generation"
+   → Map now procedurally generated:
+     - Random road (vertical or horizontal)
+     - 1-3 buildings at random positions
+     - Random bushes and flowers in grass
+     - Random fence line
+     - Deployment zone in top-left corner
+   → Aliens spawned randomly across right side of map (7-10 aliens)
+   → Each game has unique map layout
+
+### Technical Implementation:
+- Added gameState.deploymentPhase and deploymentPositions
+- generateMap() now creates procedural terrain
+- createUnits() places aliens randomly
+- handleClick() checks for deployment mode
+- drawMap() renders deployment zone with pulsing highlight
+- Enhanced path cost text with background box and remaining TU
+
+### Verification:
+- Game loads without errors
+- Title screen shows, SPACE starts deployment
+- Deployment zone visible with green pulsing tiles
+- Soldiers can be repositioned in deployment zone
+- SPACE starts combat mission
+- Path preview shows TU cost clearly
+- Map is different each game
+
+## Feedback Fixes (2026-01-11)
+
+### Fix 1: Add clear icons to all bottom UI buttons
+**Issue:** Action buttons in bottom UI were blank colored squares with no indication of their function.
+
+**Solution:**
+1. Added button label definitions with key letter, sub-text, and distinct color
+2. Each button now shows:
+   - Large letter (S/A/F/T/K/R/O/E) in unique color
+   - Sub-label describing action (Snap/Aim/Auto/Gren/Kneel/Load/Ovwt/End)
+   - Colored background indicating button type
+3. Colors match action categories:
+   - S (Snap) = Green (quick action)
+   - A (Aim) = Blue (precision)
+   - F (Auto) = Red (aggressive)
+   - T (Gren) = Orange (explosive)
+   - K (Kneel) = Purple (defensive)
+   - R (Load) = Yellow (utility)
+   - O (Ovwt) = Pink (overwatch)
+   - E (End) = Gray (turn control)
+
+**Changes made:**
+- drawUI: Added actionButtons array with color definitions
+- drawUI: Added colored background fill for each button
+- drawTextElements: Added button labels and sub-labels to text array
+
+**Testing:**
+- Verified buttons display correctly with icons
+- All 8 action buttons have clear labels
+- No JavaScript errors
+
+---
+
+## Second 100 Iterations (2026-01-11)
+
+### Iterations 41-50: Expanded Weapons System
+41. Added Pistol (26 damage, ballistic type)
+42. Added Heavy Cannon (56 damage, high accuracy)
+43. Added Auto-Cannon (42 damage, burst fire)
+44. Added Rocket Launcher (75 damage, explosive with blast radius)
+45. Added Laser Pistol (46 damage, unlimited ammo)
+46. Added Laser Rifle (60 damage, unlimited ammo, burst capable)
+47. Added Heavy Laser (85 damage, unlimited ammo)
+48. Added Plasma Rifle (80 damage, high accuracy)
+49. Added Heavy Plasma (115 damage, best weapon in game)
+50. Added weapon type classification (ballistic, laser, plasma, explosive)
+
+### Iterations 51-60: Armor System
+51. Added ARMOR constant with armor types
+52. Implemented None armor (0 protection)
+53. Implemented Personal Armor (50/40/30 front/side/rear)
+54. Implemented Power Suit (100/80/70, fire immune)
+55. Implemented Flying Suit (110/90/80, flight capable)
+56. Added armor damage reduction in combat
+57. Laser weapons ignore 50% armor
+58. Plasma weapons ignore 70% armor
+59. Added armor blocked damage floating text
+60. Added armor color property for visual distinction
+
+### Iterations 61-70: Expanded Alien Types
+61. Added ALIEN_TYPES constant with enemy definitions
+62. Sectoid: 30 HP, 54 TU, Plasma Pistol
+63. Floater: 40 HP, flight capable, Plasma Rifle
+64. Snakeman: 50 HP, 20 armor, Plasma Rifle
+65. Muton: 125 HP, 32 armor, Heavy Plasma (tank unit)
+66. Ethereal: 55 HP, psionic abilities, Heavy Plasma
+67. Added alien size property for visual scaling
+68. Added alien color property for unique appearance
+69. Added canFly property for Floater
+70. Added psionic property for Ethereal
+
+### Iterations 71-80: Items System
+71. Added ITEMS constant for consumables
+72. Implemented Medi-Kit (25 HP heal, 15 TU)
+73. Implemented Smoke Grenade (3 radius smoke cloud, 5 turn duration)
+74. Implemented Frag Grenade (50 damage, 3 radius)
+75. Implemented Stun Rod (melee, 100 stun damage)
+76. Implemented Motion Scanner (utility, 8 range)
+77. Added useMedikit() function
+78. Added throwSmokeGrenade() function
+79. Added M key binding for medikit
+80. Added G key binding for smoke grenade
+
+### Iterations 81-90: Soldier Improvements
+81. Increased squad size to 8 soldiers
+82. Added rank system (Rookie to Commander)
+83. Added stamina stat
+84. Added throwingAccuracy stat
+85. Added bravery stat
+86. Added strength stat
+87. Added experience tracking
+88. Added smoke grenades inventory
+89. Added medikits inventory
+90. Added varied weapon loadouts per soldier
+
+### Iterations 91-100: Unit Creation Improvements
+91. Created loadouts array for weapon variety
+92. Riflemen get standard Rifle + Pistol
+93. Laser specialists get Laser Rifle + Laser Pistol
+94. Heavy weapons get Heavy Cannon or Auto-Cannon
+95. Demolitions expert gets Rocket Launcher
+96. Added armorTypes array for varied protection
+97. Soldiers 3-4 get Personal Armor
+98. Soldiers 5-6 get Power Suit
+99. Soldier 7 gets Flying Suit
+100. Aliens use alienTypeDistribution for variety
+
+### Iterations 101-110: Alien Spawning
+101. Changed alienCount range to 8-12 aliens
+102. Created alienTypeDistribution array
+103. More Sectoids spawn (common enemy)
+104. Floaters spawn as mid-tier threat
+105. Snakemen spawn as armored threat
+106. Muton spawns as tank unit
+107. Aliens get weapon from ALIEN_TYPES data
+108. Aliens get armor value from type definition
+109. Added alienTypeData property for reference
+110. Aliens get color from type definition
+
+### Iterations 111-120: Combat Improvements
+111. Added weapon type to damage calculation
+112. Ballistic weapons normal armor interaction
+113. Laser weapons 50% armor penetration
+114. Plasma weapons 70% armor penetration
+115. Added penetratingDamage calculation
+116. Added blockedDamage tracking
+117. Show "ARMOR: -X" floating text when armor blocks
+118. Minimum 1 damage always dealt
+119. Critical hits still apply after armor
+120. Screen shake scales with actual damage
+
+### Iterations 121-130: Soldier Stats
+121. Health now varies 35-55 base
+122. TU now varies 50-70 base
+123. Stamina varies 50-80 base
+124. Reactions vary 30-60
+125. Firing Accuracy varies 40-70
+126. Throwing Accuracy varies 50-75
+127. Bravery varies 30-80
+128. Strength varies 25-45
+129. Rank randomly assigned from first 3 ranks
+130. Experience starts at 0
+
+### Iterations 131-140: Additional Features
+131. Added smoke property to map tiles
+132. Smoke decreases each turn
+133. Smoke blocks line of sight
+134. Added smokeDuration property to SMOKE_GRENADE
+135. Smoke grenade targets nearest visible alien
+136. Fixed soldier position validation
+137. Added null checks for map positions
+138. Added weapon weight property
+139. Added secondary weapon system
+140. Updated help text with new controls

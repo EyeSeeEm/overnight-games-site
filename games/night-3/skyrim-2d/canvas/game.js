@@ -5,9 +5,17 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 const TILE_SIZE = 16;
-const MAP_WIDTH = 50;
-const MAP_HEIGHT = 50;
+const MAP_WIDTH = 150;
+const MAP_HEIGHT = 150;
 const CAMERA_ZOOM = 1.5; // Zoom in for better visibility
+
+// Town data - generated during world creation
+let towns = [];
+const TOWN_NAMES = [
+    'Whiterun', 'Riverwood', 'Falkreath', 'Morthal', 'Dawnstar',
+    'Winterhold', 'Riften', 'Markarth', 'Solitude', 'Windhelm',
+    'Rorikstead', 'Dragon Bridge', 'Ivarstead', 'Kynesgrove', 'Shor\'s Stone'
+];
 
 // Colors - Dark fantasy palette (Stoneshard inspired)
 const COLORS = {
@@ -117,6 +125,69 @@ const game = {
     interactTarget: null
 };
 
+// Combat feedback effects
+let screenShake = { intensity: 0, duration: 0 };
+let damageFlash = { intensity: 0, duration: 0 };
+let hitParticles = [];
+
+// Screen shake helper
+function triggerScreenShake(intensity, duration) {
+    screenShake.intensity = intensity;
+    screenShake.duration = duration;
+}
+
+// Damage flash helper
+function triggerDamageFlash(intensity, duration) {
+    damageFlash.intensity = intensity;
+    damageFlash.duration = duration;
+}
+
+// Spawn hit particles at position
+function spawnHitParticles(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 50 + Math.random() * 100;
+        hitParticles.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 0.3 + Math.random() * 0.3,
+            color,
+            size: 2 + Math.random() * 3
+        });
+    }
+}
+
+// Update particles
+function updateHitParticles(dt) {
+    for (let i = hitParticles.length - 1; i >= 0; i--) {
+        const p = hitParticles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vx *= 0.95;
+        p.vy *= 0.95;
+        p.life -= dt;
+        if (p.life <= 0) {
+            hitParticles.splice(i, 1);
+        }
+    }
+}
+
+// Draw hit particles
+function drawHitParticles() {
+    for (const p of hitParticles) {
+        const screenX = p.x - game.camera.x;
+        const screenY = p.y - game.camera.y;
+        const alpha = p.life / 0.6;
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, p.size * alpha, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}
+
 // Player
 const player = {
     x: 400, y: 400,
@@ -133,9 +204,111 @@ const player = {
     attacking: false,
     attackTimer: 0,
     attackCooldown: 0,
+    blocking: false,
+    blockTimer: 0,
+    dodging: false,
+    dodgeTimer: 0,
+    dodgeCooldown: 0,
+    dodgeDir: { x: 0, y: 0 },
+    castingSpell: null,
+    spellCooldown: 0,
     inventory: ['Iron Sword', 'Health Potion', 'Health Potion'],
-    equipped: { weapon: 'Iron Sword', armor: null },
-    skills: { combat: 1, magic: 1, stealth: 1 }
+    equipped: {
+        weapon: 'Iron Sword',
+        head: null,
+        body: null,
+        hands: null,
+        feet: null,
+        shield: null
+    },
+    skills: { combat: 1, magic: 1, stealth: 1 },
+    perks: [],
+    spells: ['Flames', 'Healing'],
+    selectedSpell: 0
+};
+
+// Projectiles (arrows, spells)
+let projectiles = [];
+
+// Weather system
+const weather = {
+    type: 'clear', // clear, rain, snow, fog
+    intensity: 0,
+    timer: 0,
+    particles: []
+};
+
+// Day/night cycle
+const dayNight = {
+    time: 12, // Hours (0-24)
+    rate: 0.001 // Hours per second
+};
+
+// Chests
+let chests = [];
+
+// Equipment definitions
+const EQUIPMENT = {
+    weapons: {
+        'Iron Sword': { damage: 10, speed: 1.0, type: 'melee' },
+        'Steel Sword': { damage: 15, speed: 1.0, type: 'melee' },
+        'Iron Greatsword': { damage: 18, speed: 0.7, type: 'melee' },
+        'Dagger': { damage: 6, speed: 1.5, type: 'melee', sneakBonus: 2 },
+        'Hunting Bow': { damage: 12, speed: 0.8, type: 'bow', range: 200 },
+        'Long Bow': { damage: 18, speed: 0.6, type: 'bow', range: 280 },
+        'Elven Blade': { damage: 25, speed: 1.0, type: 'melee' },
+        'Staff of Flames': { damage: 8, speed: 1.0, type: 'staff', spell: 'Flames' }
+    },
+    armor: {
+        head: {
+            'Leather Cap': { armor: 5 },
+            'Iron Helmet': { armor: 10 },
+            'Steel Helmet': { armor: 15 }
+        },
+        body: {
+            'Leather Armor': { armor: 15 },
+            'Iron Armor': { armor: 30 },
+            'Steel Armor': { armor: 45 }
+        },
+        hands: {
+            'Leather Bracers': { armor: 3 },
+            'Iron Gauntlets': { armor: 6 }
+        },
+        feet: {
+            'Leather Boots': { armor: 3 },
+            'Iron Boots': { armor: 6 }
+        },
+        shield: {
+            'Wooden Shield': { block: 50 },
+            'Iron Shield': { block: 65 },
+            'Steel Shield': { block: 75 }
+        }
+    }
+};
+
+// Spell definitions
+const SPELLS = {
+    'Flames': { damage: 5, cost: 3, range: 48, type: 'fire', dot: 2 },
+    'Frostbite': { damage: 10, cost: 15, range: 120, type: 'frost', slow: 0.5 },
+    'Sparks': { damage: 6, cost: 4, range: 64, type: 'shock', chain: true },
+    'Healing': { heal: 30, cost: 20, type: 'restore' },
+    'Firebolt': { damage: 25, cost: 25, speed: 250, range: 200, type: 'fire' }
+};
+
+// Perk definitions
+const PERKS = {
+    // Combat
+    'Armsman': { skill: 'combat', req: 2, effect: { damageBonus: 0.25 } },
+    'Power Strike': { skill: 'combat', req: 4, effect: { powerAttack: true } },
+    'Warriors Resolve': { skill: 'combat', req: 7, effect: { hpBonus: 20 } },
+    // Magic
+    'Novice Mage': { skill: 'magic', req: 2, effect: { spellCostReduction: 0.25 } },
+    'Impact': { skill: 'magic', req: 4, effect: { spellStagger: true } },
+    'Arcane Mastery': { skill: 'magic', req: 7, effect: { mpBonus: 30 } },
+    // Stealth
+    'Stealth': { skill: 'stealth', req: 2, effect: { detectionReduction: 0.25 } },
+    'Deadly Aim': { skill: 'stealth', req: 4, effect: { sneakDamage: 1.5 } },
+    'Assassin': { skill: 'stealth', req: 7, effect: { sneakDamage: 3 } }
 };
 
 // Enemies
@@ -148,15 +321,29 @@ let map = [];
 function generateWorld() {
     map = [];
     decorations = [];
+    towns = [];
 
-    // First pass: base terrain
+    // First pass: base terrain with biomes
     for (let y = 0; y < MAP_HEIGHT; y++) {
         map[y] = [];
         for (let x = 0; x < MAP_WIDTH; x++) {
-            // Grass variations
-            const grassVar = Math.random();
-            let variant = grassVar < 0.4 ? 0 : grassVar < 0.7 ? 1 : grassVar < 0.9 ? 2 : 3;
-            map[y][x] = { terrain: TERRAIN.GRASS, variant: variant };
+            // Determine biome based on position
+            let terrain = TERRAIN.GRASS;
+            let variant = Math.floor(Math.random() * 4);
+
+            // Northern snow (top 30%)
+            if (y < MAP_HEIGHT * 0.3) {
+                terrain = TERRAIN.SNOW;
+                variant = Math.floor(Math.random() * 2);
+            }
+            // Mountain ridges (perlin-like noise simulation)
+            const mountainNoise = Math.sin(x * 0.1) * Math.cos(y * 0.08) + Math.sin(x * 0.05 + y * 0.05);
+            if (mountainNoise > 0.8 && Math.random() < 0.3) {
+                terrain = TERRAIN.ROCK;
+                variant = Math.floor(Math.random() * 2);
+            }
+
+            map[y][x] = { terrain, variant };
         }
     }
 
@@ -170,128 +357,285 @@ function generateWorld() {
         map[y][MAP_WIDTH - 1] = { terrain: TERRAIN.WALL, variant: 0 };
     }
 
-    // Village center - dirt area
-    for (let y = 20; y <= 30; y++) {
-        for (let x = 20; x <= 30; x++) {
-            map[y][x] = { terrain: TERRAIN.DIRT, variant: Math.floor(Math.random() * 3) };
-        }
-    }
+    // Generate multiple rivers
+    generateRiver(30, 0, 30, MAP_HEIGHT - 1, 3); // Vertical river west
+    generateRiver(100, 0, 110, MAP_HEIGHT - 1, 4); // Vertical river east
+    generateRiver(0, 80, MAP_WIDTH - 1, 85, 3); // Horizontal river
 
-    // Main paths
-    for (let i = 15; i <= 35; i++) {
-        map[25][i] = { terrain: TERRAIN.PATH, variant: 0 }; // Horizontal
-        map[i][25] = { terrain: TERRAIN.PATH, variant: 1 }; // Vertical
-    }
+    // Generate 8-12 towns
+    const numTowns = 8 + Math.floor(Math.random() * 5);
+    const usedNames = [];
 
-    // Buildings (3x3 structures with roofs)
-    const buildings = [
-        { x: 21, y: 21, w: 3, h: 3, type: 'inn' },
-        { x: 27, y: 21, w: 3, h: 3, type: 'smith' },
-        { x: 21, y: 27, w: 3, h: 3, type: 'shop' },
-        { x: 27, y: 27, w: 2, h: 2, type: 'house' }
-    ];
+    for (let i = 0; i < numTowns; i++) {
+        let attempts = 0;
+        while (attempts < 50) {
+            const tx = 20 + Math.floor(Math.random() * (MAP_WIDTH - 40));
+            const ty = 20 + Math.floor(Math.random() * (MAP_HEIGHT - 40));
 
-    for (const b of buildings) {
-        for (let dy = 0; dy < b.h; dy++) {
-            for (let dx = 0; dx < b.w; dx++) {
-                if (dy === 0) {
-                    map[b.y + dy][b.x + dx] = { terrain: TERRAIN.ROOF, variant: b.type === 'inn' ? 1 : 0 };
-                } else {
-                    map[b.y + dy][b.x + dx] = { terrain: TERRAIN.BUILDING, variant: dx === 1 && dy === b.h - 1 ? 1 : 0 };
+            // Check distance from other towns (min 30 tiles apart)
+            let tooClose = false;
+            for (const town of towns) {
+                const dist = Math.hypot(town.x - tx, town.y - ty);
+                if (dist < 30) {
+                    tooClose = true;
+                    break;
                 }
             }
-        }
-    }
 
-    // River
-    for (let y = 8; y <= 42; y++) {
-        const wobble = Math.floor(Math.sin(y * 0.3) * 1.5);
-        for (let wx = 0; wx < 3; wx++) {
-            const rx = 37 + wobble + wx;
-            if (rx > 0 && rx < MAP_WIDTH - 1) {
-                map[y][rx] = { terrain: TERRAIN.WATER, variant: wx === 1 ? 0 : 1 };
+            // Check not on water
+            if (!tooClose && map[ty][tx].terrain !== TERRAIN.WATER) {
+                // Pick unique name
+                let name;
+                do {
+                    name = TOWN_NAMES[Math.floor(Math.random() * TOWN_NAMES.length)];
+                } while (usedNames.includes(name) && usedNames.length < TOWN_NAMES.length);
+                usedNames.push(name);
+
+                // Determine town size (1=small, 2=medium, 3=large)
+                const size = i === 0 ? 3 : (Math.random() < 0.3 ? 3 : Math.random() < 0.5 ? 2 : 1);
+
+                towns.push({ x: tx, y: ty, name, size, isStartTown: i === 0 });
+                generateTown(tx, ty, size, i === 0);
+                break;
             }
+            attempts++;
         }
     }
 
-    // Northern snowy/dungeon area
-    for (let y = 1; y < 12; y++) {
-        for (let x = 1; x < MAP_WIDTH - 1; x++) {
-            if (map[y][x].terrain === TERRAIN.GRASS) {
-                map[y][x] = { terrain: TERRAIN.SNOW, variant: Math.floor(Math.random() * 2) };
+    // Generate roads connecting towns
+    for (let i = 0; i < towns.length; i++) {
+        // Connect to nearest 2-3 towns
+        const sorted = [...towns].sort((a, b) => {
+            const distA = Math.hypot(a.x - towns[i].x, a.y - towns[i].y);
+            const distB = Math.hypot(b.x - towns[i].x, b.y - towns[i].y);
+            return distA - distB;
+        });
+
+        for (let j = 1; j <= Math.min(3, sorted.length - 1); j++) {
+            generateRoad(towns[i].x, towns[i].y, sorted[j].x, sorted[j].y);
+        }
+    }
+
+    // Generate dungeon entrances (3-5)
+    const numDungeons = 3 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < numDungeons; i++) {
+        let dx, dy;
+        let attempts = 0;
+        while (attempts < 30) {
+            dx = 10 + Math.floor(Math.random() * (MAP_WIDTH - 20));
+            dy = 10 + Math.floor(Math.random() * (MAP_HEIGHT - 20));
+
+            // Not too close to towns
+            let nearTown = false;
+            for (const town of towns) {
+                if (Math.hypot(town.x - dx, town.y - dy) < 20) {
+                    nearTown = true;
+                    break;
+                }
             }
+
+            if (!nearTown && map[dy][dx].terrain !== TERRAIN.WATER) {
+                generateDungeonEntrance(dx, dy);
+                break;
+            }
+            attempts++;
         }
     }
 
-    // Dungeon entrance
-    for (let dy = 0; dy < 3; dy++) {
-        for (let dx = 0; dx < 3; dx++) {
-            map[7 + dy][8 + dx] = { terrain: TERRAIN.STONE, variant: 2 };
-        }
-    }
-    map[9][9] = { terrain: TERRAIN.STONE, variant: 3 }; // Entrance door
-
-    // Scatter trees in forests (away from village) - DENSE FORESTS
+    // Scatter trees in forests (away from towns)
     for (let y = 2; y < MAP_HEIGHT - 2; y++) {
         for (let x = 2; x < MAP_WIDTH - 2; x++) {
             if (map[y][x].terrain === TERRAIN.GRASS || map[y][x].terrain === TERRAIN.SNOW) {
-                // Much denser trees farther from village
-                const distFromVillage = Math.abs(x - 25) + Math.abs(y - 25);
-                const treeChance = distFromVillage > 18 ? 0.35 : distFromVillage > 14 ? 0.25 : distFromVillage > 10 ? 0.12 : 0.03;
+                // Check distance from any town
+                let minDistToTown = Infinity;
+                for (const town of towns) {
+                    const dist = Math.hypot(x - town.x, y - town.y);
+                    if (dist < minDistToTown) minDistToTown = dist;
+                }
+
+                // More trees farther from towns
+                const treeChance = minDistToTown > 25 ? 0.35 : minDistToTown > 18 ? 0.25 : minDistToTown > 12 ? 0.12 : 0.03;
 
                 if (Math.random() < treeChance) {
                     map[y][x].terrain = TERRAIN.TREE;
                     map[y][x].variant = Math.floor(Math.random() * 3);
-                } else if (Math.random() < 0.03) {
+                } else if (Math.random() < 0.02) {
                     map[y][x].terrain = TERRAIN.ROCK;
                     map[y][x].variant = Math.floor(Math.random() * 2);
-                } else if (Math.random() < 0.06 && map[y][x].terrain === TERRAIN.GRASS && distFromVillage > 8) {
+                } else if (Math.random() < 0.04 && map[y][x].terrain === TERRAIN.GRASS && minDistToTown > 10) {
                     map[y][x].terrain = TERRAIN.BUSH;
                     map[y][x].variant = Math.floor(Math.random() * 2);
-                } else if (Math.random() < 0.03 && map[y][x].terrain === TERRAIN.GRASS) {
+                } else if (Math.random() < 0.02 && map[y][x].terrain === TERRAIN.GRASS) {
                     map[y][x].terrain = TERRAIN.FLOWER;
                     map[y][x].variant = Math.floor(Math.random() * 3);
                 }
             }
         }
     }
-
-    // Add fences around some areas
-    for (let x = 19; x <= 31; x++) {
-        if (map[19][x].terrain === TERRAIN.GRASS || map[19][x].terrain === TERRAIN.DIRT) {
-            map[19][x] = { terrain: TERRAIN.FENCE, variant: 0 };
-        }
-        if (map[31][x].terrain === TERRAIN.GRASS || map[31][x].terrain === TERRAIN.DIRT) {
-            map[31][x] = { terrain: TERRAIN.FENCE, variant: 0 };
-        }
-    }
-
-    // Add farmland south of village
-    for (let y = 32; y <= 38; y++) {
-        for (let x = 18; x <= 32; x++) {
-            if (map[y][x].terrain === TERRAIN.GRASS) {
-                map[y][x] = { terrain: TERRAIN.FARMLAND, variant: (x + y) % 2 };
-            }
-        }
-    }
-
-    // Add farmland west of village too
-    for (let y = 22; y <= 28; y++) {
-        for (let x = 14; x <= 18; x++) {
-            if (map[y][x].terrain === TERRAIN.GRASS) {
-                map[y][x] = { terrain: TERRAIN.FARMLAND, variant: (x + y) % 2 };
-            }
-        }
-    }
-
-    // Add hay bales
-    map[33][20] = { terrain: TERRAIN.HAY, variant: 0 };
-    map[33][30] = { terrain: TERRAIN.HAY, variant: 1 };
-    map[26][16] = { terrain: TERRAIN.HAY, variant: 0 };
-
-    // Add campfire in village center
-    map[25][24] = { terrain: TERRAIN.CAMPFIRE, variant: 0 };
 }
+
+// Generate a river between two points with width
+function generateRiver(x1, y1, x2, y2, width) {
+    const steps = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
+    for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const x = Math.floor(x1 + (x2 - x1) * t);
+        const y = Math.floor(y1 + (y2 - y1) * t);
+        const wobble = Math.floor(Math.sin(i * 0.2) * 3);
+
+        for (let w = -Math.floor(width / 2); w <= Math.floor(width / 2); w++) {
+            const rx = x + wobble + (Math.abs(y2 - y1) > Math.abs(x2 - x1) ? w : 0);
+            const ry = y + (Math.abs(x2 - x1) > Math.abs(y2 - y1) ? w : 0);
+
+            if (rx > 0 && rx < MAP_WIDTH - 1 && ry > 0 && ry < MAP_HEIGHT - 1) {
+                map[ry][rx] = { terrain: TERRAIN.WATER, variant: Math.abs(w) === Math.floor(width / 2) ? 1 : 0 };
+            }
+        }
+    }
+}
+
+// Generate a road between two points
+function generateRoad(x1, y1, x2, y2) {
+    // Simple line with some wobble
+    const steps = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
+    for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        let x = Math.floor(x1 + (x2 - x1) * t);
+        let y = Math.floor(y1 + (y2 - y1) * t);
+
+        // Small random wobble
+        x += Math.floor(Math.sin(i * 0.3) * 1);
+        y += Math.floor(Math.cos(i * 0.3) * 1);
+
+        if (x > 0 && x < MAP_WIDTH - 1 && y > 0 && y < MAP_HEIGHT - 1) {
+            if (map[y][x].terrain !== TERRAIN.WATER && map[y][x].terrain !== TERRAIN.BUILDING &&
+                map[y][x].terrain !== TERRAIN.ROOF) {
+                map[y][x] = { terrain: TERRAIN.PATH, variant: Math.abs(y2 - y1) > Math.abs(x2 - x1) ? 1 : 0 };
+            }
+        }
+    }
+}
+
+// Generate a town at position with size (1-3)
+function generateTown(cx, cy, size, isStart) {
+    const radius = size === 3 ? 8 : size === 2 ? 6 : 4;
+
+    // Clear area with dirt
+    for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+            const x = cx + dx;
+            const y = cy + dy;
+            if (x > 0 && x < MAP_WIDTH - 1 && y > 0 && y < MAP_HEIGHT - 1) {
+                if (Math.hypot(dx, dy) <= radius) {
+                    map[y][x] = { terrain: TERRAIN.DIRT, variant: Math.floor(Math.random() * 3) };
+                }
+            }
+        }
+    }
+
+    // Main paths through town
+    for (let i = -radius - 3; i <= radius + 3; i++) {
+        if (cx + i > 0 && cx + i < MAP_WIDTH - 1) {
+            map[cy][cx + i] = { terrain: TERRAIN.PATH, variant: 0 };
+        }
+        if (cy + i > 0 && cy + i < MAP_HEIGHT - 1) {
+            map[cy + i][cx] = { terrain: TERRAIN.PATH, variant: 1 };
+        }
+    }
+
+    // Buildings based on size
+    const buildingCount = size === 3 ? 6 : size === 2 ? 4 : 2;
+    const buildingPositions = [
+        { dx: -4, dy: -4 }, { dx: 2, dy: -4 },
+        { dx: -4, dy: 2 }, { dx: 2, dy: 2 },
+        { dx: -4, dy: -1 }, { dx: 3, dy: -1 }
+    ];
+
+    const buildingTypes = ['inn', 'smith', 'shop', 'house', 'house', 'house'];
+
+    for (let i = 0; i < buildingCount; i++) {
+        const pos = buildingPositions[i];
+        const bx = cx + pos.dx;
+        const by = cy + pos.dy;
+        const bType = buildingTypes[i];
+        const bw = bType === 'house' ? 2 : 3;
+        const bh = bType === 'house' ? 2 : 3;
+
+        for (let dy = 0; dy < bh; dy++) {
+            for (let dx = 0; dx < bw; dx++) {
+                const x = bx + dx;
+                const y = by + dy;
+                if (x > 0 && x < MAP_WIDTH - 1 && y > 0 && y < MAP_HEIGHT - 1) {
+                    if (dy === 0) {
+                        map[y][x] = { terrain: TERRAIN.ROOF, variant: bType === 'inn' ? 1 : 0 };
+                    } else {
+                        map[y][x] = { terrain: TERRAIN.BUILDING, variant: dx === Math.floor(bw / 2) && dy === bh - 1 ? 1 : 0 };
+                    }
+                }
+            }
+        }
+    }
+
+    // Fences around town
+    for (let dx = -radius - 1; dx <= radius + 1; dx++) {
+        const fy1 = cy - radius - 1;
+        const fy2 = cy + radius + 1;
+        const fx = cx + dx;
+        if (fx > 0 && fx < MAP_WIDTH - 1 && fy1 > 0 && map[fy1][fx].terrain === TERRAIN.GRASS) {
+            map[fy1][fx] = { terrain: TERRAIN.FENCE, variant: 0 };
+        }
+        if (fx > 0 && fx < MAP_WIDTH - 1 && fy2 < MAP_HEIGHT - 1 && map[fy2][fx].terrain === TERRAIN.GRASS) {
+            map[fy2][fx] = { terrain: TERRAIN.FENCE, variant: 0 };
+        }
+    }
+
+    // Campfire in center
+    map[cy][cx - 1] = { terrain: TERRAIN.CAMPFIRE, variant: 0 };
+
+    // Farmland outside town (for larger towns)
+    if (size >= 2) {
+        for (let fy = cy + radius + 2; fy <= cy + radius + 6; fy++) {
+            for (let fx = cx - 5; fx <= cx + 5; fx++) {
+                if (fx > 0 && fx < MAP_WIDTH - 1 && fy > 0 && fy < MAP_HEIGHT - 1) {
+                    if (map[fy][fx].terrain === TERRAIN.GRASS || map[fy][fx].terrain === TERRAIN.SNOW) {
+                        map[fy][fx] = { terrain: TERRAIN.FARMLAND, variant: (fx + fy) % 2 };
+                    }
+                }
+            }
+        }
+        // Hay bales
+        if (cy + radius + 3 < MAP_HEIGHT - 1 && cx - 3 > 0) {
+            map[cy + radius + 3][cx - 3] = { terrain: TERRAIN.HAY, variant: 0 };
+        }
+        if (cy + radius + 3 < MAP_HEIGHT - 1 && cx + 3 < MAP_WIDTH - 1) {
+            map[cy + radius + 3][cx + 3] = { terrain: TERRAIN.HAY, variant: 1 };
+        }
+    }
+}
+
+// Generate dungeon entrance
+function generateDungeonEntrance(cx, cy) {
+    for (let dy = 0; dy < 3; dy++) {
+        for (let dx = 0; dx < 3; dx++) {
+            if (cy + dy > 0 && cy + dy < MAP_HEIGHT - 1 && cx + dx > 0 && cx + dx < MAP_WIDTH - 1) {
+                map[cy + dy][cx + dx] = { terrain: TERRAIN.STONE, variant: 2 };
+            }
+        }
+    }
+    map[cy + 2][cx + 1] = { terrain: TERRAIN.STONE, variant: 3 }; // Entrance door
+}
+
+// Quest templates
+const QUEST_TEMPLATES = [
+    { type: 'kill', name: 'Clear the Bandits', target: 'bandit', count: 3, reward: 100, dialogue: 'Bandits have been attacking travelers. Slay {count} of them!' },
+    { type: 'kill', name: 'Wolf Hunt', target: 'wolf', count: 4, reward: 75, dialogue: 'Wolves are threatening our livestock. Hunt {count} of them!' },
+    { type: 'kill', name: 'Draugr Extermination', target: 'draugr', count: 3, reward: 150, dialogue: 'Undead draugr roam the northern wastes. Destroy {count} of them!' },
+    { type: 'kill', name: 'Bandit Camp Raid', target: 'bandit', count: 5, reward: 200, dialogue: 'A bandit camp threatens our trade routes. Eliminate {count} bandits!' },
+    { type: 'kill', name: 'Wolf Pack Culling', target: 'wolf', count: 6, reward: 120, dialogue: 'A large wolf pack hunts near the roads. Kill {count} wolves!' },
+    { type: 'kill', name: 'Ancient Evil', target: 'draugr', count: 5, reward: 250, dialogue: 'An ancient burial site stirs with draugr. Destroy {count} of them!' },
+    { type: 'explore', name: 'Scout the Roads', count: 3, reward: 80, dialogue: 'Scout the roads to {count} nearby towns to ensure they are safe.' },
+    { type: 'collect', name: 'Gold Collection', item: 'gold', count: 100, reward: 50, dialogue: 'The town treasury is low. Collect {count} gold from the wilderness.' }
+];
 
 // Spawn entities
 function spawnEntities() {
@@ -299,46 +643,169 @@ function spawnEntities() {
     npcs = [];
     items = [];
 
-    // Enemies
-    const enemyPositions = [
-        { x: 12, y: 30, type: 'bandit' },
-        { x: 15, y: 35, type: 'bandit' },
-        { x: 40, y: 25, type: 'wolf' },
-        { x: 42, y: 28, type: 'wolf' },
-        { x: 10, y: 8, type: 'draugr' },
-        { x: 12, y: 6, type: 'draugr' }
-    ];
+    // Track used quests so we don't duplicate
+    const usedQuestIds = [];
 
-    for (const pos of enemyPositions) {
-        enemies.push(createEnemy(pos.x * TILE_SIZE, pos.y * TILE_SIZE, pos.type));
+    // Spawn NPCs in each town
+    for (let townIndex = 0; townIndex < towns.length; townIndex++) {
+        const town = towns[townIndex];
+
+        // Innkeeper
+        npcs.push({
+            x: (town.x - 2) * TILE_SIZE, y: (town.y - 2) * TILE_SIZE,
+            name: 'Innkeeper', type: 'merchant', town: town.name,
+            dialogue: `Welcome to ${town.name}! Rest here to restore your health.`,
+            quest: null
+        });
+
+        // Guard with quest
+        let guardQuest = null;
+        if (town.isStartTown) {
+            // Start town always has bandit quest
+            guardQuest = {
+                id: 'kill_bandits_0', name: 'Clear the Bandits', target: 'bandit', type: 'kill',
+                count: 3, current: 0, reward: 100
+            };
+            usedQuestIds.push('kill_bandits_0');
+        } else if (Math.random() < 0.6) {
+            // Other towns have 60% chance of guard quest
+            const template = QUEST_TEMPLATES.filter(t => t.type === 'kill')[Math.floor(Math.random() * 3)];
+            const questId = template.name.toLowerCase().replace(/ /g, '_') + '_' + townIndex;
+            if (!usedQuestIds.includes(questId)) {
+                guardQuest = {
+                    id: questId, name: template.name, target: template.target, type: 'kill',
+                    count: template.count, current: 0, reward: template.reward
+                };
+                usedQuestIds.push(questId);
+            }
+        }
+        npcs.push({
+            x: (town.x + 1) * TILE_SIZE, y: (town.y - 3) * TILE_SIZE,
+            name: 'Guard Captain', type: 'questgiver', town: town.name,
+            dialogue: guardQuest ? QUEST_TEMPLATES.find(t => t.name === guardQuest.name)?.dialogue.replace('{count}', guardQuest.count) || 'I have work for you.' : `${town.name} is peaceful... for now.`,
+            quest: guardQuest
+        });
+
+        // Blacksmith in larger towns - sometimes has quests
+        if (town.size >= 2) {
+            let smithQuest = null;
+            if (Math.random() < 0.4 && !town.isStartTown) {
+                smithQuest = {
+                    id: 'collect_gold_' + townIndex, name: 'Ore Collection', type: 'collect',
+                    item: 'gold', count: 50 + Math.floor(Math.random() * 50), current: 0, reward: 60
+                };
+            }
+            npcs.push({
+                x: (town.x + 3) * TILE_SIZE, y: (town.y + 1) * TILE_SIZE,
+                name: 'Blacksmith', type: 'merchant', town: town.name,
+                dialogue: smithQuest ? 'I need materials! Bring me gold and I\'ll reward you.' : 'Need weapons? I forge the finest steel!',
+                quest: smithQuest
+            });
+        }
+
+        // Villager with exploration quest in larger towns
+        if (town.size >= 2) {
+            let villagerQuest = null;
+            // Find nearby town for explore quest
+            const otherTowns = towns.filter(t => t.name !== town.name);
+            if (otherTowns.length > 0 && Math.random() < 0.5) {
+                const targetTown = otherTowns[Math.floor(Math.random() * otherTowns.length)];
+                villagerQuest = {
+                    id: 'explore_' + townIndex, name: `Journey to ${targetTown.name}`, type: 'explore',
+                    targetTown: targetTown.name, targetX: targetTown.x * TILE_SIZE, targetY: targetTown.y * TILE_SIZE,
+                    count: 1, current: 0, reward: 80
+                };
+            }
+            npcs.push({
+                x: (town.x - 3) * TILE_SIZE, y: (town.y + 2) * TILE_SIZE,
+                name: 'Villager', type: 'questgiver', town: town.name,
+                dialogue: villagerQuest ? `I need someone to deliver a message to ${villagerQuest.targetTown}. Can you help?` : `${town.name} is a peaceful place... usually.`,
+                quest: villagerQuest
+            });
+        }
+
+        // Hunter NPC in some towns with wolf quests
+        if (Math.random() < 0.4 && town.size >= 1) {
+            const hunterQuest = {
+                id: 'wolf_hunt_' + townIndex, name: 'Wolf Pelts', type: 'kill',
+                target: 'wolf', count: 2 + Math.floor(Math.random() * 3), current: 0, reward: 50 + Math.floor(Math.random() * 30)
+            };
+            npcs.push({
+                x: (town.x - 1) * TILE_SIZE, y: (town.y + 4) * TILE_SIZE,
+                name: 'Hunter', type: 'questgiver', town: town.name,
+                dialogue: 'I need wolf pelts! Hunt some wolves for me.',
+                quest: hunterQuest
+            });
+        }
     }
 
-    // NPCs
-    npcs.push({
-        x: 24 * TILE_SIZE, y: 24 * TILE_SIZE,
-        name: 'Innkeeper', type: 'merchant',
-        dialogue: 'Welcome to Frostfall! Would you like to rest?',
-        quest: null
-    });
+    // Spawn enemies in wilderness
+    const enemyTypes = ['bandit', 'wolf', 'draugr'];
 
-    npcs.push({
-        x: 26 * TILE_SIZE, y: 23 * TILE_SIZE,
-        name: 'Guard Captain', type: 'questgiver',
-        dialogue: 'Bandits have been attacking travelers. Can you help?',
-        quest: { id: 'kill_bandits', name: 'Clear the Bandits', target: 'bandit', count: 2, current: 0, reward: 100 }
-    });
+    // Spawn 30-50 enemies across the map
+    const numEnemies = 30 + Math.floor(Math.random() * 20);
+    for (let i = 0; i < numEnemies; i++) {
+        let ex, ey;
+        let attempts = 0;
 
-    npcs.push({
-        x: 22 * TILE_SIZE, y: 26 * TILE_SIZE,
-        name: 'Blacksmith', type: 'merchant',
-        dialogue: 'Need weapons? I have the finest steel!',
-        quest: null
-    });
+        while (attempts < 20) {
+            ex = 5 + Math.floor(Math.random() * (MAP_WIDTH - 10));
+            ey = 5 + Math.floor(Math.random() * (MAP_HEIGHT - 10));
 
-    // Items
-    items.push({ x: 15 * TILE_SIZE, y: 20 * TILE_SIZE, type: 'gold', amount: 25 });
-    items.push({ x: 30 * TILE_SIZE, y: 15 * TILE_SIZE, type: 'potion', name: 'Health Potion' });
-    items.push({ x: 10 * TILE_SIZE, y: 10 * TILE_SIZE, type: 'weapon', name: 'Steel Sword', damage: 15 });
+            // Not too close to towns
+            let nearTown = false;
+            for (const town of towns) {
+                if (Math.hypot(town.x - ex, town.y - ey) < 15) {
+                    nearTown = true;
+                    break;
+                }
+            }
+
+            // Not on water or buildings
+            if (!nearTown && map[ey] && map[ey][ex] &&
+                map[ey][ex].terrain !== TERRAIN.WATER &&
+                map[ey][ex].terrain !== TERRAIN.BUILDING &&
+                map[ey][ex].terrain !== TERRAIN.ROOF) {
+
+                // Choose enemy type based on location
+                let type;
+                if (ey < MAP_HEIGHT * 0.3) {
+                    // Northern area - draugr more common
+                    type = Math.random() < 0.5 ? 'draugr' : Math.random() < 0.5 ? 'wolf' : 'bandit';
+                } else {
+                    // Southern area - bandits and wolves
+                    type = Math.random() < 0.4 ? 'bandit' : Math.random() < 0.6 ? 'wolf' : 'draugr';
+                }
+
+                enemies.push(createEnemy(ex * TILE_SIZE, ey * TILE_SIZE, type));
+                break;
+            }
+            attempts++;
+        }
+    }
+
+    // Spawn items in wilderness
+    for (let i = 0; i < 20; i++) {
+        let ix = 5 + Math.floor(Math.random() * (MAP_WIDTH - 10));
+        let iy = 5 + Math.floor(Math.random() * (MAP_HEIGHT - 10));
+
+        if (map[iy] && map[iy][ix] && map[iy][ix].terrain !== TERRAIN.WATER) {
+            const itemType = Math.random();
+            if (itemType < 0.5) {
+                items.push({ x: ix * TILE_SIZE, y: iy * TILE_SIZE, type: 'gold', amount: 10 + Math.floor(Math.random() * 30) });
+            } else if (itemType < 0.8) {
+                items.push({ x: ix * TILE_SIZE, y: iy * TILE_SIZE, type: 'potion', name: 'Health Potion' });
+            } else {
+                const weapons = [
+                    { name: 'Steel Sword', damage: 15 },
+                    { name: 'Silver Sword', damage: 20 },
+                    { name: 'Elven Blade', damage: 25 }
+                ];
+                const weapon = weapons[Math.floor(Math.random() * weapons.length)];
+                items.push({ x: ix * TILE_SIZE, y: iy * TILE_SIZE, type: 'weapon', name: weapon.name, damage: weapon.damage });
+            }
+        }
+    }
 }
 
 function createEnemy(x, y, type) {
@@ -429,6 +896,25 @@ function updatePlayer(dt) {
     game.camera.y = player.y - viewHeight / 2;
     game.camera.x = Math.max(0, Math.min(MAP_WIDTH * TILE_SIZE - viewWidth, game.camera.x));
     game.camera.y = Math.max(0, Math.min(MAP_HEIGHT * TILE_SIZE - viewHeight, game.camera.y));
+
+    // Check explore quest completion
+    checkExploreQuests();
+}
+
+// Check if player has reached target town for explore quests
+function checkExploreQuests() {
+    for (const quest of game.quests) {
+        if (quest.type === 'explore' && quest.current < quest.count) {
+            const dist = Math.hypot(player.x - quest.targetX, player.y - quest.targetY);
+            if (dist < 100) { // Within 100 pixels of target town
+                quest.current = quest.count;
+                showMessage(`Quest Complete: ${quest.name}! +${quest.reward} gold`);
+                player.gold += quest.reward;
+                player.xp += 30;
+                if (player.xp >= player.xpToNext) levelUp();
+            }
+        }
+    }
 }
 
 // Circular collision check with push-out for sliding
@@ -535,7 +1021,22 @@ function playerAttack() {
                 enemy.hp -= damage;
                 showDamageNumber(enemy.x, enemy.y, damage);
 
+                // Hit feedback
+                triggerScreenShake(3, 0.1);
+                spawnHitParticles(enemy.x + 7, enemy.y + 7, '#ffaa44', 6);
+                enemy.hitFlash = 0.15; // Flash white for 0.15s
+
+                // Knockback
+                const kbDist = 8;
+                const kbX = (dx / dist) * kbDist;
+                const kbY = (dy / dist) * kbDist;
+                if (canMove(enemy.x + kbX, enemy.y, 14, 14)) enemy.x += kbX;
+                if (canMove(enemy.x, enemy.y + kbY, 14, 14)) enemy.y += kbY;
+
                 if (enemy.hp <= 0) {
+                    // Death feedback
+                    triggerScreenShake(6, 0.15);
+                    spawnHitParticles(enemy.x + 7, enemy.y + 7, '#ff4444', 12);
                     killEnemy(enemy);
                 }
             }
@@ -560,11 +1061,19 @@ function killEnemy(enemy) {
         levelUp();
     }
 
-    // Quest progress
+    // Quest progress for kill quests
     for (const quest of game.quests) {
-        if (quest.target === enemy.type && quest.current < quest.count) {
+        if ((quest.type === 'kill' || !quest.type) && quest.target === enemy.type && quest.current < quest.count) {
             quest.current++;
-            showMessage(`Quest progress: ${quest.current}/${quest.count}`);
+            if (quest.current >= quest.count) {
+                // Quest complete!
+                showMessage(`Quest Complete: ${quest.name}! +${quest.reward} gold`);
+                player.gold += quest.reward;
+                player.xp += 50;
+                if (player.xp >= player.xpToNext) levelUp();
+            } else {
+                showMessage(`Quest progress: ${quest.name} ${quest.current}/${quest.count}`);
+            }
         }
     }
 
@@ -578,8 +1087,448 @@ function levelUp() {
     player.xpToNext = player.level * 100;
     player.maxHp += 10;
     player.hp = player.maxHp;
+    player.maxMp += 5;
+    player.mp = player.maxMp;
     player.damage += 2;
+    triggerScreenShake(5, 0.2);
     showMessage(`Level Up! You are now level ${player.level}`);
+}
+
+// Dodge roll
+function startDodge() {
+    if (player.dodgeCooldown > 0 || player.stamina < 20 || player.dodging) return;
+
+    let dx = 0, dy = 0;
+    if (keys.w || keys.arrowup) dy = -1;
+    if (keys.s || keys.arrowdown) dy = 1;
+    if (keys.a || keys.arrowleft) dx = -1;
+    if (keys.d || keys.arrowright) dx = 1;
+
+    if (dx === 0 && dy === 0) {
+        // Dodge in facing direction
+        const angles = [-1, 0, 1, 0]; // up, right, down, left
+        const anglesY = [0, -1, 0, 1];
+        dx = angles[player.facing];
+        dy = anglesY[player.facing];
+    }
+
+    const len = Math.sqrt(dx * dx + dy * dy);
+    player.dodgeDir = { x: dx / len, y: dy / len };
+    player.dodging = true;
+    player.dodgeTimer = 0.3;
+    player.dodgeCooldown = 0.5;
+    player.stamina -= 20;
+
+    // Invincibility during dodge
+    spawnHitParticles(player.x + 7, player.y + 7, '#aaccff', 4);
+}
+
+function updateDodge(dt) {
+    if (player.dodging) {
+        const dodgeSpeed = 200;
+        const newX = player.x + player.dodgeDir.x * dodgeSpeed * dt;
+        const newY = player.y + player.dodgeDir.y * dodgeSpeed * dt;
+
+        const collision = canMoveCircular(newX + player.width/2, newY + player.height/2, 6);
+        if (!collision.blocked) {
+            player.x = newX;
+            player.y = newY;
+        }
+
+        player.dodgeTimer -= dt;
+        if (player.dodgeTimer <= 0) {
+            player.dodging = false;
+        }
+    }
+
+    if (player.dodgeCooldown > 0) {
+        player.dodgeCooldown -= dt;
+    }
+}
+
+// Shield blocking
+function updateBlock(dt) {
+    player.blocking = keys.rightMouse && player.equipped.shield !== null;
+
+    if (player.blocking && player.stamina > 0) {
+        // Blocking drains stamina slowly
+        player.stamina = Math.max(0, player.stamina - 2 * dt);
+    }
+}
+
+function getBlockReduction() {
+    if (!player.blocking || !player.equipped.shield) return 0;
+    const shield = EQUIPMENT.armor.shield[player.equipped.shield];
+    return shield ? shield.block / 100 : 0;
+}
+
+// Spell casting
+function castSpell() {
+    if (player.spellCooldown > 0 || player.spells.length === 0) return;
+
+    const spellName = player.spells[player.selectedSpell];
+    const spell = SPELLS[spellName];
+    if (!spell) return;
+
+    // Check mana cost
+    let cost = spell.cost;
+    if (player.perks.includes('Novice Mage')) cost *= 0.75;
+
+    if (player.mp < cost) {
+        showMessage('Not enough magicka!');
+        return;
+    }
+
+    player.mp -= cost;
+    player.spellCooldown = 0.4;
+
+    // Cast based on spell type
+    if (spell.type === 'restore') {
+        // Healing spell
+        player.hp = Math.min(player.maxHp, player.hp + spell.heal);
+        spawnHitParticles(player.x + 7, player.y + 7, '#44ff44', 8);
+        showMessage(`Healed for ${spell.heal} HP`);
+    } else if (spell.speed) {
+        // Projectile spell (Firebolt)
+        const angles = [Math.PI * 1.5, 0, Math.PI * 0.5, Math.PI];
+        const angle = angles[player.facing];
+
+        projectiles.push({
+            x: player.x + 7,
+            y: player.y + 7,
+            vx: Math.cos(angle) * spell.speed,
+            vy: Math.sin(angle) * spell.speed,
+            damage: spell.damage,
+            type: spell.type,
+            owner: 'player',
+            life: spell.range / spell.speed
+        });
+
+        spawnHitParticles(player.x + 7, player.y + 7, spell.type === 'fire' ? '#ff6633' : '#6699ff', 4);
+    } else {
+        // Cone/touch spell (Flames)
+        const attackRange = spell.range;
+        const angles = [Math.PI * 1.5, 0, Math.PI * 0.5, Math.PI];
+        const facingAngle = angles[player.facing];
+
+        for (const enemy of enemies) {
+            const dx = (enemy.x + 7) - (player.x + 7);
+            const dy = (enemy.y + 7) - (player.y + 7);
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < attackRange) {
+                const angle = Math.atan2(dy, dx);
+                let angleDiff = Math.abs(angle - facingAngle);
+                if (angleDiff > Math.PI) angleDiff = Math.PI * 2 - angleDiff;
+
+                if (angleDiff < Math.PI / 3) {
+                    enemy.hp -= spell.damage;
+                    showDamageNumber(enemy.x, enemy.y, spell.damage);
+                    spawnHitParticles(enemy.x + 7, enemy.y + 7, spell.type === 'fire' ? '#ff6633' : '#6699ff', 4);
+
+                    // Apply DOT for fire
+                    if (spell.dot) {
+                        enemy.burning = spell.dot;
+                        enemy.burnTimer = 3;
+                    }
+                    // Apply slow for frost
+                    if (spell.slow) {
+                        enemy.slowed = spell.slow;
+                        enemy.slowTimer = 2;
+                    }
+
+                    if (enemy.hp <= 0) {
+                        killEnemy(enemy);
+                    }
+                }
+            }
+        }
+    }
+
+    // Gain magic XP
+    player.skills.magic += 0.1;
+}
+
+// Update projectiles
+function updateProjectiles(dt) {
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+        const proj = projectiles[i];
+
+        proj.x += proj.vx * dt;
+        proj.y += proj.vy * dt;
+        proj.life -= dt;
+
+        // Check collisions
+        if (proj.owner === 'player') {
+            for (const enemy of enemies) {
+                const dist = Math.hypot(proj.x - (enemy.x + 7), proj.y - (enemy.y + 7));
+                if (dist < 12) {
+                    enemy.hp -= proj.damage;
+                    showDamageNumber(enemy.x, enemy.y, proj.damage);
+                    triggerScreenShake(4, 0.1);
+                    spawnHitParticles(enemy.x + 7, enemy.y + 7, proj.type === 'fire' ? '#ff6633' : '#ffaa44', 8);
+
+                    if (enemy.hp <= 0) {
+                        killEnemy(enemy);
+                    }
+
+                    projectiles.splice(i, 1);
+                    break;
+                }
+            }
+        } else {
+            // Enemy projectile
+            const dist = Math.hypot(proj.x - (player.x + 7), proj.y - (player.y + 7));
+            if (dist < 10 && !player.dodging) {
+                let damage = proj.damage;
+                const blockReduction = getBlockReduction();
+                if (blockReduction > 0) {
+                    damage = Math.floor(damage * (1 - blockReduction));
+                    player.stamina -= 5;
+                    showMessage('Blocked!');
+                }
+                damage = Math.max(1, damage - player.armor);
+                player.hp -= damage;
+                showDamageNumber(player.x, player.y, damage);
+                triggerScreenShake(6, 0.15);
+                triggerDamageFlash(0.4, 0.1);
+
+                if (player.hp <= 0) {
+                    game.state = 'gameover';
+                }
+
+                projectiles.splice(i, 1);
+                break;
+            }
+        }
+
+        // Check terrain collision or life expired
+        const tileX = Math.floor(proj.x / TILE_SIZE);
+        const tileY = Math.floor(proj.y / TILE_SIZE);
+        if (tileX < 0 || tileX >= MAP_WIDTH || tileY < 0 || tileY >= MAP_HEIGHT) {
+            projectiles.splice(i, 1);
+            continue;
+        }
+        const terrain = map[tileY][tileX].terrain;
+        if (terrain === TERRAIN.WALL || terrain === TERRAIN.TREE || terrain === TERRAIN.ROCK ||
+            terrain === TERRAIN.BUILDING || proj.life <= 0) {
+            projectiles.splice(i, 1);
+        }
+    }
+}
+
+// Fire bow
+function fireBow() {
+    if (player.attackCooldown > 0) return;
+
+    const weapon = EQUIPMENT.weapons[player.equipped.weapon];
+    if (!weapon || weapon.type !== 'bow') return;
+
+    player.attackCooldown = 1 / weapon.speed;
+
+    const angles = [Math.PI * 1.5, 0, Math.PI * 0.5, Math.PI];
+    const angle = angles[player.facing];
+    const speed = 300;
+
+    projectiles.push({
+        x: player.x + 7,
+        y: player.y + 7,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        damage: weapon.damage + Math.floor(player.skills.combat * 0.5),
+        type: 'arrow',
+        owner: 'player',
+        life: weapon.range / speed
+    });
+
+    spawnHitParticles(player.x + 7, player.y + 7, '#aa8866', 3);
+    player.skills.combat += 0.05;
+}
+
+// Weather system
+function updateWeather(dt) {
+    weather.timer -= dt;
+    if (weather.timer <= 0) {
+        // Change weather
+        const types = ['clear', 'clear', 'clear', 'rain', 'fog'];
+        // Snow only in northern areas
+        if (player.y < MAP_HEIGHT * TILE_SIZE * 0.3) {
+            types.push('snow', 'snow');
+        }
+        weather.type = types[Math.floor(Math.random() * types.length)];
+        weather.intensity = 0.3 + Math.random() * 0.7;
+        weather.timer = 60 + Math.random() * 120; // 1-3 minutes
+    }
+
+    // Update weather particles
+    if (weather.type === 'rain' || weather.type === 'snow') {
+        if (weather.particles.length < 100 * weather.intensity) {
+            weather.particles.push({
+                x: game.camera.x + Math.random() * canvas.width / CAMERA_ZOOM,
+                y: game.camera.y - 10,
+                speed: weather.type === 'rain' ? 200 + Math.random() * 100 : 30 + Math.random() * 20,
+                drift: weather.type === 'snow' ? (Math.random() - 0.5) * 30 : (Math.random() - 0.5) * 5,
+                size: weather.type === 'rain' ? 1 : 2 + Math.random() * 2
+            });
+        }
+    }
+
+    for (let i = weather.particles.length - 1; i >= 0; i--) {
+        const p = weather.particles[i];
+        p.y += p.speed * dt;
+        p.x += p.drift * dt;
+        if (p.y > game.camera.y + canvas.height / CAMERA_ZOOM + 20) {
+            weather.particles.splice(i, 1);
+        }
+    }
+}
+
+function drawWeather() {
+    if (weather.type === 'clear') return;
+
+    ctx.save();
+    ctx.scale(CAMERA_ZOOM, CAMERA_ZOOM);
+
+    if (weather.type === 'rain') {
+        ctx.strokeStyle = 'rgba(150, 170, 200, 0.5)';
+        ctx.lineWidth = 1;
+        for (const p of weather.particles) {
+            const sx = p.x - game.camera.x;
+            const sy = p.y - game.camera.y;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(sx + p.drift * 0.1, sy + 8);
+            ctx.stroke();
+        }
+    } else if (weather.type === 'snow') {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        for (const p of weather.particles) {
+            const sx = p.x - game.camera.x;
+            const sy = p.y - game.camera.y;
+            ctx.beginPath();
+            ctx.arc(sx, sy, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    } else if (weather.type === 'fog') {
+        ctx.fillStyle = `rgba(180, 190, 200, ${weather.intensity * 0.3})`;
+        ctx.fillRect(0, 0, canvas.width / CAMERA_ZOOM, canvas.height / CAMERA_ZOOM);
+    }
+
+    ctx.restore();
+}
+
+// Day/night cycle
+function updateDayNight(dt) {
+    dayNight.time += dayNight.rate * dt * 60;
+    if (dayNight.time >= 24) dayNight.time -= 24;
+}
+
+function getDayNightOverlay() {
+    // Calculate darkness based on time
+    // 6-18 is daytime, 0-6 and 18-24 is night
+    const hour = dayNight.time;
+    let darkness = 0;
+
+    if (hour < 6) {
+        darkness = 0.4 - (hour / 6) * 0.2; // 0.4 to 0.2
+    } else if (hour < 7) {
+        darkness = 0.2 - ((hour - 6) / 1) * 0.2; // Dawn
+    } else if (hour < 18) {
+        darkness = 0; // Day
+    } else if (hour < 19) {
+        darkness = ((hour - 18) / 1) * 0.2; // Dusk
+    } else {
+        darkness = 0.2 + ((hour - 19) / 5) * 0.2; // 0.2 to 0.4
+    }
+
+    return darkness;
+}
+
+// Chest system
+function generateChests() {
+    chests = [];
+
+    // Add chests near dungeon entrances and in wilderness
+    for (let i = 0; i < 15; i++) {
+        let cx, cy;
+        let attempts = 0;
+        while (attempts < 20) {
+            cx = 10 + Math.floor(Math.random() * (MAP_WIDTH - 20));
+            cy = 10 + Math.floor(Math.random() * (MAP_HEIGHT - 20));
+
+            if (map[cy][cx].terrain === TERRAIN.GRASS || map[cy][cx].terrain === TERRAIN.DIRT) {
+                chests.push({
+                    x: cx * TILE_SIZE,
+                    y: cy * TILE_SIZE,
+                    opened: false,
+                    tier: Math.floor(Math.random() * 3) // 0=common, 1=rare, 2=boss
+                });
+                break;
+            }
+            attempts++;
+        }
+    }
+}
+
+function openChest(chest) {
+    if (chest.opened) return;
+
+    chest.opened = true;
+    triggerScreenShake(2, 0.1);
+
+    // Generate loot based on tier
+    const gold = (chest.tier + 1) * (10 + Math.floor(Math.random() * 30));
+    player.gold += gold;
+    showMessage(`Found ${gold} gold!`);
+
+    // Chance for item
+    if (Math.random() < 0.3 + chest.tier * 0.2) {
+        const itemTypes = ['Health Potion', 'Magicka Potion', 'Stamina Potion'];
+        if (chest.tier >= 1) itemTypes.push('Iron Helmet', 'Leather Armor');
+        if (chest.tier >= 2) itemTypes.push('Steel Sword', 'Iron Armor');
+
+        const item = itemTypes[Math.floor(Math.random() * itemTypes.length)];
+        player.inventory.push(item);
+        showMessage(`Found ${item}!`);
+    }
+}
+
+function drawChests() {
+    for (const chest of chests) {
+        const screenX = (chest.x - game.camera.x);
+        const screenY = (chest.y - game.camera.y);
+
+        if (screenX < -20 || screenX > canvas.width / CAMERA_ZOOM + 20 ||
+            screenY < -20 || screenY > canvas.height / CAMERA_ZOOM + 20) continue;
+
+        // Draw chest
+        if (chest.opened) {
+            ctx.fillStyle = '#4a3a2a';
+        } else {
+            ctx.fillStyle = '#8a6a3a';
+        }
+        ctx.fillRect(screenX, screenY, 12, 10);
+
+        // Chest lid
+        ctx.fillStyle = chest.opened ? '#3a2a1a' : '#6a5030';
+        ctx.fillRect(screenX - 1, screenY - 3, 14, 4);
+
+        // Gold highlight for unopened
+        if (!chest.opened) {
+            ctx.fillStyle = '#d4aa44';
+            ctx.fillRect(screenX + 4, screenY + 3, 4, 3);
+        }
+    }
+}
+
+function checkChestInteraction() {
+    for (const chest of chests) {
+        const dist = Math.hypot(player.x - chest.x, player.y - chest.y);
+        if (dist < 30 && !chest.opened) {
+            openChest(chest);
+            return;
+        }
+    }
 }
 
 let messageText = '';
@@ -606,11 +1555,19 @@ function updateEnemies(dt) {
                 // Attack player
                 enemy.attackCooldown -= dt;
                 if (enemy.attackCooldown <= 0) {
-                    player.hp -= Math.max(1, enemy.damage - player.armor);
+                    const actualDamage = Math.max(1, enemy.damage - player.armor);
+                    player.hp -= actualDamage;
                     showDamageNumber(player.x, player.y, enemy.damage);
                     enemy.attackCooldown = 1;
 
+                    // Combat feedback effects
+                    triggerScreenShake(8, 0.2);
+                    triggerDamageFlash(0.5, 0.15);
+                    spawnHitParticles(player.x + 7, player.y + 7, '#ff4444', 8);
+
                     if (player.hp <= 0) {
+                        triggerScreenShake(15, 0.5);
+                        triggerDamageFlash(1.0, 0.3);
                         game.state = 'gameover';
                     }
                 }
@@ -641,6 +1598,14 @@ function draw() {
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Apply screen shake
+    ctx.save();
+    if (screenShake.duration > 0) {
+        const shakeX = (Math.random() - 0.5) * screenShake.intensity * 2;
+        const shakeY = (Math.random() - 0.5) * screenShake.intensity * 2;
+        ctx.translate(shakeX, shakeY);
+    }
+
     // Apply camera zoom for game world rendering
     ctx.save();
     ctx.scale(CAMERA_ZOOM, CAMERA_ZOOM);
@@ -649,9 +1614,19 @@ function draw() {
     drawItems();
     drawEntities();
     drawPlayer();
+    drawProjectiles();
     drawDamageNumbers();
+    drawHitParticles();
 
     ctx.restore(); // Restore to draw UI at normal scale
+
+    // Draw damage flash overlay
+    if (damageFlash.duration > 0) {
+        ctx.fillStyle = `rgba(255, 0, 0, ${damageFlash.intensity * 0.4})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    ctx.restore(); // Restore from screen shake
 
     drawUI();
 
@@ -1054,6 +2029,54 @@ function drawItems() {
             ctx.fillRect(screenX + 5, screenY + 12, 6, 3);
         }
     }
+
+    // Draw chests
+    drawChests();
+}
+
+function drawProjectiles() {
+    for (const proj of projectiles) {
+        const screenX = proj.x - game.camera.x;
+        const screenY = proj.y - game.camera.y;
+
+        if (proj.type === 'arrow') {
+            // Draw arrow
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            const angle = Math.atan2(proj.vy, proj.vx);
+            ctx.rotate(angle);
+            ctx.fillStyle = '#aa8866';
+            ctx.fillRect(-6, -1, 12, 2);
+            ctx.fillStyle = '#444444';
+            ctx.beginPath();
+            ctx.moveTo(6, 0);
+            ctx.lineTo(3, -2);
+            ctx.lineTo(3, 2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        } else if (proj.type === 'fire') {
+            // Fire projectile
+            ctx.fillStyle = '#ff6633';
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffaa44';
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, 2, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (proj.type === 'frost') {
+            // Frost projectile
+            ctx.fillStyle = '#6699ff';
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#aaccff';
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
 }
 
 function drawEntities() {
@@ -1160,6 +2183,12 @@ function drawEntities() {
             // Hood
             ctx.fillStyle = '#4a3a2a';
             ctx.fillRect(screenX + 4, screenY - 2, 8, 4);
+        }
+
+        // Hit flash overlay (white flash when hit)
+        if (enemy.hitFlash > 0) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${enemy.hitFlash * 4})`;
+            ctx.fillRect(screenX + 2, screenY - 2, 12, 16);
         }
 
         // Health bar
@@ -1436,6 +2465,9 @@ function drawUI() {
     // Draw arrow pointing to nearest quest target (edge of screen indicator)
     drawQuestArrow();
 
+    // Draw town markers on minimap and direction arrows
+    drawTownMarkers();
+
     // Message popup
     if (messageTimer > 0) {
         const msgWidth = ctx.measureText(messageText).width + 40;
@@ -1538,6 +2570,109 @@ function drawQuestArrow() {
     ctx.textAlign = 'left';
 }
 
+// Town markers on minimap and screen edges
+function drawTownMarkers() {
+    const mmScale = 60 / (MAP_WIDTH * TILE_SIZE);
+    const mmX = canvas.width / 2 - 30;
+    const mmY = 10;
+
+    // Draw towns on minimap
+    for (const town of towns) {
+        const townMmX = mmX + town.x * TILE_SIZE * mmScale;
+        const townMmY = mmY + town.y * TILE_SIZE * mmScale;
+
+        // Town dot color based on size
+        ctx.fillStyle = town.size === 3 ? '#ffaa44' : town.size === 2 ? '#88cc88' : '#aaaaaa';
+        ctx.beginPath();
+        ctx.arc(townMmX, townMmY, town.size + 1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+
+    // Draw direction arrows to nearby towns (not on screen)
+    const nearbyTowns = towns
+        .map(t => ({
+            ...t,
+            dist: Math.hypot(t.x * TILE_SIZE - player.x, t.y * TILE_SIZE - player.y)
+        }))
+        .filter(t => t.dist > 100 && t.dist < 800) // 100-800 pixel range
+        .sort((a, b) => a.dist - b.dist)
+        .slice(0, 3); // Show up to 3 nearest towns
+
+    for (const town of nearbyTowns) {
+        const townWorldX = town.x * TILE_SIZE;
+        const townWorldY = town.y * TILE_SIZE;
+
+        // Check if town is off screen
+        const screenX = (townWorldX - game.camera.x) * CAMERA_ZOOM;
+        const screenY = (townWorldY - game.camera.y) * CAMERA_ZOOM;
+
+        if (screenX > 80 && screenX < canvas.width - 80 &&
+            screenY > 120 && screenY < canvas.height - 170) {
+            // Town is on screen - show name label
+            ctx.fillStyle = 'rgba(18,20,26,0.85)';
+            const nameWidth = ctx.measureText(town.name).width + 10;
+            ctx.fillRect(screenX - nameWidth / 2, screenY - 35, nameWidth, 16);
+            ctx.strokeStyle = '#88cc88';
+            ctx.strokeRect(screenX - nameWidth / 2, screenY - 35, nameWidth, 16);
+
+            ctx.fillStyle = '#88cc88';
+            ctx.font = 'bold 10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(town.name, screenX, screenY - 23);
+            ctx.textAlign = 'left';
+            continue;
+        }
+
+        // Town is off screen - draw directional arrow at screen edge
+        const angle = Math.atan2(townWorldY - player.y, townWorldX - player.x);
+        const arrowDist = 130;
+        const centerX = canvas.width / 2;
+        const centerY = (canvas.height - 70) / 2;
+
+        let arrowX = centerX + Math.cos(angle) * arrowDist;
+        let arrowY = centerY + Math.sin(angle) * arrowDist;
+
+        // Clamp to screen edges
+        arrowX = Math.max(60, Math.min(canvas.width - 60, arrowX));
+        arrowY = Math.max(120, Math.min(canvas.height - 150, arrowY));
+
+        // Draw arrow
+        ctx.save();
+        ctx.translate(arrowX, arrowY);
+        ctx.rotate(angle);
+
+        // Arrow shape - green for towns
+        ctx.fillStyle = '#88cc88';
+        ctx.beginPath();
+        ctx.moveTo(12, 0);
+        ctx.lineTo(-6, -8);
+        ctx.lineTo(-3, 0);
+        ctx.lineTo(-6, 8);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = '#336633';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.restore();
+
+        // Town name and distance
+        const distText = Math.floor(town.dist / TILE_SIZE) + 'm';
+        ctx.fillStyle = '#88cc88';
+        ctx.font = 'bold 9px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(town.name, arrowX, arrowY + 18);
+        ctx.fillStyle = '#668866';
+        ctx.font = '8px Arial';
+        ctx.fillText(distText, arrowX, arrowY + 28);
+        ctx.textAlign = 'left';
+    }
+}
+
 function drawDialogue() {
     ctx.fillStyle = 'rgba(0,0,0,0.9)';
     ctx.fillRect(50, canvas.height - 150, canvas.width - 100, 120);
@@ -1601,13 +2736,66 @@ document.addEventListener('keydown', (e) => {
         return;
     }
 
+    // Space - Attack (melee or bow)
     if (e.key === ' ') {
         e.preventDefault();
-        if (!game.dialogueActive) {
-            playerAttack();
+        if (!game.dialogueActive && game.state === 'playing') {
+            const weapon = EQUIPMENT.weapons[player.equipped.weapon];
+            if (weapon && weapon.type === 'bow') {
+                fireBow();
+            } else {
+                playerAttack();
+            }
         }
     }
 
+    // Shift - Dodge roll
+    if (e.shiftKey && !keys['shift_held']) {
+        keys['shift_held'] = true;
+        if (!game.dialogueActive && game.state === 'playing') {
+            startDodge();
+        }
+    }
+
+    // Q - Cast selected spell
+    if (e.key.toLowerCase() === 'q') {
+        if (!game.dialogueActive && game.state === 'playing') {
+            castSpell();
+        }
+    }
+
+    // 1-3 - Select spell
+    if (e.key === '1' && player.spells.length > 0) {
+        player.selectedSpell = 0;
+        showMessage(`Spell: ${player.spells[0]}`);
+    }
+    if (e.key === '2' && player.spells.length > 1) {
+        player.selectedSpell = 1;
+        showMessage(`Spell: ${player.spells[1]}`);
+    }
+    if (e.key === '3' && player.spells.length > 2) {
+        player.selectedSpell = 2;
+        showMessage(`Spell: ${player.spells[2]}`);
+    }
+
+    // F - Use health potion
+    if (e.key.toLowerCase() === 'f') {
+        const potionIdx = player.inventory.indexOf('Health Potion');
+        if (potionIdx !== -1) {
+            player.inventory.splice(potionIdx, 1);
+            player.hp = Math.min(player.maxHp, player.hp + 50);
+            showMessage('Used Health Potion (+50 HP)');
+            spawnHitParticles(player.x + 7, player.y + 7, '#ff4444', 6);
+        }
+    }
+
+    // Tab - Toggle inventory (placeholder)
+    if (e.key === 'Tab') {
+        e.preventDefault();
+        showMessage(`Inventory: ${player.inventory.join(', ') || 'Empty'}`);
+    }
+
+    // E - Interact
     if (e.key.toLowerCase() === 'e') {
         if (game.dialogueActive) {
             game.dialogueActive = false;
@@ -1618,12 +2806,32 @@ document.addEventListener('keydown', (e) => {
             }
         } else {
             interact();
+            checkChestInteraction();
         }
     }
 });
 
+// Mouse input for blocking
+document.addEventListener('mousedown', (e) => {
+    if (e.button === 2) { // Right click
+        keys.rightMouse = true;
+    }
+});
+
+document.addEventListener('mouseup', (e) => {
+    if (e.button === 2) {
+        keys.rightMouse = false;
+    }
+});
+
+// Prevent context menu on right-click
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
 document.addEventListener('keyup', (e) => {
     keys[e.key.toLowerCase()] = false;
+    if (e.key === 'Shift') {
+        keys['shift_held'] = false;
+    }
 });
 
 function interact() {
@@ -1644,6 +2852,19 @@ function interact() {
             if (item.type === 'gold') {
                 player.gold += item.amount;
                 showMessage(`Picked up ${item.amount} gold`);
+
+                // Check collect quests
+                for (const quest of game.quests) {
+                    if (quest.type === 'collect' && quest.item === 'gold' && quest.current < quest.count) {
+                        quest.current += item.amount;
+                        if (quest.current >= quest.count) {
+                            showMessage(`Quest Complete: ${quest.name}! +${quest.reward} gold`);
+                            player.gold += quest.reward;
+                            player.xp += 30;
+                            if (player.xp >= player.xpToNext) levelUp();
+                        }
+                    }
+                }
             } else if (item.type === 'potion') {
                 player.inventory.push(item.name);
                 showMessage(`Picked up ${item.name}`);
@@ -1662,9 +2883,18 @@ function interact() {
 function initGame() {
     generateWorld();
     spawnEntities();
+    generateChests();
 
-    player.x = 25 * TILE_SIZE;
-    player.y = 25 * TILE_SIZE;
+    // Spawn player at start town (first town in array)
+    const startTown = towns.find(t => t.isStartTown) || towns[0];
+    if (startTown) {
+        player.x = startTown.x * TILE_SIZE;
+        player.y = startTown.y * TILE_SIZE;
+    } else {
+        player.x = 75 * TILE_SIZE;
+        player.y = 75 * TILE_SIZE;
+    }
+
     player.hp = player.maxHp;
     player.mp = player.maxMp;
     player.stamina = player.maxStamina;
@@ -1672,28 +2902,96 @@ function initGame() {
     player.xp = 0;
     player.gold = 50;
     player.damage = 10;
+    player.blocking = false;
+    player.dodging = false;
+    player.dodgeCooldown = 0;
+    player.spellCooldown = 0;
+    projectiles = [];
+    weather.timer = 0;
+    weather.particles = [];
 
     game.state = 'playing';
     game.quests = [];
     game.dialogueActive = false;
     damageNumbers = [];
+
+    // Show welcome message with town name
+    if (startTown) {
+        showMessage(`Welcome to ${startTown.name}!`);
+    }
 }
 
 // Game loop
 let lastTime = 0;
 function gameLoop(currentTime) {
-    const dt = (currentTime - lastTime) / 1000;
+    const dt = Math.min((currentTime - lastTime) / 1000, 0.1); // Cap delta at 100ms
     lastTime = currentTime;
 
     if (game.state === 'playing' && !game.dialogueActive) {
         updatePlayer(dt);
+        updateDodge(dt);
+        updateBlock(dt);
         updateEnemies(dt);
+        updateProjectiles(dt);
+        updateWeather(dt);
+        updateDayNight(dt);
         updateParticles();
+        updateHitParticles(dt);
         game.tick++;
+
+        // Update spell cooldown
+        if (player.spellCooldown > 0) {
+            player.spellCooldown -= dt;
+        }
+
+        // Update mana regeneration
+        if (player.mp < player.maxMp) {
+            player.mp = Math.min(player.maxMp, player.mp + 3 * dt);
+        }
+
+        // Update enemy DOT and slow effects
+        for (const enemy of enemies) {
+            if (enemy.burning && enemy.burnTimer > 0) {
+                enemy.hp -= enemy.burning * dt;
+                enemy.burnTimer -= dt;
+                if (enemy.hp <= 0) {
+                    killEnemy(enemy);
+                }
+            }
+            if (enemy.slowTimer > 0) {
+                enemy.slowTimer -= dt;
+            }
+        }
+    }
+
+    // Update combat effects (always update, even when paused for visual continuity)
+    if (screenShake.duration > 0) {
+        screenShake.duration -= dt;
+        screenShake.intensity *= 0.9; // Decay intensity
+    }
+    if (damageFlash.duration > 0) {
+        damageFlash.duration -= dt;
+        damageFlash.intensity *= 0.85; // Decay flash
+    }
+
+    // Update enemy hit flash
+    for (const enemy of enemies) {
+        if (enemy.hitFlash > 0) {
+            enemy.hitFlash -= dt;
+        }
     }
 
     draw();
     drawParticles();
+    drawWeather();
+
+    // Draw day/night overlay
+    const darkness = getDayNightOverlay();
+    if (darkness > 0) {
+        ctx.fillStyle = `rgba(0, 0, 30, ${darkness})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
     requestAnimationFrame(gameLoop);
 }
 

@@ -186,3 +186,23 @@ Game achieves expanded Lost Outpost aesthetic with Phaser 3 framework:
 
 ### Difficulty Rating
 Medium - Translating Canvas code to Phaser requires understanding both APIs. The framework helps with some things (input, game loop) but adds complexity in others (scene management).
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "Aiming doesn't point at cursor"
+   → Fixed by always tracking activePointer in update loop instead of relying on pointermove event
+   → Player now correctly aims at mouse cursor continuously
+
+2. [x] "Too boring, needs more in a level"
+   → Doubled enemy counts on wave 1 (from 3 to 10 enemies)
+   → Increased enemy variety across all waves
+   → Added more items: 5 ammo pickups, 4 health packs, 3 credits, 3 armor
+   → Added 2 extra weapon pickups (SMG, Flamethrower)
+   → Added 2 extra power-ups scattered around the map
+
+### Verification:
+- Tested aiming by moving mouse to different positions - player correctly tracks cursor
+- Level now starts with more action (10 enemies instead of 3)
+- More items visible on the map for collection
+- All feedback items addressed

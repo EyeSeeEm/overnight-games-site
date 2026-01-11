@@ -80,6 +80,26 @@
 - All 20 polish passes completed
 - All features working and verified
 
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "Player can only drill down - completely unplayable" → Added LEFT and RIGHT drilling!
+   - Added drill left detection: checks tile to left of player
+   - Added drill right detection: checks tile to right of player
+   - Updated updateDrilling() to move player left/right after drilling
+   - Added drill spark animation for left/right directions
+2. [x] Updated controls hint to show "Hold direction to drill (LEFT/RIGHT/DOWN)"
+3. [x] Updated title screen controls text
+
+### Verification:
+- Tested drilling DOWN: depth 0→68 ft ✓
+- Tested drilling LEFT: worked, depth increased as player fell ✓
+- Tested drilling RIGHT: worked, collected mineral (cargo: 1) ✓
+- Fuel consumed during drilling ✓
+- Score increased from mineral collection ✓
+
+---
+
 ## Dev Notes
 
 ### Debug Overlay Added (2026-01-10)

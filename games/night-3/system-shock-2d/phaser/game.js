@@ -19,11 +19,38 @@ const COLORS = {
     PLAYER: 0x6a8a8a,
     CYBORG: 0x7a6050,
     CYBORG_EYE: 0xff3030,
+    CYBORG_HEAVY: 0x5a4030,
+    CYBORG_ASSASSIN: 0x404060,
+    MUTANT: 0x4a6a4a,
+    MUTANT_BRUTE: 0x3a5a3a,
+    ROBOT: 0x606880,
     BULLET: 0xffff80,
     LASER: 0x80ffff,
+    PLASMA: 0x40ff80,
     HEALTH_BAR: 0xcc4040,
     ENERGY_BAR: 0x4080cc,
+    STAMINA_BAR: 0xcccc40,
     EXIT: 0x40aa40
+};
+
+// Status effects
+const STATUS_EFFECTS = {
+    bleeding: { name: 'Bleeding', damagePerSec: 2, duration: 10, color: 0xff3333 },
+    shocked: { name: 'Shocked', speedMod: 0, attackMod: 0, duration: 3, color: 0xffff00 },
+    irradiated: { name: 'Irradiated', damagePerSec: 0.33, duration: 30, stacks: true, maxStacks: 3, color: 0x40ff40 },
+    cloaked: { name: 'Cloaked', invisible: true, duration: 15, color: 0x8080ff }
+};
+
+// Enemy types from GDD
+const ENEMY_TYPES = {
+    DRONE: { name: 'Cyborg Drone', hp: 30, armor: 0, damage: 10, speed: 80, behavior: 'melee', color: COLORS.CYBORG, drops: ['bullets'] },
+    SOLDIER: { name: 'Cyborg Soldier', hp: 60, armor: 5, damage: 15, speed: 100, behavior: 'ranged', color: COLORS.CYBORG, drops: ['bullets', 'medkit'] },
+    ASSASSIN: { name: 'Cyborg Assassin', hp: 40, armor: 0, damage: 25, speed: 150, behavior: 'stealth', color: COLORS.CYBORG_ASSASSIN, drops: ['energy', 'cloak'] },
+    HEAVY: { name: 'Cyborg Heavy', hp: 120, armor: 15, damage: 20, speed: 60, behavior: 'tank', color: COLORS.CYBORG_HEAVY, drops: ['shells', 'armor'] },
+    MUTANT_CRAWLER: { name: 'Mutant Crawler', hp: 20, armor: 0, damage: 8, speed: 120, behavior: 'swarm', color: COLORS.MUTANT, drops: ['toxin'] },
+    MUTANT_BRUTE: { name: 'Mutant Brute', hp: 100, armor: 5, damage: 30, speed: 50, behavior: 'charge', color: COLORS.MUTANT_BRUTE, drops: ['mutagen'] },
+    MAINTENANCE_BOT: { name: 'Maintenance Bot', hp: 40, armor: 10, damage: 10, speed: 60, behavior: 'patrol', color: COLORS.ROBOT, drops: ['scrap', 'battery'] },
+    SECURITY_BOT: { name: 'Security Bot', hp: 80, armor: 15, damage: 18, speed: 80, behavior: 'aggressive', color: COLORS.ROBOT, drops: ['scrap', 'energy'] }
 };
 
 class BootScene extends Phaser.Scene {
@@ -90,13 +117,69 @@ class BootScene extends Phaser.Scene {
         g.fillRect(22, 10, 10, 4);
         g.generateTexture('player', 32, 24);
 
-        // Cyborg
+        // Cyborg Drone
         g.clear();
         g.fillStyle(COLORS.CYBORG);
         g.fillRect(0, 2, 28, 20);
         g.fillStyle(COLORS.CYBORG_EYE);
         g.fillCircle(20, 12, 4);
         g.generateTexture('cyborg', 28, 24);
+
+        // Cyborg Heavy
+        g.clear();
+        g.fillStyle(COLORS.CYBORG_HEAVY);
+        g.fillRect(0, 0, 36, 28);
+        g.fillStyle(0x404040);
+        g.fillRect(4, 4, 28, 20);
+        g.fillStyle(COLORS.CYBORG_EYE);
+        g.fillCircle(28, 14, 5);
+        g.generateTexture('cyborg_heavy', 36, 28);
+
+        // Cyborg Assassin
+        g.clear();
+        g.fillStyle(COLORS.CYBORG_ASSASSIN);
+        g.fillRect(2, 4, 24, 16);
+        g.fillStyle(0x8080ff);
+        g.fillCircle(20, 12, 3);
+        g.generateTexture('cyborg_assassin', 28, 24);
+
+        // Mutant Crawler
+        g.clear();
+        g.fillStyle(COLORS.MUTANT);
+        g.fillRect(0, 4, 20, 12);
+        g.fillStyle(0x80ff80);
+        g.fillCircle(16, 10, 3);
+        g.fillCircle(4, 10, 3);
+        g.generateTexture('mutant_crawler', 20, 20);
+
+        // Mutant Brute
+        g.clear();
+        g.fillStyle(COLORS.MUTANT_BRUTE);
+        g.fillRect(0, 0, 40, 32);
+        g.fillStyle(0xff4040);
+        g.fillCircle(32, 12, 4);
+        g.fillCircle(32, 20, 4);
+        g.generateTexture('mutant_brute', 40, 32);
+
+        // Maintenance Bot
+        g.clear();
+        g.fillStyle(COLORS.ROBOT);
+        g.fillRect(4, 4, 24, 24);
+        g.fillStyle(0x40ff40);
+        g.fillCircle(16, 8, 4);
+        g.fillStyle(0x404040);
+        g.fillRect(8, 16, 16, 8);
+        g.generateTexture('maintenance_bot', 32, 32);
+
+        // Security Bot
+        g.clear();
+        g.fillStyle(COLORS.ROBOT);
+        g.fillRect(2, 2, 28, 28);
+        g.fillStyle(0xff4040);
+        g.fillCircle(16, 10, 5);
+        g.fillStyle(0x404040);
+        g.fillRect(24, 14, 8, 4);
+        g.generateTexture('security_bot', 32, 32);
 
         // Bullet
         g.clear();
@@ -150,15 +233,36 @@ class GameScene extends Phaser.Scene {
             maxHp: 100,
             energy: 100,
             maxEnergy: 100,
+            stamina: 100,
+            maxStamina: 100,
+            armor: 0,
             weapon: 'pistol',
-            ammo: { bullets: 48, shells: 0 },
+            secondaryWeapon: 'wrench',
+            ammo: { bullets: 48, shells: 12, energy: 30, grenades: 2 },
             magazine: 12,
             maxMagazine: 12,
             reloading: false,
             reloadTime: 0,
             lastShot: 0,
             flashlightOn: true,
-            isSprinting: false
+            isSprinting: false,
+            isCrouching: false,
+            isDodging: false,
+            dodgeCooldown: 0,
+            dodgeDirection: { x: 0, y: 0 },
+            dodgeTimer: 0,
+            invincible: false,
+            statusEffects: [],
+            skills: {
+                firearms: 1,
+                melee: 1,
+                hacking: 1,
+                repair: 1,
+                stealth: 1,
+                endurance: 1
+            },
+            cyberModules: 0,
+            scrap: 0
         };
 
         // Stats tracking
@@ -193,9 +297,16 @@ class GameScene extends Phaser.Scene {
         this.gameStartTime = Date.now();
 
         this.weapons = {
-            wrench: { damage: 15, range: 40, fireRate: 400, ammoType: null, magazineSize: null, melee: true },
-            pistol: { damage: 12, range: 400, fireRate: 300, ammoType: 'bullets', magazineSize: 12, melee: false },
-            shotgun: { damage: 8, pellets: 6, range: 200, fireRate: 800, ammoType: 'shells', magazineSize: 6, melee: false }
+            wrench: { name: 'Wrench', damage: 15, range: 40, fireRate: 400, ammoType: null, magazineSize: null, melee: true, durability: Infinity, condition: 100 },
+            pipe: { name: 'Pipe', damage: 20, range: 50, fireRate: 600, ammoType: null, magazineSize: null, melee: true, durability: 50, condition: 50, knockback: 1.5 },
+            stunProd: { name: 'Stun Prod', damage: 10, range: 45, fireRate: 400, ammoType: null, magazineSize: null, melee: true, durability: 30, condition: 30, stunDuration: 2 },
+            laserRapier: { name: 'Laser Rapier', damage: 35, range: 45, fireRate: 300, ammoType: 'energy', energyCost: 5, magazineSize: null, melee: true, durability: Infinity, condition: 100, bypassArmor: true },
+            pistol: { name: 'Pistol', damage: 12, range: 400, fireRate: 300, ammoType: 'bullets', magazineSize: 12, melee: false, durability: 100, condition: 100 },
+            shotgun: { name: 'Shotgun', damage: 8, pellets: 6, range: 200, fireRate: 800, ammoType: 'shells', magazineSize: 6, melee: false, durability: 80, condition: 80, spread: 0.4 },
+            smg: { name: 'SMG', damage: 8, range: 350, fireRate: 100, ammoType: 'bullets', magazineSize: 30, melee: false, durability: 90, condition: 90, recoil: 0.1 },
+            laserPistol: { name: 'Laser Pistol', damage: 20, range: 450, fireRate: 400, ammoType: 'energy', energyPerShot: 5, magazineSize: 20, melee: false, durability: Infinity, condition: 100, penetration: 0.5 },
+            laserRifle: { name: 'Laser Rifle', damage: 35, range: 500, fireRate: 600, ammoType: 'energy', energyPerShot: 8, magazineSize: 30, melee: false, durability: Infinity, condition: 100, penetration: 0.7 },
+            grenadeLauncher: { name: 'Grenade Launcher', damage: 80, range: 300, fireRate: 1500, ammoType: 'grenades', magazineSize: 1, melee: false, durability: 120, condition: 100, explosive: true, blastRadius: 80 }
         };
 
         this.map = [];
@@ -347,6 +458,17 @@ class GameScene extends Phaser.Scene {
 
     spawnEnemies() {
         const enemyCount = 5 + this.gameData.deck * 3;
+        const enemyTypeKeys = Object.keys(ENEMY_TYPES);
+        const textureMap = {
+            DRONE: 'cyborg',
+            SOLDIER: 'cyborg',
+            ASSASSIN: 'cyborg_assassin',
+            HEAVY: 'cyborg_heavy',
+            MUTANT_CRAWLER: 'mutant_crawler',
+            MUTANT_BRUTE: 'mutant_brute',
+            MAINTENANCE_BOT: 'maintenance_bot',
+            SECURITY_BOT: 'security_bot'
+        };
 
         for (let i = 0; i < enemyCount; i++) {
             let attempts = 0;
@@ -359,20 +481,41 @@ class GameScene extends Phaser.Scene {
                         x * TILE_SIZE, y * TILE_SIZE, this.spawnX, this.spawnY
                     );
                     if (dist > 200) {
-                        const enemy = this.add.sprite(x * TILE_SIZE + TILE_SIZE/2, y * TILE_SIZE + TILE_SIZE/2, 'cyborg');
+                        // Choose enemy type based on deck
+                        let typeKey;
+                        const rand = Math.random();
+                        if (this.gameData.deck === 1) {
+                            typeKey = rand < 0.6 ? 'DRONE' : rand < 0.9 ? 'SOLDIER' : 'MAINTENANCE_BOT';
+                        } else if (this.gameData.deck === 2) {
+                            typeKey = rand < 0.3 ? 'DRONE' : rand < 0.5 ? 'SOLDIER' : rand < 0.7 ? 'MUTANT_CRAWLER' : rand < 0.85 ? 'HEAVY' : 'SECURITY_BOT';
+                        } else {
+                            typeKey = enemyTypeKeys[Math.floor(Math.random() * enemyTypeKeys.length)];
+                        }
+
+                        const enemyType = ENEMY_TYPES[typeKey];
+                        const texture = textureMap[typeKey] || 'cyborg';
+                        const enemy = this.add.sprite(x * TILE_SIZE + TILE_SIZE/2, y * TILE_SIZE + TILE_SIZE/2, texture);
                         enemy.setDepth(8);
                         enemy.enemyData = {
-                            hp: 30 + Math.random() * 30,
-                            maxHp: 60,
-                            speed: 80 + Math.random() * 40,
-                            damage: 10 + Math.floor(Math.random() * 10),
-                            range: Math.random() < 0.5 ? 30 : 200,
+                            type: typeKey,
+                            typeName: enemyType.name,
+                            hp: enemyType.hp + Math.random() * (enemyType.hp * 0.2),
+                            maxHp: enemyType.hp,
+                            armor: enemyType.armor,
+                            speed: enemyType.speed + Math.random() * 20 - 10,
+                            damage: enemyType.damage,
+                            range: enemyType.behavior === 'melee' || enemyType.behavior === 'swarm' ? 30 :
+                                   enemyType.behavior === 'charge' ? 40 : 200,
                             state: 'patrol',
                             alertTimer: 0,
                             lastAttack: 0,
                             lastSeen: { x: 0, y: 0 },
                             patrolTarget: null,
-                            behavior: Math.random() < 0.5 ? 'melee' : 'ranged'
+                            behavior: enemyType.behavior,
+                            drops: enemyType.drops,
+                            statusEffects: [],
+                            cloaked: enemyType.behavior === 'stealth',
+                            chargeTimer: 0
                         };
                         this.enemies.push(enemy);
                         break;
@@ -384,8 +527,18 @@ class GameScene extends Phaser.Scene {
     }
 
     spawnItems() {
-        const itemCount = 10 + this.gameData.deck * 2;
-        const itemTypes = ['medkit', 'bullets', 'energy'];
+        const itemCount = 12 + this.gameData.deck * 3;
+        const itemTypes = [
+            { type: 'medkit', weight: 30, amount: [20, 40] },
+            { type: 'bullets', weight: 25, amount: [15, 30] },
+            { type: 'shells', weight: 15, amount: [6, 12] },
+            { type: 'energy', weight: 20, amount: [20, 40] },
+            { type: 'grenades', weight: 5, amount: [1, 2] },
+            { type: 'scrap', weight: 15, amount: [10, 30] },
+            { type: 'cyberModules', weight: 10, amount: [5, 15] }
+        ];
+
+        const totalWeight = itemTypes.reduce((sum, it) => sum + it.weight, 0);
 
         for (let i = 0; i < itemCount; i++) {
             let attempts = 0;
@@ -394,11 +547,32 @@ class GameScene extends Phaser.Scene {
                 const y = Math.floor(Math.random() * MAP_HEIGHT);
 
                 if (this.map[y][x] === 0) {
+                    // Weighted random selection
+                    let roll = Math.random() * totalWeight;
+                    let selectedType = itemTypes[0];
+                    for (const it of itemTypes) {
+                        roll -= it.weight;
+                        if (roll <= 0) {
+                            selectedType = it;
+                            break;
+                        }
+                    }
+
                     const item = this.add.image(x * TILE_SIZE + TILE_SIZE/2, y * TILE_SIZE + TILE_SIZE/2, 'item');
                     item.setDepth(5);
+
+                    // Set item color based on type
+                    if (selectedType.type === 'medkit') item.setTint(0xff4040);
+                    else if (selectedType.type === 'bullets') item.setTint(0xffff40);
+                    else if (selectedType.type === 'shells') item.setTint(0xff8040);
+                    else if (selectedType.type === 'energy') item.setTint(0x40ffff);
+                    else if (selectedType.type === 'grenades') item.setTint(0x80ff40);
+                    else if (selectedType.type === 'scrap') item.setTint(0x808080);
+                    else if (selectedType.type === 'cyberModules') item.setTint(0xff40ff);
+
                     item.itemData = {
-                        type: itemTypes[Math.floor(Math.random() * itemTypes.length)],
-                        amount: 20 + Math.floor(Math.random() * 30)
+                        type: selectedType.type,
+                        amount: selectedType.amount[0] + Math.floor(Math.random() * (selectedType.amount[1] - selectedType.amount[0]))
                     };
                     this.items.push(item);
                     break;
@@ -411,37 +585,60 @@ class GameScene extends Phaser.Scene {
     createUI() {
         this.uiGroup = this.add.group();
 
-        // UI texts
+        // UI texts - weapon slots
         this.weaponTexts = [];
-        const weapons = ['wrench', 'pistol', 'shotgun'];
+        const weapons = ['1:wrench', '2:pistol', '3:shotgun', '4:smg', '5:laserPistol', '6:laserRifle'];
         let y = 25;
         for (const w of weapons) {
-            const text = this.add.text(13, y, w, { fontSize: '14px', fontFamily: 'monospace', color: '#ffffff' });
+            const text = this.add.text(13, y, w, { fontSize: '12px', fontFamily: 'monospace', color: '#ffffff' });
             text.setScrollFactor(0);
             text.setDepth(100);
-            this.weaponTexts.push({ text, weapon: w });
-            y += 18;
+            this.weaponTexts.push({ text, weapon: w.split(':')[1] });
+            y += 16;
         }
 
-        this.ammoText = this.add.text(13, GAME_HEIGHT - 110, '', { fontSize: '14px', fontFamily: 'monospace', color: '#60cc80' });
+        // Ammo display
+        this.ammoText = this.add.text(13, GAME_HEIGHT - 130, '', { fontSize: '12px', fontFamily: 'monospace', color: '#60cc80' });
         this.ammoText.setScrollFactor(0);
         this.ammoText.setDepth(100);
 
-        this.statsText = this.add.text(13, GAME_HEIGHT - 80, '', { fontSize: '16px', fontFamily: 'monospace', color: '#ffffff' });
+        // Stats display
+        this.statsText = this.add.text(13, GAME_HEIGHT - 95, '', { fontSize: '14px', fontFamily: 'monospace', color: '#ffffff' });
         this.statsText.setScrollFactor(0);
         this.statsText.setDepth(100);
 
-        this.descText = this.add.text(13, GAME_HEIGHT - 30, '', { fontSize: '14px', fontFamily: 'monospace', color: '#ffffff' });
+        // Status effects display
+        this.statusText = this.add.text(13, GAME_HEIGHT - 35, '', { fontSize: '10px', fontFamily: 'monospace', color: '#ffaa00' });
+        this.statusText.setScrollFactor(0);
+        this.statusText.setDepth(100);
+
+        // Weapon description
+        this.descText = this.add.text(13, GAME_HEIGHT - 20, '', { fontSize: '12px', fontFamily: 'monospace', color: '#aaaaaa' });
         this.descText.setScrollFactor(0);
         this.descText.setDepth(100);
 
+        // Deck info
         this.deckText = this.add.text(GAME_WIDTH - 200, 25, 'DECK 1: Engineering', { fontSize: '14px', fontFamily: 'monospace', color: '#ffffff' });
         this.deckText.setScrollFactor(0);
         this.deckText.setDepth(100);
 
+        // Minimap background
+        this.minimapBg = this.add.rectangle(GAME_WIDTH - 85, 110, 150, 100, 0x000000, 0.6);
+        this.minimapBg.setScrollFactor(0).setDepth(99);
+
+        // Minimap graphics
+        this.minimap = this.add.graphics();
+        this.minimap.setScrollFactor(0).setDepth(100);
+
+        // Messages
         this.messagesText = this.add.text(GAME_WIDTH - 420, GAME_HEIGHT - 100, '', { fontSize: '12px', fontFamily: 'monospace', color: '#60cc80' });
         this.messagesText.setScrollFactor(0);
         this.messagesText.setDepth(100);
+
+        // Controls hint
+        this.controlsText = this.add.text(GAME_WIDTH - 200, GAME_HEIGHT - 50, 'SPACE:Dodge Q:Heal TAB:Swap\nRMB:Grenade CTRL:Crouch', { fontSize: '10px', fontFamily: 'monospace', color: '#666666' });
+        this.controlsText.setScrollFactor(0);
+        this.controlsText.setDepth(100);
 
         // Crosshair
         this.crosshair = this.add.graphics();
@@ -480,30 +677,189 @@ class GameScene extends Phaser.Scene {
             left: Phaser.Input.Keyboard.KeyCodes.A,
             right: Phaser.Input.Keyboard.KeyCodes.D,
             shift: Phaser.Input.Keyboard.KeyCodes.SHIFT,
+            ctrl: Phaser.Input.Keyboard.KeyCodes.CTRL,
             interact: Phaser.Input.Keyboard.KeyCodes.E,
             reload: Phaser.Input.Keyboard.KeyCodes.R,
             flashlight: Phaser.Input.Keyboard.KeyCodes.F,
+            dodge: Phaser.Input.Keyboard.KeyCodes.SPACE,
+            quickHeal: Phaser.Input.Keyboard.KeyCodes.Q,
+            swap: Phaser.Input.Keyboard.KeyCodes.TAB,
             one: Phaser.Input.Keyboard.KeyCodes.ONE,
             two: Phaser.Input.Keyboard.KeyCodes.TWO,
-            three: Phaser.Input.Keyboard.KeyCodes.THREE
+            three: Phaser.Input.Keyboard.KeyCodes.THREE,
+            four: Phaser.Input.Keyboard.KeyCodes.FOUR,
+            five: Phaser.Input.Keyboard.KeyCodes.FIVE,
+            six: Phaser.Input.Keyboard.KeyCodes.SIX
         });
 
         this.input.keyboard.on('keydown-R', () => this.reload());
         this.input.keyboard.on('keydown-F', () => this.playerData.flashlightOn = !this.playerData.flashlightOn);
         this.input.keyboard.on('keydown-E', () => this.interact());
-        this.input.keyboard.on('keydown-Q', () => {
+        this.input.keyboard.on('keydown-G', () => {
             this.debugMode = !this.debugMode;
             this.debugText.setVisible(this.debugMode);
+        });
+        this.input.keyboard.on('keydown-Q', () => this.quickHeal());
+        this.input.keyboard.on('keydown-SPACE', () => this.dodge());
+        this.input.keyboard.on('keydown-TAB', (e) => {
+            e.preventDefault();
+            this.swapWeapon();
         });
         this.input.keyboard.on('keydown-ONE', () => this.selectWeapon('wrench'));
         this.input.keyboard.on('keydown-TWO', () => this.selectWeapon('pistol'));
         this.input.keyboard.on('keydown-THREE', () => this.selectWeapon('shotgun'));
+        this.input.keyboard.on('keydown-FOUR', () => this.selectWeapon('smg'));
+        this.input.keyboard.on('keydown-FIVE', () => this.selectWeapon('laserPistol'));
+        this.input.keyboard.on('keydown-SIX', () => this.selectWeapon('laserRifle'));
 
         this.input.on('pointerdown', (pointer) => {
             if (pointer.leftButtonDown()) {
                 this.shoot();
             }
+            if (pointer.rightButtonDown()) {
+                this.useItem();
+            }
         });
+    }
+
+    dodge() {
+        if (this.playerData.isDodging || this.playerData.dodgeCooldown > 0) return;
+        if (this.playerData.stamina < 15) return;
+
+        this.playerData.stamina -= 15;
+        this.playerData.isDodging = true;
+        this.playerData.invincible = true;
+        this.playerData.dodgeTimer = 0.4;
+
+        // Get dodge direction from movement keys or facing direction
+        let dx = 0, dy = 0;
+        if (this.cursors.up.isDown) dy = -1;
+        if (this.cursors.down.isDown) dy = 1;
+        if (this.cursors.left.isDown) dx = -1;
+        if (this.cursors.right.isDown) dx = 1;
+
+        if (dx === 0 && dy === 0) {
+            dx = Math.cos(this.player.rotation);
+            dy = Math.sin(this.player.rotation);
+        }
+
+        const len = Math.hypot(dx, dy);
+        this.playerData.dodgeDirection = { x: dx / len, y: dy / len };
+
+        // Dodge visual effect
+        this.player.setAlpha(0.5);
+        this.createFloatingText(this.player.x, this.player.y - 20, 'DODGE!', '#80ffff', 12);
+    }
+
+    quickHeal() {
+        if (this.playerData.hp >= this.playerData.maxHp) return;
+
+        // Look for medkit in inventory (simplified - just check stats)
+        for (let i = this.items.length - 1; i >= 0; i--) {
+            const item = this.items[i];
+            if (!item.active) continue;
+            const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, item.x, item.y);
+            if (dist < 60 && item.itemData.type === 'medkit') {
+                this.pickupItem(item, i);
+                return;
+            }
+        }
+
+        // If no nearby medkit, use emergency heal for energy
+        if (this.playerData.energy >= 30 && this.playerData.hp < this.playerData.maxHp) {
+            this.playerData.energy -= 30;
+            const healAmount = 15;
+            this.playerData.hp = Math.min(this.playerData.maxHp, this.playerData.hp + healAmount);
+            this.createFloatingText(this.player.x, this.player.y - 20, '+' + healAmount + ' HP (emergency)', '#40ff40', 12);
+            this.addMessage("Emergency heal: -30 energy");
+        }
+    }
+
+    swapWeapon() {
+        const temp = this.playerData.weapon;
+        this.playerData.weapon = this.playerData.secondaryWeapon;
+        this.playerData.secondaryWeapon = temp;
+        this.addMessage("Swapped to: " + this.playerData.weapon);
+    }
+
+    useItem() {
+        // Use equipped throwable (grenade)
+        if (this.playerData.ammo.grenades > 0) {
+            this.throwGrenade();
+        }
+    }
+
+    throwGrenade() {
+        if (this.playerData.ammo.grenades <= 0) return;
+
+        this.playerData.ammo.grenades--;
+        const pointer = this.input.activePointer;
+        const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+
+        const grenade = this.add.circle(this.player.x, this.player.y, 6, 0x80ff40);
+        grenade.setDepth(15);
+
+        const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, worldPoint.x, worldPoint.y);
+        const dist = Math.min(300, Phaser.Math.Distance.Between(this.player.x, this.player.y, worldPoint.x, worldPoint.y));
+
+        this.tweens.add({
+            targets: grenade,
+            x: this.player.x + Math.cos(angle) * dist,
+            y: this.player.y + Math.sin(angle) * dist,
+            duration: 500,
+            onComplete: () => {
+                this.createExplosion(grenade.x, grenade.y, 80, 60);
+                grenade.destroy();
+            }
+        });
+
+        this.addMessage("Threw grenade!");
+    }
+
+    createExplosion(x, y, radius, damage) {
+        // Visual explosion
+        const blast = this.add.circle(x, y, radius, 0xff8800, 0.6);
+        this.tweens.add({
+            targets: blast,
+            alpha: 0,
+            scale: 1.5,
+            duration: 300,
+            onComplete: () => blast.destroy()
+        });
+
+        // Screen shake
+        this.triggerScreenShake(12);
+
+        // Damage enemies in radius
+        for (const enemy of this.enemies) {
+            if (!enemy.active) continue;
+            const dist = Phaser.Math.Distance.Between(x, y, enemy.x, enemy.y);
+            if (dist < radius) {
+                const falloff = 1 - (dist / radius);
+                this.damageEnemy(enemy, Math.floor(damage * falloff));
+            }
+        }
+
+        // Damage player if in radius
+        const playerDist = Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y);
+        if (playerDist < radius && !this.playerData.invincible) {
+            const falloff = 1 - (playerDist / radius);
+            this.damagePlayer(Math.floor(damage * 0.5 * falloff));
+        }
+
+        // Explosion particles
+        for (let i = 0; i < 12; i++) {
+            const angle = (Math.PI * 2 * i) / 12;
+            const particle = this.add.circle(x, y, 4, 0xffaa00, 0.8);
+            this.tweens.add({
+                targets: particle,
+                x: x + Math.cos(angle) * radius,
+                y: y + Math.sin(angle) * radius,
+                alpha: 0,
+                duration: 300,
+                onComplete: () => particle.destroy()
+            });
+        }
     }
 
     update(time, delta) {
@@ -546,23 +902,62 @@ class GameScene extends Phaser.Scene {
     }
 
     updatePlayer(dt, time) {
+        // Handle dodge roll
+        if (this.playerData.isDodging) {
+            this.playerData.dodgeTimer -= dt;
+            const dodgeSpeed = 250;
+            const newX = this.player.x + this.playerData.dodgeDirection.x * dodgeSpeed * dt;
+            const newY = this.player.y + this.playerData.dodgeDirection.y * dodgeSpeed * dt;
+            if (!this.checkCollision(newX, this.player.y, 12)) this.player.x = newX;
+            if (!this.checkCollision(this.player.x, newY, 12)) this.player.y = newY;
+
+            if (this.playerData.dodgeTimer <= 0.1) {
+                this.playerData.invincible = false;
+            }
+            if (this.playerData.dodgeTimer <= 0) {
+                this.playerData.isDodging = false;
+                this.playerData.dodgeCooldown = 1.0;
+                this.player.setAlpha(1);
+            }
+            return; // Skip normal movement during dodge
+        }
+
+        // Dodge cooldown
+        if (this.playerData.dodgeCooldown > 0) {
+            this.playerData.dodgeCooldown -= dt;
+        }
+
         const pointer = this.input.activePointer;
         const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
         const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, worldPoint.x, worldPoint.y);
         this.player.rotation = angle;
 
-        this.playerData.isSprinting = this.cursors.shift.isDown && this.playerData.energy > 0;
-        const speed = this.playerData.isSprinting ? 250 : 150;
+        // Crouching
+        this.playerData.isCrouching = this.cursors.ctrl.isDown;
 
+        // Sprint requires stamina now
+        this.playerData.isSprinting = this.cursors.shift.isDown && this.playerData.stamina > 0 && !this.playerData.isCrouching;
+        let speed = 150;
         if (this.playerData.isSprinting) {
-            this.playerData.energy = Math.max(0, this.playerData.energy - 5 * dt);
+            speed = 250;
+            this.playerData.stamina = Math.max(0, this.playerData.stamina - 20 * dt);
+        } else if (this.playerData.isCrouching) {
+            speed = 80;
         }
 
+        // Stamina regeneration (slower when moving)
+        let moving = false;
         let dx = 0, dy = 0;
         if (this.cursors.up.isDown) dy = -1;
         if (this.cursors.down.isDown) dy = 1;
         if (this.cursors.left.isDown) dx = -1;
         if (this.cursors.right.isDown) dx = 1;
+        moving = dx !== 0 || dy !== 0;
+
+        if (!this.playerData.isSprinting) {
+            const regenRate = moving ? 15 : 30;
+            this.playerData.stamina = Math.min(this.playerData.maxStamina, this.playerData.stamina + regenRate * dt);
+        }
 
         if (dx !== 0 || dy !== 0) {
             const len = Math.hypot(dx, dy);
@@ -582,18 +977,67 @@ class GameScene extends Phaser.Scene {
             if (this.playerData.reloadTime <= 0) {
                 this.playerData.reloading = false;
                 const weapon = this.weapons[this.playerData.weapon];
-                if (weapon.ammoType) {
+                if (weapon.ammoType && weapon.magazineSize) {
                     const needed = weapon.magazineSize - this.playerData.magazine;
-                    const available = Math.min(needed, this.playerData.ammo[weapon.ammoType]);
+                    const available = Math.min(needed, this.playerData.ammo[weapon.ammoType] || 0);
                     this.playerData.magazine += available;
                     this.playerData.ammo[weapon.ammoType] -= available;
                 }
             }
         }
 
+        // Update player status effects
+        this.updatePlayerStatusEffects(dt);
+
         // Auto-fire
-        if (pointer.isDown && !this.playerData.reloading) {
+        if (pointer.isDown && !this.playerData.reloading && !this.playerData.isDodging) {
             this.shoot();
+        }
+    }
+
+    updatePlayerStatusEffects(dt) {
+        for (let i = this.playerData.statusEffects.length - 1; i >= 0; i--) {
+            const effect = this.playerData.statusEffects[i];
+            effect.duration -= dt;
+
+            // Apply DOT
+            if (effect.damagePerSec) {
+                const damage = effect.damagePerSec * dt * (effect.stacks || 1);
+                this.playerData.hp -= damage;
+                if (Math.random() < 0.1) {
+                    this.createFloatingText(this.player.x, this.player.y - 20, '-' + Math.ceil(damage), effect.color ? '#' + effect.color.toString(16) : '#ff4444', 10);
+                }
+            }
+
+            // Remove expired effects
+            if (effect.duration <= 0) {
+                this.playerData.statusEffects.splice(i, 1);
+                this.addMessage(effect.name + " wore off");
+            }
+        }
+    }
+
+    applyStatusEffect(target, effectName) {
+        const effectData = STATUS_EFFECTS[effectName];
+        if (!effectData) return;
+
+        const effects = target === this.player ? this.playerData.statusEffects : target.enemyData.statusEffects;
+
+        // Check for existing effect
+        const existing = effects.find(e => e.name === effectData.name);
+        if (existing) {
+            if (effectData.stacks) {
+                existing.stacks = Math.min((existing.stacks || 1) + 1, effectData.maxStacks || 3);
+                existing.duration = effectData.duration;
+            } else {
+                existing.duration = effectData.duration;
+            }
+        } else {
+            effects.push({
+                ...effectData,
+                stacks: 1
+            });
+            this.addMessage((target === this.player ? "You are " : "Enemy ") + effectData.name.toLowerCase());
         }
     }
 
@@ -759,31 +1203,77 @@ class GameScene extends Phaser.Scene {
         const data = item.itemData;
         this.stats.itemsPickedUp++;
 
-        if (data.type === 'medkit') {
-            this.playerData.hp = Math.min(this.playerData.maxHp, this.playerData.hp + data.amount);
-            this.addMessage("Used: medkit +" + data.amount);
-            this.createFloatingText(item.x, item.y - 20, '+' + data.amount + ' HP', '#40ff40', 14);
-            // Healing particles
-            for (let i = 0; i < 6; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const particle = this.add.circle(this.player.x + Math.cos(angle) * 20, this.player.y + Math.sin(angle) * 20, 4, 0x40ff40, 0.8);
-                this.tweens.add({
-                    targets: particle,
-                    y: particle.y - 30,
-                    alpha: 0,
-                    duration: 500,
-                    onComplete: () => particle.destroy()
-                });
-            }
-        } else if (data.type === 'bullets') {
-            this.playerData.ammo.bullets += data.amount;
-            this.addMessage("Picked up: bullets x" + data.amount);
-            this.createFloatingText(item.x, item.y - 20, '+AMMO', '#ffff40', 12);
-        } else if (data.type === 'energy') {
-            this.playerData.energy = Math.min(this.playerData.maxEnergy, this.playerData.energy + data.amount);
-            this.addMessage("Picked up: energy cell");
-            this.createFloatingText(item.x, item.y - 20, '+' + data.amount + ' ENERGY', '#40ffff', 12);
+        let feedbackColor = '#ffffff';
+        let feedbackText = '';
+
+        switch (data.type) {
+            case 'medkit':
+                this.playerData.hp = Math.min(this.playerData.maxHp, this.playerData.hp + data.amount);
+                this.addMessage("Used: medkit +" + data.amount);
+                feedbackText = '+' + data.amount + ' HP';
+                feedbackColor = '#40ff40';
+                // Healing particles
+                for (let i = 0; i < 6; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const particle = this.add.circle(this.player.x + Math.cos(angle) * 20, this.player.y + Math.sin(angle) * 20, 4, 0x40ff40, 0.8);
+                    this.tweens.add({
+                        targets: particle,
+                        y: particle.y - 30,
+                        alpha: 0,
+                        duration: 500,
+                        onComplete: () => particle.destroy()
+                    });
+                }
+                break;
+
+            case 'bullets':
+                this.playerData.ammo.bullets += data.amount;
+                this.addMessage("Picked up: bullets x" + data.amount);
+                feedbackText = '+' + data.amount + ' BULLETS';
+                feedbackColor = '#ffff40';
+                break;
+
+            case 'shells':
+                this.playerData.ammo.shells += data.amount;
+                this.addMessage("Picked up: shells x" + data.amount);
+                feedbackText = '+' + data.amount + ' SHELLS';
+                feedbackColor = '#ff8040';
+                break;
+
+            case 'energy':
+                this.playerData.energy = Math.min(this.playerData.maxEnergy, this.playerData.energy + data.amount);
+                this.addMessage("Picked up: energy cell");
+                feedbackText = '+' + data.amount + ' ENERGY';
+                feedbackColor = '#40ffff';
+                break;
+
+            case 'grenades':
+                this.playerData.ammo.grenades += data.amount;
+                this.addMessage("Picked up: grenades x" + data.amount);
+                feedbackText = '+' + data.amount + ' GRENADES';
+                feedbackColor = '#80ff40';
+                break;
+
+            case 'scrap':
+                this.playerData.scrap += data.amount;
+                this.addMessage("Picked up: scrap x" + data.amount);
+                feedbackText = '+' + data.amount + ' SCRAP';
+                feedbackColor = '#808080';
+                break;
+
+            case 'cyberModules':
+                this.playerData.cyberModules += data.amount;
+                this.addMessage("Picked up: cyber modules x" + data.amount);
+                feedbackText = '+' + data.amount + ' MODULES';
+                feedbackColor = '#ff40ff';
+                break;
+
+            default:
+                this.addMessage("Picked up: " + data.type);
+                feedbackText = '+' + data.type.toUpperCase();
         }
+
+        this.createFloatingText(item.x, item.y - 20, feedbackText, feedbackColor, 12);
 
         // Pickup sparkle
         for (let i = 0; i < 6; i++) {
@@ -809,22 +1299,38 @@ class GameScene extends Phaser.Scene {
             const data = enemy.enemyData;
             if (data.hp <= 0) continue;
 
-            const distToPlayer = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.player.x, this.player.y);
-            const angleToPlayer = Phaser.Math.Angle.Between(enemy.y, enemy.y, this.player.x, this.player.y);
+            // Update enemy status effects
+            this.updateEnemyStatusEffects(enemy, dt);
 
-            const canSee = distToPlayer < (this.playerData.flashlightOn ? 250 : 80);
+            // Check if stunned - skip movement/attack
+            const isStunned = data.statusEffects && data.statusEffects.find(e => e.name === 'Shocked');
+            if (isStunned) continue;
+
+            const distToPlayer = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.player.x, this.player.y);
+            const angleToPlayer = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
+
+            // Stealth modifier based on player crouching/darkness
+            const stealthMod = this.playerData.isCrouching ? 0.6 : 1.0;
+            const detectRange = (this.playerData.flashlightOn ? 250 : 80) * stealthMod;
+            const canSee = distToPlayer < detectRange && !this.playerData.invincible;
+
+            // Behavior-specific speed modifiers
+            let speedMod = 1.0;
+            if (data.behavior === 'swarm') speedMod = 1.2;
+            if (data.behavior === 'tank') speedMod = 0.8;
+            if (data.behavior === 'stealth') speedMod = 1.3;
 
             switch (data.state) {
                 case 'patrol':
-                    if (canSee && distToPlayer < 250) {
+                    if (canSee && distToPlayer < detectRange) {
                         data.state = 'chase';
                         data.lastSeen = { x: this.player.x, y: this.player.y };
-                        this.addMessage("M.A.R.I.A.: Target acquired.");
+                        if (Math.random() < 0.3) this.addMessage("M.A.R.I.A.: Target acquired.");
                     } else {
                         if (!data.patrolTarget || Math.random() < 0.01) {
                             data.patrolTarget = { x: enemy.x + (Math.random() - 0.5) * 200, y: enemy.y + (Math.random() - 0.5) * 200 };
                         }
-                        this.moveEnemy(enemy, data.patrolTarget.x, data.patrolTarget.y, dt);
+                        this.moveEnemy(enemy, data.patrolTarget.x, data.patrolTarget.y, dt, speedMod * 0.6);
                     }
                     break;
 
@@ -834,38 +1340,77 @@ class GameScene extends Phaser.Scene {
                         data.alertTimer = 5;
                     }
 
-                    if (distToPlayer < data.range && canSee) {
+                    // Behavior-specific chase patterns
+                    if (data.behavior === 'charge' && distToPlayer < 150 && data.chargeTimer <= 0) {
+                        // Brute charge attack
+                        data.chargeTimer = 3;
+                        data.charging = true;
+                        this.createFloatingText(enemy.x, enemy.y - 30, 'CHARGING!', '#ff4400', 14);
+                    }
+
+                    if (data.charging) {
+                        // Fast charge toward player
+                        this.moveEnemy(enemy, this.player.x, this.player.y, dt, 2.5);
+                        if (distToPlayer < 30) {
+                            this.damagePlayer(data.damage * 1.5);
+                            this.triggerScreenShake(10);
+                            this.addMessage("BRUTE CHARGE! -" + Math.floor(data.damage * 1.5) + " HP");
+                            data.charging = false;
+                        }
+                        data.chargeTimer -= dt;
+                        if (data.chargeTimer <= 2) data.charging = false;
+                    } else if (distToPlayer < data.range && canSee) {
                         data.state = 'attack';
                     } else if (data.alertTimer > 0) {
-                        this.moveEnemy(enemy, data.lastSeen.x, data.lastSeen.y, dt);
+                        this.moveEnemy(enemy, data.lastSeen.x, data.lastSeen.y, dt, speedMod);
                         data.alertTimer -= dt;
                     } else {
                         data.state = 'patrol';
                     }
+
+                    // Update charge cooldown
+                    if (data.chargeTimer > 0 && !data.charging) data.chargeTimer -= dt;
                     break;
 
                 case 'attack':
                     enemy.rotation = angleToPlayer;
 
-                    if (time - data.lastAttack > 1000) {
+                    const attackRate = data.behavior === 'swarm' ? 600 : data.behavior === 'tank' ? 1500 : 1000;
+
+                    if (time - data.lastAttack > attackRate) {
                         data.lastAttack = time;
 
-                        if (data.behavior === 'ranged' && distToPlayer > 50) {
+                        if ((data.behavior === 'ranged' || data.behavior === 'aggressive' || data.behavior === 'patrol') && distToPlayer > 50) {
+                            // Ranged attack
                             const bullet = this.add.sprite(enemy.x, enemy.y, 'laser');
                             bullet.setDepth(15);
                             bullet.bulletData = {
                                 vx: Math.cos(angleToPlayer) * 300,
                                 vy: Math.sin(angleToPlayer) * 300,
                                 damage: data.damage,
-                                range: data.range,
+                                range: 300,
                                 traveled: 0,
                                 owner: 'enemy'
                             };
                             this.bullets.push(bullet);
                         } else if (distToPlayer < data.range + 20) {
-                            this.damagePlayer(data.damage);
-                            this.addMessage("Cyborg attacks! -" + data.damage + " HP");
+                            // Melee attack
+                            if (!this.playerData.invincible) {
+                                this.damagePlayer(data.damage);
+
+                                // Swarm enemies can cause bleeding
+                                if (data.behavior === 'swarm' && Math.random() < 0.2) {
+                                    this.applyStatusEffect(this.player, 'bleeding');
+                                }
+
+                                this.addMessage(data.typeName + " attacks! -" + data.damage + " HP");
+                            }
                         }
+                    }
+
+                    // Swarm enemies keep moving during attack
+                    if (data.behavior === 'swarm' && distToPlayer > 20) {
+                        this.moveEnemy(enemy, this.player.x, this.player.y, dt, speedMod);
                     }
 
                     if (distToPlayer > data.range * 1.5 || !canSee) {
@@ -873,14 +1418,51 @@ class GameScene extends Phaser.Scene {
                     }
                     break;
             }
+
+            // Stealth enemies cloak when far from player
+            if (data.behavior === 'stealth') {
+                if (distToPlayer > 150 && !data.cloaked) {
+                    data.cloaked = true;
+                    enemy.setAlpha(0.3);
+                } else if (distToPlayer < 100 && data.cloaked) {
+                    data.cloaked = false;
+                    enemy.setAlpha(1);
+                    this.addMessage("Assassin decloaks!");
+                }
+            }
         }
     }
 
-    moveEnemy(enemy, targetX, targetY, dt) {
+    updateEnemyStatusEffects(enemy, dt) {
+        const data = enemy.enemyData;
+        if (!data.statusEffects) return;
+
+        for (let i = data.statusEffects.length - 1; i >= 0; i--) {
+            const effect = data.statusEffects[i];
+            effect.duration -= dt;
+
+            // Apply DOT
+            if (effect.damagePerSec) {
+                const damage = effect.damagePerSec * dt * (effect.stacks || 1);
+                data.hp -= damage;
+                if (data.hp <= 0) {
+                    this.killEnemy(enemy, false);
+                    return;
+                }
+            }
+
+            // Remove expired effects
+            if (effect.duration <= 0) {
+                data.statusEffects.splice(i, 1);
+            }
+        }
+    }
+
+    moveEnemy(enemy, targetX, targetY, dt, speedMod = 1.0) {
         const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, targetX, targetY);
         enemy.rotation = angle;
 
-        const speed = enemy.enemyData.speed;
+        const speed = enemy.enemyData.speed * speedMod;
         const newX = enemy.x + Math.cos(angle) * speed * dt;
         const newY = enemy.y + Math.sin(angle) * speed * dt;
 
@@ -888,7 +1470,23 @@ class GameScene extends Phaser.Scene {
         if (!this.checkCollision(enemy.x, newY, 14)) enemy.y = newY;
     }
 
-    damageEnemy(enemy, damage) {
+    damageEnemy(enemy, damage, weaponKey = null) {
+        const data = enemy.enemyData;
+        const weapon = weaponKey ? this.weapons[weaponKey] : this.weapons[this.playerData.weapon];
+
+        // Apply armor reduction
+        let armor = data.armor || 0;
+        if (weapon) {
+            if (weapon.bypassArmor) {
+                armor = 0;
+            } else if (weapon.penetration) {
+                armor = Math.floor(armor * (1 - weapon.penetration));
+            }
+        }
+
+        // Reduce damage by armor
+        damage = Math.max(1, damage - armor);
+
         // Critical hit system (15% chance, 2x damage)
         const isCrit = Math.random() < 0.15;
         if (isCrit) {
@@ -896,7 +1494,14 @@ class GameScene extends Phaser.Scene {
             this.stats.critCount++;
         }
 
-        const data = enemy.enemyData;
+        // Backstab bonus (3x from behind)
+        const angleToEnemy = Phaser.Math.Angle.Between(this.player.x, this.player.y, enemy.x, enemy.y);
+        const angleDiff = Math.abs(Phaser.Math.Angle.Wrap(enemy.rotation - angleToEnemy));
+        if (angleDiff < Math.PI / 4) {
+            damage = Math.floor(damage * 1.5);
+            this.createFloatingText(enemy.x, enemy.y - 40, 'BACKSTAB!', '#ff8800', 12);
+        }
+
         data.hp -= damage;
         data.state = 'chase';
         data.lastSeen = { x: this.player.x, y: this.player.y };
@@ -905,7 +1510,30 @@ class GameScene extends Phaser.Scene {
         this.stats.totalDamageDealt += damage;
         this.stats.shotsHit++;
 
+        // Apply weapon effects
+        if (weapon) {
+            // Stun effect
+            if (weapon.stunDuration && Math.random() < 0.5) {
+                this.applyStatusEffect(enemy, 'shocked');
+            }
+            // Knockback
+            if (weapon.knockback) {
+                const knockAngle = Phaser.Math.Angle.Between(this.player.x, this.player.y, enemy.x, enemy.y);
+                const knockDist = weapon.knockback * 20;
+                const newX = enemy.x + Math.cos(knockAngle) * knockDist;
+                const newY = enemy.y + Math.sin(knockAngle) * knockDist;
+                if (!this.checkCollision(newX, enemy.y, 14)) enemy.x = newX;
+                if (!this.checkCollision(enemy.x, newY, 14)) enemy.y = newY;
+            }
+        }
+
+        // Random bleed chance for certain attacks
+        if (Math.random() < 0.1 && weapon && weapon.melee) {
+            this.applyStatusEffect(enemy, 'bleeding');
+        }
+
         // Floating damage number
+        const armorText = armor > 0 ? ' (-' + armor + ' armor)' : '';
         this.createFloatingText(
             enemy.x, enemy.y - 20,
             damage.toString() + (isCrit ? '!' : ''),
@@ -916,11 +1544,13 @@ class GameScene extends Phaser.Scene {
         // Screen shake
         this.triggerScreenShake(isCrit ? 6 : 3);
 
-        // Blood effect (more for crits)
+        // Blood/spark effect based on enemy type
+        const isRobot = data.type && (data.type.includes('BOT') || data.type === 'MAINTENANCE_BOT' || data.type === 'SECURITY_BOT');
+        const effectColor = isRobot ? 0xffff40 : 0xaa4040;
         const count = isCrit ? 4 : 1;
         for (let i = 0; i < count; i++) {
-            const blood = this.add.circle(enemy.x + (Math.random() - 0.5) * 20, enemy.y + (Math.random() - 0.5) * 20, 6, 0xaa4040, 0.8);
-            this.tweens.add({ targets: blood, alpha: 0, scale: 2, duration: 400, onComplete: () => blood.destroy() });
+            const particle = this.add.circle(enemy.x + (Math.random() - 0.5) * 20, enemy.y + (Math.random() - 0.5) * 20, 6, effectColor, 0.8);
+            this.tweens.add({ targets: particle, alpha: 0, scale: 2, duration: 400, onComplete: () => particle.destroy() });
         }
 
         if (data.hp <= 0) {
@@ -1080,9 +1710,11 @@ class GameScene extends Phaser.Scene {
         const startAngle = this.player.rotation - width / 2;
         const endAngle = this.player.rotation + width / 2;
 
-        for (let a = startAngle; a <= endAngle; a += 0.05) {
-            const x = this.player.x + Math.cos(a) * length;
-            const y = this.player.y + Math.sin(a) * length;
+        // Cast rays and stop at walls
+        for (let a = startAngle; a <= endAngle; a += 0.03) {
+            const rayLength = this.castRay(this.player.x, this.player.y, a, length);
+            const x = this.player.x + Math.cos(a) * rayLength;
+            const y = this.player.y + Math.sin(a) * rayLength;
             this.darkness.lineTo(x, y);
         }
 
@@ -1090,31 +1722,79 @@ class GameScene extends Phaser.Scene {
         this.darkness.fill();
     }
 
+    // Cast a ray from origin in direction angle, return distance to first wall or max length
+    castRay(ox, oy, angle, maxLength) {
+        const step = TILE_SIZE / 4; // Ray step size
+        const dx = Math.cos(angle) * step;
+        const dy = Math.sin(angle) * step;
+
+        let x = ox;
+        let y = oy;
+        let dist = 0;
+
+        while (dist < maxLength) {
+            x += dx;
+            y += dy;
+            dist += step;
+
+            // Check if we hit a wall
+            const tx = Math.floor(x / TILE_SIZE);
+            const ty = Math.floor(y / TILE_SIZE);
+
+            if (tx < 0 || tx >= MAP_WIDTH || ty < 0 || ty >= MAP_HEIGHT) {
+                return dist;
+            }
+
+            if (this.map[ty] && this.map[ty][tx] === 1) {
+                return dist;
+            }
+        }
+
+        return maxLength;
+    }
+
     updateUI() {
         // Weapon highlight
         for (const wt of this.weaponTexts) {
-            wt.text.setBackgroundColor(wt.weapon === this.playerData.weapon ? '#000000' : null);
+            const isEquipped = wt.weapon === this.playerData.weapon;
+            const isSecondary = wt.weapon === this.playerData.secondaryWeapon;
+            wt.text.setBackgroundColor(isEquipped ? '#004400' : isSecondary ? '#333333' : null);
+            wt.text.setColor(isEquipped ? '#00ff00' : isSecondary ? '#aaaaaa' : '#666666');
         }
 
-        // Ammo
-        this.ammoText.setText('bullets ' + this.playerData.ammo.bullets + 'x');
+        // Ammo for all types
+        const ammoLines = [];
+        if (this.playerData.ammo.bullets > 0) ammoLines.push('bullets:' + this.playerData.ammo.bullets);
+        if (this.playerData.ammo.shells > 0) ammoLines.push('shells:' + this.playerData.ammo.shells);
+        if (this.playerData.ammo.energy > 0) ammoLines.push('energy:' + this.playerData.ammo.energy);
+        if (this.playerData.ammo.grenades > 0) ammoLines.push('grenades:' + this.playerData.ammo.grenades);
+        this.ammoText.setText(ammoLines.join(' | '));
 
-        // Stats
+        // Stats with stamina
         const weapon = this.weapons[this.playerData.weapon];
         let statsStr = '';
-        if (weapon.ammoType) {
-            statsStr += 'ammo  =' + this.playerData.magazine + '/' + this.playerData.ammo[weapon.ammoType] + '\n';
+        if (weapon && weapon.ammoType && weapon.magazineSize) {
+            statsStr += 'ammo  =' + this.playerData.magazine + '/' + (this.playerData.ammo[weapon.ammoType] || 0) + '\n';
+        } else if (weapon && weapon.melee) {
+            statsStr += 'ammo  = MELEE\n';
         }
         statsStr += 'health=' + Math.floor(this.playerData.hp) + '/' + this.playerData.maxHp + '\n';
-        statsStr += 'energy=' + Math.floor(this.playerData.energy) + '/' + this.playerData.maxEnergy;
+        statsStr += 'energy=' + Math.floor(this.playerData.energy) + '/' + this.playerData.maxEnergy + '\n';
+        statsStr += 'stamina=' + Math.floor(this.playerData.stamina) + '/' + this.playerData.maxStamina;
         this.statsText.setText(statsStr);
 
+        // Status effects
+        const statusEffects = this.playerData.statusEffects.map(e => e.name + (e.stacks > 1 ? 'x' + e.stacks : '')).join(', ');
+        this.statusText.setText(statusEffects || '');
+
         // Description
-        let desc = '';
-        if (this.playerData.weapon === 'wrench') desc = 'Standard maintenance tool.';
-        else if (this.playerData.weapon === 'pistol') desc = '9mm semi-automatic pistol.';
-        else if (this.playerData.weapon === 'shotgun') desc = 'Pump-action shotgun.';
+        let desc = weapon ? weapon.name + ' - Dmg:' + weapon.damage : '';
+        if (weapon && weapon.penetration) desc += ' (Armor Pen:' + Math.round(weapon.penetration * 100) + '%)';
+        if (weapon && weapon.bypassArmor) desc += ' (Ignores Armor)';
         this.descText.setText(desc);
+
+        // Update minimap
+        this.updateMinimap();
 
         // Messages
         let msgStr = '';
@@ -1224,6 +1904,57 @@ class GameScene extends Phaser.Scene {
             const maria = this.add.text(GAME_WIDTH/2, GAME_HEIGHT - 80, 'M.A.R.I.A.: You have won nothing. I am eternal.', { fontSize: '14px', fontFamily: 'monospace', color: '#40aa60' });
             maria.setOrigin(0.5).setScrollFactor(0).setDepth(201);
         }
+    }
+
+    updateMinimap() {
+        this.minimap.clear();
+        const mapX = GAME_WIDTH - 160;
+        const mapY = 60;
+        const scale = 3;
+
+        // Draw explored tiles
+        for (let y = 0; y < MAP_HEIGHT; y++) {
+            for (let x = 0; x < MAP_WIDTH; x++) {
+                const px = mapX + x * scale;
+                const py = mapY + y * scale;
+                if (this.map[y][x] === 0) {
+                    this.minimap.fillStyle(0x333333, 0.5);
+                } else {
+                    this.minimap.fillStyle(0x666666, 0.5);
+                }
+                this.minimap.fillRect(px, py, scale - 1, scale - 1);
+            }
+        }
+
+        // Draw enemies (red dots)
+        for (const enemy of this.enemies) {
+            if (!enemy.active) continue;
+            const ex = mapX + (enemy.x / TILE_SIZE) * scale;
+            const ey = mapY + (enemy.y / TILE_SIZE) * scale;
+            this.minimap.fillStyle(0xff4444, 0.8);
+            this.minimap.fillRect(ex - 1, ey - 1, 2, 2);
+        }
+
+        // Draw items (yellow dots)
+        for (const item of this.items) {
+            if (!item.active) continue;
+            const ix = mapX + (item.x / TILE_SIZE) * scale;
+            const iy = mapY + (item.y / TILE_SIZE) * scale;
+            this.minimap.fillStyle(0xffff00, 0.6);
+            this.minimap.fillRect(ix, iy, 1, 1);
+        }
+
+        // Draw exit (green)
+        const exitTX = mapX + (this.exitX / TILE_SIZE) * scale;
+        const exitTY = mapY + (this.exitY / TILE_SIZE) * scale;
+        this.minimap.fillStyle(0x40ff40, 0.8);
+        this.minimap.fillRect(exitTX - 1, exitTY - 1, 3, 3);
+
+        // Draw player (cyan dot)
+        const px = mapX + (this.player.x / TILE_SIZE) * scale;
+        const py = mapY + (this.player.y / TILE_SIZE) * scale;
+        this.minimap.fillStyle(0x00ffff, 1);
+        this.minimap.fillRect(px - 1, py - 1, 3, 3);
     }
 
     addMessage(text) {

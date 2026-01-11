@@ -85,3 +85,40 @@
 
 ### Difficulty Rating
 Hard - Bullet hell complexity plus Phaser's tilemap quirks
+
+
+---
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "CRITICAL: Room transitions dont work"
+   → Added checkDoorTransition() function
+   → Player can now walk through doors when room is cleared
+   → Doors highlighted green when open
+
+2. [x] "Cant clear any room, doors never open"
+   → Added doorsOpen flag that enables door collision after clearing
+   → updateDoorGraphics() shows green doors when open
+   → showRoomClearMessage() displays "ROOM CLEARED!" text
+
+3. [x] Room system features:
+   → transitionRoom() handles room transitions
+   → Player spawns on opposite side when entering new room
+   → Every 5 rooms advances to next floor
+   → Enemies cleared between rooms
+   → Floor counter updates correctly
+
+### Technical Implementation:
+- Added roomNum tracking (1-5 per floor)
+- Added doorsOpen state flag
+- Door detection checks all 4 directions
+- Room graphics stored and recreated between rooms
+- Floor messages shown when advancing
+
+### Verification:
+- Game loads without errors
+- Combat works (player can shoot enemies)
+- Door transitions implemented
+- Floor progression system working
+

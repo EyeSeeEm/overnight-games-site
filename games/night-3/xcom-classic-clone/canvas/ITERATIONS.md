@@ -284,3 +284,26 @@ Game achieves authentic X-COM tactical combat aesthetic:
 
 ### Difficulty Rating
 Hard - Isometric rendering and tactical combat mechanics require careful implementation. The TU system, line of sight, and reaction fire all need precise math. Most complex game in the batch.
+
+---
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "CRITICAL: After the map spawns, nothing happens - it's not playable" → Game now shows clear "MISSION START!" message with instructions immediately after title screen
+2. [x] "When the game starts there are immediately 4 alien enemies that immediately fire on the player soldiers" → Moved aliens farther from soldiers (spawn positions now 15+ tiles away)
+3. [x] "The map is not randomly generated and too small" → Map increased from 20x20 to 30x30, added procedural building generation with 2-4 random buildings
+
+### Technical Changes:
+- `MAP_WIDTH` and `MAP_HEIGHT`: 20 → 30
+- `generateMap()`: Now creates 2-4 random buildings with doors, random bush/flower placement
+- `alienPositions`: All spawn points moved to far side of map (x: 15-27, y: 10-28)
+- Added initial `setMessage()` and `createFloatingText()` in `initGame()` to show instructions
+- Added validation for alien spawn positions (check walkable and not occupied)
+
+### Verification:
+- Game starts with clear instructions displayed
+- Aliens spawn far from soldiers - no immediate combat
+- Map is now 30x30 with random buildings each game
+- Player has time to explore and set up before engaging
+- All feedback items addressed

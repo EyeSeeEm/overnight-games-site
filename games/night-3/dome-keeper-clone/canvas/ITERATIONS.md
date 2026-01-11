@@ -107,6 +107,27 @@
 ### Difficulty Rating
 Medium - Phase system added complexity, but each phase individually was straightforward
 
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "Nothing happens when I start digging - just animation but no actual digging"
+   - ROOT CAUSE: Drilling was restarting every frame (drillProgress reset to 0)
+   - FIX 1: Added `&& !keeper.drilling` check to prevent restarting drilling
+   - ROOT CAUSE 2: Player spanned 2 tile columns, but only 1 tile was drilled
+   - FIX 2: Snap keeper to tile center when drilling starts
+2. [x] Increased drilling speed (drillStrength 2→4) for better gameplay feel
+3. [x] Increased movement speed (56→80) for snappier controls
+4. [x] Exposed keeper/map to window for testing
+
+### Verification:
+- Keeper can now drill down through tiles ✓
+- Keeper can drill left/right ✓
+- Resources are collected when mining mineral tiles ✓
+- Cargo fills up (3 iron collected in test) ✓
+- First Iron achievement triggers (score +100) ✓
+
+---
+
 ## Dev Notes
 
 ### Debug Overlay Added (2026-01-10)

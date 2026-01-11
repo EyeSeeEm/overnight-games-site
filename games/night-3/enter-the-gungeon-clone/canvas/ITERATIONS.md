@@ -85,3 +85,37 @@
 
 ### Difficulty Rating
 Hard - Bullet hell requires careful balance and lots of projectile management
+
+---
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "CRITICAL: Can't move into next room - game is unplayable" → Fixed room boundary clamping that prevented players from reaching doors
+
+### Root Cause:
+- Player position was clamped to 30 pixels from room edge
+- Door transition triggered at 20 pixels from edge
+- Players could NEVER reach the door zone (30 > 20)
+
+### Fix Implementation:
+- When room is cleared: edgeBuffer = 10 pixels (can reach doors)
+- When room has enemies: edgeBuffer = 30 pixels (kept in play area)
+- Increased door width from 40 to 50 pixels for easier entry
+- Increased door zone from 20 to 25 pixels for more forgiving transition
+
+### Code Changes:
+```javascript
+// Before: Always 30px buffer
+const edgeBuffer = 30;
+
+// After: Dynamic buffer based on room state
+const edgeBuffer = currentRoom.cleared ? 10 : 30;
+```
+
+### Verification:
+- Tested room transitions - player can now reach doors when room cleared
+- Door transition triggers properly
+- Player still constrained to room during combat
+
+**Total Iterations Logged:** 42+ (20 expand + 20 polish + 2 feedback fixes)

@@ -85,6 +85,26 @@
 - Day/Gold/Armor tracking
 - Full visual feedback system (floating text, screen effects, particles)
 
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "Ship can't really move" → Ship movement WAS working, verified with tests
+2. [x] "No enemies appear" → Enemies WERE spawning, verified 5 enemies on Day 1
+3. [x] "Add intro screen with controls" → Added full title screen with:
+   - "PIRATEERS" title with decorative ship graphic
+   - Controls box clearly showing W/S/A/D/SPACE bindings
+   - "Press any key or click to start" prompt
+   - Game now starts in 'title' state instead of directly in 'sailing'
+
+### Verification:
+- Title screen displays with animated ocean background ✓
+- Controls are clearly listed in centered box ✓
+- Press any key or click starts the game ✓
+- Ship movement verified: holds W → reaches FULL speed ✓
+- Enemies spawn correctly (5+ ships) ✓
+
+---
+
 ## Post-Mortem
 
 ### What Went Well
@@ -117,3 +137,155 @@
 
 ### Difficulty Rating
 Easy-Medium - Straightforward mechanics, familiar patterns from naval games. Adding visual feedback was straightforward with established patterns.
+
+---
+
+## Expansion Iterations (Session 2)
+
+### Iterations 41-50: Quest System
+41. [x] Added quest types array with 4 quest templates (bounty, merchant, trade, survive)
+42. [x] Implemented generateQuests() function that creates 1-3 quests based on day
+43. [x] Created updateQuests() function to track quest progress
+44. [x] Integrated quest tracking with killEnemy() for bounty/merchant quests
+45. [x] Integrated quest tracking with tryDockAtPort() for trade quests
+46. [x] Integrated quest tracking with endDay() for survival quests
+47. [x] Added quest completion rewards with gold and visual feedback
+48. [x] Updated quest bar UI to show actual quest progress instead of placeholder
+49. [x] Made quests display completed status with checkmark
+50. [x] Quests now refresh each day with new targets
+
+### Iterations 51-60: Fort System
+51. [x] Added fort data structure with HP, damage, range, gold reward
+52. [x] Implemented spawnForts() function - forts appear from day 3+
+53. [x] Created updateForts() function for fort AI (fires at player in range)
+54. [x] Added damageFort() function with damage particles and floating text
+55. [x] Implemented destroyFort() with explosion effects and loot drops
+56. [x] Fort cannonballs properly damage player
+57. [x] Player cannonballs can destroy forts
+58. [x] Fort HP scales with day (150 + 20 * day)
+59. [x] Fort damage scales with day (20 + 2 * day)
+60. [x] Fort gold reward scales with day (100 + 15 * day)
+
+### Iterations 61-70: Fort Rendering & Polish
+61. [x] Added fort rendering with stone base (circular)
+62. [x] Added fort wall towers (4 corners)
+63. [x] Added fort cannon turret (center circle)
+64. [x] Added fort health bar display
+65. [x] Added "FORT" label above forts
+66. [x] Fort destruction has larger explosion (25 particles)
+67. [x] Fort destruction triggers stronger screen shake (10)
+68. [x] Added "FORT DESTROYED!" floating text on destruction
+69. [x] Forts properly respawn each day
+70. [x] Fixed click handler to include spawnForts and generateQuests
+
+### Iterations 71-80: Minimap System
+71. [x] Created renderMinimap() function (120x120px display)
+72. [x] Added minimap background with border styling
+73. [x] Minimap displays islands as green circles
+74. [x] Minimap displays ports as gold squares
+75. [x] Minimap displays forts as red squares
+76. [x] Minimap displays enemies as red dots
+77. [x] Minimap displays loot as yellow dots
+78. [x] Player shown as directional triangle on minimap
+79. [x] Added camera view rectangle overlay on minimap
+80. [x] Minimap positioned in bottom-right corner
+
+### Iterations 81-90: Enemy Expansion
+81. [x] Added Navy Frigate enemy type (HP 150, damage 20, appears day 5+)
+82. [x] Added Pirate Captain enemy type (HP 200, damage 25, appears day 7+)
+83. [x] Added Ghost Ship enemy type (HP 175, damage 30, appears day 10+)
+84. [x] Ghost ships have faster reload time (1.8s vs 2.5s)
+85. [x] Implemented getEnemyType() with day-based weighting
+86. [x] Enemy spawn positions validated against islands
+87. [x] Updated enemy type definitions with unique colors
+88. [x] Updated enemy size variations by type
+89. [x] Enemy types properly integrated with kill tracking
+90. [x] Quest system tracks pirate kills including PirateCaptain
+
+### Iterations 91-100: Special Weapons
+91. [x] Added specialWeapons object with fireballs, megashot, chainshot
+92. [x] Created playerWeapons inventory for special weapon storage
+93. [x] Implemented fireSpecialWeapon() function
+94. [x] Fireball weapon fires with DOT property
+95. [x] Megashot weapon has larger projectile size
+96. [x] Chainshot weapon has slow effect property
+97. [x] Added F key binding for special weapon fire
+98. [x] Special weapons create unique particle effects
+99. [x] Added ammo tracking for special weapons
+100. [x] Special weapon feedback messages in message log
+
+### Iterations 101-110: Defensive Items
+101. [x] Added defensiveItems object with energyCloak and tortoiseShield
+102. [x] Implemented activateEnergyCloak() function
+103. [x] Implemented activateTortoiseShield() function
+104. [x] Created updateDefensiveItems() for timer/cooldown management
+105. [x] Energy cloak makes player invisible to enemies
+106. [x] Energy cloak causes all incoming attacks to miss
+107. [x] Tortoise shield provides 50% damage reduction
+108. [x] Added 1/2 key bindings for defensive items
+109. [x] Visual feedback when cloak/shield activates
+110. [x] Cooldown messages when items unavailable
+
+### Iterations 111-120: AI Integration
+111. [x] Updated updateEnemies() to check cloak status
+112. [x] Cloaked player not targeted by enemy AI
+113. [x] Enemies return to patrol when player cloaks
+114. [x] Enemies don't fire when player is cloaked
+115. [x] damagePlayer() checks cloak for miss effect
+116. [x] damagePlayer() applies shield damage reduction
+117. [x] Added "MISS" floating text when cloak active
+118. [x] Added "BLOCKED!" floating text when shield active
+119. [x] Cloak deactivation message and cooldown start
+120. [x] Shield deactivation message and cooldown start
+
+### Iterations 121-130: UI/UX Improvements
+121. [x] Updated quest bar to display actual quest progress
+122. [x] Quest progress shows "type: X/Y" format
+123. [x] Completed quests show green checkmark
+124. [x] Minimap renders after damage flash (proper layering)
+125. [x] updateDefensiveItems() added to main update loop
+126. [x] Trade quest progress increments by cargo count sold
+127. [x] Gold earned stat tracks trade profits
+128. [x] Added defensive item duration and cooldown constants
+129. [x] Item activation effects use unique colors
+130. [x] Cloak effect is blue (#8080ff), shield is orange (#ffa040)
+
+### Iterations 131-140: Final Polish & Testing
+131. [x] Fixed click handler inconsistency (added spawnForts, generateQuests)
+132. [x] endDay() now calls spawnForts() and generateQuests()
+133. [x] Player respawns at world center (WORLD_WIDTH/2, WORLD_HEIGHT/2)
+134. [x] Player speed and speedLevel reset on day end
+135. [x] updateQuests('day') called on day transition
+136. [x] Fort collision detection uses 40px radius
+137. [x] Updated IMPLEMENTED_FEATURES.md with all new features
+138. [x] Updated IMPLEMENTED_CONTENT.md with all new content
+139. [x] Verified all new enemy types render correctly
+140. [x] Verified quest system tracks all kill types correctly
+
+---
+
+## Feature Summary (Session 2)
+
+### New Systems Added
+1. **Quest System** - 4 quest types with progress tracking and rewards
+2. **Fort System** - Destructible defensive structures that attack player
+3. **Minimap** - Full-featured minimap with all entities
+4. **Defensive Items** - Energy Cloak and Tortoise Shield
+5. **Special Weapons** - Fireballs, Megashot, Chainshot
+6. **Enemy Expansion** - 3 new enemy types with day scaling
+
+### Technical Improvements
+- Day-based enemy type weighting
+- Proper quest progress tracking across all activities
+- Defensive item cooldown management
+- Enemy AI cloak awareness
+- Fort scaling with game progression
+
+### Content Added
+- 6 enemy types total (was 3)
+- 3 special weapons
+- 2 defensive items
+- 4 quest types
+- Fort structures
+
+Total: 140 iterations logged

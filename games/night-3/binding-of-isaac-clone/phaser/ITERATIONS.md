@@ -163,3 +163,45 @@ Core mechanics all functional.
 
 **Total Iterations Logged:** 46 (20 expand + 20 polish + 6 verification/fun)
 **Game Status:** AMAZING - Would definitely recommend to a friend!
+
+
+---
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "Player bullets dont move in tear-like motion (should arc/fall slightly)"
+   → Added tear arc system with distanceTraveled and maxRange tracking
+   → Tears now arc up/down using sin(progress * PI) * 18 formula
+   → Tears shrink when progress > 0.7 (end of range)
+   → Range-based destruction instead of time-based
+
+2. [x] "Apply all fixes from canvas version: stats on screen"
+   → Added stats display: DMG, SPD, TEARS/s, RANGE
+   → Stats update in real-time as items are collected
+
+3. [x] "Apply all fixes from canvas version: fog of war"
+   → Minimap now only shows visited rooms and adjacent rooms
+   → Unexplored rooms appear as dark silhouettes when adjacent to visited
+   → Special room colors only visible after visiting
+
+4. [x] "Apply all fixes from canvas version: enemy wake-up delay"
+   → Added spawnAnim property (0.6 seconds)
+   → Enemies fade in and dont move/attack during spawn animation
+   → Gives player reaction time when entering rooms
+
+5. [x] "Apply all fixes from canvas version: treasure rooms"
+   → Treasure rooms already implemented with item pedestals
+   → Items give stat upgrades (verified working)
+
+6. [x] "Apply all fixes from canvas version: spawn on room border"
+   → Player position on room transition already correct
+   → Spawns 2 tiles from edge when entering from any direction
+
+### Verification:
+- Game loads without errors
+- Tears arc properly when shot
+- Stats display visible in HUD
+- Minimap shows fog of war effect
+- Enemies pause before attacking
+

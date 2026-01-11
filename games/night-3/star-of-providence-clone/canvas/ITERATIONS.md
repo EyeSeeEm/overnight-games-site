@@ -318,3 +318,61 @@ Game captures Star of Providence's core aesthetic:
 
 ### Difficulty Rating
 Medium-Hard - Bullet hell patterns require careful balancing to feel challenging but fair
+
+---
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "Enemies just keep coming in same room even when cleared" → Changed to door-based progression
+2. [x] "Player should have to move to next rooms and clear the level" → Added door system for room transitions
+3. [x] "Enemies need short stun time ~500ms when player enters a room" → Added game.enemyStunTimer
+
+### Implementation Details:
+
+**Room-Based Progression:**
+- Changed wave clearing to open doors instead of auto-spawning next wave
+- Reduced maxWave from 5 to 3 for faster room-based progression
+- When all enemies are killed, `game.roomCleared = true` and doors open
+- Player walks through doors (within 50px) to transition to next room
+
+**Door System:**
+- Added `openRoomDoors()`: Creates 2-3 randomly positioned doors (north/south/east/west)
+- Added `drawDoors()`: Draws glowing green doors with directional arrows
+- Added `checkDoorTransition()`: Detects player entering door zones
+- Added `transitionToNextRoom()`: Handles screen flash, player repositioning, wave progression
+
+**Enemy Stun Timer:**
+- Added `game.enemyStunTimer = 0.5` (500ms) when entering new room
+- Enemies don't update during stun period, giving player time to react
+- Applied after room transitions and after salvage screen
+
+### Code Changes:
+```javascript
+// Added state variables
+roomCleared: false,
+doors: [],
+transitioning: false,
+enemyStunTimer: 0
+
+// Enemy update gated by stun timer
+if (game.enemyStunTimer > 0) {
+    game.enemyStunTimer -= dt;
+} else {
+    updateEnemies(dt);
+}
+
+// Doors open when room cleared
+if (enemies.length === 0 && !game.roomCleared) {
+    game.roomCleared = true;
+    openRoomDoors();
+}
+```
+
+### Verification:
+- Enemies no longer auto-spawn after wave clear
+- Doors appear when all enemies killed
+- Player can walk through doors to next room
+- 500ms stun gives breathing room on room entry
+
+**Total Iterations Logged:** 43+ (20 expand + 20 polish + 3 feedback fixes)

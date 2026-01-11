@@ -323,3 +323,25 @@ Game captures High Tea's core aesthetic:
 
 ### Difficulty Rating
 Medium - Map rendering took planning, but Phaser handled UI elements well
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "Mechanics aren't very clear how to play"
+   → Added full tutorial overlay explaining:
+     - How to click trade offers
+     - Buy opium with silver
+     - Sell opium for silver and tea
+     - Ship tea to meet quota
+   → Added tips about risk levels and quota system
+
+2. [x] "Need more/quicker resources to start trading"
+   → Increased starting silver from 500 to 1000
+   → Added 20 starting opium so players can trade immediately
+   → Increased quota timer from 120 to 150 seconds
+
+### Verification:
+- Tutorial shows on game start with clear instructions
+- Player starts with enough resources to begin trading right away
+- Game pauses during tutorial until dismissed
+- All feedback items addressed

@@ -237,3 +237,19 @@ Game achieves cozy incremental/idle aesthetic:
 
 ### Difficulty Rating
 Easy-Medium - Incremental mechanics are straightforward, but balancing multiple interconnected systems (spirits, resources, prestige, walls) requires careful thought about progression curves.
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "UI element in the top-left is partially covered by the resources tab" → Fixed by moving orb position
+   - Resources panel was at x=20 to x=200 (width 180)
+   - Orb was centered at x=200, causing overlap with "+1" text and "Click/hold for magic" text
+   - Created ORB_X, ORB_Y, ORB_RADIUS constants at top of file
+   - Moved orb from x=200 to x=300 (clear of Resources panel)
+   - Updated all orb references: handleClick, clickOrb particles, drawOrb
+
+### Verification:
+- Resources panel displays fully visible in top-left ✓
+- Orb and all text ("+1", "Click/hold for magic") display clearly without overlap ✓
+- Orb click detection still works correctly at new position ✓
+- Magic particle effects spawn at correct orb location ✓

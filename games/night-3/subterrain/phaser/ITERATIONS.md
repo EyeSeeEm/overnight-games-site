@@ -125,3 +125,229 @@
 
 ### Difficulty Rating
 Medium - Familiar patterns from Canvas version, but Phaser-specific adaptations needed. Adding visual feedback was straightforward with the floating text system.
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "Camera doesn't move with player when moving through larger rooms"
+   → Re-established camera follow after sector load with `startFollow()` and `centerOn()`
+   → Changed screen shake from `setScroll()` to `setFollowOffset()` to not interfere with follow
+   → Increased camera lerp values from 0.1 to 0.15 for smoother tracking
+
+### Verification:
+- Tested 60+ seconds in Storage Wing (larger sector)
+- Player moved to edges of sector, camera followed properly
+- Sector transitions maintain camera follow
+- All feedback items addressed
+
+---
+
+## Second 100 Iterations (2026-01-11)
+
+### Iterations 41-50: Weapons System Foundation
+41. Added WEAPONS constant with weapon definitions (fists, shiv, pipeClub, stunBaton, pistol)
+42. Added weapon properties: damage, speed, range, durability, special effects
+43. Added playerData.weapon and weaponDurability tracking
+44. Implemented weapon-based damage calculation in attack()
+45. Added melee weapon cooldown based on weapon speed
+46. Added weapon durability reduction on attack
+47. Added weapon breaking mechanic and "WEAPON BROKE" feedback
+48. Added stamina cost for melee attacks (10 per swing)
+49. Added weapon switching with 5-7 keys
+50. Added weapon display in UI (bottom left)
+
+### Iterations 51-60: Ranged Combat
+51. Added fireProjectile() for ranged weapons
+52. Implemented accuracy system with spread calculation
+53. Added ammo tracking (playerData.ammo.bullets)
+54. Added player bullet collision with enemies in updateProjectiles()
+55. Added wall collision for projectiles
+56. Added muzzle flash effect for ranged weapons
+57. Added "NO AMMO" feedback when empty
+58. Added bullets floor drop item with brass texture
+59. Added ammo pickup (+10 bullets) handling
+60. Updated UI to show ammo count for ranged weapons
+
+### Iterations 61-70: Status Effects System
+61. Added STATUS_EFFECTS constant (bleeding, stunned, slowed)
+62. Added playerData.statusEffects array
+63. Implemented updatePlayerStatusEffects() with DOT handling
+64. Added bleeding effect (2 damage/sec for 10 sec)
+65. Added shiv bleedChance (20%) on hit
+66. Implemented enemy status effects array
+67. Added updateEnemyStatusEffects() with DOT on enemies
+68. Added pipe club knockback effect
+69. Added stun baton stun effect (2 sec)
+70. Added stunned state blocking enemy actions
+
+### Iterations 71-80: Dodge Roll System
+71. Added dodge() function with invincibility frames
+72. Added dodgeCooldown (1.5 sec) tracking
+73. Added stamina cost for dodge (20)
+74. Added dodge direction based on movement keys
+75. Added dodge tween with flicker animation
+76. Added "DODGE!" floating text feedback
+77. Added playerData.isInvincible flag
+78. Updated damagePlayer() to check invincibility
+79. Added space key binding for dodge
+80. Added right-click binding for dodge
+
+### Iterations 81-90: Sprint and Movement
+81. Added sprint mechanic (Shift key)
+82. Added sprint speed boost (150 -> 220)
+83. Added stamina drain during sprint (15/sec)
+84. Added fatigue movement penalty at 50%+ (10% slower)
+85. Added fatigue movement penalty at 75%+ (25% slower)
+86. Added stamina regeneration (5/sec when not attacking)
+87. Added stamina display in UI
+88. Added dodge cooldown decay in updatePlayer()
+89. Implemented status effect speed modifiers
+90. Added bleeding visual tint on bleeding enemies
+
+### Iterations 91-100: Crawler Lunge Attack
+91. Added crawler lunge detection (80 units, >30 units)
+92. Added isLunging flag and lungeTimer
+93. Added lungeVx/lungeVy velocity calculation
+94. Implemented lunge movement in updateEnemies()
+95. Added lunge hit detection on completion
+96. Added lunge damage application with infection
+97. Added lunge cooldown via lastAttack timer
+98. Tested crawler behavior - lunges work correctly
+99. Tuned lunge speed (300) and duration (0.3s)
+100. Added lunge attack animation (movement speed burst)
+
+### Iterations 101-110: Brute Charge Attack
+101. Added brute charge detection (150 units, >50 units)
+102. Added isCharging flag and chargeTimer
+103. Added chargeAngle tracking for direction
+104. Added charge visual indicator (orange tint)
+105. Implemented charge movement (200 speed for 0.5s)
+106. Added charge hit detection during movement
+107. Added charge damage multiplier (1.5x)
+108. Added wall collision stun (1 sec)
+109. Added "STUN!" feedback on wall collision
+110. Added screen shake on charge wall collision
+
+### Iterations 111-120: Crafting System
+111. Added RECIPES constant with tier1 and tier2 recipes
+112. Added openCraftingMenu() at workbench interaction
+113. Implemented canCraft() material checking
+114. Implemented craftItem() material consumption
+115. Added crafting result to inventory
+116. Added crafting time passage (gameData.realTime)
+117. Added "CRAFTED:" floating text feedback
+118. Added sparkle effect on craft completion
+119. Added tier2Unlocked flag for advanced recipes
+120. Added "NEED MATERIALS" feedback when can't craft
+
+### Iterations 121-130: Power Panel System
+121. Added power panel texture generation
+122. Added TILE.POWER_PANEL constant
+123. Added power panel tile in hub generation
+124. Added openPowerPanel() function
+125. Implemented power budget calculation (500 max)
+126. Added sector power costs (100/150/200/300)
+127. Implemented power cycling (toggle first available)
+128. Added "POWERED" feedback on sector enable
+129. Added "UNPOWERED" feedback on sector disable
+130. Added getPowerCost() helper function
+
+### Iterations 131-140: Additional Features
+131. Added storage locker texture generation
+132. Added TILE.STORAGE_LOCKER constant
+133. Added storage locker tile in hub
+134. Added electronics floor drop texture
+135. Added electronics to drop table (5% chance)
+136. Added data chip handling for tier 2 unlock
+137. Added "TIER 2 UNLOCKED!" feedback
+138. Added escape pod interaction messages
+139. Added "NEED KEYCARD" and "NO POWER" feedback
+140. Updated help hints in UI
+
+## Feedback Fixes (2026-01-11)
+
+### Fix 1: Health item collection on floor
+**Issue:** Items dropped by enemies were immediately added to inventory instead of appearing on the floor for collection.
+
+**Solution:**
+1. Created floor item textures for all item types (medkit, scrap, cloth, chemicals, food, water, antidote)
+2. Added `floorItems` array and `floorItemGroup` for tracking floor items
+3. Rewrote `dropItem()` to spawn visible sprites on the floor with bobbing animation
+4. Added weighted drop system - health items (medkit) now have 15% drop chance, consumables have lower chances
+5. Added `collectFloorItems()` function that checks player proximity (25px range) and auto-collects items
+6. Items show visual feedback with floating text and sparkle effects on collection
+
+**Changes made:**
+- BootScene: Added 7 floor item textures (floorItem_medkit, floorItem_scrap, etc.)
+- initGameState: Added `this.floorItems = []`
+- loadSector: Added floorItemGroup creation and clearing
+- dropItem: Complete rewrite - spawns sprites with tween animation
+- collectFloorItems: New function for proximity-based auto-collection
+- update: Added `collectFloorItems()` call
+
+**Testing:**
+- Verified floor items spawn when enemies die
+- Verified items have bobbing animation
+- Verified player auto-collects items when walking over them
+- Verified inventory updates correctly on collection
+
+### Fix 2: Remove combo system
+**Issue:** Kill streak/combo system was not needed for this survival horror game.
+
+**Removed:**
+- `maxKillStreak` stat tracking
+- `killStreak` and `killStreakTimer` variables
+- `killStreakText` UI element
+- `updateKillStreak()` function
+- Kill streak logic in `killEnemy()`
+- Streak messages (TRIPLE KILL, QUAD KILL, etc.)
+- Streak display in debug overlay, game over, and victory screens
+
+**Testing:**
+- Verified game runs without JavaScript errors
+- Verified game state remains 'playing'
+- All kill streak UI and logic removed cleanly
+
+### Fix 3: Add room persistence
+**Issue:** Rooms reset when leaving and re-entering - enemies respawned, blood disappeared.
+
+**Solution:**
+1. Added `sectorStates` object to track per-sector state (enemies, blood splatters, visited flag)
+2. Added `saveSectorState()` - saves surviving enemies (position, HP) and blood splatters before leaving
+3. Added `restoreSectorState()` - recreates enemies and blood from saved state on return
+4. Modified `loadSector()` to save state before clearing, and either spawn fresh enemies (first visit) or restore saved state (return visit)
+5. Modified `createEnemy()` to return the enemy object for HP restoration
+
+**Changes made:**
+- initGameState: Added `this.sectorStates` with entries for all 5 sectors
+- loadSector: Added save state before clearing, conditional spawn/restore based on visited flag
+- saveSectorState: New function - serializes enemies and blood splatters
+- restoreSectorState: New function - recreates enemies and blood from saved data
+- createEnemy: Now returns the created enemy object
+
+**Testing:**
+- Verified no JavaScript errors
+- Verified enemies persist when leaving and returning to a sector
+- Verified blood splatters persist between visits
+- Verified first visit spawns fresh enemies, return visits restore saved state
+
+### Fix 4: Fix room transition spawn positions
+**Issue:** Player always spawned at the same fixed position regardless of which door they used to enter.
+
+**Solution:**
+1. Modified `checkDoorTransition()` to determine entry direction based on door position (top/bottom/left/right)
+2. Modified `loadSector()` to accept an entryDirection parameter
+3. Added spawn positioning logic: when exiting from one side, spawn on the opposite side of the new room
+   - Exit from top → spawn at bottom
+   - Exit from bottom → spawn at top
+   - Exit from left → spawn at right
+   - Exit from right → spawn at left
+
+**Changes made:**
+- checkDoorTransition: Added entry direction calculation based on door tile position
+- loadSector: Added entryDirection parameter and spawn positioning switch statement
+
+**Testing:**
+- Exit hub from bottom (to storage) → spawn at top of storage ✓
+- Exit storage from top (to hub) → spawn at bottom of hub ✓
+- No JavaScript errors ✓

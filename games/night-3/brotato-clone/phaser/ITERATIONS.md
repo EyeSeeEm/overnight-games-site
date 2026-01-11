@@ -85,3 +85,40 @@
 
 ### Difficulty Rating
 Easy-Medium - Phaser handles most complexity, just need to configure properly
+
+
+---
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "No wave mechanics (game doesnt progress through multiple waves)"
+   → Wave progression was working, but no break between waves
+   → Added ShopScene that appears between each wave
+   → Enemies cleared when wave ends
+
+2. [x] "No shop between waves"
+   → Created ShopScene with 4 purchasable upgrades:
+     - +10 Max HP (15 materials)
+     - +3 Damage (20 materials)
+     - +0.2 Attack Speed (25 materials)
+     - Heal Full HP (10 materials)
+   → Player stats persist between waves
+   → Continue button and Space key to proceed
+
+3. [x] "Waaaay too many enemies right from wave 1"
+   → Reduced max enemies from (50 + wave*5) to (5 + wave*3)
+   → Wave 1 now has max 8 enemies instead of 55
+   → Spawn rate slowed from 1.5s to 3.0s at start
+
+4. [x] "Fire rate too high"
+   → Reduced initial attackSpeed from 1.0 to 0.6
+   → Now fires ~1.7 seconds between shots instead of 1.0
+   → Can upgrade fire rate in shop
+
+### Verification:
+- Game loads without errors
+- Wave 1 spawns reasonable number of enemies
+- Shop appears after wave ends
+- Stats persist between waves
+

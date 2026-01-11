@@ -295,6 +295,29 @@ Game captures High Tea's core aesthetic:
 
 **40 iterations complete - 20 EXPAND + 20 POLISH**
 
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "Not clear what the mechanics are" → Added step-by-step tutorial system
+   - Tutorial welcomes player and explains the trading loop
+   - Step 1: Buy opium with silver (highlighted button)
+   - Step 2: Sell opium at ports (highlighted map offers)
+   - Step 3: Wait for ship to return with silver
+   - Step 4: Buy tea with silver (highlighted button)
+   - Step 5: Tea shipped when clipper arrives (highlighted quota panel)
+   - Final summary of gameplay loop
+2. [x] "Start simple with resources" → Player now starts with 15 opium chests
+3. [x] Tutorial uses visual highlights (yellow rectangles) to guide player
+4. [x] Tutorial darkens non-relevant areas to focus attention
+
+### Verification:
+- Tutorial displays correctly on game start ✓
+- Click-to-advance works for text steps ✓
+- Action triggers (buy, sell, etc.) advance tutorial ✓
+- Highlights correctly point to relevant UI elements ✓
+
+---
+
 ## Post-Mortem
 
 ### What Went Well

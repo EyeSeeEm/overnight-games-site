@@ -321,3 +321,40 @@ Game captures Star of Providence's core aesthetic:
 
 ### Difficulty Rating
 Hard - Phaser class initialization quirks and bullet hell balancing both required iteration
+
+
+---
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "Room transitions don't work correctly"
+   → Root cause: selectSalvage() was calling scene.restart() without preserving state
+   → Fixed by passing playerStats and gameState through init(data)
+   → Room transitions now preserve all player upgrades and progress
+
+2. [x] "Upgrade rooms only (salvage screen)"
+   → Salvage screen now appears after clearing all 5 waves
+   → Player selects an upgrade, then transitions to new room
+   → Stats are preserved across rooms
+
+3. [x] "Need minimap"
+   → Added minimap in top-right corner (60x60 pixels)
+   → Shows visited rooms (dim green) and current room (bright green)
+   → Shows adjacent unvisited rooms (grey)
+   → Updates as player progresses through rooms
+   → Added roomsVisited array and currentRoomX/Y tracking
+
+### Technical Implementation:
+- Modified init(data) to accept preserved state from previous room
+- Added roomsVisited 2D array for minimap tracking
+- Added currentRoomX/Y for position tracking
+- Created updateMinimap() function in HUD
+- selectSalvage() now updates room position and passes state to restart
+
+### Verification:
+- Game loads without errors
+- Room transitions work - player advances to Room 2 after clearing Room 1
+- Player stats preserved (speed upgrade shows increased value)
+- Minimap displays correctly with multiple visited rooms
+- All waves must be cleared before salvage screen appears

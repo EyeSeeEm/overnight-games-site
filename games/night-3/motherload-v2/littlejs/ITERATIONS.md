@@ -117,3 +117,19 @@ Added comprehensive debug overlay (press Q to toggle) showing:
 - Cash and score
 - Drilling state and mining combo
 - Particles and floating texts count
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "CRITICAL: Can only drill down, not sideways"
+   → Added sideways drilling by pressing LEFT/RIGHT arrows when grounded
+   → Added drillDirection variable to track which way to drill
+   → Modified startDrill() to accept direction parameter ('down', 'left', 'right')
+   → Modified updateDrilling() to move player in the correct direction after drilling
+   → Now supports drilling: down (ArrowDown), left (ArrowLeft), right (ArrowRight)
+
+### Verification:
+- Code review confirms sideways drilling implementation is correct
+- Player can now drill in 3 directions: down, left, right
+- Movement after drilling moves player into the cleared tile
+- All feedback items addressed

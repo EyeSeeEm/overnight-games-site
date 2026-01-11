@@ -77,10 +77,26 @@
 - All 20 polish passes completed
 - All features working and verified
 
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "Doesn't work at all" → Actually working! Verified all controls, enemies spawn, combat works
+2. [x] Q key conflict - Q was both firing AND toggling debug overlay → Changed debug toggle to backtick (`) key
+3. [x] Player too squishy → Increased HP from 75→100, Shield from 60→80, Shield recharge from 5→8
+
+### Verification:
+- Tested 60 seconds with no crashes
+- All gameplay mechanics verified working
+- Controls: WASD move, Click/Q fire, E gravity beam, F missile, R dock
+- Wave system spawning enemies correctly
+- Score and combat working
+
+---
+
 ## Dev Notes
 
 ### Debug Overlay Added (2026-01-10)
-Added comprehensive debug overlay (press Q to toggle) showing:
+Added comprehensive debug overlay (press ` to toggle) showing:
 - Player position, velocity, HP, shield, missiles, combo
 - Aegis HP and shield
 - Enemy count, asteroid count, mineral count, powerup count

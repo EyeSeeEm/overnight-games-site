@@ -238,3 +238,22 @@ Game achieves cozy incremental/idle aesthetic:
 
 ### Difficulty Rating
 Medium - Phaser adds structure but requires learning its patterns. The button/panel creation is more complex than Canvas but provides better organization.
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "Spell buttons along bottom are covered by other elements"
+   → Verified tabs are visible and not covered (already working)
+   → Improved active tab highlighting with white border for clarity
+
+2. [x] "No visual feedback when clicking spells"
+   → Added visual feedback on button click (flash effect, scale change)
+   → Added hover effect on buttons (color change)
+   → Active tabs now have prominent white border
+   → Button labels shrink on click then restore for tactile feedback
+
+### Verification:
+- Tested clicking different room tabs - visual feedback is clear
+- Active tab shows white border and brighter color
+- Panel content changes when different tab is selected
+- All feedback items addressed

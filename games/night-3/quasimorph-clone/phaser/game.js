@@ -824,28 +824,44 @@ class GameScene extends Phaser.Scene {
         const textStyle = { fontFamily: 'monospace', fontSize: '12px', color: '#8ac8aa' };
         const labelStyle = { fontFamily: 'monospace', fontSize: '10px', color: '#6a9a8a' };
 
-        this.add.text(16, 12, 'I INVENTORY', labelStyle);
+        // All UI text must be added to uiContainer to prevent scrolling with camera
+        const invLabel = this.add.text(16, 12, 'INVENTORY', labelStyle);
+        this.uiContainer.add(invLabel);
         this.weaponText = this.add.text(16, 30, '', textStyle);
+        this.uiContainer.add(this.weaponText);
         this.ammoText = this.add.text(16, 48, '', textStyle);
+        this.uiContainer.add(this.ammoText);
         this.itemsText = this.add.text(16, 66, '', textStyle);
+        this.uiContainer.add(this.itemsText);
 
-        this.add.text(GAME_WIDTH - 140, 12, 'C CLASS', labelStyle);
+        const classLabel = this.add.text(GAME_WIDTH - 140, 12, 'CLASS', labelStyle);
+        this.uiContainer.add(classLabel);
         this.classText = this.add.text(GAME_WIDTH - 140, 30, 'ASSAULT', textStyle);
+        this.uiContainer.add(this.classText);
         this.stanceText = this.add.text(GAME_WIDTH - 140, 48, '', textStyle);
+        this.uiContainer.add(this.stanceText);
 
-        this.add.text(16, GAME_HEIGHT - 94, 'H HEALTH MONITOR', labelStyle);
+        const healthLabel = this.add.text(16, GAME_HEIGHT - 94, 'STATUS', labelStyle);
+        this.uiContainer.add(healthLabel);
         this.turnText = this.add.text(16, GAME_HEIGHT - 76, '', textStyle);
+        this.uiContainer.add(this.turnText);
         this.healthText = this.add.text(16, GAME_HEIGHT - 58, '', textStyle);
+        this.uiContainer.add(this.healthText);
         this.apText = this.add.text(16, GAME_HEIGHT - 40, '', textStyle);
+        this.uiContainer.add(this.apText);
         this.phaseText = this.add.text(16, GAME_HEIGHT - 22, '', textStyle);
+        this.uiContainer.add(this.phaseText);
 
-        this.add.text(GAME_WIDTH - 170, GAME_HEIGHT - 94, 'CORRUPTION', { ...labelStyle, color: '#aa6a8a' });
+        const corrLabel = this.add.text(GAME_WIDTH - 170, GAME_HEIGHT - 94, 'CORRUPTION', { ...labelStyle, color: '#aa6a8a' });
+        this.uiContainer.add(corrLabel);
         this.corruptionText = this.add.text(GAME_WIDTH - 170, GAME_HEIGHT - 70, '', { ...textStyle, color: '#cc8aaa' });
+        this.uiContainer.add(this.corruptionText);
         this.corruptionBar = this.add.graphics();
         this.uiContainer.add(this.corruptionBar);
 
-        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 12, 'WASD: Move | Click: Attack | Space: End Turn | R: Reload',
+        const controlsText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 12, 'WASD: Move | Click: Attack | ENTER: End Turn | R: Reload',
             { ...labelStyle, color: '#6a8a8a' }).setOrigin(0.5, 1);
+        this.uiContainer.add(controlsText);
 
         this.updateUI();
     }
@@ -892,6 +908,7 @@ class GameScene extends Phaser.Scene {
         if (!this.corrLevelText) {
             this.corrLevelText = this.add.text(GAME_WIDTH - 170, GAME_HEIGHT - 28, '',
                 { fontFamily: 'monospace', fontSize: '10px', color: '#aa6a8a' });
+            this.uiContainer.add(this.corrLevelText);
         }
         this.corrLevelText.setText(corrLevel);
 
@@ -900,6 +917,7 @@ class GameScene extends Phaser.Scene {
         if (!this.enemiesText) {
             this.enemiesText = this.add.text(GAME_WIDTH - 140, 68, '',
                 { fontFamily: 'monospace', fontSize: '11px', color: '#cc8888' });
+            this.uiContainer.add(this.enemiesText);
         }
         this.enemiesText.setText(`Hostiles: ${enemiesRemaining}`);
 
@@ -908,6 +926,7 @@ class GameScene extends Phaser.Scene {
             this.streakText = this.add.text(GAME_WIDTH / 2, 30, '',
                 { fontFamily: 'monospace', fontSize: '14px', color: '#ff8800' });
             this.streakText.setOrigin(0.5);
+            this.uiContainer.add(this.streakText);
         }
         if (gs.killStreak >= 2) {
             this.streakText.setText(`${gs.killStreak}x KILL STREAK`);
@@ -924,7 +943,7 @@ class GameScene extends Phaser.Scene {
             s: this.input.keyboard.addKey('S'),
             d: this.input.keyboard.addKey('D')
         };
-        this.spaceKey = this.input.keyboard.addKey('SPACE');
+        this.enterKey = this.input.keyboard.addKey('ENTER');
         this.rKey = this.input.keyboard.addKey('R');
 
         this.wasd.w.on('down', () => this.tryMove(0, -1));
@@ -932,7 +951,7 @@ class GameScene extends Phaser.Scene {
         this.wasd.s.on('down', () => this.tryMove(0, 1));
         this.wasd.d.on('down', () => this.tryMove(1, 0));
 
-        this.spaceKey.on('down', () => this.endPlayerTurn());
+        this.enterKey.on('down', () => this.endPlayerTurn());
         this.rKey.on('down', () => this.reloadWeapon());
 
         this.input.on('pointerdown', (pointer) => {
@@ -1545,8 +1564,11 @@ class GameScene extends Phaser.Scene {
     }
 
     checkAutoEndTurn() {
+        if (this.gameState.phase !== 'player') return;
         if (this.gameState.player.ap <= 0) {
-            this.time.delayedCall(300, () => this.endPlayerTurn());
+            // Show notification and auto-end immediately
+            this.showFloatingText(this.gameState.player.x, this.gameState.player.y - 0.5, 'NO AP - ENDING TURN', 0xffaa00);
+            this.time.delayedCall(100, () => this.endPlayerTurn());
         }
     }
 
@@ -1555,8 +1577,51 @@ class GameScene extends Phaser.Scene {
 
         this.gameState.phase = 'enemy';
         this.updateUI();
+        this.showTurnIndicator('ENEMY TURN', 0xcc4444);
 
         this.processEnemyTurns();
+    }
+
+    showTurnIndicator(text, color) {
+        // Create or update turn indicator at center top of screen
+        if (!this.turnIndicatorBg) {
+            this.turnIndicatorBg = this.add.rectangle(GAME_WIDTH / 2, 50, 200, 40, 0x000000, 0.85);
+            this.turnIndicatorBg.setStrokeStyle(2, color);
+            this.uiContainer.add(this.turnIndicatorBg);
+        }
+        if (!this.turnIndicatorText) {
+            this.turnIndicatorText = this.add.text(GAME_WIDTH / 2, 50, '', {
+                fontFamily: 'monospace',
+                fontSize: '18px',
+                fontStyle: 'bold'
+            }).setOrigin(0.5);
+            this.uiContainer.add(this.turnIndicatorText);
+        }
+
+        this.turnIndicatorBg.setStrokeStyle(2, color);
+        this.turnIndicatorText.setText(text);
+        this.turnIndicatorText.setColor(`#${color.toString(16).padStart(6, '0')}`);
+        this.turnIndicatorBg.setVisible(true);
+        this.turnIndicatorText.setVisible(true);
+
+        // Pulse animation for enemy turn
+        if (text === 'ENEMY TURN') {
+            this.tweens.add({
+                targets: [this.turnIndicatorBg, this.turnIndicatorText],
+                alpha: 0.5,
+                yoyo: true,
+                repeat: -1,
+                duration: 400
+            });
+        }
+    }
+
+    hideTurnIndicator() {
+        if (this.turnIndicatorBg) this.turnIndicatorBg.setVisible(false);
+        if (this.turnIndicatorText) this.turnIndicatorText.setVisible(false);
+        this.tweens.killTweensOf([this.turnIndicatorBg, this.turnIndicatorText]);
+        if (this.turnIndicatorBg) this.turnIndicatorBg.setAlpha(1);
+        if (this.turnIndicatorText) this.turnIndicatorText.setAlpha(1);
     }
 
     processEnemyTurns() {
@@ -1808,6 +1873,11 @@ class GameScene extends Phaser.Scene {
         this.gameState.turn++;
         this.gameState.phase = 'player';
         this.gameState.player.ap = this.gameState.player.maxAp;
+
+        // Hide enemy turn indicator and show player turn
+        this.hideTurnIndicator();
+        this.showTurnIndicator('YOUR TURN', 0x44cc44);
+        this.time.delayedCall(1500, () => this.hideTurnIndicator());
 
         this.gameState.corruption += 2;
 

@@ -212,3 +212,43 @@ GDD-CHECKLIST.md created with full feature verification.
 
 **Total Iterations Logged:** 44 (20 expand + 20 polish + 4 fun)
 **Game Status:** AMAZING - Would definitely recommend to a friend!
+
+---
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "Player's spawn position can be completely random - often in positions outside border"
+   → Rewrote generateLevel() with better bounds checking (min margin of 3 tiles)
+   → Fixed spawn point calculation to use tile center coordinates
+   → Added fallback room if generation fails
+
+2. [x] "Player can often hit invisible walls, cannot progress to certain parts (especially downward)"
+   → Completely rewrote createCorridor() to properly carve floor tiles
+   → Changed corridor algorithm to L-shaped paths (horizontal then vertical)
+   → Made corridors 2 tiles wide for easier navigation
+   → Added addWallsAroundFloors() that runs AFTER all floors carved
+
+3. [x] "Transparent grey band over bottom 1/4 or right 1/5 of screen"
+   → Completely rewrote updateDarknessOverlay()
+   → Changed from edge bands to subtle corner triangles only
+   → Reduced alpha from 0.4 to 0.2 for subtlety
+   → No more bands blocking gameplay view
+
+4. [x] "Switching weapons by pressing Q insta-reloads the pistol"
+   → Added weaponAmmo tracking object to store ammo per weapon
+   → switchWeapon() now saves current weapon ammo before switch
+   → Restores destination weapon's ammo (doesn't auto-reload)
+
+5. [x] "Reloading doesn't have any animation"
+   → Added reloadBarBg, reloadBarFill, reloadText HUD elements
+   → Shows centered reload progress bar during reload
+   → Bar fills from left to right as reload progresses
+   → Bar hides automatically when reload completes
+
+### Verification:
+- Tested 10+ seconds gameplay with no crashes
+- Movement working in all directions (WASD)
+- Shooting depletes ammo correctly (12 → 7 → 0)
+- Player can kill enemies and earn credits
+- All feedback items addressed

@@ -84,6 +84,7 @@ let message = '';
 let messageTimer = 0;
 let actionLog = [];
 let animating = false;
+let enemyTurnIndicator = 0; // Time remaining to show enemy turn text
 let screenShake = 0;
 let corruptionFlicker = 0;
 let damageFlash = 0;
@@ -782,7 +783,7 @@ function calculateHitChance(attacker, target, weapon, distance) {
 // Combat
 function playerShoot(targetX, targetY) {
     const weapon = player.getWeapon();
-    if (player.ap < weapon.apCost) { showMessage('Not enough AP!'); return; }
+    if (player.ap < weapon.apCost) { showMessage('Not enough AP!'); addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 20, 'NO AP!', '#ff4444'); return; }
     if (weapon.ammo <= 0) { showMessage('Out of ammo! Press R to reload.'); return; }
 
     const dist = Math.sqrt(Math.pow(targetX - player.x, 2) + Math.pow(targetY - player.y, 2));
@@ -934,7 +935,7 @@ function playerShoot(targetX, targetY) {
 function playerReload() {
     const weapon = player.getWeapon();
     if (weapon.ammo === weapon.magSize) { showMessage('Already full!'); return; }
-    if (player.ap < 1) { showMessage('Not enough AP!'); return; }
+    if (player.ap < 1) { showMessage('Not enough AP!'); addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 20, 'NO AP!', '#ff4444'); return; }
 
     const ammoNeeded = weapon.magSize - weapon.ammo;
     const ammoHave = player.inventory.ammo[weapon.ammoType] || 0;
@@ -967,7 +968,7 @@ function playerHeal() {
     if (player.inventory.medkits <= 0 && player.inventory.bandages <= 0) {
         showMessage('No healing items!'); return;
     }
-    if (player.ap < 1) { showMessage('Not enough AP!'); return; }
+    if (player.ap < 1) { showMessage('Not enough AP!'); addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 20, 'NO AP!', '#ff4444'); return; }
     if (player.hp === player.maxHp && player.bleeding === 0) {
         showMessage('Already healthy!'); return;
     }
@@ -1024,7 +1025,7 @@ function useStimpack() {
 
 function throwGrenade(targetX, targetY) {
     if (player.inventory.grenades <= 0) { showMessage('No grenades!'); return; }
-    if (player.ap < 1) { showMessage('Not enough AP!'); return; }
+    if (player.ap < 1) { showMessage('Not enough AP!'); addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 20, 'NO AP!', '#ff4444'); return; }
 
     const dist = Math.sqrt(Math.pow(targetX - player.x, 2) + Math.pow(targetY - player.y, 2));
     if (dist > 8) { showMessage('Target too far!'); return; }
@@ -1105,7 +1106,7 @@ function throwGrenade(targetX, targetY) {
 function hackTerminal() {
     const terminal = terminals.find(t => t.x === player.x && t.y === player.y && !t.hacked);
     if (!terminal) { showMessage('No terminal here!'); return; }
-    if (player.ap < 1) { showMessage('Not enough AP!'); return; }
+    if (player.ap < 1) { showMessage('Not enough AP!'); addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 20, 'NO AP!', '#ff4444'); return; }
 
     player.ap--;
     terminal.hacked = true;
@@ -1141,6 +1142,7 @@ function hackTerminal() {
 // Enemy AI
 function enemyTurn() {
     animating = true;
+    enemyTurnIndicator = 60; // Show "ENEMY TURN" for 60 frames (1 second)
 
     enemies.forEach(enemy => {
         if (enemy.stunned > 0) { enemy.stunned--; return; }
@@ -1155,7 +1157,9 @@ function enemyTurn() {
 
         if (enemy.alerted) {
             if (canSee && dist <= enemy.range) {
-                // Attack
+                // Attack with animation
+                enemy.attackAnim = 30; // Animation frames
+
                 const hitChance = enemy.accuracy - getCoverBonus(player.x, player.y, enemy.x, enemy.y) * 15;
                 if (Math.random() * 100 < hitChance) {
                     const damage = enemy.damage[0] + Math.floor(Math.random() * (enemy.damage[1] - enemy.damage[0]));
@@ -1277,7 +1281,7 @@ function canMove(x, y) {
 }
 
 function playerMove(dx, dy) {
-    if (player.ap <= 0) { showMessage('No AP! Press SPACE to end turn.'); return; }
+    if (player.ap <= 0) { showMessage('No AP! Press SPACE to end turn.'); addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 20, 'NO AP!', '#ff4444'); return; }
 
     const newX = player.x + dx, newY = player.y + dy;
 
@@ -1739,6 +1743,31 @@ function renderGame(shakeX, shakeY) {
             }
             ctx.drawImage(tex, enemy.x * TILE, enemy.y * TILE);
 
+            // Attack animation (muzzle flash + shake)
+            if (enemy.attackAnim > 0) {
+                enemy.attackAnim--;
+                // Muzzle flash
+                const flashSize = 8 + Math.random() * 6;
+                const flashAlpha = enemy.attackAnim / 30;
+                ctx.save();
+                ctx.globalAlpha = flashAlpha;
+                ctx.fillStyle = '#ffff00';
+                ctx.shadowColor = '#ff8800';
+                ctx.shadowBlur = 15;
+                ctx.beginPath();
+                ctx.arc(enemy.x * TILE + TILE/2, enemy.y * TILE + TILE/2, flashSize, 0, Math.PI * 2);
+                ctx.fill();
+                // Orange ring
+                ctx.strokeStyle = '#ff6600';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(enemy.x * TILE + TILE/2, enemy.y * TILE + TILE/2, flashSize + 4, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1;
+                ctx.restore();
+            }
+
             // Health bar
             const hpPct = enemy.hp / enemy.maxHp;
             ctx.fillStyle = '#000';
@@ -1876,6 +1905,24 @@ function renderGame(shakeX, shakeY) {
     }
 
     renderHUD();
+
+    // Big enemy turn indicator at center
+    if (enemyTurnIndicator > 0) {
+        enemyTurnIndicator--;
+        const alpha = Math.min(1, enemyTurnIndicator / 30);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#ff4444';
+        ctx.font = 'bold 48px Courier New';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = '#ff0000';
+        ctx.shadowBlur = 20;
+        ctx.fillText('ENEMY TURN', canvas.width / 2, canvas.height / 2 - 50);
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+        ctx.restore();
+    }
 }
 
 function renderHUD() {

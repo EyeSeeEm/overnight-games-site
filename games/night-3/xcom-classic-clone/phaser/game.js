@@ -78,20 +78,109 @@ const TERRAIN = {
 
 // Weapons
 const WEAPONS = {
+    PISTOL: {
+        name: 'Pistol', damage: 26, type: 'ballistic',
+        snapShot: { accuracy: 30, tuPercent: 18 },
+        aimedShot: { accuracy: 78, tuPercent: 30 },
+        autoShot: null,
+        ammo: 12, weight: 5
+    },
     RIFLE: {
-        name: 'Rifle', damage: 30,
+        name: 'Rifle', damage: 30, type: 'ballistic',
         snapShot: { accuracy: 60, tuPercent: 25 },
         aimedShot: { accuracy: 110, tuPercent: 80 },
         autoShot: { accuracy: 35, tuPercent: 35, rounds: 3 },
-        ammo: 20
+        ammo: 20, weight: 8
+    },
+    HEAVY_CANNON: {
+        name: 'Heavy Cannon', damage: 56, type: 'ballistic',
+        snapShot: { accuracy: 60, tuPercent: 33 },
+        aimedShot: { accuracy: 90, tuPercent: 80 },
+        autoShot: null,
+        ammo: 6, weight: 18
+    },
+    AUTO_CANNON: {
+        name: 'Auto-Cannon', damage: 42, type: 'ballistic',
+        snapShot: { accuracy: 56, tuPercent: 33 },
+        aimedShot: { accuracy: 82, tuPercent: 80 },
+        autoShot: { accuracy: 32, tuPercent: 40, rounds: 3 },
+        ammo: 14, weight: 16
+    },
+    ROCKET_LAUNCHER: {
+        name: 'Rocket Launcher', damage: 75, type: 'explosive',
+        snapShot: { accuracy: 55, tuPercent: 45 },
+        aimedShot: { accuracy: 115, tuPercent: 75 },
+        autoShot: null,
+        ammo: 1, weight: 10, explosive: true, blastRadius: 2
+    },
+    LASER_PISTOL: {
+        name: 'Laser Pistol', damage: 46, type: 'laser',
+        snapShot: { accuracy: 40, tuPercent: 20 },
+        aimedShot: { accuracy: 68, tuPercent: 55 },
+        autoShot: { accuracy: 28, tuPercent: 25, rounds: 3 },
+        ammo: 999, weight: 6 // Unlimited ammo
+    },
+    LASER_RIFLE: {
+        name: 'Laser Rifle', damage: 60, type: 'laser',
+        snapShot: { accuracy: 65, tuPercent: 25 },
+        aimedShot: { accuracy: 100, tuPercent: 50 },
+        autoShot: { accuracy: 46, tuPercent: 34, rounds: 3 },
+        ammo: 999, weight: 8
+    },
+    HEAVY_LASER: {
+        name: 'Heavy Laser', damage: 85, type: 'laser',
+        snapShot: { accuracy: 50, tuPercent: 33 },
+        aimedShot: { accuracy: 84, tuPercent: 80 },
+        autoShot: null,
+        ammo: 999, weight: 15
     },
     PLASMA_PISTOL: {
-        name: 'Plasma Pistol', damage: 52,
+        name: 'Plasma Pistol', damage: 52, type: 'plasma',
         snapShot: { accuracy: 65, tuPercent: 30 },
         aimedShot: { accuracy: 85, tuPercent: 60 },
-        autoShot: null,
-        ammo: 26
+        autoShot: { accuracy: 50, tuPercent: 30, rounds: 3 },
+        ammo: 26, weight: 7
+    },
+    PLASMA_RIFLE: {
+        name: 'Plasma Rifle', damage: 80, type: 'plasma',
+        snapShot: { accuracy: 86, tuPercent: 30 },
+        aimedShot: { accuracy: 100, tuPercent: 60 },
+        autoShot: { accuracy: 55, tuPercent: 36, rounds: 3 },
+        ammo: 28, weight: 10
+    },
+    HEAVY_PLASMA: {
+        name: 'Heavy Plasma', damage: 115, type: 'plasma',
+        snapShot: { accuracy: 75, tuPercent: 30 },
+        aimedShot: { accuracy: 110, tuPercent: 60 },
+        autoShot: { accuracy: 50, tuPercent: 35, rounds: 3 },
+        ammo: 35, weight: 14
     }
+};
+
+// Armor types
+const ARMOR = {
+    NONE: { name: 'None', front: 0, side: 0, rear: 0, color: null },
+    PERSONAL: { name: 'Personal Armor', front: 50, side: 40, rear: 30, color: 0x557755 },
+    POWER: { name: 'Power Suit', front: 100, side: 80, rear: 70, color: 0x666688 },
+    FLYING: { name: 'Flying Suit', front: 110, side: 90, rear: 80, color: 0x5577aa, canFly: true }
+};
+
+// Alien types
+const ALIEN_TYPES = {
+    SECTOID: { name: 'Sectoid', health: 30, tu: 54, reactions: 63, armor: 4, weapon: 'PLASMA_PISTOL', color: 0x888899, size: 1 },
+    FLOATER: { name: 'Floater', health: 40, tu: 55, reactions: 60, armor: 8, weapon: 'PLASMA_RIFLE', color: 0x8b6914, size: 1, canFly: true },
+    SNAKEMAN: { name: 'Snakeman', health: 50, tu: 46, reactions: 65, armor: 20, weapon: 'PLASMA_RIFLE', color: 0x2a7a2a, size: 1 },
+    MUTON: { name: 'Muton', health: 125, tu: 62, reactions: 68, armor: 32, weapon: 'HEAVY_PLASMA', color: 0x7a5a3a, size: 1.2 },
+    ETHEREAL: { name: 'Ethereal', health: 55, tu: 72, reactions: 85, armor: 35, weapon: 'HEAVY_PLASMA', color: 0xaaaa88, size: 1, psionic: true }
+};
+
+// Items
+const ITEMS = {
+    MEDIKIT: { name: 'Medi-Kit', type: 'healing', healAmount: 25, tuCost: 15 },
+    SMOKE_GRENADE: { name: 'Smoke Grenade', type: 'grenade', tuCost: 25, smokeRadius: 3, smokeDuration: 5 },
+    FRAG_GRENADE: { name: 'Frag Grenade', type: 'grenade', damage: 50, tuCost: 25, blastRadius: 3 },
+    STUN_ROD: { name: 'Stun Rod', type: 'melee', damage: 0, stunDamage: 100, tuCost: 20 },
+    MOTION_SCANNER: { name: 'Motion Scanner', type: 'utility', tuCost: 25, range: 8 }
 };
 
 // Global arrays
@@ -364,42 +453,79 @@ function generateMap() {
 }
 
 function createUnits() {
-    const names = ['Johnson', 'Williams', 'Martinez', 'Lee', 'Thompson', 'Garcia'];
-    const positions = [[2, 2], [3, 2], [4, 2], [2, 3], [3, 3], [4, 3]];
+    const names = ['Johnson', 'Williams', 'Martinez', 'Lee', 'Thompson', 'Garcia', 'Brown', 'Davis'];
+    const positions = [[2, 2], [3, 2], [4, 2], [2, 3], [3, 3], [4, 3], [5, 2], [5, 3]];
+    const ranks = ['Rookie', 'Squaddie', 'Sergeant', 'Captain', 'Colonel', 'Commander'];
+
+    // Weapon loadouts for variety
+    const loadouts = [
+        { primary: 'RIFLE', secondary: 'PISTOL' },
+        { primary: 'RIFLE', secondary: 'PISTOL' },
+        { primary: 'LASER_RIFLE', secondary: 'LASER_PISTOL' },
+        { primary: 'HEAVY_CANNON', secondary: 'PISTOL' },
+        { primary: 'AUTO_CANNON', secondary: 'PISTOL' },
+        { primary: 'ROCKET_LAUNCHER', secondary: 'PISTOL' },
+        { primary: 'LASER_RIFLE', secondary: 'LASER_PISTOL' },
+        { primary: 'RIFLE', secondary: 'PISTOL' }
+    ];
+
+    // Armor assignments
+    const armorTypes = ['NONE', 'NONE', 'PERSONAL', 'PERSONAL', 'POWER', 'POWER', 'FLYING', 'NONE'];
 
     soldiers = [];
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < Math.min(8, names.length); i++) {
         const baseTU = 50 + Math.floor(Math.random() * 20);
+        const loadout = loadouts[i % loadouts.length];
+        const primaryWeapon = WEAPONS[loadout.primary];
+        const secondaryWeapon = WEAPONS[loadout.secondary];
+        const armor = ARMOR[armorTypes[i % armorTypes.length]];
+
         const s = {
             type: 'soldier',
             name: names[i],
+            rank: ranks[Math.floor(Math.random() * 3)], // Random starting rank
             x: positions[i][0],
             y: positions[i][1],
             facing: 2,
             stance: 'standing',
             tu: { base: baseTU, current: baseTU },
-            health: { base: 35, current: 35 },
+            health: { base: 35 + Math.floor(Math.random() * 20), current: 35 + Math.floor(Math.random() * 20) },
+            stamina: { base: 50 + Math.floor(Math.random() * 30), current: 50 + Math.floor(Math.random() * 30) },
             reactions: 30 + Math.floor(Math.random() * 30),
             firingAccuracy: 40 + Math.floor(Math.random() * 30),
+            throwingAccuracy: 50 + Math.floor(Math.random() * 25),
+            bravery: 30 + Math.floor(Math.random() * 50),
+            strength: 25 + Math.floor(Math.random() * 20),
             morale: 100,
-            weapon: { ...WEAPONS.RIFLE, currentAmmo: WEAPONS.RIFLE.ammo },
-            secondaryWeapon: { name: 'Pistol', damage: 26, snapShot: { accuracy: 65, tuPercent: 18 }, aimedShot: { accuracy: 85, tuPercent: 40 }, autoShot: null, ammo: 12, currentAmmo: 12 },
+            armor: armor,
+            weapon: { ...primaryWeapon, currentAmmo: primaryWeapon.ammo },
+            secondaryWeapon: { ...secondaryWeapon, currentAmmo: secondaryWeapon.ammo },
             usingPrimary: true,
             isAlive: true,
             overwatch: false,
             kills: 0,
+            experience: 0,
             grenades: 2,
+            smokegrenades: 1,
+            medikits: 1,
             sprite: null,
             arrow: null,
-            deployed: false // Track if deployed during deployment phase
+            deployed: false
         };
+        // Set max health after initialization
+        s.health.base = s.health.current;
         soldiers.push(s);
-        map[s.y][s.x].unit = s;
+        if (map[s.y] && map[s.y][s.x]) {
+            map[s.y][s.x].unit = s;
+        }
     }
 
     // Generate alien positions randomly across the right side of map
-    const alienCount = 7 + Math.floor(Math.random() * 4); // 7-10 aliens
+    const alienCount = 8 + Math.floor(Math.random() * 5); // 8-12 aliens
     aliens = [];
+
+    // Determine alien type distribution based on mission difficulty
+    const alienTypeDistribution = ['SECTOID', 'SECTOID', 'SECTOID', 'FLOATER', 'FLOATER', 'SNAKEMAN', 'MUTON'];
 
     for (let i = 0; i < alienCount; i++) {
         let ax, ay, attempts = 0;
@@ -411,27 +537,92 @@ function createUnits() {
 
         if (attempts >= 50) continue;
 
-        const isFloater = i >= alienCount - 3; // Last 3 aliens are Floaters
+        // Select alien type
+        const alienTypeName = alienTypeDistribution[Math.floor(Math.random() * alienTypeDistribution.length)];
+        const alienType = ALIEN_TYPES[alienTypeName];
+        const isFloater = alienTypeName === 'FLOATER';
+        const alienWeapon = WEAPONS[alienType.weapon];
         const a = {
             type: 'alien',
-            alienType: isFloater ? 'floater' : 'sectoid',
-            name: isFloater ? 'Floater' : 'Sectoid',
+            alienType: alienTypeName.toLowerCase(),
+            alienTypeData: alienType,
+            name: alienType.name,
             x: ax,
             y: ay,
             facing: 6,
             stance: 'standing',
-            tu: { base: isFloater ? 60 : 54, current: isFloater ? 60 : 54 },
-            health: { base: isFloater ? 45 : 30, current: isFloater ? 45 : 30 },
-            reactions: 50 + Math.floor(Math.random() * 20),
+            tu: { base: alienType.tu, current: alienType.tu },
+            health: { base: alienType.health, current: alienType.health },
+            armor: alienType.armor,
+            reactions: alienType.reactions + Math.floor(Math.random() * 10),
             firingAccuracy: 50 + Math.floor(Math.random() * 30),
-            weapon: { ...WEAPONS.PLASMA_PISTOL, currentAmmo: WEAPONS.PLASMA_PISTOL.ammo },
+            weapon: { ...alienWeapon, currentAmmo: alienWeapon.ammo },
             isAlive: true,
             spotted: false,
+            canFly: alienType.canFly || false,
+            psionic: alienType.psionic || false,
+            size: alienType.size || 1,
+            color: alienType.color,
             sprite: null
         };
         aliens.push(a);
         map[a.y][a.x].unit = a;
     }
+}
+
+// Use medikit function
+function useMedikit(soldier) {
+    if (!soldier || !soldier.isAlive || soldier.medikits <= 0) return false;
+
+    const tuCost = ITEMS.MEDIKIT.tuCost;
+    if (soldier.tu.current < tuCost) {
+        showMessage('Not enough TU for medikit');
+        return false;
+    }
+
+    const healAmount = ITEMS.MEDIKIT.healAmount;
+    const oldHealth = soldier.health.current;
+    soldier.health.current = Math.min(soldier.health.base, soldier.health.current + healAmount);
+    const actualHeal = soldier.health.current - oldHealth;
+
+    if (actualHeal > 0) {
+        soldier.tu.current -= tuCost;
+        soldier.medikits--;
+        showMessage(`${soldier.name} healed ${actualHeal} HP`);
+        createFloatingText(soldier.x, soldier.y, `+${actualHeal}`, 0x00ff00);
+        return true;
+    }
+    return false;
+}
+
+// Throw smoke grenade
+function throwSmokeGrenade(soldier, targetX, targetY) {
+    if (!soldier || !soldier.isAlive || soldier.smokegrenades <= 0) return false;
+
+    const tuCost = ITEMS.SMOKE_GRENADE.tuCost;
+    if (soldier.tu.current < tuCost) {
+        showMessage('Not enough TU for smoke grenade');
+        return false;
+    }
+
+    // Create smoke cloud
+    const radius = ITEMS.SMOKE_GRENADE.smokeRadius;
+    for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+            const tx = targetX + dx;
+            const ty = targetY + dy;
+            if (tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT) {
+                if (Math.abs(dx) + Math.abs(dy) <= radius) {
+                    map[ty][tx].smoke = ITEMS.SMOKE_GRENADE.smokeDuration;
+                }
+            }
+        }
+    }
+
+    soldier.tu.current -= tuCost;
+    soldier.smokegrenades--;
+    showMessage(`${soldier.name} threw smoke grenade`);
+    return true;
 }
 
 // Isometric conversion
@@ -644,7 +835,33 @@ function fireWeapon(shooter, target, shotType) {
             if (isCritical) {
                 damage = Math.floor(damage * 2);
             }
-            target.health.current -= damage;
+
+            // Apply armor damage reduction
+            let armorValue = 0;
+            if (target.type === 'soldier' && target.armor) {
+                armorValue = target.armor.front; // Simplified - use front armor
+            } else if (target.type === 'alien' && target.armor) {
+                armorValue = typeof target.armor === 'number' ? target.armor : target.armor.front || 0;
+            }
+
+            // Laser weapons ignore some armor
+            if (weapon.type === 'laser') {
+                armorValue = Math.floor(armorValue * 0.5);
+            }
+            // Plasma weapons ignore more armor
+            if (weapon.type === 'plasma') {
+                armorValue = Math.floor(armorValue * 0.3);
+            }
+
+            const penetratingDamage = Math.max(1, damage - armorValue);
+            const blockedDamage = damage - penetratingDamage;
+
+            if (blockedDamage > 0) {
+                createFloatingText(target.x, target.y - 0.3, `ARMOR: -${blockedDamage}`, 0x888888);
+            }
+
+            target.health.current -= penetratingDamage;
+            damage = penetratingDamage; // Update for display
             if (isCritical) {
                 createFloatingText(target.x, target.y, `CRIT! -${damage}`, 0xff0000);
                 gameState.screenShake = Math.min(20, 8 + damage / 5);
@@ -1336,6 +1553,39 @@ function handleKeyDown(event) {
         }
     }
 
+    // Medikit (M key)
+    if (key === 'm') {
+        if (gameState.selectedUnit.medikits > 0) {
+            useMedikit(gameState.selectedUnit);
+        } else {
+            setMessage('No medikits remaining!');
+        }
+    }
+
+    // Smoke grenade (G key - throw at nearest enemy)
+    if (key === 'g') {
+        if (gameState.selectedUnit.smokegrenades > 0) {
+            // Find nearest visible alien for smoke
+            const visibleAliens = aliens.filter(a => a.isAlive && a.spotted);
+            if (visibleAliens.length > 0) {
+                let nearest = visibleAliens[0];
+                let nearestDist = Math.hypot(nearest.x - gameState.selectedUnit.x, nearest.y - gameState.selectedUnit.y);
+                for (const a of visibleAliens) {
+                    const dist = Math.hypot(a.x - gameState.selectedUnit.x, a.y - gameState.selectedUnit.y);
+                    if (dist < nearestDist) {
+                        nearest = a;
+                        nearestDist = dist;
+                    }
+                }
+                throwSmokeGrenade(gameState.selectedUnit, nearest.x, nearest.y);
+            } else {
+                setMessage('No visible enemies for smoke target!');
+            }
+        } else {
+            setMessage('No smoke grenades remaining!');
+        }
+    }
+
     if (key === 'e') {
         // Check if any soldiers have significant TU remaining
         const soldiersWithTU = soldiers.filter(s => s.isAlive && s.tu.current > 20);
@@ -1946,11 +2196,24 @@ function drawUI() {
         uiGraphics.fillRect(bx, by, 18, 18);
     }
 
-    // Action buttons
+    // Action buttons with icons/labels
+    const actionButtons = [
+        { label: 'S', sub: 'Snap', color: 0x44aa44 },
+        { label: 'A', sub: 'Aim', color: 0x4488aa },
+        { label: 'F', sub: 'Auto', color: 0xaa4444 },
+        { label: 'T', sub: 'Gren', color: 0xaa6644 },
+        { label: 'K', sub: 'Kneel', color: 0x6666aa },
+        { label: 'R', sub: 'Load', color: 0xaaaa44 },
+        { label: 'O', sub: 'Ovwt', color: 0xaa44aa },
+        { label: 'E', sub: 'End', color: 0x888888 }
+    ];
     for (let i = 0; i < 8; i++) {
         const bx = 95 + (i % 4) * 40;
         const by = GAME_HEIGHT + 10 + Math.floor(i / 2) * 38;
         drawPanel(bx, by, 36, 32);
+        // Draw button icon background
+        uiGraphics.fillStyle(actionButtons[i].color, 0.3);
+        uiGraphics.fillRect(bx + 2, by + 2, 32, 28);
     }
 
     // Selected unit panel
@@ -2072,6 +2335,26 @@ function drawTextElements() {
         { key: 'controls2', x: 12, y: GAME_HEIGHT + 130, text: '1-6: Select | Space: Cycle | R: Reload | W: Switch | O: Overwatch | H: Help',
           style: { font: '10px monospace', fill: '#555555' } }
     ];
+
+    // Action button labels
+    const btnLabels = [
+        { key: 'btn_s', label: 'S', sub: 'Snap', color: '#44ff44' },
+        { key: 'btn_a', label: 'A', sub: 'Aim', color: '#66aaff' },
+        { key: 'btn_f', label: 'F', sub: 'Auto', color: '#ff6666' },
+        { key: 'btn_t', label: 'T', sub: 'Gren', color: '#ffaa66' },
+        { key: 'btn_k', label: 'K', sub: 'Kneel', color: '#8888ff' },
+        { key: 'btn_r', label: 'R', sub: 'Load', color: '#ffff66' },
+        { key: 'btn_o', label: 'O', sub: 'Ovwt', color: '#ff66ff' },
+        { key: 'btn_e', label: 'E', sub: 'End', color: '#aaaaaa' }
+    ];
+    for (let i = 0; i < 8; i++) {
+        const bx = 95 + (i % 4) * 40;
+        const by = GAME_HEIGHT + 10 + Math.floor(i / 2) * 38;
+        texts.push(
+            { key: btnLabels[i].key, x: bx + 18, y: by + 5, text: btnLabels[i].label, style: { font: 'bold 14px monospace', fill: btnLabels[i].color } },
+            { key: btnLabels[i].key + '_sub', x: bx + 18, y: by + 20, text: btnLabels[i].sub, style: { font: '8px monospace', fill: '#888888' } }
+        );
+    }
 
     // Add selected unit info
     if (gameState.selectedUnit) {

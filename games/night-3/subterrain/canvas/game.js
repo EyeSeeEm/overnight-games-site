@@ -113,6 +113,16 @@ const player = {
     weapon: 'fists',
     ammo: 0,
     attackCooldown: 0,
+    weaponDurability: {}, // { 'shiv': 20, 'pipeClub': 30, etc }
+
+    // Dodge
+    dodging: false,
+    dodgeTimer: 0,
+    dodgeCooldown: 0,
+    dodgeDir: { x: 0, y: 0 },
+
+    // Armor
+    armorReduction: 0,
 
     // Inventory
     inventory: [
@@ -120,6 +130,45 @@ const player = {
         { type: 'water', name: 'Water Bottle', count: 2 }
     ],
     maxInventory: 20
+};
+
+// UI States
+let showInventory = false;
+let showMap = false;
+let showCrafting = false;
+let selectedCraftRecipe = 0;
+
+// Acid puddles from spitters
+let acidPuddles = [];
+
+// Hallucination enemies (fake)
+let hallucinations = [];
+
+// Weapon definitions
+const WEAPONS = {
+    fists: { damage: 5, speed: 0.5, durability: Infinity, type: 'melee', range: 40 },
+    shiv: { damage: 10, speed: 0.4, durability: 20, type: 'melee', range: 45, bleed: 0.2 },
+    pipeClub: { damage: 20, speed: 1.0, durability: 30, type: 'melee', range: 50, knockback: 30 },
+    stunBaton: { damage: 15, speed: 0.7, durability: 25, type: 'melee', range: 45, stun: 2 },
+    pistol: { damage: 15, speed: 0.5, durability: 100, type: 'ranged', range: 400 }
+};
+
+// Crafting recipes
+const RECIPES = {
+    tier1: [
+        { name: 'Shiv', result: 'shiv', materials: { scrap: 2 }, time: 10, resultType: 'weapon' },
+        { name: 'Pipe Club', result: 'pipeClub', materials: { scrap: 3 }, time: 15, resultType: 'weapon' },
+        { name: 'Bandage', result: 'bandage', materials: { cloth: 2 }, time: 5, resultType: 'item' },
+        { name: 'Torch', result: 'torch', materials: { cloth: 1, chemicals: 1 }, time: 10, resultType: 'item' },
+        { name: 'Barricade', result: 'barricade', materials: { scrap: 5 }, time: 20, resultType: 'item' }
+    ],
+    tier2: [
+        { name: 'Pistol', result: 'pistol', materials: { scrap: 5, electronics: 2 }, time: 30, resultType: 'weapon' },
+        { name: 'Pistol Ammo x10', result: 'ammo10', materials: { scrap: 2, chemicals: 1 }, time: 10, resultType: 'ammo' },
+        { name: 'Antidote', result: 'antidote', materials: { chemicals: 3 }, time: 15, resultType: 'item' },
+        { name: 'Stun Baton', result: 'stunBaton', materials: { scrap: 3, electronics: 2, powerCell: 1 }, time: 25, resultType: 'weapon' },
+        { name: 'Armor Vest', result: 'armorVest', materials: { scrap: 4, cloth: 3 }, time: 30, resultType: 'armor' }
+    ]
 };
 
 // Enemies
@@ -136,6 +185,12 @@ let projectiles = [];
 
 // Particles
 let particles = [];
+
+// Ground pickups (items that can be walked over to collect)
+let groundPickups = [];
+
+// Sector states for persistence when revisiting
+const sectorStates = {};
 
 // Map data for each sector
 const sectors = {
@@ -211,13 +266,93 @@ const mouse = { x: 0, y: 0, down: false };
 
 document.addEventListener('keydown', e => {
     keys[e.key.toLowerCase()] = true;
-    if (e.key === 'Tab') e.preventDefault();
+    if (e.key === 'Tab') {
+        e.preventDefault();
+        showInventory = !showInventory;
+        showMap = false;
+        showCrafting = false;
+    }
+    if (e.key.toLowerCase() === 'm') {
+        showMap = !showMap;
+        showInventory = false;
+        showCrafting = false;
+    }
     // Debug mode toggle
     if (e.key === '`' || e.key === 'q') {
         debugMode = !debugMode;
     }
+    // Weapon switching (5-7)
+    if (e.key === '5') switchWeapon('fists');
+    if (e.key === '6') switchWeapon('shiv');
+    if (e.key === '7') switchWeapon('pipeClub');
+    if (e.key === '8') switchWeapon('stunBaton');
+    if (e.key === '9') switchWeapon('pistol');
+    // Crafting navigation
+    if (showCrafting) {
+        if (e.key === 'ArrowUp') selectedCraftRecipe = Math.max(0, selectedCraftRecipe - 1);
+        if (e.key === 'ArrowDown') selectedCraftRecipe++;
+        if (e.key === 'Enter' || e.key === 'c') craftItem();
+    }
 });
 document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+// Right-click for dodge
+canvas.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    startDodge();
+});
+
+function switchWeapon(weaponName) {
+    if (weaponName === 'fists') {
+        player.weapon = 'fists';
+        return;
+    }
+    // Check if we have the weapon in inventory
+    const weaponItem = player.inventory.find(i => i.type === weaponName);
+    if (weaponItem || player.weaponDurability[weaponName] > 0) {
+        player.weapon = weaponName;
+    }
+}
+
+function startDodge() {
+    if (player.dodging || player.dodgeCooldown > 0) return;
+    if (player.stamina < 20) return;
+
+    player.stamina -= 20;
+    player.dodging = true;
+    player.dodgeTimer = 0.3;
+    player.dodgeCooldown = 1.5;
+
+    // Dodge in movement direction or facing direction
+    let dx = 0, dy = 0;
+    if (keys['w'] || keys['arrowup']) dy = -1;
+    if (keys['s'] || keys['arrowdown']) dy = 1;
+    if (keys['a'] || keys['arrowleft']) dx = -1;
+    if (keys['d'] || keys['arrowright']) dx = 1;
+
+    if (dx === 0 && dy === 0) {
+        dx = Math.cos(player.angle);
+        dy = Math.sin(player.angle);
+    } else {
+        const len = Math.hypot(dx, dy);
+        dx /= len;
+        dy /= len;
+    }
+
+    player.dodgeDir = { x: dx, y: dy };
+
+    // Dodge particles
+    for (let i = 0; i < 5; i++) {
+        particles.push({
+            x: player.x,
+            y: player.y,
+            vx: -dx * 50 + (Math.random() - 0.5) * 30,
+            vy: -dy * 50 + (Math.random() - 0.5) * 30,
+            life: 0.3,
+            color: '#6688aa'
+        });
+    }
+}
 canvas.addEventListener('mousemove', e => {
     const rect = canvas.getBoundingClientRect();
     mouse.x = e.clientX - rect.left;
@@ -512,12 +647,15 @@ function update(timestamp) {
     }
 
     updatePlayer(dt);
+    updateDodge(dt);
     updateEnemies(dt);
     updateProjectiles(dt);
     updateParticles(dt);
     updateFloatingTexts(dt);
     updateScreenEffects(dt);
     updateSurvivalMeters(dt);
+    updateAcidPuddles(dt);
+    updateHallucinations(dt);
     updateCamera();
 
     draw();
@@ -557,6 +695,9 @@ function updatePlayer(dt) {
 
     // Check door transitions
     checkDoorTransition();
+
+    // Check ground pickups
+    checkGroundPickups();
 
     // Mouse aim
     player.angle = Math.atan2(mouse.y - (player.y - camera.y), mouse.x - (player.x - camera.x));
@@ -664,10 +805,47 @@ function checkDoorTransition() {
             vy: -20
         });
 
-        // Spawn enemies for new sector
-        spawnEnemies(newSector);
-        bloodSplatters = [];
+        // Save current sector state before leaving
+        saveSectorState(previousSector);
+
+        // Restore or create new sector state
+        if (sectorStates[newSector]) {
+            restoreSectorState(newSector);
+        } else {
+            // Spawn enemies and pickups for first visit
+            spawnEnemies(newSector);
+            spawnGroundPickups(newSector);
+            bloodSplatters = [];
+        }
     }
+}
+
+// Save the current sector's state
+function saveSectorState(sectorName) {
+    sectorStates[sectorName] = {
+        enemies: enemies.map(e => ({...e})),
+        bloodSplatters: bloodSplatters.map(b => ({
+            ...b,
+            splatters: b.splatters ? b.splatters.map(s => ({...s})) : null
+        })),
+        groundPickups: groundPickups.filter(p => p.sector === sectorName).map(p => ({...p}))
+    };
+}
+
+// Restore a sector's saved state
+function restoreSectorState(sectorName) {
+    const state = sectorStates[sectorName];
+    if (!state) return;
+
+    enemies = state.enemies.map(e => ({...e}));
+    bloodSplatters = state.bloodSplatters.map(b => ({
+        ...b,
+        splatters: b.splatters ? b.splatters.map(s => ({...s})) : null
+    }));
+
+    // Restore ground pickups for this sector
+    groundPickups = groundPickups.filter(p => p.sector !== sectorName);
+    groundPickups.push(...state.groundPickups.map(p => ({...p})));
 }
 
 // Get the door tile type that leads to a given sector
@@ -709,25 +887,75 @@ function findDoorPosition(sector, doorType) {
 }
 
 function attack() {
-    if (player.weapon === 'fists') {
+    const weapon = WEAPONS[player.weapon];
+    if (!weapon) return;
+
+    // Check if weapon has durability left
+    if (player.weapon !== 'fists' && player.weapon !== 'pistol') {
+        if (!player.weaponDurability[player.weapon] || player.weaponDurability[player.weapon] <= 0) {
+            player.weapon = 'fists';
+            floatingTexts.push({
+                x: player.x, y: player.y - 30,
+                text: 'Weapon broke!', color: '#ff6666', life: 1.5, vy: -30
+            });
+            return;
+        }
+    }
+
+    if (weapon.type === 'melee') {
         if (player.stamina < 10) return;
         player.stamina -= 10;
-        player.attackCooldown = 0.5;
+        player.attackCooldown = weapon.speed;
+
+        // Reduce durability
+        if (player.weapon !== 'fists' && player.weaponDurability[player.weapon] > 0) {
+            player.weaponDurability[player.weapon]--;
+        }
 
         // Melee attack
-        const range = 40;
+        const range = weapon.range;
         const attackX = player.x + Math.cos(player.angle) * range;
         const attackY = player.y + Math.sin(player.angle) * range;
 
+        let hitCount = 0;
         enemies.forEach(enemy => {
             if (enemy.hp <= 0) return;
             const dist = Math.hypot(enemy.x - attackX, enemy.y - attackY);
             if (dist < enemy.width + 20) {
-                damageEnemy(enemy, 5);
+                hitCount++;
+                let damage = weapon.damage;
+
+                // Apply fatigue penalty
+                if (player.fatigue > 75) damage *= 0.6;
+                else if (player.fatigue > 50) damage *= 0.8;
+
+                damageEnemy(enemy, damage);
+
+                // Weapon effects
+                if (weapon.knockback) {
+                    const angle = Math.atan2(enemy.y - player.y, enemy.x - player.x);
+                    enemy.x += Math.cos(angle) * weapon.knockback;
+                    enemy.y += Math.sin(angle) * weapon.knockback;
+                }
+                if (weapon.stun && !enemy.stunned) {
+                    enemy.stunned = true;
+                    enemy.stunTimer = weapon.stun;
+                }
+                if (weapon.bleed && Math.random() < weapon.bleed) {
+                    enemy.bleeding = true;
+                    enemy.bleedTimer = 3;
+                    floatingTexts.push({
+                        x: enemy.x, y: enemy.y - 30,
+                        text: 'BLEED!', color: '#ff4444', life: 1.0, vy: -20
+                    });
+                }
             }
         });
 
         // Particles
+        const swingColor = player.weapon === 'shiv' ? '#aaaaaa' :
+                          player.weapon === 'pipeClub' ? '#666666' :
+                          player.weapon === 'stunBaton' ? '#4488ff' : '#888';
         for (let i = 0; i < 3; i++) {
             particles.push({
                 x: attackX + (Math.random() - 0.5) * 20,
@@ -735,20 +963,40 @@ function attack() {
                 vx: Math.cos(player.angle) * 100 + (Math.random() - 0.5) * 50,
                 vy: Math.sin(player.angle) * 100 + (Math.random() - 0.5) * 50,
                 life: 0.3,
-                color: '#888'
+                color: swingColor
             });
         }
-    } else if (player.weapon === 'pistol' && player.ammo > 0) {
+    } else if (weapon.type === 'ranged') {
+        if (player.ammo <= 0) {
+            floatingTexts.push({
+                x: player.x, y: player.y - 30,
+                text: 'No ammo!', color: '#ff6666', life: 1.0, vy: -30
+            });
+            return;
+        }
         player.ammo--;
-        player.attackCooldown = 0.5;
+        player.attackCooldown = weapon.speed;
+
+        // Reduce durability
+        if (player.weaponDurability[player.weapon] > 0) {
+            player.weaponDurability[player.weapon]--;
+        }
+
+        // Accuracy affected by thirst
+        let accuracyMod = 1;
+        if (player.thirst > 75) accuracyMod = 0.6;
+        else if (player.thirst > 50) accuracyMod = 0.8;
+
+        const spread = (1 - accuracyMod) * 0.3;
+        const angle = player.angle + (Math.random() - 0.5) * spread;
 
         // Ranged attack
         projectiles.push({
             x: player.x,
             y: player.y,
-            vx: Math.cos(player.angle) * 500,
-            vy: Math.sin(player.angle) * 500,
-            damage: 15,
+            vx: Math.cos(angle) * 500,
+            vy: Math.sin(angle) * 500,
+            damage: weapon.damage,
             owner: 'player'
         });
 
@@ -884,7 +1132,9 @@ function interact() {
                     lootContainer(cx, cy);
                     break;
                 case TILE.WORKBENCH:
-                    // Crafting - simplified
+                    showCrafting = !showCrafting;
+                    showInventory = false;
+                    showMap = false;
                     break;
                 case TILE.BED:
                     // Sleep - reduces fatigue
@@ -945,8 +1195,20 @@ function lootContainer(x, y) {
         ammo: { type: 'ammo', name: 'Pistol Ammo' }
     };
 
+    const worldX = x * TILE_SIZE + TILE_SIZE / 2;
+    const worldY = y * TILE_SIZE + TILE_SIZE / 2;
+
     if (loot === 'keycard') {
         game.hasKeycard = true;
+        // Feedback for keycard
+        floatingTexts.push({
+            x: worldX,
+            y: worldY - 20,
+            text: '+RED KEYCARD!',
+            color: '#ff4444',
+            life: 2.0,
+            vy: -30
+        });
     } else {
         const item = lootItems[loot];
         const existing = player.inventory.find(i => i.type === item.type);
@@ -955,10 +1217,133 @@ function lootContainer(x, y) {
         } else if (player.inventory.length < player.maxInventory) {
             player.inventory.push({ ...item, count: 1 });
         }
+        // Feedback for item pickup
+        const itemColors = {
+            food: '#ffaa66',
+            water: '#66aaff',
+            medkit: '#ff6666',
+            antidote: '#66ff66',
+            scrap: '#888888',
+            cloth: '#aa88aa',
+            chemicals: '#88ff88',
+            electronics: '#88aaff',
+            powerCell: '#ffff66',
+            dataChip: '#ff88ff',
+            ammo: '#ffcc44'
+        };
+        floatingTexts.push({
+            x: worldX,
+            y: worldY - 20,
+            text: `+1 ${item.name}`,
+            color: itemColors[loot] || '#88cc88',
+            life: 1.5,
+            vy: -30
+        });
     }
 
     // Change tile to floor
     sectors[game.currentSector].tiles[y][x] = TILE.FLOOR;
+}
+
+// Spawn ground pickups for a sector
+function spawnGroundPickups(sectorName) {
+    // Clear pickups not from this sector
+    groundPickups = groundPickups.filter(p => p.sector !== sectorName);
+
+    if (sectorName === 'hub') return; // No pickups in hub
+
+    const sector = sectors[sectorName];
+    const w = sector.width;
+    const h = sector.height;
+
+    // Determine pickup types based on sector
+    let pickupTypes;
+    if (sectorName === 'storage') {
+        pickupTypes = ['health', 'health', 'ammo'];
+    } else if (sectorName === 'medical') {
+        pickupTypes = ['health', 'health', 'health', 'antidote'];
+    } else if (sectorName === 'research') {
+        pickupTypes = ['health', 'ammo', 'ammo'];
+    } else if (sectorName === 'escape') {
+        pickupTypes = ['health', 'health', 'ammo', 'ammo'];
+    }
+
+    const numPickups = 3 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < numPickups; i++) {
+        for (let attempts = 0; attempts < 20; attempts++) {
+            const x = 2 + Math.floor(Math.random() * (w - 4));
+            const y = 2 + Math.floor(Math.random() * (h - 4));
+            if (sector.tiles[y][x] === TILE.FLOOR) {
+                const type = pickupTypes[Math.floor(Math.random() * pickupTypes.length)];
+                groundPickups.push({
+                    sector: sectorName,
+                    x: x * TILE_SIZE + TILE_SIZE / 2,
+                    y: y * TILE_SIZE + TILE_SIZE / 2,
+                    type: type,
+                    bobOffset: Math.random() * Math.PI * 2
+                });
+                break;
+            }
+        }
+    }
+}
+
+// Check if player walks over ground pickups
+function checkGroundPickups() {
+    for (let i = groundPickups.length - 1; i >= 0; i--) {
+        const pickup = groundPickups[i];
+        if (pickup.sector !== game.currentSector) continue;
+
+        const dist = Math.hypot(player.x - pickup.x, player.y - pickup.y);
+        if (dist < 24) {
+            // Collect the pickup
+            if (pickup.type === 'health') {
+                const healAmount = 15;
+                player.health = Math.min(player.maxHealth, player.health + healAmount);
+                floatingTexts.push({
+                    x: pickup.x,
+                    y: pickup.y - 20,
+                    text: `+${healAmount} HP`,
+                    color: '#ff6666',
+                    life: 1.0,
+                    vy: -40
+                });
+                // Healing particles
+                for (let j = 0; j < 6; j++) {
+                    particles.push({
+                        x: pickup.x + (Math.random() - 0.5) * 20,
+                        y: pickup.y + (Math.random() - 0.5) * 20,
+                        vx: (Math.random() - 0.5) * 40,
+                        vy: -40 - Math.random() * 40,
+                        life: 0.6,
+                        color: '#ff8888'
+                    });
+                }
+            } else if (pickup.type === 'ammo') {
+                player.ammo += 5;
+                if (player.weapon === 'fists') player.weapon = 'pistol'; // Auto-equip pistol
+                floatingTexts.push({
+                    x: pickup.x,
+                    y: pickup.y - 20,
+                    text: '+5 AMMO',
+                    color: '#ffcc44',
+                    life: 1.0,
+                    vy: -40
+                });
+            } else if (pickup.type === 'antidote') {
+                player.infection = Math.max(0, player.infection - 15);
+                floatingTexts.push({
+                    x: pickup.x,
+                    y: pickup.y - 20,
+                    text: 'INFECTION -15',
+                    color: '#66ff66',
+                    life: 1.0,
+                    vy: -40
+                });
+            }
+            groundPickups.splice(i, 1);
+        }
+    }
 }
 
 function updateEnemies(dt) {
@@ -966,6 +1351,24 @@ function updateEnemies(dt) {
         if (enemy.hp <= 0) return;
 
         const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
+
+        // Update stun/bleed timers
+        if (enemy.stunned) {
+            enemy.stunTimer -= dt;
+            if (enemy.stunTimer <= 0) {
+                enemy.stunned = false;
+            }
+            return; // Stunned enemies don't act
+        }
+
+        if (enemy.bleeding) {
+            enemy.bleedTimer -= dt;
+            // Damage over time from bleeding
+            enemy.hp -= 2 * dt;
+            if (enemy.bleedTimer <= 0) {
+                enemy.bleeding = false;
+            }
+        }
 
         // Cocoon spawning
         if (enemy.type === 'cocoon') {
@@ -997,6 +1400,73 @@ function updateEnemies(dt) {
 
         enemy.attackCooldown -= dt;
 
+        // Brute charge mechanic
+        if (enemy.type === 'brute' && enemy.state === 'chase') {
+            if (!enemy.charging && dist > 100 && dist < 300 && enemy.attackCooldown <= 0) {
+                // Start charge
+                enemy.charging = true;
+                enemy.chargeTimer = 1.5;
+                const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+                enemy.chargeDir = { x: Math.cos(angle), y: Math.sin(angle) };
+                // Warning flash
+                floatingTexts.push({
+                    x: enemy.x, y: enemy.y - 30,
+                    text: 'CHARGE!', color: '#ff4444', life: 0.5, vy: -20
+                });
+            }
+
+            if (enemy.charging) {
+                enemy.chargeTimer -= dt;
+                const chargeSpeed = enemy.speed * 3;
+                const newX = enemy.x + enemy.chargeDir.x * chargeSpeed * dt;
+                const newY = enemy.y + enemy.chargeDir.y * chargeSpeed * dt;
+
+                // Check wall collision - stun if hit wall
+                if (checkCollision(newX, newY, enemy.width, enemy.height)) {
+                    enemy.charging = false;
+                    enemy.stunned = true;
+                    enemy.stunTimer = 1.5;
+                    screenShake = 8;
+                    floatingTexts.push({
+                        x: enemy.x, y: enemy.y - 30,
+                        text: 'STUNNED!', color: '#8888ff', life: 1.0, vy: -20
+                    });
+                } else {
+                    enemy.x = newX;
+                    enemy.y = newY;
+
+                    // Hit player during charge
+                    if (dist < enemy.width + player.width && !player.dodging) {
+                        const damage = enemy.damage * 1.5;
+                        player.health -= damage * (1 - player.armorReduction);
+                        player.infection += enemy.infection;
+                        game.totalDamageTaken += damage;
+                        enemy.charging = false;
+                        enemy.attackCooldown = enemy.attackRate;
+
+                        damageFlash = 15;
+                        screenShake = 10;
+
+                        // Big knockback
+                        const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+                        player.x += Math.cos(angle) * 40;
+                        player.y += Math.sin(angle) * 40;
+
+                        floatingTexts.push({
+                            x: player.x, y: player.y - 20,
+                            text: `-${Math.floor(damage)}`, color: '#ff4444', life: 1.0, vy: -40
+                        });
+                    }
+                }
+
+                if (enemy.chargeTimer <= 0) {
+                    enemy.charging = false;
+                    enemy.attackCooldown = enemy.attackRate;
+                }
+                return;
+            }
+        }
+
         if (enemy.state === 'chase') {
             // Move toward player
             const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
@@ -1027,9 +1497,11 @@ function updateEnemies(dt) {
             // Attack
             if (enemy.attackCooldown <= 0) {
                 if (enemy.ranged && dist < 300) {
-                    // Ranged attack
+                    // Ranged attack - spitter creates acid puddle
                     enemy.attackCooldown = enemy.attackRate;
                     const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+
+                    // Projectile that creates puddle on hit
                     projectiles.push({
                         x: enemy.x,
                         y: enemy.y,
@@ -1038,14 +1510,16 @@ function updateEnemies(dt) {
                         damage: enemy.damage,
                         infection: enemy.infection,
                         owner: 'enemy',
-                        color: COLORS.SPITTER_ACID
+                        color: COLORS.SPITTER_ACID,
+                        createsPuddle: true
                     });
-                } else if (!enemy.ranged && dist < enemy.width + player.width) {
+                } else if (!enemy.ranged && dist < enemy.width + player.width && !player.dodging) {
                     // Melee attack
                     enemy.attackCooldown = enemy.attackRate;
-                    player.health -= enemy.damage;
+                    const damage = enemy.damage * (1 - player.armorReduction);
+                    player.health -= damage;
                     player.infection += enemy.infection;
-                    game.totalDamageTaken += enemy.damage;
+                    game.totalDamageTaken += damage;
 
                     // Damage effects
                     damageFlash = 10;
@@ -1060,7 +1534,7 @@ function updateEnemies(dt) {
                     floatingTexts.push({
                         x: player.x,
                         y: player.y - 20,
-                        text: `-${enemy.damage}`,
+                        text: `-${Math.floor(damage)}`,
                         color: '#ff6666',
                         life: 1.0,
                         vy: -40
@@ -1109,6 +1583,15 @@ function updateProjectiles(dt) {
 
         // Check wall collision
         if (checkCollision(proj.x, proj.y, 4, 4)) {
+            // Create acid puddle if applicable
+            if (proj.createsPuddle) {
+                acidPuddles.push({
+                    x: proj.x,
+                    y: proj.y,
+                    size: 20,
+                    life: 3.0
+                });
+            }
             proj.dead = true;
             return;
         }
@@ -1125,10 +1608,21 @@ function updateProjectiles(dt) {
             });
         } else {
             const dist = Math.hypot(proj.x - player.x, proj.y - player.y);
-            if (dist < player.width / 2 + 5) {
-                player.health -= proj.damage;
+            if (dist < player.width / 2 + 5 && !player.dodging) {
+                const damage = proj.damage * (1 - player.armorReduction);
+                player.health -= damage;
                 if (proj.infection) player.infection += proj.infection;
-                game.totalDamageTaken += proj.damage;
+                game.totalDamageTaken += damage;
+
+                // Create acid puddle at player feet
+                if (proj.createsPuddle) {
+                    acidPuddles.push({
+                        x: player.x,
+                        y: player.y,
+                        size: 25,
+                        life: 3.0
+                    });
+                }
                 proj.dead = true;
 
                 // Damage effects
@@ -1139,7 +1633,7 @@ function updateProjectiles(dt) {
                 floatingTexts.push({
                     x: player.x,
                     y: player.y - 20,
-                    text: `-${proj.damage}`,
+                    text: `-${Math.floor(damage)}`,
                     color: proj.infection ? '#88ff88' : '#ff6666',
                     life: 1.0,
                     vy: -40
@@ -1201,6 +1695,152 @@ function updateScreenEffects(dt) {
         if (game.killStreakTimer <= 0) {
             game.killStreak = 0;
         }
+    }
+}
+
+// Update dodge movement
+function updateDodge(dt) {
+    if (player.dodging) {
+        const dodgeSpeed = 300;
+        const newX = player.x + player.dodgeDir.x * dodgeSpeed * dt;
+        const newY = player.y + player.dodgeDir.y * dodgeSpeed * dt;
+
+        if (!checkCollision(newX, player.y, player.width, player.height)) {
+            player.x = newX;
+        }
+        if (!checkCollision(player.x, newY, player.width, player.height)) {
+            player.y = newY;
+        }
+
+        player.dodgeTimer -= dt;
+        if (player.dodgeTimer <= 0) {
+            player.dodging = false;
+        }
+    }
+
+    if (player.dodgeCooldown > 0) {
+        player.dodgeCooldown -= dt;
+    }
+}
+
+// Update acid puddles
+function updateAcidPuddles(dt) {
+    for (let i = acidPuddles.length - 1; i >= 0; i--) {
+        const puddle = acidPuddles[i];
+        puddle.life -= dt;
+
+        // Damage player if standing in puddle
+        const dist = Math.hypot(player.x - puddle.x, player.y - puddle.y);
+        if (dist < puddle.size + player.width / 2 && !player.dodging) {
+            player.health -= 2 * dt;
+            player.infection += 2 * dt;
+            game.totalDamageTaken += 2 * dt;
+        }
+
+        if (puddle.life <= 0) {
+            acidPuddles.splice(i, 1);
+        }
+    }
+}
+
+// Update hallucinations (fake enemies at high infection)
+function updateHallucinations(dt) {
+    // Spawn hallucinations at high infection
+    if (player.infection > 50 && Math.random() < 0.005 * (player.infection / 100)) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 100 + Math.random() * 150;
+        hallucinations.push({
+            x: player.x + Math.cos(angle) * dist,
+            y: player.y + Math.sin(angle) * dist,
+            type: ['shambler', 'crawler', 'spitter'][Math.floor(Math.random() * 3)],
+            life: 0.5 + Math.random() * 1.5,
+            alpha: 0.5 + Math.random() * 0.3
+        });
+    }
+
+    // Update hallucinations
+    for (let i = hallucinations.length - 1; i >= 0; i--) {
+        const h = hallucinations[i];
+        h.life -= dt;
+        h.alpha -= dt * 0.3;
+        // Flicker
+        if (Math.random() < 0.1) {
+            h.alpha = Math.random() * 0.5;
+        }
+        if (h.life <= 0 || h.alpha <= 0) {
+            hallucinations.splice(i, 1);
+        }
+    }
+}
+
+// Crafting function
+function craftItem() {
+    const recipes = game.tier2Unlocked ? [...RECIPES.tier1, ...RECIPES.tier2] : RECIPES.tier1;
+    if (selectedCraftRecipe >= recipes.length) return;
+
+    const recipe = recipes[selectedCraftRecipe];
+
+    // Check materials
+    for (const [mat, amount] of Object.entries(recipe.materials)) {
+        const item = player.inventory.find(i => i.type === mat);
+        if (!item || (item.count || 1) < amount) {
+            floatingTexts.push({
+                x: player.x, y: player.y - 30,
+                text: `Need ${amount} ${mat}!`,
+                color: '#ff6666', life: 1.5, vy: -30
+            });
+            return;
+        }
+    }
+
+    // Consume materials
+    for (const [mat, amount] of Object.entries(recipe.materials)) {
+        const item = player.inventory.find(i => i.type === mat);
+        item.count = (item.count || 1) - amount;
+        if (item.count <= 0) {
+            player.inventory = player.inventory.filter(i => i !== item);
+        }
+    }
+
+    // Time passes
+    game.realTime += recipe.time;
+
+    // Give result
+    if (recipe.resultType === 'weapon') {
+        player.weaponDurability[recipe.result] = WEAPONS[recipe.result].durability;
+        player.weapon = recipe.result;
+        floatingTexts.push({
+            x: player.x, y: player.y - 30,
+            text: `Crafted ${recipe.name}!`,
+            color: '#88ff88', life: 2.0, vy: -30
+        });
+    } else if (recipe.resultType === 'ammo') {
+        player.ammo += 10;
+        floatingTexts.push({
+            x: player.x, y: player.y - 30,
+            text: '+10 Ammo!',
+            color: '#ffcc44', life: 1.5, vy: -30
+        });
+    } else if (recipe.resultType === 'armor') {
+        player.armorReduction = 0.25;
+        floatingTexts.push({
+            x: player.x, y: player.y - 30,
+            text: 'Armor Vest equipped!',
+            color: '#8888ff', life: 2.0, vy: -30
+        });
+    } else {
+        // Add item to inventory
+        const existing = player.inventory.find(i => i.type === recipe.result);
+        if (existing) {
+            existing.count = (existing.count || 1) + 1;
+        } else if (player.inventory.length < player.maxInventory) {
+            player.inventory.push({ type: recipe.result, name: recipe.name, count: 1 });
+        }
+        floatingTexts.push({
+            x: player.x, y: player.y - 30,
+            text: `Crafted ${recipe.name}!`,
+            color: '#88ff88', life: 1.5, vy: -30
+        });
     }
 }
 
@@ -1338,7 +1978,10 @@ function draw() {
     if (game.state === 'playing') {
         drawMap();
         drawBlood();
+        drawAcidPuddles();
+        drawGroundPickups();
         drawEntities();
+        drawHallucinations();
         drawProjectiles();
         drawParticles();
         drawFloatingTexts();
@@ -1361,8 +2004,25 @@ function draw() {
             ctx.fillRect(GAME_WIDTH - 30, 0, 30, GAME_HEIGHT);
         }
 
+        // Infection visual effect at high levels
+        if (player.infection > 75) {
+            const alpha = (player.infection - 75) / 25 * 0.15;
+            ctx.fillStyle = `rgba(100, 200, 100, ${alpha})`;
+            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+            // Random flickers
+            if (Math.random() < 0.02) {
+                ctx.fillStyle = `rgba(0, 255, 0, 0.1)`;
+                ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+            }
+        }
+
         drawUI();
         if (debugMode) drawDebugOverlay();
+
+        // UI overlays
+        if (showInventory) drawInventoryScreen();
+        if (showMap) drawMapScreen();
+        if (showCrafting) drawCraftingScreen();
     } else if (game.state === 'gameover') {
         drawGameOver();
     } else if (game.state === 'victory') {
@@ -1552,13 +2212,134 @@ function drawBlood() {
         ctx.arc(screenX, screenY, blood.size, 0, Math.PI * 2);
         ctx.fill();
 
-        // Irregular splatter
-        for (let i = 0; i < 5; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const dist = blood.size * 0.5 + Math.random() * blood.size * 0.5;
+        // Irregular splatter - use stored splatter data instead of random each frame
+        // Generate splatter offsets if not already stored (fix for wiggle bug)
+        if (!blood.splatters) {
+            blood.splatters = [];
+            for (let i = 0; i < 5; i++) {
+                blood.splatters.push({
+                    angle: Math.random() * Math.PI * 2,
+                    dist: blood.size * 0.5 + Math.random() * blood.size * 0.5
+                });
+            }
+        }
+
+        // Draw splatter using stored values
+        for (let i = 0; i < blood.splatters.length; i++) {
+            const splat = blood.splatters[i];
             ctx.beginPath();
-            ctx.arc(screenX + Math.cos(angle) * dist, screenY + Math.sin(angle) * dist, blood.size * 0.3, 0, Math.PI * 2);
+            ctx.arc(screenX + Math.cos(splat.angle) * splat.dist,
+                    screenY + Math.sin(splat.angle) * splat.dist,
+                    blood.size * 0.3, 0, Math.PI * 2);
             ctx.fill();
+        }
+    });
+}
+
+function drawAcidPuddles() {
+    acidPuddles.forEach(puddle => {
+        const screenX = puddle.x - camera.x;
+        const screenY = puddle.y - camera.y;
+
+        const alpha = Math.min(1, puddle.life / 1.5);
+        ctx.fillStyle = `rgba(106, 170, 90, ${alpha * 0.6})`;
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, puddle.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bubbles
+        ctx.fillStyle = `rgba(150, 220, 130, ${alpha * 0.8})`;
+        for (let i = 0; i < 3; i++) {
+            const bx = screenX + Math.cos(i * 2.1 + Date.now() / 500) * puddle.size * 0.5;
+            const by = screenY + Math.sin(i * 2.1 + Date.now() / 500) * puddle.size * 0.5;
+            ctx.beginPath();
+            ctx.arc(bx, by, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    });
+}
+
+function drawHallucinations() {
+    hallucinations.forEach(h => {
+        const screenX = h.x - camera.x;
+        const screenY = h.y - camera.y;
+
+        ctx.globalAlpha = h.alpha;
+
+        // Draw as enemy type but flickery
+        if (h.type === 'shambler') {
+            ctx.fillStyle = COLORS.SHAMBLER;
+            ctx.fillRect(screenX - 12, screenY - 12, 24, 24);
+        } else if (h.type === 'crawler') {
+            ctx.fillStyle = COLORS.CRAWLER;
+            ctx.fillRect(screenX - 14, screenY - 8, 28, 16);
+        } else if (h.type === 'spitter') {
+            ctx.fillStyle = COLORS.SPITTER;
+            ctx.fillRect(screenX - 12, screenY - 12, 24, 24);
+        }
+
+        ctx.globalAlpha = 1;
+    });
+}
+
+function drawGroundPickups() {
+    const time = Date.now() / 1000;
+
+    groundPickups.forEach(pickup => {
+        if (pickup.sector !== game.currentSector) return;
+
+        const screenX = pickup.x - camera.x;
+        const screenY = pickup.y - camera.y;
+
+        // Skip if off screen
+        if (screenX < -20 || screenX > GAME_WIDTH + 20 ||
+            screenY < -20 || screenY > GAME_HEIGHT + 20) return;
+
+        // Bobbing animation
+        const bob = Math.sin(time * 3 + pickup.bobOffset) * 3;
+        const drawY = screenY + bob;
+
+        // Glow effect
+        const glowAlpha = 0.3 + Math.sin(time * 4 + pickup.bobOffset) * 0.15;
+
+        if (pickup.type === 'health') {
+            // Red health pack with white cross
+            ctx.fillStyle = `rgba(255, 80, 80, ${glowAlpha})`;
+            ctx.beginPath();
+            ctx.arc(screenX, drawY, 14, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#cc3030';
+            ctx.fillRect(screenX - 8, drawY - 8, 16, 16);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(screenX - 2, drawY - 6, 4, 12); // Vertical bar
+            ctx.fillRect(screenX - 6, drawY - 2, 12, 4); // Horizontal bar
+        } else if (pickup.type === 'ammo') {
+            // Yellow ammo box
+            ctx.fillStyle = `rgba(255, 200, 80, ${glowAlpha})`;
+            ctx.beginPath();
+            ctx.arc(screenX, drawY, 12, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#cc9930';
+            ctx.fillRect(screenX - 7, drawY - 5, 14, 10);
+            ctx.fillStyle = '#ffcc44';
+            ctx.fillRect(screenX - 5, drawY - 3, 10, 6);
+            // Bullet icons
+            ctx.fillStyle = '#886622';
+            ctx.fillRect(screenX - 3, drawY - 2, 2, 4);
+            ctx.fillRect(screenX + 1, drawY - 2, 2, 4);
+        } else if (pickup.type === 'antidote') {
+            // Green syringe
+            ctx.fillStyle = `rgba(80, 255, 80, ${glowAlpha})`;
+            ctx.beginPath();
+            ctx.arc(screenX, drawY, 12, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#228822';
+            ctx.fillRect(screenX - 3, drawY - 8, 6, 16);
+            ctx.fillStyle = '#44ff44';
+            ctx.fillRect(screenX - 2, drawY - 6, 4, 10);
         }
     });
 }
@@ -1785,6 +2566,261 @@ function drawBar(x, y, width, height, fill, color, label) {
     ctx.fillStyle = '#fff';
     ctx.font = `${height - 2}px monospace`;
     ctx.fillText(label, x + 3, y + height - 2);
+}
+
+// Inventory Screen (Tab key)
+function drawInventoryScreen() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    ctx.fillRect(100, 50, 600, 500);
+
+    ctx.strokeStyle = COLORS.UI_BORDER;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(100, 50, 600, 500);
+
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = '20px monospace';
+    ctx.fillText('INVENTORY', 320, 85);
+
+    ctx.font = '12px monospace';
+    ctx.fillText('[Tab] Close', 580, 85);
+
+    // Draw inventory grid
+    const startX = 120;
+    const startY = 110;
+    const slotSize = 60;
+    const cols = 5;
+
+    player.inventory.forEach((item, i) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        const x = startX + col * (slotSize + 10);
+        const y = startY + row * (slotSize + 10);
+
+        ctx.fillStyle = '#333333';
+        ctx.fillRect(x, y, slotSize, slotSize);
+        ctx.strokeStyle = '#555555';
+        ctx.strokeRect(x, y, slotSize, slotSize);
+
+        // Item icon color
+        const colors = {
+            food: '#ffaa66', water: '#66aaff', medkit: '#ff6666',
+            antidote: '#66ff66', scrap: '#888888', cloth: '#aa88aa',
+            chemicals: '#88ff88', electronics: '#88aaff', powerCell: '#ffff66',
+            dataChip: '#ff88ff', keycard: '#ff4444', ammo: '#ffcc44',
+            shiv: '#cccccc', pipeClub: '#666666', stunBaton: '#4488ff',
+            pistol: '#aaaaaa', bandage: '#ffffff', torch: '#ff8800'
+        };
+
+        ctx.fillStyle = colors[item.type] || '#888';
+        ctx.fillRect(x + 10, y + 10, 40, 30);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '10px monospace';
+        ctx.fillText(item.name.substring(0, 8), x + 5, y + 55);
+
+        if (item.count > 1) {
+            ctx.fillText(`x${item.count}`, x + 45, y + 20);
+        }
+    });
+
+    // Weapon info
+    ctx.fillStyle = '#888888';
+    ctx.font = '14px monospace';
+    ctx.fillText('EQUIPPED WEAPON:', 450, 120);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(player.weapon.toUpperCase(), 450, 140);
+
+    if (player.weapon !== 'fists') {
+        const durability = player.weaponDurability[player.weapon] || 0;
+        const maxDur = WEAPONS[player.weapon]?.durability || 1;
+        ctx.fillText(`Durability: ${durability}/${maxDur}`, 450, 160);
+    }
+
+    ctx.fillStyle = '#888888';
+    ctx.fillText(`Ammo: ${player.ammo}`, 450, 190);
+
+    // Armor info
+    if (player.armorReduction > 0) {
+        ctx.fillText(`Armor: -${Math.floor(player.armorReduction * 100)}% damage`, 450, 220);
+    }
+
+    // Controls hint
+    ctx.fillStyle = '#666666';
+    ctx.font = '11px monospace';
+    ctx.fillText('Press 5-9 to switch weapons', 450, 500);
+    ctx.fillText('5:Fists 6:Shiv 7:Club 8:Baton 9:Pistol', 450, 520);
+}
+
+// Map Screen (M key)
+function drawMapScreen() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+    ctx.fillRect(150, 100, 500, 400);
+
+    ctx.strokeStyle = COLORS.UI_BORDER;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(150, 100, 500, 400);
+
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = '20px monospace';
+    ctx.fillText('FACILITY MAP', 330, 135);
+
+    ctx.font = '12px monospace';
+    ctx.fillText('[M] Close', 550, 135);
+
+    // Draw sector layout
+    const centerX = 400;
+    const centerY = 300;
+    const sectorSize = 60;
+
+    const sectorPositions = {
+        hub: { x: 0, y: 0 },
+        storage: { x: 0, y: 80 },
+        medical: { x: 100, y: 0 },
+        research: { x: -100, y: 0 },
+        escape: { x: 0, y: -80 }
+    };
+
+    for (const [name, pos] of Object.entries(sectorPositions)) {
+        const x = centerX + pos.x - sectorSize / 2;
+        const y = centerY + pos.y - sectorSize / 2;
+
+        // Sector box
+        const isPowered = game.poweredSectors[name];
+        const isVisited = game.sectorsVisited.has(name);
+        const isCurrent = game.currentSector === name;
+
+        ctx.fillStyle = isCurrent ? '#446644' : isPowered ? '#334433' : '#222222';
+        ctx.fillRect(x, y, sectorSize, sectorSize);
+
+        ctx.strokeStyle = isCurrent ? '#88ff88' : isVisited ? '#666666' : '#333333';
+        ctx.lineWidth = isCurrent ? 3 : 1;
+        ctx.strokeRect(x, y, sectorSize, sectorSize);
+
+        // Sector name
+        ctx.fillStyle = isVisited ? '#aaaaaa' : '#555555';
+        ctx.font = '9px monospace';
+        const displayName = sectors[name].name.split(' ')[0].substring(0, 8);
+        ctx.fillText(displayName, x + 5, y + 15);
+
+        // Power cost
+        ctx.fillStyle = isPowered ? '#88ff88' : '#888888';
+        ctx.font = '8px monospace';
+        ctx.fillText(`${sectors[name].powerCost}W`, x + 5, y + 55);
+    }
+
+    // Draw connections
+    ctx.strokeStyle = '#444444';
+    ctx.lineWidth = 2;
+    // Hub to all
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY - 30); ctx.lineTo(centerX, centerY - 50); // to escape
+    ctx.moveTo(centerX, centerY + 30); ctx.lineTo(centerX, centerY + 50); // to storage
+    ctx.moveTo(centerX + 30, centerY); ctx.lineTo(centerX + 70, centerY); // to medical
+    ctx.moveTo(centerX - 30, centerY); ctx.lineTo(centerX - 70, centerY); // to research
+    ctx.stroke();
+
+    // Power status
+    ctx.fillStyle = '#888888';
+    ctx.font = '14px monospace';
+    const usedPower = Object.entries(game.poweredSectors)
+        .filter(([k, v]) => v && k !== 'hub')
+        .reduce((sum, [k]) => sum + sectors[k].powerCost, 0);
+    ctx.fillText(`Power: ${usedPower}/${game.power.max}`, 200, 470);
+
+    // Legend
+    ctx.fillStyle = '#666666';
+    ctx.font = '10px monospace';
+    ctx.fillText('Green border = Current', 450, 450);
+    ctx.fillText('Green text = Powered', 450, 465);
+    ctx.fillText('Gray = Visited', 450, 480);
+}
+
+// Crafting Screen (at workbench, E key)
+function drawCraftingScreen() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+    ctx.fillRect(100, 50, 600, 500);
+
+    ctx.strokeStyle = COLORS.UI_BORDER;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(100, 50, 600, 500);
+
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = '20px monospace';
+    ctx.fillText('WORKBENCH', 330, 85);
+
+    ctx.font = '12px monospace';
+    ctx.fillText('[E] Close  [Enter/C] Craft', 480, 85);
+
+    // Recipe list
+    const recipes = game.tier2Unlocked ? [...RECIPES.tier1, ...RECIPES.tier2] : RECIPES.tier1;
+    const startY = 120;
+
+    recipes.forEach((recipe, i) => {
+        const y = startY + i * 35;
+        const isSelected = i === selectedCraftRecipe;
+
+        // Check if can craft
+        let canCraft = true;
+        for (const [mat, amount] of Object.entries(recipe.materials)) {
+            const item = player.inventory.find(it => it.type === mat);
+            if (!item || (item.count || 1) < amount) canCraft = false;
+        }
+
+        ctx.fillStyle = isSelected ? '#446644' : '#222222';
+        ctx.fillRect(120, y, 350, 30);
+
+        ctx.strokeStyle = isSelected ? '#88ff88' : '#444444';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(120, y, 350, 30);
+
+        ctx.fillStyle = canCraft ? '#ffffff' : '#666666';
+        ctx.font = '12px monospace';
+        ctx.fillText(recipe.name, 130, y + 20);
+
+        // Materials
+        ctx.fillStyle = '#888888';
+        ctx.font = '10px monospace';
+        const matText = Object.entries(recipe.materials).map(([k, v]) => `${k}:${v}`).join(' ');
+        ctx.fillText(matText, 250, y + 20);
+
+        // Time
+        ctx.fillText(`${recipe.time}min`, 430, y + 20);
+    });
+
+    // Clamp selected recipe
+    if (selectedCraftRecipe >= recipes.length) {
+        selectedCraftRecipe = Math.max(0, recipes.length - 1);
+    }
+
+    // Current materials
+    ctx.fillStyle = '#888888';
+    ctx.font = '14px monospace';
+    ctx.fillText('YOUR MATERIALS:', 500, 130);
+
+    const materialTypes = ['scrap', 'cloth', 'chemicals', 'electronics', 'powerCell'];
+    materialTypes.forEach((mat, i) => {
+        const item = player.inventory.find(it => it.type === mat);
+        const count = item ? (item.count || 1) : 0;
+        ctx.fillStyle = count > 0 ? '#ffffff' : '#555555';
+        ctx.font = '11px monospace';
+        ctx.fillText(`${mat}: ${count}`, 500, 155 + i * 18);
+    });
+
+    // Tier 2 status
+    ctx.fillStyle = game.tier2Unlocked ? '#88ff88' : '#ff6666';
+    ctx.font = '12px monospace';
+    ctx.fillText(game.tier2Unlocked ? 'Tier 2 UNLOCKED' : 'Tier 2 LOCKED', 500, 280);
+    if (!game.tier2Unlocked) {
+        ctx.fillStyle = '#666666';
+        ctx.font = '10px monospace';
+        ctx.fillText('Need Data Chip at Research Terminal', 500, 300);
+    }
+
+    // Controls
+    ctx.fillStyle = '#666666';
+    ctx.font = '11px monospace';
+    ctx.fillText('[Up/Down] Select recipe', 120, 520);
+    ctx.fillText('[Enter/C] Craft selected item', 300, 520);
 }
 
 function drawGameOver() {

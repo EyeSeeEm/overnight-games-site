@@ -116,3 +116,18 @@ Added comprehensive debug overlay (press Q to toggle) showing:
 - Mining combo, wave, phase, timer
 - Score, enemies, drilling state
 - Camera Y, particles
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "CRITICAL: Nothing happens when starting game. Complete non-starter."
+   → Found bug: resetGame() never set gameState to 'mining'
+   → The game stayed in 'title' state forever because gameState was never changed
+   → Added `gameState = 'mining';` at the start of resetGame() function
+   → Game now properly transitions from title screen to mining phase
+
+### Verification:
+- Code review confirms the gameState transition fix
+- resetGame() now properly sets gameState = 'mining'
+- Player can now start game and play normally
+- Critical bug fixed

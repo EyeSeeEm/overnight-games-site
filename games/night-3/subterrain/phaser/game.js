@@ -32,11 +32,45 @@ const COLORS = {
     GLOBAL_INF: 0xff4444
 };
 
+// Weapons system
+const WEAPONS = {
+    fists: { name: 'Fists', type: 'melee', damage: 5, speed: 0.5, range: 40, durability: Infinity, icon: 'F' },
+    shiv: { name: 'Shiv', type: 'melee', damage: 10, speed: 0.4, range: 45, durability: 20, bleedChance: 0.2, icon: 'S' },
+    pipeClub: { name: 'Pipe Club', type: 'melee', damage: 20, speed: 1.0, range: 50, durability: 30, knockback: 1.5, icon: 'P' },
+    stunBaton: { name: 'Stun Baton', type: 'melee', damage: 15, speed: 0.7, range: 45, durability: 25, stunDuration: 2, icon: 'B' },
+    pistol: { name: 'Pistol', type: 'ranged', damage: 15, fireRate: 0.5, magazine: 12, maxMag: 12, accuracy: 85, durability: 100, ammoType: 'bullets', icon: 'G' }
+};
+
+// Crafting recipes
+const RECIPES = {
+    tier1: [
+        { id: 'shiv', name: 'Shiv', materials: { scrap: 2 }, time: 10, result: 'shiv' },
+        { id: 'pipeClub', name: 'Pipe Club', materials: { scrap: 3 }, time: 15, result: 'pipeClub' },
+        { id: 'bandage', name: 'Bandage', materials: { cloth: 2 }, time: 5, result: 'bandage' },
+        { id: 'torch', name: 'Torch', materials: { cloth: 1, chemicals: 1 }, time: 10, result: 'torch' }
+    ],
+    tier2: [
+        { id: 'pistol', name: 'Pistol', materials: { scrap: 5, electronics: 2 }, time: 30, result: 'pistol' },
+        { id: 'bullets', name: 'Pistol Ammo x10', materials: { scrap: 2, chemicals: 1 }, time: 10, result: 'bullets' },
+        { id: 'antidote', name: 'Antidote', materials: { chemicals: 3 }, time: 15, result: 'antidote' },
+        { id: 'stunBaton', name: 'Stun Baton', materials: { scrap: 3, electronics: 2, powerCell: 1 }, time: 25, result: 'stunBaton' },
+        { id: 'armorVest', name: 'Armor Vest', materials: { scrap: 4, cloth: 3 }, time: 30, result: 'armorVest' }
+    ]
+};
+
+// Status effects
+const STATUS_EFFECTS = {
+    bleeding: { name: 'Bleeding', damagePerSec: 2, duration: 10, color: 0xff3333 },
+    stunned: { name: 'Stunned', speedMod: 0, duration: 2, color: 0xffff00 },
+    slowed: { name: 'Slowed', speedMod: 0.5, duration: 3, color: 0x8888ff }
+};
+
 const TILE = {
     FLOOR: 0, WALL: 1,
     DOOR_HUB: 10, DOOR_STORAGE: 11, DOOR_MEDICAL: 12, DOOR_RESEARCH: 13, DOOR_ESCAPE: 14,
     WORKBENCH: 20, BED: 21, STORAGE_LOCKER: 22, POWER_PANEL: 23,
-    MEDICAL_STATION: 24, RESEARCH_TERMINAL: 25, ESCAPE_POD: 26, CONTAINER: 30
+    MEDICAL_STATION: 24, RESEARCH_TERMINAL: 25, ESCAPE_POD: 26, CONTAINER: 30,
+    HAZARD_FIRE: 40, HAZARD_TOXIC: 41
 };
 
 class BootScene extends Phaser.Scene {
@@ -136,6 +170,34 @@ class BootScene extends Phaser.Scene {
         g.fillCircle(16, 16, 6);
         g.generateTexture('escapePod', TILE_SIZE, TILE_SIZE);
 
+        // Power Panel
+        g.clear();
+        g.fillStyle(COLORS.FLOOR_DARK);
+        g.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        g.fillStyle(0x4a4a5a);
+        g.fillRect(4, 4, TILE_SIZE - 8, TILE_SIZE - 8);
+        g.fillStyle(0x6a6a8a);
+        g.fillRect(8, 8, 6, 16);
+        g.fillRect(18, 8, 6, 16);
+        g.fillStyle(0x44ff44);
+        g.fillRect(10, 10, 2, 4);
+        g.fillStyle(0xff4444);
+        g.fillRect(20, 10, 2, 4);
+        g.generateTexture('powerPanel', TILE_SIZE, TILE_SIZE);
+
+        // Storage Locker
+        g.clear();
+        g.fillStyle(COLORS.FLOOR_DARK);
+        g.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        g.fillStyle(0x5a5a5a);
+        g.fillRect(4, 2, TILE_SIZE - 8, TILE_SIZE - 4);
+        g.fillStyle(0x6a6a6a);
+        g.fillRect(6, 4, TILE_SIZE - 12, 4);
+        g.fillRect(6, 10, TILE_SIZE - 12, 4);
+        g.fillRect(6, 16, TILE_SIZE - 12, 4);
+        g.fillRect(6, 22, TILE_SIZE - 12, 4);
+        g.generateTexture('storageLocker', TILE_SIZE, TILE_SIZE);
+
         // Player
         g.clear();
         g.fillStyle(COLORS.PLAYER);
@@ -223,6 +285,87 @@ class BootScene extends Phaser.Scene {
         g.fillCircle(5, 5, 5);
         g.generateTexture('acid', 10, 10);
 
+        // Floor item - health pickup (red cross)
+        g.clear();
+        g.fillStyle(0x228822);
+        g.fillCircle(10, 10, 10);
+        g.fillStyle(0xaa3030);
+        g.fillRect(7, 4, 6, 12);
+        g.fillRect(4, 7, 12, 6);
+        g.generateTexture('floorItem_medkit', 20, 20);
+
+        // Floor item - scrap (brown)
+        g.clear();
+        g.fillStyle(0x5a4a3a);
+        g.fillRect(2, 4, 16, 12);
+        g.fillStyle(0x7a6a5a);
+        g.fillRect(4, 6, 12, 8);
+        g.generateTexture('floorItem_scrap', 20, 20);
+
+        // Floor item - cloth (white)
+        g.clear();
+        g.fillStyle(0x888888);
+        g.fillRect(2, 4, 16, 12);
+        g.fillStyle(0xaaaaaa);
+        g.fillRect(4, 6, 12, 8);
+        g.generateTexture('floorItem_cloth', 20, 20);
+
+        // Floor item - chemicals (green)
+        g.clear();
+        g.fillStyle(0x228822);
+        g.fillCircle(10, 10, 8);
+        g.fillStyle(0x44aa44);
+        g.fillCircle(10, 10, 5);
+        g.generateTexture('floorItem_chemicals', 20, 20);
+
+        // Floor item - food (orange)
+        g.clear();
+        g.fillStyle(0xaa6630);
+        g.fillRect(2, 4, 16, 12);
+        g.fillStyle(0xcc8840);
+        g.fillRect(4, 6, 12, 8);
+        g.generateTexture('floorItem_food', 20, 20);
+
+        // Floor item - water (blue)
+        g.clear();
+        g.fillStyle(0x3060aa);
+        g.fillCircle(10, 10, 8);
+        g.fillStyle(0x5080cc);
+        g.fillCircle(10, 10, 5);
+        g.generateTexture('floorItem_water', 20, 20);
+
+        // Floor item - antidote (cyan)
+        g.clear();
+        g.fillStyle(0x30aaaa);
+        g.fillCircle(10, 10, 8);
+        g.fillStyle(0x50cccc);
+        g.fillCircle(10, 10, 5);
+        g.generateTexture('floorItem_antidote', 20, 20);
+
+        // Floor item - electronics (purple/gold)
+        g.clear();
+        g.fillStyle(0x3a3a5a);
+        g.fillRect(2, 4, 16, 12);
+        g.fillStyle(0xccaa44);
+        g.fillRect(4, 6, 3, 3);
+        g.fillRect(9, 6, 3, 3);
+        g.fillRect(14, 6, 3, 3);
+        g.fillRect(4, 11, 3, 3);
+        g.fillRect(9, 11, 3, 3);
+        g.generateTexture('floorItem_electronics', 20, 20);
+
+        // Floor item - bullets (brass)
+        g.clear();
+        g.fillStyle(0xaa8844);
+        g.fillRect(3, 6, 4, 8);
+        g.fillRect(8, 6, 4, 8);
+        g.fillRect(13, 6, 4, 8);
+        g.fillStyle(0xcc9955);
+        g.fillRect(4, 7, 2, 3);
+        g.fillRect(9, 7, 2, 3);
+        g.fillRect(14, 7, 2, 3);
+        g.generateTexture('floorItem_bullets', 20, 20);
+
         g.destroy();
     }
 }
@@ -264,10 +407,17 @@ class GameScene extends Phaser.Scene {
             health: 100, maxHealth: 100,
             hunger: 0, thirst: 0, fatigue: 0, infection: 0,
             stamina: 100, maxStamina: 100,
-            weapon: 'fists', ammo: 0,
+            weapon: 'fists',
+            weaponDurability: {},
+            ammo: { bullets: 0 },
+            armor: 0,
+            statusEffects: [],
+            dodgeCooldown: 0,
+            lastAttackTime: 0,
             inventory: [
                 { type: 'food', name: 'Canned Food', count: 2 },
-                { type: 'water', name: 'Water Bottle', count: 2 }
+                { type: 'water', name: 'Water Bottle', count: 2 },
+                { type: 'shiv', name: 'Shiv', count: 1 }
             ]
         };
 
@@ -279,13 +429,8 @@ class GameScene extends Phaser.Scene {
             critCount: 0,
             containersLooted: 0,
             itemsUsed: 0,
-            sectorsVisited: new Set(['hub']),
-            maxKillStreak: 0
+            sectorsVisited: new Set(['hub'])
         };
-
-        // Kill streak system
-        this.killStreak = 0;
-        this.killStreakTimer = 0;
 
         // Visual effects state
         this.damageFlashAlpha = 0;
@@ -301,6 +446,16 @@ class GameScene extends Phaser.Scene {
         this.floatingTexts = [];
         this.particles = [];
         this.bloodGroup = null;
+        this.floorItems = []; // Items dropped on the floor
+
+        // Room persistence - stores enemy state per sector
+        this.sectorStates = {
+            hub: { enemies: [], visited: false, bloodSplatters: [] },
+            storage: { enemies: [], visited: false, bloodSplatters: [] },
+            medical: { enemies: [], visited: false, bloodSplatters: [] },
+            research: { enemies: [], visited: false, bloodSplatters: [] },
+            escape: { enemies: [], visited: false, bloodSplatters: [] }
+        };
     }
 
     generateSectors() {
@@ -356,6 +511,8 @@ class GameScene extends Phaser.Scene {
             sector.tiles[0][Math.floor(w / 2)] = TILE.DOOR_ESCAPE;
             sector.tiles[3][3] = TILE.WORKBENCH;
             sector.tiles[3][w - 4] = TILE.BED;
+            sector.tiles[h - 4][3] = TILE.POWER_PANEL;
+            sector.tiles[h - 4][w - 4] = TILE.STORAGE_LOCKER;
         } else {
             sector.tiles[0][Math.floor(w / 2)] = TILE.DOOR_HUB;
         }
@@ -405,7 +562,15 @@ class GameScene extends Phaser.Scene {
         return 'scrap';
     }
 
-    loadSector(name) {
+    loadSector(name, entryDirection = null) {
+        // Save current sector state before leaving (if we have one)
+        if (this.gameData.currentSector && this.sectorStates[this.gameData.currentSector]) {
+            this.saveSectorState(this.gameData.currentSector);
+        }
+
+        // Store entry direction for spawn positioning
+        this.entryDirection = entryDirection;
+
         // Track sector visit
         const isNewSector = !this.stats.sectorsVisited.has(name);
         this.stats.sectorsVisited.add(name);
@@ -415,13 +580,16 @@ class GameScene extends Phaser.Scene {
         if (this.enemyGroup) this.enemyGroup.destroy(true);
         if (this.bloodGroup) this.bloodGroup.destroy(true);
         if (this.projectileGroup) this.projectileGroup.destroy(true);
+        if (this.floorItemGroup) this.floorItemGroup.destroy(true);
 
         this.mapGroup = this.add.group();
         this.enemyGroup = this.add.group();
         this.bloodGroup = this.add.group();
         this.projectileGroup = this.add.group();
+        this.floorItemGroup = this.add.group();
         this.enemies = [];
         this.projectiles = [];
+        this.floorItems = [];
 
         // Show sector transition message if entering new sector
         if (isNewSector && this.sectors[name]) {
@@ -448,6 +616,8 @@ class GameScene extends Phaser.Scene {
                 else if (tile === TILE.BED) texture = 'bed';
                 else if (tile === TILE.MEDICAL_STATION) texture = 'medical';
                 else if (tile === TILE.ESCAPE_POD) texture = 'escapePod';
+                else if (tile === TILE.POWER_PANEL) texture = 'powerPanel';
+                else if (tile === TILE.STORAGE_LOCKER) texture = 'storageLocker';
 
                 const sprite = this.add.image(px, py, texture);
                 this.mapGroup.add(sprite);
@@ -468,15 +638,57 @@ class GameScene extends Phaser.Scene {
             this.darkness = null;
         }
 
-        // Spawn enemies
+        // Spawn or restore enemies and blood splatters
         if (name !== 'hub') {
-            this.spawnEnemies(name);
+            const sectorState = this.sectorStates[name];
+            if (!sectorState.visited) {
+                // First visit - spawn fresh enemies
+                this.spawnEnemies(name);
+                sectorState.visited = true;
+            } else {
+                // Returning visit - restore saved enemies
+                this.restoreSectorState(name);
+            }
         }
 
-        // Position player
+        // Position player based on entry direction
         if (this.player) {
-            this.player.x = sector.spawnX * TILE_SIZE + TILE_SIZE / 2;
-            this.player.y = sector.spawnY * TILE_SIZE + TILE_SIZE / 2;
+            let spawnX, spawnY;
+
+            if (this.entryDirection) {
+                // Position based on which side we entered from
+                // If we exited from top (y=0), we spawn at the bottom of new room
+                // If we exited from bottom, we spawn at top of new room
+                // etc.
+                switch (this.entryDirection) {
+                    case 'top': // Exited from top door, spawn at bottom of new sector
+                        spawnX = Math.floor(sector.width / 2);
+                        spawnY = sector.height - 2;
+                        break;
+                    case 'bottom': // Exited from bottom door, spawn at top of new sector
+                        spawnX = Math.floor(sector.width / 2);
+                        spawnY = 2;
+                        break;
+                    case 'left': // Exited from left door, spawn at right of new sector
+                        spawnX = sector.width - 2;
+                        spawnY = Math.floor(sector.height / 2);
+                        break;
+                    case 'right': // Exited from right door, spawn at left of new sector
+                        spawnX = 2;
+                        spawnY = Math.floor(sector.height / 2);
+                        break;
+                    default:
+                        spawnX = sector.spawnX;
+                        spawnY = sector.spawnY;
+                }
+            } else {
+                // Default spawn (game start)
+                spawnX = sector.spawnX;
+                spawnY = sector.spawnY;
+            }
+
+            this.player.x = spawnX * TILE_SIZE + TILE_SIZE / 2;
+            this.player.y = spawnY * TILE_SIZE + TILE_SIZE / 2;
         }
 
         // Camera bounds and follow
@@ -535,6 +747,50 @@ class GameScene extends Phaser.Scene {
         }
     }
 
+    saveSectorState(sectorName) {
+        const state = this.sectorStates[sectorName];
+        if (!state) return;
+
+        // Save surviving enemies
+        state.enemies = this.enemies.map(e => ({
+            type: e.type,
+            x: e.x,
+            y: e.y,
+            hp: e.hp,
+            maxHp: e.maxHp
+        }));
+
+        // Save blood splatters
+        if (this.bloodGroup) {
+            state.bloodSplatters = this.bloodGroup.getChildren().map(b => ({
+                x: b.x,
+                y: b.y,
+                texture: b.texture.key,
+                alpha: b.alpha
+            }));
+        }
+    }
+
+    restoreSectorState(sectorName) {
+        const state = this.sectorStates[sectorName];
+        if (!state) return;
+
+        // Restore enemies
+        state.enemies.forEach(e => {
+            const enemy = this.createEnemy(e.type, e.x, e.y);
+            if (enemy) {
+                enemy.hp = e.hp;
+            }
+        });
+
+        // Restore blood splatters
+        state.bloodSplatters.forEach(b => {
+            const blood = this.add.image(b.x, b.y, b.texture);
+            blood.setAlpha(b.alpha);
+            this.bloodGroup.add(blood);
+        });
+    }
+
     createEnemy(type, x, y) {
         const stats = {
             shambler: { hp: 30, damage: 10, speed: 50, attackRate: 1500, range: 250 },
@@ -562,6 +818,7 @@ class GameScene extends Phaser.Scene {
 
         this.enemyGroup.add(enemy);
         this.enemies.push(enemy);
+        return enemy;
     }
 
     createPlayer() {
@@ -595,11 +852,17 @@ class GameScene extends Phaser.Scene {
         this.thirstText = this.add.text(10, 50, 'THI: 0', { fontSize: '10px', color: '#3070aa' });
         this.fatigueText = this.add.text(10, 65, 'FAT: 0', { fontSize: '10px', color: '#6a6a6a' });
         this.infectionText = this.add.text(10, 85, 'INF: 0', { fontSize: '12px', color: '#30aa40' });
+        this.staminaText = this.add.text(10, 105, 'STA: 100', { fontSize: '10px', color: '#88aa88' });
 
-        [this.healthText, this.hungerText, this.thirstText, this.fatigueText, this.infectionText].forEach(t => {
+        [this.healthText, this.hungerText, this.thirstText, this.fatigueText, this.infectionText, this.staminaText].forEach(t => {
             t.setScrollFactor(0);
             this.uiGroup.add(t);
         });
+
+        // Weapon display (bottom left)
+        this.weaponText = this.add.text(10, GAME_HEIGHT - 50, '[Fists]', { fontSize: '11px', color: '#aaaaff' });
+        this.weaponText.setScrollFactor(0);
+        this.uiGroup.add(this.weaponText);
 
         // Global infection
         this.globalText = this.add.text(GAME_WIDTH - 140, GAME_HEIGHT - 45, 'GLOBAL: 0.0%', { fontSize: '14px', color: '#ff4444' });
@@ -645,10 +908,6 @@ class GameScene extends Phaser.Scene {
         this.infectionOverlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x003300, 0);
         this.infectionOverlay.setScrollFactor(0).setDepth(88);
 
-        // Kill streak display
-        this.killStreakText = this.add.text(GAME_WIDTH / 2, 80, '', { fontSize: '18px', color: '#ffaa00', fontStyle: 'bold' });
-        this.killStreakText.setOrigin(0.5).setScrollFactor(0).setDepth(101);
-
         // Debug overlay
         this.debugText = this.add.text(GAME_WIDTH - 200, 50, '', { fontSize: '10px', color: '#00ff00', backgroundColor: '#000000aa' });
         this.debugText.setScrollFactor(0).setDepth(150).setVisible(false);
@@ -664,14 +923,28 @@ class GameScene extends Phaser.Scene {
         };
         this.eKey = this.input.keyboard.addKey('E');
         this.qKey = this.input.keyboard.addKey('Q');
+        this.rKey = this.input.keyboard.addKey('R'); // Reload
+        this.tabKey = this.input.keyboard.addKey('TAB'); // Inventory
+        this.mKey = this.input.keyboard.addKey('M'); // Map
+        this.spaceKey = this.input.keyboard.addKey('SPACE'); // Dodge
+        this.shiftKey = this.input.keyboard.addKey('SHIFT'); // Sprint
         this.keys1to4 = [
             this.input.keyboard.addKey('ONE'),
             this.input.keyboard.addKey('TWO'),
             this.input.keyboard.addKey('THREE'),
             this.input.keyboard.addKey('FOUR')
         ];
+        // Weapon switching
+        this.weaponKeys = [
+            this.input.keyboard.addKey('FIVE'),
+            this.input.keyboard.addKey('SIX'),
+            this.input.keyboard.addKey('SEVEN')
+        ];
 
-        this.input.on('pointerdown', () => this.attack());
+        this.input.on('pointerdown', (pointer) => {
+            if (pointer.leftButtonDown()) this.attack();
+            if (pointer.rightButtonDown()) this.dodge();
+        });
     }
 
     startTimers() {
@@ -729,19 +1002,46 @@ class GameScene extends Phaser.Scene {
         this.updatePlayer();
         this.updateEnemies();
         this.updateProjectiles();
+        this.collectFloorItems();
         this.updateUI();
         this.checkItemUse();
         this.checkInteraction();
         this.updateVisualEffects(delta);
         this.updateFloatingTexts(delta);
         this.updateParticles(delta);
-        this.updateKillStreak(delta);
         this.updateDebugOverlay();
     }
 
     updatePlayer() {
+        const dt = this.game.loop.delta / 1000;
+
+        // Stamina regen (5/sec when not attacking)
+        if (this.time.now - this.playerData.lastAttackTime > 500) {
+            this.playerData.stamina = Math.min(this.playerData.maxStamina, this.playerData.stamina + 5 * dt);
+        }
+
+        // Dodge cooldown
+        if (this.playerData.dodgeCooldown > 0) {
+            this.playerData.dodgeCooldown -= dt;
+        }
+
+        // Status effects on player
+        this.updatePlayerStatusEffects(dt);
+
+        // Movement
         let vx = 0, vy = 0;
-        const speed = 150;
+        let speed = 150;
+
+        // Sprint
+        if (this.shiftKey.isDown && this.playerData.stamina > 0) {
+            speed = 220;
+            this.playerData.stamina -= 15 * dt;
+        }
+
+        // Fatigue penalty
+        if (this.playerData.fatigue > 50) {
+            speed *= this.playerData.fatigue > 75 ? 0.75 : 0.9;
+        }
 
         if (this.wasd.w.isDown || this.cursors.up.isDown) vy = -speed;
         if (this.wasd.s.isDown || this.cursors.down.isDown) vy = speed;
@@ -753,7 +1053,6 @@ class GameScene extends Phaser.Scene {
             vy *= 0.707;
         }
 
-        const dt = this.game.loop.delta / 1000;
         const newX = this.player.x + vx * dt;
         const newY = this.player.y + vy * dt;
 
@@ -770,8 +1069,52 @@ class GameScene extends Phaser.Scene {
             pointer.worldX, pointer.worldY);
         this.player.rotation = angle;
 
+        // Weapon switching (5-7 keys)
+        this.checkWeaponSwitch();
+
+        // Dodge with space
+        if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+            this.dodge();
+        }
+
         // Check door transitions
         this.checkDoorTransition();
+    }
+
+    updatePlayerStatusEffects(dt) {
+        this.playerData.statusEffects = this.playerData.statusEffects.filter(effect => {
+            effect.duration -= dt;
+
+            if (effect.type === 'bleeding') {
+                effect.tickTimer = (effect.tickTimer || 0) + dt;
+                if (effect.tickTimer >= 1) {
+                    effect.tickTimer = 0;
+                    this.playerData.health -= STATUS_EFFECTS.bleeding.damagePerSec;
+                    this.createFloatingText(this.player.x, this.player.y - 20, '-2', '#ff3333', 10);
+                }
+            }
+
+            return effect.duration > 0;
+        });
+    }
+
+    checkWeaponSwitch() {
+        const weaponList = ['fists', 'shiv', 'pipeClub', 'stunBaton', 'pistol'];
+        const availableWeapons = weaponList.filter(w => {
+            if (w === 'fists') return true;
+            return this.playerData.inventory.some(i => i.type === w);
+        });
+
+        // 5-7 keys for weapon slots
+        this.weaponKeys.forEach((key, i) => {
+            if (Phaser.Input.Keyboard.JustDown(key)) {
+                if (availableWeapons[i + 1]) {
+                    this.playerData.weapon = availableWeapons[i + 1];
+                    this.createFloatingText(this.player.x, this.player.y - 30,
+                        WEAPONS[this.playerData.weapon].name.toUpperCase(), '#aaaaff', 12);
+                }
+            }
+        });
     }
 
     checkCollision(x, y) {
@@ -811,39 +1154,165 @@ class GameScene extends Phaser.Scene {
         if (doorMap[tile] && doorMap[tile] !== this.gameData.currentSector) {
             const newSector = doorMap[tile];
             if (newSector === 'escape' && !this.gameData.hasKeycard) return;
-            this.loadSector(newSector);
+
+            // Determine entry direction based on door position
+            let entryDirection = 'top'; // default
+            if (ty === 0) entryDirection = 'top';
+            else if (ty === sector.height - 1) entryDirection = 'bottom';
+            else if (tx === 0) entryDirection = 'left';
+            else if (tx === sector.width - 1) entryDirection = 'right';
+
+            this.loadSector(newSector, entryDirection);
         }
     }
 
-    attack() {
+    dodge() {
+        if (this.playerData.dodgeCooldown > 0) return;
+        if (this.playerData.stamina < 20) return;
+
+        this.playerData.stamina -= 20;
+        this.playerData.dodgeCooldown = 1.5;
+        this.playerData.isInvincible = true;
+
+        // Get dodge direction from movement or facing
         const pointer = this.input.activePointer;
-        const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, pointer.worldX, pointer.worldY);
+        let angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, pointer.worldX, pointer.worldY);
 
-        // Melee attack
-        const range = 40;
-        const attackX = this.player.x + Math.cos(angle) * range;
-        const attackY = this.player.y + Math.sin(angle) * range;
+        // If moving, dodge in movement direction
+        let vx = 0, vy = 0;
+        if (this.wasd.w.isDown) vy = -1;
+        if (this.wasd.s.isDown) vy = 1;
+        if (this.wasd.a.isDown) vx = -1;
+        if (this.wasd.d.isDown) vx = 1;
+        if (vx !== 0 || vy !== 0) {
+            angle = Math.atan2(vy, vx);
+        }
 
-        this.enemies.forEach(enemy => {
-            if (enemy.hp <= 0) return;
-            const dist = Phaser.Math.Distance.Between(attackX, attackY, enemy.x, enemy.y);
-            if (dist < enemy.width + 20) {
-                this.damageEnemy(enemy, 8);
+        const dodgeDistance = 80;
+        const targetX = this.player.x + Math.cos(angle) * dodgeDistance;
+        const targetY = this.player.y + Math.sin(angle) * dodgeDistance;
+
+        // Dodge tween with i-frames
+        this.tweens.add({
+            targets: this.player,
+            x: targetX,
+            y: targetY,
+            duration: 200,
+            ease: 'Quad.easeOut',
+            onUpdate: () => {
+                this.player.setAlpha(0.5 + Math.random() * 0.3);
+            },
+            onComplete: () => {
+                this.player.setAlpha(1);
+                this.playerData.isInvincible = false;
             }
         });
 
-        // Attack effect
-        const flash = this.add.circle(attackX, attackY, 10, 0xffffff, 0.5);
+        this.createFloatingText(this.player.x, this.player.y - 30, 'DODGE!', '#88aaff', 12);
+    }
+
+    attack() {
+        const now = this.time.now;
+        const weapon = WEAPONS[this.playerData.weapon];
+
+        // Check attack cooldown
+        const cooldown = weapon.type === 'melee' ? weapon.speed * 1000 : weapon.fireRate * 1000;
+        if (now - this.playerData.lastAttackTime < cooldown) return;
+
+        // Check stamina for melee
+        if (weapon.type === 'melee' && this.playerData.stamina < 10) return;
+
+        // Check ammo for ranged
+        if (weapon.type === 'ranged') {
+            const ammoType = weapon.ammoType;
+            if (this.playerData.ammo[ammoType] <= 0 && weapon.magazine <= 0) {
+                this.createFloatingText(this.player.x, this.player.y - 30, 'NO AMMO!', '#ff6666', 12);
+                return;
+            }
+        }
+
+        this.playerData.lastAttackTime = now;
+
+        const pointer = this.input.activePointer;
+        const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, pointer.worldX, pointer.worldY);
+
+        if (weapon.type === 'melee') {
+            // Consume stamina
+            this.playerData.stamina -= 10;
+
+            const range = weapon.range;
+            const attackX = this.player.x + Math.cos(angle) * range;
+            const attackY = this.player.y + Math.sin(angle) * range;
+
+            this.enemies.forEach(enemy => {
+                if (enemy.hp <= 0) return;
+                const dist = Phaser.Math.Distance.Between(attackX, attackY, enemy.x, enemy.y);
+                if (dist < enemy.width + 20) {
+                    this.damageEnemy(enemy, weapon.damage, weapon);
+                }
+            });
+
+            // Attack effect
+            const flash = this.add.circle(attackX, attackY, 12, 0xffffff, 0.5);
+            this.tweens.add({
+                targets: flash,
+                alpha: 0,
+                scale: 2,
+                duration: 100,
+                onComplete: () => flash.destroy()
+            });
+
+            // Reduce durability
+            if (weapon.durability !== Infinity) {
+                if (!this.playerData.weaponDurability[this.playerData.weapon]) {
+                    this.playerData.weaponDurability[this.playerData.weapon] = weapon.durability;
+                }
+                this.playerData.weaponDurability[this.playerData.weapon]--;
+                if (this.playerData.weaponDurability[this.playerData.weapon] <= 0) {
+                    this.createFloatingText(this.player.x, this.player.y - 40, 'WEAPON BROKE!', '#ff4444', 14);
+                    this.playerData.weapon = 'fists';
+                }
+            }
+        } else if (weapon.type === 'ranged') {
+            // Fire bullet
+            this.fireProjectile(angle, weapon);
+        }
+    }
+
+    fireProjectile(angle, weapon) {
+        // Accuracy check
+        const spread = (100 - weapon.accuracy) * 0.01 * Math.PI / 4;
+        angle += (Math.random() - 0.5) * spread;
+
+        const bullet = this.add.sprite(this.player.x, this.player.y, 'bullet');
+        bullet.vx = Math.cos(angle) * 400;
+        bullet.vy = Math.sin(angle) * 400;
+        bullet.damage = weapon.damage;
+        bullet.owner = 'player';
+        this.projectileGroup.add(bullet);
+        this.projectiles.push(bullet);
+
+        // Muzzle flash
+        const flash = this.add.circle(
+            this.player.x + Math.cos(angle) * 25,
+            this.player.y + Math.sin(angle) * 25,
+            8, COLORS.MUZZLE, 0.8
+        );
         this.tweens.add({
             targets: flash,
             alpha: 0,
-            scale: 2,
-            duration: 100,
+            scale: 0.5,
+            duration: 80,
             onComplete: () => flash.destroy()
         });
+
+        // Consume ammo
+        if (this.playerData.ammo[weapon.ammoType] > 0) {
+            this.playerData.ammo[weapon.ammoType]--;
+        }
     }
 
-    damageEnemy(enemy, damage) {
+    damageEnemy(enemy, damage, weapon = null) {
         // Critical hit system (15% chance, 2x damage)
         const isCrit = Math.random() < 0.15;
         if (isCrit) {
@@ -853,6 +1322,29 @@ class GameScene extends Phaser.Scene {
 
         enemy.hp -= damage;
         this.stats.totalDamageDealt += damage;
+
+        // Apply weapon effects
+        if (weapon) {
+            // Bleed chance (shiv)
+            if (weapon.bleedChance && Math.random() < weapon.bleedChance) {
+                enemy.statusEffects = enemy.statusEffects || [];
+                enemy.statusEffects.push({ type: 'bleeding', duration: 10, tickTimer: 0 });
+                this.createFloatingText(enemy.x, enemy.y - 30, 'BLEED!', '#ff3333', 10);
+            }
+            // Knockback (pipe club)
+            if (weapon.knockback) {
+                const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, enemy.x, enemy.y);
+                enemy.x += Math.cos(angle) * weapon.knockback * 30;
+                enemy.y += Math.sin(angle) * weapon.knockback * 30;
+            }
+            // Stun (stun baton)
+            if (weapon.stunDuration) {
+                enemy.statusEffects = enemy.statusEffects || [];
+                enemy.statusEffects.push({ type: 'stunned', duration: weapon.stunDuration });
+                enemy.state = 'stunned';
+                this.createFloatingText(enemy.x, enemy.y - 30, 'STUNNED!', '#ffff00', 10);
+            }
+        }
 
         // Flash red
         enemy.setTint(isCrit ? 0xffff00 : 0xff0000);
@@ -876,20 +1368,6 @@ class GameScene extends Phaser.Scene {
 
     killEnemy(enemy, wasCrit) {
         this.stats.killCount++;
-
-        // Kill streak
-        this.killStreak++;
-        this.killStreakTimer = 3000; // 3 second timer
-        if (this.killStreak > this.stats.maxKillStreak) {
-            this.stats.maxKillStreak = this.killStreak;
-        }
-
-        // Kill streak messages
-        if (this.killStreak >= 3) {
-            const streakMessages = { 3: 'TRIPLE KILL!', 4: 'QUAD KILL!', 5: 'RAMPAGE!', 6: 'MASSACRE!' };
-            const msg = streakMessages[Math.min(this.killStreak, 6)] || 'UNSTOPPABLE!';
-            this.createFloatingText(GAME_WIDTH / 2, 120, msg, '#ffaa00', 22);
-        }
 
         // Blood splatter with more particles for crits
         const isGreen = enemy.type === 'spitter';
@@ -942,20 +1420,99 @@ class GameScene extends Phaser.Scene {
     }
 
     dropItem(x, y) {
-        const types = ['scrap', 'cloth', 'chemicals'];
-        const type = types[Math.floor(Math.random() * types.length)];
-        const item = { type, name: type, count: 1 };
-        const existing = this.playerData.inventory.find(i => i.type === item.type);
-        if (existing) existing.count++;
-        else this.playerData.inventory.push(item);
-        this.createFloatingText(x, y - 30, '+' + type.toUpperCase(), '#88ff88', 12);
+        // Extended drop types including health items and tech
+        const types = ['scrap', 'cloth', 'chemicals', 'medkit', 'food', 'water', 'antidote', 'electronics', 'bullets'];
+        const weights = [25, 18, 18, 12, 8, 7, 5, 5, 2]; // Weighted probabilities
+        const totalWeight = weights.reduce((a, b) => a + b, 0);
+        let roll = Math.random() * totalWeight;
+        let type = types[0];
+        for (let i = 0; i < types.length; i++) {
+            roll -= weights[i];
+            if (roll <= 0) {
+                type = types[i];
+                break;
+            }
+        }
+
+        // Create floor item sprite
+        const textureName = 'floorItem_' + type;
+        const floorItem = this.add.sprite(x, y, textureName);
+        floorItem.setDepth(5);
+        floorItem.itemType = type;
+        floorItem.itemName = type;
+
+        // Add bobbing animation
+        this.tweens.add({
+            targets: floorItem,
+            y: y - 5,
+            duration: 500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        // Add glow effect
+        floorItem.setTint(0xffffff);
+
+        this.floorItemGroup.add(floorItem);
+        this.floorItems.push(floorItem);
+
+        this.createFloatingText(x, y - 30, type.toUpperCase() + ' DROPPED', '#ffff88', 10);
+    }
+
+    collectFloorItems() {
+        const collectRange = 25;
+        this.floorItems = this.floorItems.filter(item => {
+            const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, item.x, item.y);
+            if (dist < collectRange) {
+                // Special handling for ammo
+                if (item.itemType === 'bullets') {
+                    this.playerData.ammo.bullets = (this.playerData.ammo.bullets || 0) + 10;
+                    this.createFloatingText(item.x, item.y - 20, '+10 BULLETS', '#ccaa44', 14);
+                }
+                // Special handling for data chip (Tier 2 unlock)
+                else if (item.itemType === 'dataChip') {
+                    this.gameData.tier2Unlocked = true;
+                    this.createFloatingText(item.x, item.y - 20, 'TIER 2 UNLOCKED!', '#ffff00', 16);
+                }
+                // Normal inventory items
+                else {
+                    const existing = this.playerData.inventory.find(i => i.type === item.itemType);
+                    if (existing) {
+                        existing.count++;
+                    } else {
+                        this.playerData.inventory.push({ type: item.itemType, name: item.itemName, count: 1 });
+                    }
+                    this.createFloatingText(item.x, item.y - 20, '+' + item.itemType.toUpperCase(), '#88ff88', 14);
+                }
+
+                this.createLootSparkle(item.x, item.y);
+
+                // Remove item
+                item.destroy();
+                return false;
+            }
+            return true;
+        });
     }
 
     updateEnemies() {
         const time = this.time.now;
+        const dt = this.game.loop.delta / 1000;
 
         this.enemies.forEach(enemy => {
             if (enemy.hp <= 0) return;
+
+            // Update status effects
+            this.updateEnemyStatusEffects(enemy, dt);
+
+            // Skip if stunned
+            if (enemy.state === 'stunned') {
+                enemy.setTint(0xffff00);
+                return;
+            } else {
+                enemy.clearTint();
+            }
 
             const dist = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.player.x, this.player.y);
 
@@ -983,58 +1540,168 @@ class GameScene extends Phaser.Scene {
 
             if (enemy.state === 'chase') {
                 const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
-                const dt = this.game.loop.delta / 1000;
 
-                // Spitters keep distance
-                if (enemy.ranged && dist < 150) {
-                    enemy.x -= Math.cos(angle) * enemy.speed * dt;
-                    enemy.y -= Math.sin(angle) * enemy.speed * dt;
-                } else if (!enemy.ranged || dist > 200) {
-                    enemy.x += Math.cos(angle) * enemy.speed * dt;
-                    enemy.y += Math.sin(angle) * enemy.speed * dt;
+                // Crawler lunge attack
+                if (enemy.type === 'crawler' && dist < 80 && dist > 30 && !enemy.isLunging) {
+                    enemy.isLunging = true;
+                    enemy.lungeTimer = 0.3;
+                    enemy.lungeVx = Math.cos(angle) * 300;
+                    enemy.lungeVy = Math.sin(angle) * 300;
                 }
 
-                // Attack
-                if (time - enemy.lastAttack > enemy.attackRate) {
-                    if (enemy.ranged && dist < 300) {
+                // Brute charge attack
+                if (enemy.type === 'brute' && dist < 150 && dist > 50 && !enemy.isCharging && time - enemy.lastAttack > 3000) {
+                    enemy.isCharging = true;
+                    enemy.chargeTimer = 0.5;
+                    enemy.chargeAngle = angle;
+                    enemy.setTint(0xff6600);
+                }
+
+                // Handle lunge movement
+                if (enemy.isLunging) {
+                    enemy.x += enemy.lungeVx * dt;
+                    enemy.y += enemy.lungeVy * dt;
+                    enemy.lungeTimer -= dt;
+                    if (enemy.lungeTimer <= 0) {
+                        enemy.isLunging = false;
+                        if (dist < 35) {
+                            this.damagePlayer(enemy.damage, enemy.infection);
+                            enemy.lastAttack = time;
+                        }
+                    }
+                }
+                // Handle charge movement
+                else if (enemy.isCharging) {
+                    enemy.x += Math.cos(enemy.chargeAngle) * 200 * dt;
+                    enemy.y += Math.sin(enemy.chargeAngle) * 200 * dt;
+                    enemy.chargeTimer -= dt;
+
+                    // Hit player during charge
+                    if (dist < 40) {
+                        this.damagePlayer(enemy.damage * 1.5, enemy.infection);
                         enemy.lastAttack = time;
-                        const projAngle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
-                        const proj = this.add.sprite(enemy.x, enemy.y, 'acid');
-                        proj.vx = Math.cos(projAngle) * 200;
-                        proj.vy = Math.sin(projAngle) * 200;
-                        proj.damage = enemy.damage;
-                        proj.infection = enemy.infection;
-                        this.projectileGroup.add(proj);
-                        this.projectiles.push(proj);
-                    } else if (!enemy.ranged && dist < 40) {
-                        enemy.lastAttack = time;
-                        this.damagePlayer(enemy.damage, enemy.infection);
+                        enemy.isCharging = false;
+                        enemy.clearTint();
+                    }
+
+                    // Wall collision stun
+                    if (this.checkCollision(enemy.x, enemy.y)) {
+                        enemy.isCharging = false;
+                        enemy.state = 'stunned';
+                        enemy.statusEffects = enemy.statusEffects || [];
+                        enemy.statusEffects.push({ type: 'stunned', duration: 1 });
+                        this.createFloatingText(enemy.x, enemy.y - 20, 'STUN!', '#ffff00', 12);
+                        this.triggerScreenShake(5);
+                    }
+
+                    if (enemy.chargeTimer <= 0) {
+                        enemy.isCharging = false;
+                        enemy.clearTint();
+                    }
+                }
+                // Normal movement
+                else {
+                    // Spitters keep distance
+                    if (enemy.ranged && dist < 150) {
+                        enemy.x -= Math.cos(angle) * enemy.speed * dt;
+                        enemy.y -= Math.sin(angle) * enemy.speed * dt;
+                    } else if (!enemy.ranged || dist > 200) {
+                        enemy.x += Math.cos(angle) * enemy.speed * dt;
+                        enemy.y += Math.sin(angle) * enemy.speed * dt;
+                    }
+
+                    // Attack
+                    if (time - enemy.lastAttack > enemy.attackRate) {
+                        if (enemy.ranged && dist < 300) {
+                            enemy.lastAttack = time;
+                            const projAngle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
+                            const proj = this.add.sprite(enemy.x, enemy.y, 'acid');
+                            proj.vx = Math.cos(projAngle) * 200;
+                            proj.vy = Math.sin(projAngle) * 200;
+                            proj.damage = enemy.damage;
+                            proj.infection = enemy.infection;
+                            proj.owner = 'enemy';
+                            this.projectileGroup.add(proj);
+                            this.projectiles.push(proj);
+                        } else if (!enemy.ranged && dist < 40) {
+                            enemy.lastAttack = time;
+                            this.damagePlayer(enemy.damage, enemy.infection);
+                        }
                     }
                 }
             }
         });
     }
 
+    updateEnemyStatusEffects(enemy, dt) {
+        enemy.statusEffects = enemy.statusEffects || [];
+        enemy.statusEffects = enemy.statusEffects.filter(effect => {
+            effect.duration -= dt;
+
+            if (effect.type === 'bleeding') {
+                effect.tickTimer = (effect.tickTimer || 0) + dt;
+                if (effect.tickTimer >= 1) {
+                    effect.tickTimer = 0;
+                    enemy.hp -= STATUS_EFFECTS.bleeding.damagePerSec;
+                    this.createFloatingText(enemy.x, enemy.y - 15, '2', '#ff3333', 10);
+                    if (enemy.hp <= 0) {
+                        this.killEnemy(enemy, false);
+                    }
+                }
+            }
+
+            if (effect.type === 'stunned' && effect.duration <= 0) {
+                enemy.state = 'idle';
+            }
+
+            return effect.duration > 0;
+        });
+    }
+
     updateProjectiles() {
         const dt = this.game.loop.delta / 1000;
 
-        this.projectiles.forEach(proj => {
+        this.projectiles = this.projectiles.filter(proj => {
             proj.x += proj.vx * dt;
             proj.y += proj.vy * dt;
 
-            // Hit player
-            const dist = Phaser.Math.Distance.Between(proj.x, proj.y, this.player.x, this.player.y);
-            if (dist < 20) {
-                this.damagePlayer(proj.damage, proj.infection || 0);
+            // Player bullets hit enemies
+            if (proj.owner === 'player') {
+                for (const enemy of this.enemies) {
+                    if (enemy.hp <= 0) continue;
+                    const dist = Phaser.Math.Distance.Between(proj.x, proj.y, enemy.x, enemy.y);
+                    if (dist < enemy.width / 2 + 10) {
+                        this.damageEnemy(enemy, proj.damage);
+                        proj.destroy();
+                        return false;
+                    }
+                }
+            }
+            // Enemy bullets hit player (if not invincible)
+            else if (proj.owner === 'enemy' || !proj.owner) {
+                if (!this.playerData.isInvincible) {
+                    const dist = Phaser.Math.Distance.Between(proj.x, proj.y, this.player.x, this.player.y);
+                    if (dist < 20) {
+                        this.damagePlayer(proj.damage, proj.infection || 0);
+                        proj.destroy();
+                        return false;
+                    }
+                }
+            }
+
+            // Wall collision
+            if (this.checkCollision(proj.x, proj.y)) {
                 proj.destroy();
-                this.projectiles = this.projectiles.filter(p => p !== proj);
+                return false;
             }
 
             // Out of bounds
             if (proj.x < 0 || proj.y < 0 || proj.x > 1000 || proj.y > 1000) {
                 proj.destroy();
-                this.projectiles = this.projectiles.filter(p => p !== proj);
+                return false;
             }
+
+            return true;
         });
     }
 
@@ -1106,14 +1773,108 @@ class GameScene extends Phaser.Scene {
                     } else if (tile === TILE.BED && this.playerData.fatigue > 0) {
                         this.playerData.fatigue = Math.max(0, this.playerData.fatigue - 30);
                         this.gameData.realTime += 60;
+                        this.createFloatingText(this.player.x, this.player.y - 30, 'RESTED', '#8888ff', 12);
                     } else if (tile === TILE.MEDICAL_STATION && this.gameData.poweredSectors.medical) {
                         this.playerData.health = Math.min(100, this.playerData.health + 20);
+                        this.createFloatingText(this.player.x, this.player.y - 30, '+20 HP', '#88ff88', 12);
+                        this.createHealingParticles();
+                    } else if (tile === TILE.WORKBENCH) {
+                        this.openCraftingMenu();
+                    } else if (tile === TILE.POWER_PANEL) {
+                        this.openPowerPanel();
                     } else if (tile === TILE.ESCAPE_POD && this.gameData.hasKeycard && this.gameData.poweredSectors.escape) {
                         this.victory();
+                    } else if (tile === TILE.ESCAPE_POD && !this.gameData.hasKeycard) {
+                        this.createFloatingText(this.player.x, this.player.y - 30, 'NEED KEYCARD', '#ff6666', 12);
+                    } else if (tile === TILE.ESCAPE_POD && !this.gameData.poweredSectors.escape) {
+                        this.createFloatingText(this.player.x, this.player.y - 30, 'NO POWER', '#ff6666', 12);
                     }
                 }
             }
         }
+    }
+
+    openCraftingMenu() {
+        // Simple crafting - try to craft first available recipe with materials
+        const recipes = this.gameData.tier2Unlocked ?
+            [...RECIPES.tier1, ...RECIPES.tier2] : RECIPES.tier1;
+
+        for (const recipe of recipes) {
+            if (this.canCraft(recipe)) {
+                this.craftItem(recipe);
+                return;
+            }
+        }
+        this.createFloatingText(this.player.x, this.player.y - 30, 'NEED MATERIALS', '#ff6666', 12);
+    }
+
+    canCraft(recipe) {
+        for (const [material, amount] of Object.entries(recipe.materials)) {
+            const item = this.playerData.inventory.find(i => i.type === material);
+            if (!item || item.count < amount) return false;
+        }
+        return true;
+    }
+
+    craftItem(recipe) {
+        // Consume materials
+        for (const [material, amount] of Object.entries(recipe.materials)) {
+            const item = this.playerData.inventory.find(i => i.type === material);
+            item.count -= amount;
+            if (item.count <= 0) {
+                this.playerData.inventory = this.playerData.inventory.filter(i => i !== item);
+            }
+        }
+
+        // Add result to inventory
+        const existing = this.playerData.inventory.find(i => i.type === recipe.result);
+        if (existing) {
+            existing.count++;
+        } else {
+            this.playerData.inventory.push({ type: recipe.result, name: recipe.name, count: 1 });
+        }
+
+        // Time passes
+        this.gameData.realTime += recipe.time;
+
+        this.createFloatingText(this.player.x, this.player.y - 30, 'CRAFTED: ' + recipe.name, '#88ff88', 12);
+        this.createLootSparkle(this.player.x, this.player.y);
+    }
+
+    openPowerPanel() {
+        // Cycle through power allocation
+        const sectors = ['storage', 'medical', 'research', 'escape'];
+        const currentPower = Object.entries(this.gameData.poweredSectors)
+            .filter(([k, v]) => v && k !== 'hub')
+            .reduce((sum, [k]) => sum + this.getPowerCost(k), 0);
+
+        // Toggle first unpowered sector that fits in budget
+        for (const sector of sectors) {
+            if (!this.gameData.poweredSectors[sector]) {
+                const cost = this.getPowerCost(sector);
+                if (currentPower + cost <= 500) {
+                    this.gameData.poweredSectors[sector] = true;
+                    this.createFloatingText(this.player.x, this.player.y - 30,
+                        sector.toUpperCase() + ' POWERED', '#88ff88', 12);
+                    return;
+                }
+            }
+        }
+
+        // If all powered or can't fit more, turn off the last one
+        for (let i = sectors.length - 1; i >= 0; i--) {
+            if (this.gameData.poweredSectors[sectors[i]]) {
+                this.gameData.poweredSectors[sectors[i]] = false;
+                this.createFloatingText(this.player.x, this.player.y - 30,
+                    sectors[i].toUpperCase() + ' UNPOWERED', '#ff8888', 12);
+                return;
+            }
+        }
+    }
+
+    getPowerCost(sector) {
+        const costs = { storage: 100, medical: 150, research: 200, escape: 300 };
+        return costs[sector] || 0;
     }
 
     lootContainer(x, y) {
@@ -1149,6 +1910,7 @@ class GameScene extends Phaser.Scene {
         this.thirstText.setText(`THI: ${Math.floor(this.playerData.thirst)}`);
         this.fatigueText.setText(`FAT: ${Math.floor(this.playerData.fatigue)}`);
         this.infectionText.setText(`INF: ${Math.floor(this.playerData.infection)}`);
+        this.staminaText.setText(`STA: ${Math.floor(this.playerData.stamina)}`);
 
         this.globalText.setText(`GLOBAL: ${this.gameData.globalInfection.toFixed(1)}%`);
         this.sectorText.setText(this.sectors[this.gameData.currentSector].name);
@@ -1156,6 +1918,18 @@ class GameScene extends Phaser.Scene {
         const hours = Math.floor(this.gameData.time / 60);
         const mins = this.gameData.time % 60;
         this.timeText.setText(`Day 1 ${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`);
+
+        // Weapon display
+        const weapon = WEAPONS[this.playerData.weapon];
+        let weaponInfo = `[${weapon.name}]`;
+        if (weapon.type === 'ranged') {
+            weaponInfo += ` Ammo: ${this.playerData.ammo[weapon.ammoType]}`;
+        }
+        if (weapon.durability !== Infinity) {
+            const dur = this.playerData.weaponDurability[this.playerData.weapon] || weapon.durability;
+            weaponInfo += ` Dur: ${dur}`;
+        }
+        this.weaponText.setText(weaponInfo);
 
         // Update slot colors
         const itemTypes = ['food', 'water', 'medkit', 'antidote'];
@@ -1167,6 +1941,14 @@ class GameScene extends Phaser.Scene {
 
     // Helper methods for visual effects and feedback
     damagePlayer(damage, infection = 0) {
+        // Check invincibility (dodge i-frames)
+        if (this.playerData.isInvincible) return;
+
+        // Apply armor reduction
+        if (this.playerData.armor > 0) {
+            damage = Math.max(1, damage - this.playerData.armor);
+        }
+
         this.playerData.health -= damage;
         this.playerData.infection += infection;
         this.stats.totalDamageTaken += damage;
@@ -1179,6 +1961,11 @@ class GameScene extends Phaser.Scene {
 
         // Screen shake
         this.triggerScreenShake(5);
+
+        // Check death
+        if (this.playerData.health <= 0) {
+            this.gameOver('You died.');
+        }
     }
 
     createFloatingText(x, y, text, color, size) {
@@ -1320,23 +2107,6 @@ class GameScene extends Phaser.Scene {
         // For simplicity, we'll use tween'd circles
     }
 
-    updateKillStreak(delta) {
-        if (this.killStreakTimer > 0) {
-            this.killStreakTimer -= delta;
-            if (this.killStreakTimer <= 0) {
-                this.killStreak = 0;
-            }
-        }
-
-        // Update kill streak display
-        if (this.killStreak >= 2) {
-            this.killStreakText.setText(`${this.killStreak}x STREAK`);
-            this.killStreakText.setVisible(true);
-        } else {
-            this.killStreakText.setVisible(false);
-        }
-    }
-
     updateDebugOverlay() {
         if (!this.debugMode) return;
 
@@ -1348,8 +2118,6 @@ class GameScene extends Phaser.Scene {
             `CONTAINERS: ${this.stats.containersLooted}`,
             `ITEMS USED: ${this.stats.itemsUsed}`,
             `SECTORS: ${this.stats.sectorsVisited.size}/5`,
-            `MAX STREAK: ${this.stats.maxKillStreak}`,
-            `STREAK: ${this.killStreak}`,
             `---`,
             `HP: ${Math.floor(this.playerData.health)}`,
             `HUN: ${Math.floor(this.playerData.hunger)}`,
@@ -1388,7 +2156,7 @@ class GameScene extends Phaser.Scene {
         // Stats display
         const statsY = GAME_HEIGHT / 2 + 10;
         const statsText = [
-            `Kills: ${this.stats.killCount}  |  Crits: ${this.stats.critCount}  |  Max Streak: ${this.stats.maxKillStreak}`,
+            `Kills: ${this.stats.killCount}  |  Crits: ${this.stats.critCount}`,
             `Damage Dealt: ${this.stats.totalDamageDealt}  |  Damage Taken: ${this.stats.totalDamageTaken}`,
             `Containers: ${this.stats.containersLooted}  |  Items Used: ${this.stats.itemsUsed}  |  Sectors: ${this.stats.sectorsVisited.size}/5`,
             `Survived: ${Math.floor(this.gameData.time / 60)}h ${this.gameData.time % 60}m  |  Global: ${this.gameData.globalInfection.toFixed(1)}%`
@@ -1430,7 +2198,7 @@ class GameScene extends Phaser.Scene {
         // Stats display
         const statsY = GAME_HEIGHT / 2;
         const statsText = [
-            `Kills: ${this.stats.killCount}  |  Crits: ${this.stats.critCount}  |  Max Streak: ${this.stats.maxKillStreak}`,
+            `Kills: ${this.stats.killCount}  |  Crits: ${this.stats.critCount}`,
             `Damage Dealt: ${this.stats.totalDamageDealt}  |  Damage Taken: ${this.stats.totalDamageTaken}`,
             `Containers: ${this.stats.containersLooted}  |  Items Used: ${this.stats.itemsUsed}  |  Sectors: ${this.stats.sectorsVisited.size}/5`,
             `Final Health: ${Math.floor(this.playerData.health)}  |  Infection: ${Math.floor(this.playerData.infection)}%`,

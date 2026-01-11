@@ -236,3 +236,32 @@ Game achieves expanded Lost Outpost/Alien Breed aesthetic with:
 
 ### Difficulty Rating
 Medium - The core shooter mechanics are straightforward, but balancing 7 enemy types and 5 weapons required iteration. The wave system helped structure the difficulty curve.
+
+---
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "Player char doesn't seem to aim at the mouse cursor" → Fixed aiming calculation to use player's screen position instead of canvas center
+2. [x] "Walking around the level is boring, it's just one big room" → Completely redesigned map generation to use walls-first approach with distinct rooms and corridors
+
+### Technical Changes:
+- **Aiming Fix**: Changed `player.angle = Math.atan2(mouseY - canvas.height / 2, mouseX - canvas.width / 2)` to calculate from player's actual screen position (`player.x - game.camera.x`, `player.y - game.camera.y`)
+- **Map Generation**:
+  - Map now starts with walls everywhere instead of floor
+  - Rooms are carved out with wall borders preserved
+  - Corridors explicitly connect rooms
+  - Creates distinct spaces with chokepoints
+
+### New Level Layout:
+- 7 distinct rooms (4 corners, N/S rooms, central hub)
+- Corridors connecting rooms with proper wall boundaries
+- Rooms have interior floor and wall borders
+- More tactical gameplay with corridors as choke points
+
+### Verification:
+- Player now correctly aims at mouse cursor from any position
+- Level has distinct rooms connected by corridors
+- Walls separate areas creating tactical gameplay
+- Minimap shows proper room layout
+- All feedback items addressed

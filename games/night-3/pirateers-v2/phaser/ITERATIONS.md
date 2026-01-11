@@ -118,3 +118,28 @@
 
 ### Difficulty Rating
 Easy-Medium - Port from Canvas was straightforward but required understanding of Phaser-specific methods for visual effects and camera control.
+
+## Feedback Fixes (2026-01-10)
+
+### Issues from Player Feedback:
+1. [x] "CRITICAL: Ship can't really move"
+   → Player now starts with speedLevel 1.5 (HALF speed) instead of 0 (STOP)
+   → Ship immediately starts moving when game begins
+
+2. [x] "No enemies appear"
+   → First 2 enemies now spawn within 400-600 units of player for immediate action
+   → "Ships: X" counter clearly visible in top-right
+
+3. [x] "Add intro screen with controls"
+   → Added full intro overlay with:
+     - "PIRATEERS" title with gold text
+     - Controls section (W/S Speed, A/D Turn, SPACE Fire)
+     - Objectives section (Hunt ships, Survive, Collect loot)
+     - Blinking "Press SPACE to Set Sail!" prompt
+   → Game pauses during intro, starts when player dismisses it
+
+### Verification:
+- Tested gameplay start with intro screen visible
+- Ship immediately moves after dismissing intro
+- Enemies visible within first 10 seconds of gameplay
+- All feedback items addressed
