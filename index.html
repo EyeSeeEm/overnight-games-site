@@ -303,16 +303,10 @@
     .card-rating .star-click:hover {
       transform: scale(1.2);
     }
-    .card-rating.user-rated .star-click { color: #ffd700; }
-    .card-rating.user-rated .star-click.empty { color: #444; }
-    .card-rating.agent-rated .star-click { color: #666; }
-    .card-rating.agent-rated .star-click.filled { color: #888; }
-    .card-rating .rating-label {
-      font-size: 9px;
-      color: #888;
-      margin-left: 4px;
-      align-self: center;
-    }
+    .card-rating .star-click { color: #444; }
+    .card-rating .star-click.filled { color: #666; }
+    .card-rating.user-rated .star-click { color: #444; }
+    .card-rating.user-rated .star-click.filled { color: #ffd700; }
 
     /* Star rating component */
     .star-rating {
@@ -519,6 +513,23 @@
       color: #fff;
       font-size: 16px;
     }
+    .player-rating {
+      display: flex;
+      gap: 2px;
+      margin: 0 20px;
+    }
+    .player-star {
+      font-size: 24px;
+      color: #444;
+      cursor: pointer;
+      transition: color 0.1s, transform 0.1s;
+    }
+    .player-star:hover {
+      transform: scale(1.2);
+    }
+    .player-star.filled {
+      color: #ffd700;
+    }
     .player-actions {
       display: flex;
       gap: 8px;
@@ -590,24 +601,10 @@
       padding: 12px;
       border-top: 1px solid #2a3f5f;
     }
-    .player-notes-footer button {
-      width: 100%;
-      background: linear-gradient(to right, #75b022, #588a1b);
-      color: #fff;
-      border: none;
-      padding: 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .player-notes-footer button:hover {
-      background: linear-gradient(to right, #8bc53f, #6b9d2a);
-    }
     .player-notes-footer .saved-msg {
       text-align: center;
       color: #a4d007;
       font-size: 12px;
-      margin-top: 8px;
       opacity: 0;
       transition: opacity 0.3s;
     }
@@ -744,12 +741,11 @@
     <div class="control-group">
       <label>Sort</label>
       <select id="sortBy">
-        <option value="grouped">By Game (Grouped)</option>
+        <option value="grouped">By Game</option>
+        <option value="final-rating">By Rating</option>
         <option value="date-desc">Recent</option>
         <option value="date-asc">Oldest</option>
         <option value="name">Name</option>
-        <option value="rating">Auto Rating</option>
-        <option value="final-rating">Final Rating ★</option>
       </select>
     </div>
     <div class="control-group">
@@ -838,6 +834,13 @@
       <div class="player-game">
         <div class="player-header">
           <span class="player-title" id="playerTitle">Game Name</span>
+          <div class="player-rating" id="playerRating">
+            <span class="player-star" onclick="rateFromPlayer(1)">★</span>
+            <span class="player-star" onclick="rateFromPlayer(2)">★</span>
+            <span class="player-star" onclick="rateFromPlayer(3)">★</span>
+            <span class="player-star" onclick="rateFromPlayer(4)">★</span>
+            <span class="player-star" onclick="rateFromPlayer(5)">★</span>
+          </div>
           <div class="player-actions">
             <button class="player-btn" onclick="restartGame()" style="background:#c97f00;">↻ Restart</button>
             <button class="player-btn" onclick="openInNewTab()">Open in New Tab</button>
@@ -855,7 +858,6 @@
           <textarea id="playerNotesText" placeholder="Add notes while playing...&#10;&#10;- Bugs found&#10;- Ideas for improvement&#10;- What works well"></textarea>
         </div>
         <div class="player-notes-footer">
-          <button onclick="savePlayerNotes()">Save Notes</button>
           <div class="saved-msg" id="playerSavedMsg">✓ Saved!</div>
         </div>
       </div>
@@ -903,6 +905,8 @@
         delete brokenGames[gameId];
       } else {
         brokenGames[gameId] = true;
+        // Broken = 0 points, clear any rating
+        delete finalRatings[gameId];
       }
       await saveData();
       renderGames();
@@ -957,7 +961,10 @@
           document.getElementById('playerNotesText').value = gameNotes[game.id] || '';
           document.getElementById('playerModal').classList.add('active');
           document.body.style.overflow = 'hidden';
-          setTimeout(scaleIframeToFit, 100);
+          setTimeout(() => {
+            scaleIframeToFit();
+            updatePlayerRatingStars();
+          }, 100);
           // Replace current history state instead of pushing
           history.replaceState({ playing: true, gameId: game.id }, '', '?playing=' + game.id);
         }
@@ -1001,7 +1008,6 @@
       switch (sortBy) {
         case 'date-asc': games.sort((a, b) => new Date(a.createdDate) - new Date(b.createdDate)); break;
         case 'name': games.sort((a, b) => a.name.localeCompare(b.name)); break;
-        case 'rating': games.sort((a, b) => (b.rating || 0) - (a.rating || 0)); break;
         case 'final-rating': games.sort((a, b) => (finalRatings[b.id] || 0) - (finalRatings[a.id] || 0)); break;
         case 'grouped': games.sort((a, b) => {
           // Extract base game name (without -expanded, -polished, -v2)
@@ -1044,8 +1050,11 @@
       document.getElementById('playerModal').classList.add('active');
       document.body.style.overflow = 'hidden'; // Prevent background scroll
 
-      // Scale iframe to fit after a short delay
-      setTimeout(scaleIframeToFit, 100);
+      // Scale iframe and update rating display
+      setTimeout(() => {
+        scaleIframeToFit();
+        updatePlayerRatingStars();
+      }, 100);
 
       // Push history state so back button closes modal
       history.pushState({ playing: true, gameId: gameId }, '', '?playing=' + gameId);
@@ -1092,6 +1101,18 @@
     });
 
     function closePlayer() {
+      // Auto-save notes before closing
+      if (currentPlayerGame) {
+        const text = document.getElementById('playerNotesText').value.trim();
+        if (text) {
+          gameNotes[currentPlayerGame.id] = text;
+        } else {
+          delete gameNotes[currentPlayerGame.id];
+        }
+        saveData();
+        renderGames();
+      }
+
       document.getElementById('playerModal').classList.remove('active');
       document.getElementById('playerIframe').src = 'about:blank';
       document.body.style.overflow = ''; // Restore scrolling
@@ -1109,6 +1130,17 @@
     // Handle browser back button
     window.addEventListener('popstate', function(e) {
       if (document.getElementById('playerModal').classList.contains('active')) {
+        // Auto-save notes before closing
+        if (currentPlayerGame) {
+          const text = document.getElementById('playerNotesText').value.trim();
+          if (text) {
+            gameNotes[currentPlayerGame.id] = text;
+          } else {
+            delete gameNotes[currentPlayerGame.id];
+          }
+          saveData();
+          renderGames();
+        }
         document.body.style.overflow = ''; // Restore scrolling
         setTimeout(() => window.scrollTo(0, savedScrollPosition), 50);
         document.getElementById('playerModal').classList.remove('active');
@@ -1202,9 +1234,38 @@
         delete brokenGames[currentPlayerGame.id];
       } else {
         brokenGames[currentPlayerGame.id] = true;
+        // Broken = 0 points, clear any rating
+        delete finalRatings[currentPlayerGame.id];
       }
       await saveData();
       renderGames();
+      updatePlayerRatingStars();
+    }
+
+    // Rate game from player modal
+    async function rateFromPlayer(rating) {
+      if (!currentPlayerGame) return;
+      // Toggle off if clicking same rating
+      if (finalRatings[currentPlayerGame.id] === rating) {
+        delete finalRatings[currentPlayerGame.id];
+      } else {
+        finalRatings[currentPlayerGame.id] = rating;
+        // Unmark as broken if rating
+        delete brokenGames[currentPlayerGame.id];
+      }
+      await saveData();
+      renderGames();
+      updatePlayerRatingStars();
+    }
+
+    // Update player modal rating stars display
+    function updatePlayerRatingStars() {
+      if (!currentPlayerGame) return;
+      const rating = finalRatings[currentPlayerGame.id] || 0;
+      const stars = document.querySelectorAll('.player-star');
+      stars.forEach((star, i) => {
+        star.classList.toggle('filled', i < rating);
+      });
     }
 
     let currentModalRating = 0;
@@ -1542,21 +1603,16 @@
 
         const variantLabel = sortBy === 'grouped' ? getVariantLabel(g) : '';
 
-        const userRating = finalRatings[g.id] || 0;
-        const agentRating = g.rating || 0;
-        const hasUserRating = userRating > 0;
-        const ratingToShow = hasUserRating ? userRating : agentRating;
-        const ratingClass = hasUserRating ? 'user-rated' : 'agent-rated';
-        const ratingLabel = hasUserRating ? '' : (agentRating ? '<span class="rating-label">AI</span>' : '');
+        const isBroken = brokenGames[g.id];
+        const userRating = isBroken ? 0 : (finalRatings[g.id] || 0);
 
         html += `
-        <div class="game-card ${g.played && !isGameUpdated(g.id) ? 'played' : ''} ${isGameUpdated(g.id) ? 'updated' : ''} ${brokenGames[g.id] ? 'broken' : ''}" onclick="playGame('${g.id}', '${g.path}')">
+        <div class="game-card ${g.played && !isGameUpdated(g.id) ? 'played' : ''} ${isGameUpdated(g.id) ? 'updated' : ''} ${isBroken ? 'broken' : ''}" onclick="playGame('${g.id}', '${g.path}')">
           <button class="notes-btn ${gameNotes[g.id] ? 'has-notes' : ''}" onclick="openNotes(event, '${g.id}', '${g.name.replace(/'/g, "\\'")}')">📝</button>
-          <button class="broken-btn ${brokenGames[g.id] ? 'is-broken' : ''}" onclick="toggleBroken(event, '${g.id}')" title="Mark as broken">✕</button>
-          <div class="card-rating ${ratingClass}" onclick="event.stopPropagation()">
-            ${[1,2,3,4,5].map(n => `<span class="star-click ${n <= ratingToShow ? 'filled' : 'empty'}" onclick="rateGame(event, '${g.id}', ${n})">★</span>`).join('')}
-            ${ratingLabel}
-          </div>
+          <button class="broken-btn ${isBroken ? 'is-broken' : ''}" onclick="toggleBroken(event, '${g.id}')" title="Mark as broken">✕</button>
+          ${!isBroken ? `<div class="card-rating ${userRating > 0 ? 'user-rated' : ''}" onclick="event.stopPropagation()">
+            ${[1,2,3,4,5].map(n => `<span class="star-click ${n <= userRating ? 'filled' : 'empty'}" onclick="rateGame(event, '${g.id}', ${n})">★</span>`).join('')}
+          </div>` : ''}
           ${g.screenshot
             ? `<img class="screenshot" src="${g.path}${g.screenshot}" alt="${g.name}" onerror="this.outerHTML='<div class=no-screenshot>🎮</div>'">`
             : '<div class="no-screenshot">🎮</div>'
