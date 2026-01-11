@@ -63,46 +63,225 @@
     }
 
     .controls {
-      background: #16202d;
-      padding: 12px 24px;
+      background: linear-gradient(to bottom, #1a2634, #151d27);
+      padding: 12px 20px;
       display: flex;
       gap: 12px;
       align-items: center;
       flex-wrap: wrap;
+      border-bottom: 1px solid #2a3f5f;
     }
     .control-group {
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .control-group label {
-      font-size: 11px;
-      text-transform: uppercase;
+    .control-divider {
+      width: 1px;
+      height: 24px;
+      background: #3d5a6c;
+      margin: 0 4px;
+    }
+
+    /* Filter Chips */
+    .filter-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      background: transparent;
+      border: 1px solid #3d5a6c;
       color: #8f98a0;
-    }
-    .toggle-group {
-      background: rgba(0,0,0,0.2);
       padding: 6px 12px;
-      border-radius: 3px;
-      border: 1px solid #3d6c8a;
+      border-radius: 16px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
     }
-    .toggle-label {
+    .chip:hover {
+      border-color: #66c0f4;
+      color: #c6d4df;
+      background: rgba(102, 192, 244, 0.1);
+    }
+    .chip.active {
+      background: linear-gradient(to bottom, #4a90b8, #3d7a9e);
+      border-color: #66c0f4;
+      color: #fff;
+      font-weight: 500;
+    }
+
+    /* Filter Dropdown */
+    .filter-dropdown {
+      position: relative;
+    }
+    .filter-btn {
+      background: linear-gradient(to bottom, #2a475e, #1e3a4c);
+      border: 1px solid #3d6c8a;
+      color: #c6d4df;
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s;
+    }
+    .filter-btn:hover {
+      background: linear-gradient(to bottom, #3d6c8a, #2a475e);
+      border-color: #66c0f4;
+    }
+    .filter-btn .arrow {
+      font-size: 8px;
+      opacity: 0.7;
+    }
+    .filter-count {
+      background: #66c0f4;
+      color: #1b2838;
+      font-size: 10px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 10px;
+      display: none;
+    }
+    .filter-count.show {
+      display: inline;
+    }
+    .filter-panel {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      background: #1b2838;
+      border: 1px solid #3d6c8a;
+      border-radius: 6px;
+      padding: 12px;
+      min-width: 280px;
+      z-index: 1000;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .filter-panel.show {
+      display: block;
+    }
+    .filter-section {
+      margin-bottom: 12px;
+    }
+    .filter-section:last-of-type {
+      margin-bottom: 8px;
+    }
+    .filter-section-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #66c0f4;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+    .filter-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .filter-option {
       display: flex;
       align-items: center;
       gap: 6px;
+      background: rgba(0,0,0,0.2);
+      padding: 5px 10px;
+      border-radius: 4px;
       cursor: pointer;
-      text-transform: none;
       font-size: 12px;
+      color: #8f98a0;
+      transition: all 0.15s;
+      border: 1px solid transparent;
     }
-    .toggle-label input[type="checkbox"] {
-      accent-color: #66c0f4;
-      width: 14px;
-      height: 14px;
-      cursor: pointer;
-    }
-    .toggle-label span {
+    .filter-option:hover {
+      background: rgba(102, 192, 244, 0.1);
       color: #c6d4df;
     }
+    .filter-option:has(input:checked) {
+      background: rgba(102, 192, 244, 0.2);
+      border-color: #66c0f4;
+      color: #fff;
+    }
+    .filter-option input {
+      accent-color: #66c0f4;
+      cursor: pointer;
+    }
+    .filter-actions {
+      border-top: 1px solid #2a3f5f;
+      padding-top: 10px;
+      margin-top: 4px;
+    }
+    .filter-clear {
+      background: transparent;
+      border: 1px solid #4a6572;
+      color: #8f98a0;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-clear:hover {
+      border-color: #ff6b6b;
+      color: #ff6b6b;
+    }
+
+    /* Search Box */
+    .search-box {
+      margin-left: auto;
+    }
+    .search-box input {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #3d5a6c;
+      border-radius: 16px;
+      padding: 6px 14px;
+      width: 180px;
+      transition: all 0.2s;
+    }
+    .search-box input:focus {
+      background: rgba(0,0,0,0.4);
+      border-color: #66c0f4;
+      outline: none;
+      width: 220px;
+    }
+
+    /* Active Filters Bar */
+    .active-filters {
+      display: none;
+      background: #151d27;
+      padding: 8px 20px;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      border-bottom: 1px solid #2a3f5f;
+    }
+    .active-filters.show {
+      display: flex;
+    }
+    .active-filter {
+      background: rgba(102, 192, 244, 0.15);
+      border: 1px solid #3d6c8a;
+      color: #66c0f4;
+      padding: 4px 8px 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .active-filter .remove {
+      cursor: pointer;
+      opacity: 0.7;
+      font-size: 14px;
+    }
+    .active-filter .remove:hover {
+      opacity: 1;
+    }
+
     select, input[type="text"] {
       background: #316282;
       border: none;
@@ -789,8 +968,8 @@
   </div>
 
   <div class="controls">
+    <!-- Sort dropdown -->
     <div class="control-group">
-      <label>Sort</label>
       <select id="sortBy">
         <option value="grouped">By Game</option>
         <option value="final-rating">By Rating</option>
@@ -800,46 +979,62 @@
         <option value="name">Name</option>
       </select>
     </div>
-    <div class="control-group">
-      <label>Night</label>
-      <select id="filterNight">
-        <option value="">All Nights</option>
-        <option value="night-1">Night 1</option>
-        <option value="night-2">Night 2</option>
-        <option value="night-3">Night 3</option>
-        <option value="night-4">Night 4</option>
-        <option value="night-5">Night 5</option>
-      </select>
+
+    <!-- Divider -->
+    <div class="control-divider"></div>
+
+    <!-- Quick filter chips -->
+    <div class="filter-chips">
+      <button class="chip active" data-filter="hideBroken" id="chipHideBroken">Hide Broken</button>
+      <button class="chip" data-filter="unplayed" id="chipUnplayed">Unplayed</button>
+      <button class="chip" data-filter="hasNotes" id="chipHasNotes">Has Notes</button>
+      <button class="chip" data-filter="rating5" id="chipRating5">★★★★★</button>
+      <button class="chip" data-filter="rating4" id="chipRating4">★★★★+</button>
+      <button class="chip" data-filter="updated" id="chipUpdated">Updated</button>
+      <button class="chip" data-filter="showBroken" id="chipShowBroken">Broken Only</button>
     </div>
-    <div class="control-group">
-      <label>Framework</label>
-      <select id="filterFramework">
-        <option value="">All</option>
-      </select>
+
+    <!-- Divider -->
+    <div class="control-divider"></div>
+
+    <!-- Filters dropdown -->
+    <div class="filter-dropdown">
+      <button class="filter-btn" onclick="toggleFilterPanel()">
+        <span>Filters</span>
+        <span class="filter-count" id="filterCount"></span>
+        <span class="arrow">▼</span>
+      </button>
+      <div class="filter-panel" id="filterPanel">
+        <div class="filter-section">
+          <div class="filter-section-title">Night</div>
+          <div class="filter-options">
+            <label class="filter-option"><input type="checkbox" data-night="night-1"> Night 1</label>
+            <label class="filter-option"><input type="checkbox" data-night="night-2"> Night 2</label>
+            <label class="filter-option"><input type="checkbox" data-night="night-3"> Night 3</label>
+            <label class="filter-option"><input type="checkbox" data-night="night-4"> Night 4</label>
+            <label class="filter-option"><input type="checkbox" data-night="night-5"> Night 5</label>
+          </div>
+        </div>
+        <div class="filter-section">
+          <div class="filter-section-title">Framework</div>
+          <div class="filter-options" id="frameworkOptions">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="filter-clear" onclick="clearAllFilters()">Clear All</button>
+        </div>
+      </div>
     </div>
-    <div class="control-group">
-      <label>Filter</label>
-      <select id="filterStatus">
-        <option value="">All Games</option>
-        <option value="unplayed">Unplayed</option>
-        <option value="updated">Updated</option>
-        <option value="has-notes">Has Notes</option>
-        <option value="no-rating">No Rating</option>
-        <option value="rating-5">★★★★★ (5)</option>
-        <option value="rating-4">★★★★☆ (4+)</option>
-        <option value="broken">Broken Only</option>
-      </select>
-    </div>
-    <div class="control-group toggle-group">
-      <label class="toggle-label">
-        <input type="checkbox" id="hideBroken" checked>
-        <span>Hide Broken</span>
-      </label>
-    </div>
-    <div class="control-group">
-      <input type="text" id="search" placeholder="Search games...">
+
+    <!-- Search -->
+    <div class="search-box">
+      <input type="text" id="search" placeholder="🔍 Search...">
     </div>
   </div>
+
+  <!-- Active filters display -->
+  <div class="active-filters" id="activeFilters"></div>
 
   <div class="content">
     <div class="games-grid" id="gamesGrid"></div>
@@ -1003,6 +1198,7 @@
         allGames.forEach(g => g.played = !!playedStatus[g.id]);
         populateFilters();
         restoreFilters(); // Restore AFTER filters are populated
+        updateActiveFiltersDisplay();
         renderGames();
         restorePlayingGame(); // Reopen game if ?playing= in URL
       } catch (e) {
@@ -1037,52 +1233,186 @@
 
     const otherFrameworks = ['excalibur', 'kaboom', 'kaplay', 'crisp-game-lib', 'melonjs', 'pixijs'];
 
+    // Active chip filters state
+    let activeChips = {
+      hideBroken: true,
+      unplayed: false,
+      hasNotes: false,
+      rating5: false,
+      rating4: false,
+      updated: false,
+      showBroken: false
+    };
+
     function populateFilters() {
       const frameworks = [...new Set(allGames.map(g => g.framework))].sort();
-      const select = document.getElementById('filterFramework');
+      const container = document.getElementById('frameworkOptions');
       // Add main frameworks first
       frameworks.filter(f => !otherFrameworks.includes(f)).forEach(f => {
-        const opt = document.createElement('option');
-        opt.value = f;
-        opt.textContent = f;
-        select.appendChild(opt);
+        const label = document.createElement('label');
+        label.className = 'filter-option';
+        label.innerHTML = `<input type="checkbox" data-framework="${f}"> ${f}`;
+        container.appendChild(label);
       });
       // Add "Other" if any games use those frameworks
       if (frameworks.some(f => otherFrameworks.includes(f))) {
-        const opt = document.createElement('option');
-        opt.value = 'other';
-        opt.textContent = 'Other';
-        select.appendChild(opt);
+        const label = document.createElement('label');
+        label.className = 'filter-option';
+        label.innerHTML = `<input type="checkbox" data-framework="other"> Other`;
+        container.appendChild(label);
       }
+    }
+
+    // Toggle filter panel
+    function toggleFilterPanel() {
+      const panel = document.getElementById('filterPanel');
+      panel.classList.toggle('show');
+    }
+
+    // Close panel when clicking outside
+    document.addEventListener('click', function(e) {
+      const dropdown = document.querySelector('.filter-dropdown');
+      const panel = document.getElementById('filterPanel');
+      if (dropdown && !dropdown.contains(e.target) && panel.classList.contains('show')) {
+        panel.classList.remove('show');
+      }
+    });
+
+    // Toggle chip filter
+    function toggleChip(chipId) {
+      const chip = document.getElementById(chipId);
+      const filter = chip.dataset.filter;
+
+      // Special handling for mutually exclusive chips
+      if (filter === 'showBroken') {
+        activeChips.hideBroken = false;
+        document.getElementById('chipHideBroken').classList.remove('active');
+      } else if (filter === 'hideBroken') {
+        activeChips.showBroken = false;
+        document.getElementById('chipShowBroken').classList.remove('active');
+      }
+
+      // Rating chips are mutually exclusive
+      if (filter === 'rating5' && activeChips.rating4) {
+        activeChips.rating4 = false;
+        document.getElementById('chipRating4').classList.remove('active');
+      } else if (filter === 'rating4' && activeChips.rating5) {
+        activeChips.rating5 = false;
+        document.getElementById('chipRating5').classList.remove('active');
+      }
+
+      activeChips[filter] = !activeChips[filter];
+      chip.classList.toggle('active', activeChips[filter]);
+      saveFilters();
+      renderGames();
+    }
+
+    // Clear all filters
+    function clearAllFilters() {
+      // Reset chips (except hideBroken)
+      Object.keys(activeChips).forEach(k => {
+        activeChips[k] = k === 'hideBroken';
+      });
+      document.querySelectorAll('.chip').forEach(c => {
+        c.classList.toggle('active', c.dataset.filter === 'hideBroken');
+      });
+      // Reset night checkboxes
+      document.querySelectorAll('[data-night]').forEach(cb => cb.checked = false);
+      // Reset framework checkboxes
+      document.querySelectorAll('[data-framework]').forEach(cb => cb.checked = false);
+      // Reset search
+      document.getElementById('search').value = '';
+      saveFilters();
+      renderGames();
+      updateActiveFiltersDisplay();
+    }
+
+    // Get selected nights
+    function getSelectedNights() {
+      return [...document.querySelectorAll('[data-night]:checked')].map(cb => cb.dataset.night);
+    }
+
+    // Get selected frameworks
+    function getSelectedFrameworks() {
+      return [...document.querySelectorAll('[data-framework]:checked')].map(cb => cb.dataset.framework);
+    }
+
+    // Update active filters display
+    function updateActiveFiltersDisplay() {
+      const container = document.getElementById('activeFilters');
+      const nights = getSelectedNights();
+      const frameworks = getSelectedFrameworks();
+      const search = document.getElementById('search').value;
+
+      let html = '';
+      nights.forEach(n => {
+        html += `<span class="active-filter">${n.replace('night-', 'Night ')} <span class="remove" onclick="removeNightFilter('${n}')">×</span></span>`;
+      });
+      frameworks.forEach(f => {
+        html += `<span class="active-filter">${f} <span class="remove" onclick="removeFrameworkFilter('${f}')">×</span></span>`;
+      });
+      if (search) {
+        html += `<span class="active-filter">"${search}" <span class="remove" onclick="clearSearch()">×</span></span>`;
+      }
+
+      container.innerHTML = html;
+      container.classList.toggle('show', html.length > 0);
+
+      // Update filter count badge
+      const count = nights.length + frameworks.length;
+      const countEl = document.getElementById('filterCount');
+      countEl.textContent = count;
+      countEl.classList.toggle('show', count > 0);
+    }
+
+    function removeNightFilter(night) {
+      document.querySelector(`[data-night="${night}"]`).checked = false;
+      onFilterChange();
+    }
+
+    function removeFrameworkFilter(framework) {
+      document.querySelector(`[data-framework="${framework}"]`).checked = false;
+      onFilterChange();
+    }
+
+    function clearSearch() {
+      document.getElementById('search').value = '';
+      onFilterChange();
     }
 
     function getFilteredGames() {
       let games = [...allGames];
       const search = document.getElementById('search').value.toLowerCase();
-      const night = document.getElementById('filterNight').value;
-      const framework = document.getElementById('filterFramework').value;
-      const status = document.getElementById('filterStatus').value;
+      const nights = getSelectedNights();
+      const frameworks = getSelectedFrameworks();
       const sortBy = document.getElementById('sortBy').value;
-      const hideBroken = document.getElementById('hideBroken').checked;
 
+      // Search filter
       if (search) games = games.filter(g => g.name.toLowerCase().includes(search) || g.gameDir.toLowerCase().includes(search));
-      if (night) games = games.filter(g => g.night === night);
-      // Framework filter - "other" groups minor frameworks
-      if (framework === 'other') {
-        games = games.filter(g => otherFrameworks.includes(g.framework));
-      } else if (framework) {
-        games = games.filter(g => g.framework === framework);
+
+      // Night filter (any selected)
+      if (nights.length > 0) {
+        games = games.filter(g => nights.includes(g.night));
       }
-      // Status filters
-      if (status === 'unplayed') games = games.filter(g => !g.played);
-      else if (status === 'updated') games = games.filter(g => isGameUpdated(g.id));
-      else if (status === 'has-notes') games = games.filter(g => gameNotes[g.id]);
-      else if (status === 'no-rating') games = games.filter(g => !finalRatings[g.id] && !brokenGames[g.id]);
-      else if (status === 'rating-5') games = games.filter(g => finalRatings[g.id] === 5);
-      else if (status === 'rating-4') games = games.filter(g => finalRatings[g.id] >= 4);
-      else if (status === 'broken') games = games.filter(g => brokenGames[g.id]);
-      // Hide broken toggle (but not when explicitly viewing broken)
-      if (hideBroken && status !== 'broken') {
+
+      // Framework filter (any selected)
+      if (frameworks.length > 0) {
+        games = games.filter(g => {
+          if (frameworks.includes('other') && otherFrameworks.includes(g.framework)) return true;
+          return frameworks.includes(g.framework);
+        });
+      }
+
+      // Chip filters
+      if (activeChips.unplayed) games = games.filter(g => !g.played);
+      if (activeChips.hasNotes) games = games.filter(g => gameNotes[g.id]);
+      if (activeChips.rating5) games = games.filter(g => finalRatings[g.id] === 5);
+      if (activeChips.rating4) games = games.filter(g => finalRatings[g.id] >= 4);
+      if (activeChips.updated) games = games.filter(g => isGameUpdated(g.id));
+      if (activeChips.showBroken) games = games.filter(g => brokenGames[g.id]);
+
+      // Hide broken (unless showing broken only)
+      if (activeChips.hideBroken && !activeChips.showBroken) {
         games = games.filter(g => !brokenGames[g.id]);
       }
 
@@ -1830,64 +2160,71 @@
     }
 
     // Persist filters to localStorage AND URL
-    const filterIds = ['sortBy', 'filterNight', 'filterFramework', 'filterStatus', 'search'];
-    const urlParamMap = { sortBy: 'sort', filterNight: 'night', filterFramework: 'framework', filterStatus: 'status', search: 'q' };
-
     function saveFilters() {
-      const filters = {};
-      filterIds.forEach(id => filters[id] = document.getElementById(id).value);
-      filters.hideBroken = document.getElementById('hideBroken').checked;
+      const filters = {
+        sortBy: document.getElementById('sortBy').value,
+        search: document.getElementById('search').value,
+        chips: activeChips,
+        nights: getSelectedNights(),
+        frameworks: getSelectedFrameworks()
+      };
       localStorage.setItem('gameFilters', JSON.stringify(filters));
-      updateURL();
-    }
-
-    function updateURL() {
-      const params = new URLSearchParams();
-      filterIds.forEach(id => {
-        const val = document.getElementById(id).value;
-        if (val) params.set(urlParamMap[id], val);
-      });
-      const newURL = params.toString() ? '?' + params.toString() : window.location.pathname;
-      history.replaceState(null, '', newURL);
     }
 
     function restoreFilters() {
-      // URL params take priority over localStorage
-      const urlParams = new URLSearchParams(window.location.search);
-      const hasURLParams = urlParams.toString().length > 0;
+      try {
+        const filters = JSON.parse(localStorage.getItem('gameFilters') || '{}');
+        if (filters.sortBy) document.getElementById('sortBy').value = filters.sortBy;
+        if (filters.search) document.getElementById('search').value = filters.search;
 
-      if (hasURLParams) {
-        filterIds.forEach(id => {
-          const urlKey = urlParamMap[id];
-          if (urlParams.has(urlKey)) {
-            document.getElementById(id).value = urlParams.get(urlKey);
-          }
-        });
-      } else {
-        try {
-          const filters = JSON.parse(localStorage.getItem('gameFilters') || '{}');
-          filterIds.forEach(id => {
-            if (filters[id]) document.getElementById(id).value = filters[id];
+        // Restore chips
+        if (filters.chips) {
+          activeChips = { ...activeChips, ...filters.chips };
+          Object.keys(activeChips).forEach(key => {
+            const chip = document.getElementById('chip' + key.charAt(0).toUpperCase() + key.slice(1));
+            if (chip) chip.classList.toggle('active', activeChips[key]);
           });
-          // Restore hideBroken toggle (default to true if not set)
-          if (filters.hideBroken !== undefined) {
-            document.getElementById('hideBroken').checked = filters.hideBroken;
-          }
-        } catch(e) {}
-      }
+        }
+
+        // Restore nights
+        if (filters.nights) {
+          filters.nights.forEach(n => {
+            const cb = document.querySelector(`[data-night="${n}"]`);
+            if (cb) cb.checked = true;
+          });
+        }
+
+        // Restore frameworks
+        if (filters.frameworks) {
+          filters.frameworks.forEach(f => {
+            const cb = document.querySelector(`[data-framework="${f}"]`);
+            if (cb) cb.checked = true;
+          });
+        }
+      } catch(e) {}
     }
 
     function onFilterChange() {
       saveFilters();
       renderGames();
+      updateActiveFiltersDisplay();
     }
 
+    // Event listeners
     document.getElementById('sortBy').addEventListener('change', onFilterChange);
-    document.getElementById('filterNight').addEventListener('change', onFilterChange);
-    document.getElementById('filterFramework').addEventListener('change', onFilterChange);
-    document.getElementById('filterStatus').addEventListener('change', onFilterChange);
-    document.getElementById('hideBroken').addEventListener('change', onFilterChange);
     document.getElementById('search').addEventListener('input', onFilterChange);
+
+    // Chip click handlers
+    document.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => toggleChip(chip.id));
+    });
+
+    // Filter panel checkbox handlers
+    document.addEventListener('change', function(e) {
+      if (e.target.matches('[data-night]') || e.target.matches('[data-framework]')) {
+        onFilterChange();
+      }
+    });
 
     loadGames(); // restoreFilters() is called inside after populateFilters()
   </script>
