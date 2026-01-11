@@ -1666,7 +1666,8 @@
       const sortBy = document.getElementById('sortBy').value;
       document.getElementById('totalGames').textContent = allGames.length + ' Games';
       document.getElementById('playedGames').textContent = allGames.filter(g => g.played).length + ' Played';
-      document.getElementById('ratedGames').textContent = 'Rated ' + Object.keys(finalRatings).length + '/' + allGames.length;
+      const ratedCount = new Set([...Object.keys(finalRatings), ...Object.keys(brokenGames)]).size;
+      document.getElementById('ratedGames').textContent = 'Rated ' + ratedCount + '/' + allGames.length;
       document.getElementById('updatedGamesCount').textContent = allGames.filter(g => isGameUpdated(g.id)).length + ' Updated';
 
       const getBase = (g) => g.gameDir.replace(/-expanded$|-polished$|-v2$/, '');
