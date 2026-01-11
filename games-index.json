@@ -2968,5 +2968,23 @@
     "createdDate": "2026-01-11",
     "played": false,
     "playedDate": null
+  },
+  {
+    "id": "night-5/binding-of-isaac-clone/canvas",
+    "night": "night-5",
+    "gameDir": "binding-of-isaac-clone",
+    "framework": "canvas",
+    "name": "Basement Tears (Test Harness Version)",
+    "genre": "roguelike-shooter",
+    "description": "Binding of Isaac clone with test harness - 18/18 automated tests passing. Features tears combat, room transitions, pickups, and boss fights.",
+    "polished": false,
+    "expanded": false,
+    "playable": true,
+    "rating": 0,
+    "screenshot": "screenshot.png",
+    "path": "games/night-5/binding-of-isaac-clone/canvas/",
+    "createdDate": "2026-01-11",
+    "played": false,
+    "playedDate": null
   }
 ]
