@@ -872,6 +872,7 @@
     let updatedGames = JSON.parse(localStorage.getItem('updatedGames') || '{}');
     let currentNoteGameId = null;
     let currentPlayerGame = null;
+    let savedScrollPosition = 0;
 
     // Load notes, broken status, and ratings from server (falls back to localStorage)
     async function loadNotes() {
@@ -947,12 +948,15 @@
       if (playingId) {
         const game = allGames.find(g => g.id === playingId);
         if (game) {
+          // Save current scroll position
+          savedScrollPosition = window.scrollY;
           // Open the game without pushing new history state
           currentPlayerGame = { id: game.id, path: game.path, game: game };
           document.getElementById('playerTitle').textContent = game.name;
           document.getElementById('playerIframe').src = game.path;
           document.getElementById('playerNotesText').value = gameNotes[game.id] || '';
           document.getElementById('playerModal').classList.add('active');
+          document.body.style.overflow = 'hidden';
           setTimeout(scaleIframeToFit, 100);
           // Replace current history state instead of pushing
           history.replaceState({ playing: true, gameId: game.id }, '', '?playing=' + game.id);
@@ -1029,12 +1033,16 @@
       const game = allGames.find(g => g.id === gameId);
       if (game) game.played = true;
 
+      // Save scroll position before opening modal
+      savedScrollPosition = window.scrollY;
+
       // Open in player modal with notes panel
       currentPlayerGame = { id: gameId, path: path, game: game };
       document.getElementById('playerTitle').textContent = game ? game.name : 'Game';
       document.getElementById('playerIframe').src = path;
       document.getElementById('playerNotesText').value = gameNotes[gameId] || '';
       document.getElementById('playerModal').classList.add('active');
+      document.body.style.overflow = 'hidden'; // Prevent background scroll
 
       // Scale iframe to fit after a short delay
       setTimeout(scaleIframeToFit, 100);
@@ -1086,16 +1094,23 @@
     function closePlayer() {
       document.getElementById('playerModal').classList.remove('active');
       document.getElementById('playerIframe').src = 'about:blank';
+      document.body.style.overflow = ''; // Restore scrolling
       currentPlayerGame = null;
+
       // Go back in history if we pushed a state
       if (history.state && history.state.playing) {
         history.back();
       }
+
+      // Restore scroll position after a brief delay
+      setTimeout(() => window.scrollTo(0, savedScrollPosition), 50);
     }
-    
+
     // Handle browser back button
     window.addEventListener('popstate', function(e) {
       if (document.getElementById('playerModal').classList.contains('active')) {
+        document.body.style.overflow = ''; // Restore scrolling
+        setTimeout(() => window.scrollTo(0, savedScrollPosition), 50);
         document.getElementById('playerModal').classList.remove('active');
         document.getElementById('playerIframe').src = 'about:blank';
         currentPlayerGame = null;
@@ -1104,11 +1119,22 @@
     
     // Handle Escape key to close modals
     document.addEventListener('keydown', function(e) {
+      const playerOpen = document.getElementById('playerModal').classList.contains('active');
+      const notesOpen = document.getElementById('notesModal').classList.contains('active');
+
       if (e.key === 'Escape') {
-        if (document.getElementById('playerModal').classList.contains('active')) {
+        if (playerOpen) {
           closePlayer();
-        } else if (document.getElementById('notesModal').classList.contains('active')) {
+        } else if (notesOpen) {
           closeNotes();
+        }
+      }
+
+      // Block arrow keys and space from scrolling the background when modal is open
+      if (playerOpen && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+        // Only prevent if not focused on notes textarea
+        if (document.activeElement?.id !== 'playerNotesText') {
+          e.preventDefault();
         }
       }
     });
@@ -1519,6 +1545,28 @@
           </div>
         </div>`;
       });
+
+      // Show empty state if no games match filters
+      if (games.length === 0) {
+        const night = document.getElementById('filterNight').value;
+        const framework = document.getElementById('filterFramework').value;
+        const status = document.getElementById('filterStatus').value;
+        const search = document.getElementById('search').value;
+
+        let msg = 'No games found';
+        const parts = [];
+        if (framework) parts.push(framework);
+        if (night) parts.push(night.replace('night-', 'Night '));
+        if (status) parts.push(status);
+        if (search) parts.push(`matching "${search}"`);
+        if (parts.length) msg += ': ' + parts.join(' + ');
+
+        html = `<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #8f98a0;">
+          <div style="font-size: 48px; margin-bottom: 20px;">🎮</div>
+          <div style="font-size: 18px; margin-bottom: 10px;">${msg}</div>
+          <div style="font-size: 13px;">Try adjusting your filters</div>
+        </div>`;
+      }
 
       document.getElementById('gamesGrid').innerHTML = html;
     }
