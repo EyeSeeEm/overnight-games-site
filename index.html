@@ -741,6 +741,7 @@
         <div class="player-header">
           <span class="player-title" id="playerTitle">Game Name</span>
           <div class="player-actions">
+            <button class="player-btn" onclick="restartGame()" style="background:#c97f00;">↻ Restart</button>
             <button class="player-btn" onclick="openInNewTab()">Open in New Tab</button>
             <button class="player-btn" onclick="toggleBrokenFromPlayer()">Mark Broken</button>
             <button class="player-btn close-btn" onclick="closePlayer()">Close (Esc)</button>
@@ -970,6 +971,14 @@
     function openInNewTab() {
       if (currentPlayerGame) {
         window.open(currentPlayerGame.path, '_blank');
+      }
+    }
+
+    function restartGame() {
+      if (currentPlayerGame) {
+        const iframe = document.getElementById('playerIframe');
+        iframe.src = 'about:blank';
+        setTimeout(() => { iframe.src = currentPlayerGame.path; }, 50);
       }
     }
 
