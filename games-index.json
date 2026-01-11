@@ -882,6 +882,24 @@
     "playedDate": null
   },
   {
+    "id": "night-1/deep-drill/kaboom",
+    "night": "night-1",
+    "gameDir": "deep-drill",
+    "framework": "kaboom",
+    "name": "Deep Drill",
+    "genre": "mining",
+    "description": "Kaboom.js-based Motherload-style mining game",
+    "polished": false,
+    "expanded": false,
+    "playable": true,
+    "rating": 3,
+    "screenshot": "screenshot.png",
+    "path": "games/night-1/deep-drill/kaboom/",
+    "createdDate": "2026-01-08",
+    "played": false,
+    "playedDate": null
+  },
+  {
     "id": "night-2/derelict-ship/canvas",
     "night": "night-2",
     "gameDir": "derelict-ship",
