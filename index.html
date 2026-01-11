@@ -80,6 +80,29 @@
       text-transform: uppercase;
       color: #8f98a0;
     }
+    .toggle-group {
+      background: rgba(0,0,0,0.2);
+      padding: 6px 12px;
+      border-radius: 3px;
+      border: 1px solid #3d6c8a;
+    }
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      text-transform: none;
+      font-size: 12px;
+    }
+    .toggle-label input[type="checkbox"] {
+      accent-color: #66c0f4;
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+    .toggle-label span {
+      color: #c6d4df;
+    }
     select, input[type="text"] {
       background: #316282;
       border: none;
@@ -795,21 +818,23 @@
       </select>
     </div>
     <div class="control-group">
-      <label>Status</label>
+      <label>Filter</label>
       <select id="filterStatus">
         <option value="">All Games</option>
         <option value="unplayed">Unplayed</option>
-        <option value="played">Played</option>
-        <option value="polished">Polished</option>
+        <option value="updated">Updated</option>
         <option value="has-notes">Has Notes</option>
-        <option value="has-rating">Has Rating</option>
         <option value="no-rating">No Rating</option>
         <option value="rating-5">★★★★★ (5)</option>
         <option value="rating-4">★★★★☆ (4+)</option>
-        <option value="rating-3">★★★☆☆ (3+)</option>
-        <option value="broken">Broken</option>
-        <option value="working">Working</option>
+        <option value="broken">Broken Only</option>
       </select>
+    </div>
+    <div class="control-group toggle-group">
+      <label class="toggle-label">
+        <input type="checkbox" id="hideBroken" checked>
+        <span>Hide Broken</span>
+      </label>
     </div>
     <div class="control-group">
       <input type="text" id="search" placeholder="Search games...">
@@ -1010,15 +1035,25 @@
       }
     }
 
+    const otherFrameworks = ['excalibur', 'kaboom', 'kaplay', 'crisp-game-lib', 'melonjs', 'pixijs'];
+
     function populateFilters() {
       const frameworks = [...new Set(allGames.map(g => g.framework))].sort();
       const select = document.getElementById('filterFramework');
-      frameworks.forEach(f => {
+      // Add main frameworks first
+      frameworks.filter(f => !otherFrameworks.includes(f)).forEach(f => {
         const opt = document.createElement('option');
         opt.value = f;
         opt.textContent = f;
         select.appendChild(opt);
       });
+      // Add "Other" if any games use those frameworks
+      if (frameworks.some(f => otherFrameworks.includes(f))) {
+        const opt = document.createElement('option');
+        opt.value = 'other';
+        opt.textContent = 'Other';
+        select.appendChild(opt);
+      }
     }
 
     function getFilteredGames() {
@@ -1028,21 +1063,28 @@
       const framework = document.getElementById('filterFramework').value;
       const status = document.getElementById('filterStatus').value;
       const sortBy = document.getElementById('sortBy').value;
+      const hideBroken = document.getElementById('hideBroken').checked;
 
       if (search) games = games.filter(g => g.name.toLowerCase().includes(search) || g.gameDir.toLowerCase().includes(search));
       if (night) games = games.filter(g => g.night === night);
-      if (framework) games = games.filter(g => g.framework === framework);
+      // Framework filter - "other" groups minor frameworks
+      if (framework === 'other') {
+        games = games.filter(g => otherFrameworks.includes(g.framework));
+      } else if (framework) {
+        games = games.filter(g => g.framework === framework);
+      }
+      // Status filters
       if (status === 'unplayed') games = games.filter(g => !g.played);
-      else if (status === 'played') games = games.filter(g => g.played);
-      else if (status === 'polished') games = games.filter(g => g.polished);
+      else if (status === 'updated') games = games.filter(g => isGameUpdated(g.id));
       else if (status === 'has-notes') games = games.filter(g => gameNotes[g.id]);
-      else if (status === 'has-rating') games = games.filter(g => finalRatings[g.id]);
-      else if (status === 'no-rating') games = games.filter(g => !finalRatings[g.id]);
+      else if (status === 'no-rating') games = games.filter(g => !finalRatings[g.id] && !brokenGames[g.id]);
       else if (status === 'rating-5') games = games.filter(g => finalRatings[g.id] === 5);
       else if (status === 'rating-4') games = games.filter(g => finalRatings[g.id] >= 4);
-      else if (status === 'rating-3') games = games.filter(g => finalRatings[g.id] >= 3);
       else if (status === 'broken') games = games.filter(g => brokenGames[g.id]);
-      else if (status === 'working') games = games.filter(g => !brokenGames[g.id]);
+      // Hide broken toggle (but not when explicitly viewing broken)
+      if (hideBroken && status !== 'broken') {
+        games = games.filter(g => !brokenGames[g.id]);
+      }
 
       switch (sortBy) {
         case 'date-asc': games.sort((a, b) => new Date(a.createdDate) - new Date(b.createdDate)); break;
@@ -1794,6 +1836,7 @@
     function saveFilters() {
       const filters = {};
       filterIds.forEach(id => filters[id] = document.getElementById(id).value);
+      filters.hideBroken = document.getElementById('hideBroken').checked;
       localStorage.setItem('gameFilters', JSON.stringify(filters));
       updateURL();
     }
@@ -1826,6 +1869,10 @@
           filterIds.forEach(id => {
             if (filters[id]) document.getElementById(id).value = filters[id];
           });
+          // Restore hideBroken toggle (default to true if not set)
+          if (filters.hideBroken !== undefined) {
+            document.getElementById('hideBroken').checked = filters.hideBroken;
+          }
         } catch(e) {}
       }
     }
@@ -1839,6 +1886,7 @@
     document.getElementById('filterNight').addEventListener('change', onFilterChange);
     document.getElementById('filterFramework').addEventListener('change', onFilterChange);
     document.getElementById('filterStatus').addEventListener('change', onFilterChange);
+    document.getElementById('hideBroken').addEventListener('change', onFilterChange);
     document.getElementById('search').addEventListener('input', onFilterChange);
 
     loadGames(); // restoreFilters() is called inside after populateFilters()
