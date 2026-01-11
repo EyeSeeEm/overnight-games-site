@@ -220,37 +220,8 @@
       color: #8f98a0;
     }
 
-    .hover-info {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(transparent, rgba(0,0,0,0.95));
-      padding: 40px 10px 10px;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-    .game-card:hover .hover-info {
-      opacity: 1;
-    }
-    .play-btn {
-      background: linear-gradient(to right, #75b022, #588a1b);
-      color: #fff;
-      border: none;
-      padding: 8px 20px;
-      border-radius: 2px;
-      font-size: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      width: 100%;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .play-btn:hover {
-      background: linear-gradient(to right, #8bc53f, #6b9d2a);
-    }
 
-    /* Notes indicator */
+    /* Notes indicator - hidden until hover */
     .notes-btn {
       position: absolute;
       top: 38px;
@@ -265,6 +236,10 @@
       font-size: 14px;
       z-index: 10;
       transition: all 0.2s;
+      opacity: 0;
+    }
+    .game-card:hover .notes-btn {
+      opacity: 1;
     }
     .notes-btn:hover {
       background: #67c1f5;
@@ -273,9 +248,10 @@
     .notes-btn.has-notes {
       background: #67c1f5;
       color: #fff;
+      opacity: 1;
     }
 
-    /* Broken button */
+    /* Broken button - hidden until hover */
     .broken-btn {
       position: absolute;
       top: 38px;
@@ -290,6 +266,10 @@
       font-size: 16px;
       z-index: 10;
       transition: all 0.2s;
+      opacity: 0;
+    }
+    .game-card:hover .broken-btn {
+      opacity: 1;
     }
     .broken-btn:hover {
       background: #ff4444;
@@ -298,6 +278,7 @@
     .broken-btn.is-broken {
       background: #ff4444;
       color: #fff;
+      opacity: 1;
     }
 
     /* Card rating (clickable 5-star) */
@@ -1480,9 +1461,6 @@
               ${variantLabel ? `<span class="tag variant">${variantLabel}</span>` : ''}
               ${g.polished && !variantLabel ? '<span class="tag polished">Polished</span>' : ''}
             </div>
-          </div>
-          <div class="hover-info">
-            <button class="play-btn">Play Now</button>
           </div>
         </div>`;
       });
