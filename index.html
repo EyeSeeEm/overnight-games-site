@@ -369,6 +369,24 @@
     .star-rating .clear-btn:hover {
       color: #fff;
     }
+    .variant-selector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .variant-selector label {
+      color: #8f98a0;
+      font-size: 13px;
+    }
+    .variant-selector select {
+      background: #1b2838;
+      border: 1px solid #4a6572;
+      color: #c6d4df;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
 
     /* Notes modal */
     .notes-modal {
@@ -798,6 +816,16 @@
           </div>
           <button class="clear-btn" onclick="setModalRating(0)">Clear</button>
         </div>
+        <div class="variant-selector">
+          <label>Status:</label>
+          <select id="variantSelect" onchange="setModalVariant(this.value)">
+            <option value="">Auto (from data)</option>
+            <option value="base">🎮 Base</option>
+            <option value="polished">⭐ Polished</option>
+            <option value="expanded">📈 Expanded</option>
+            <option value="v2">🔄 V2</option>
+          </select>
+        </div>
         <textarea id="notesText" placeholder="Add your feedback, bugs found, ideas for improvement..."></textarea>
       </div>
       <div class="notes-footer">
@@ -841,6 +869,7 @@
     let gameNotes = {};
     let brokenGames = {};
     let finalRatings = {};
+    let variantOverrides = {}; // User overrides for Base/Expanded/Polished/V2
     let updatedGames = JSON.parse(localStorage.getItem('updatedGames') || '{}');
     let currentNoteGameId = null;
     let currentPlayerGame = null;
@@ -864,6 +893,7 @@
         gameNotes = JSON.parse(localStorage.getItem('gameNotes') || '{}');
         brokenGames = JSON.parse(localStorage.getItem('brokenGames') || '{}');
         finalRatings = JSON.parse(localStorage.getItem('finalRatings') || '{}');
+        variantOverrides = JSON.parse(localStorage.getItem('variantOverrides') || '{}');
       }
     }
 
@@ -883,12 +913,13 @@
       localStorage.setItem('gameNotes', JSON.stringify(gameNotes));
       localStorage.setItem('brokenGames', JSON.stringify(brokenGames));
       localStorage.setItem('finalRatings', JSON.stringify(finalRatings));
+      localStorage.setItem('variantOverrides', JSON.stringify(variantOverrides));
       // Try server API if available (for local dev)
       try {
         const resp = await fetch('/api/notes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...gameNotes, _broken: brokenGames, _ratings: finalRatings })
+          body: JSON.stringify({ ...gameNotes, _broken: brokenGames, _ratings: finalRatings, _variants: variantOverrides })
         });
         if (!resp.ok) throw new Error('API not available');
       } catch (e) {
@@ -1084,12 +1115,16 @@
 
     let currentModalRating = 0;
 
+    let currentModalVariant = '';
+
     function openNotes(e, gameId, gameName) {
       e.stopPropagation();
       currentNoteGameId = gameId;
       currentModalRating = finalRatings[gameId] || 0;
+      currentModalVariant = variantOverrides[gameId] || '';
       document.getElementById('notesTitle').textContent = 'Notes: ' + gameName;
       document.getElementById('notesText').value = gameNotes[gameId] || '';
+      document.getElementById('variantSelect').value = currentModalVariant;
       updateModalStars();
       document.getElementById('notesModal').classList.add('active');
       document.getElementById('notesText').focus();
@@ -1098,6 +1133,10 @@
     function setModalRating(rating) {
       currentModalRating = rating;
       updateModalStars();
+    }
+
+    function setModalVariant(variant) {
+      currentModalVariant = variant;
     }
 
     function updateModalStars() {
@@ -1125,6 +1164,12 @@
         finalRatings[currentNoteGameId] = currentModalRating;
       } else {
         delete finalRatings[currentNoteGameId];
+      }
+      // Save variant override
+      if (currentModalVariant) {
+        variantOverrides[currentNoteGameId] = currentModalVariant;
+      } else {
+        delete variantOverrides[currentNoteGameId];
       }
       await saveData();
       closeNotes();
@@ -1164,7 +1209,12 @@
               if (g.notes) { gameNotes[g.id] = g.notes; imported++; }
               if (g.broken) { brokenGames[g.id] = true; }
               if (g.finalRating) { finalRatings[g.id] = g.finalRating; }
+              if (g.variantOverride) { variantOverrides[g.id] = g.variantOverride; }
             });
+            // Also import variantOverrides object if present
+            if (data.variantOverrides) {
+              Object.assign(variantOverrides, data.variantOverrides);
+            }
           }
           // Handle direct localStorage format
           else if (typeof data === 'object') {
@@ -1192,12 +1242,13 @@
     function exportNotes() {
       const exportData = { games: [], broken: [], rated: [], summary: {} };
 
-      // All games with notes, broken status, or final rating
+      // All games with notes, broken status, final rating, or variant override
       allGames.forEach(g => {
         const hasNotes = gameNotes[g.id];
         const isBroken = brokenGames[g.id];
         const rating = finalRatings[g.id];
-        if (hasNotes || isBroken || rating) {
+        const variant = variantOverrides[g.id];
+        if (hasNotes || isBroken || rating || variant) {
           exportData.games.push({
             id: g.id,
             name: g.name,
@@ -1205,12 +1256,16 @@
             path: g.path,
             broken: isBroken || false,
             finalRating: rating || null,
+            variantOverride: variant || null,
             notes: hasNotes || ''
           });
         }
         if (isBroken) exportData.broken.push(g.id);
         if (rating) exportData.rated.push({ id: g.id, rating });
       });
+
+      // Add variant overrides summary
+      exportData.variantOverrides = { ...variantOverrides };
 
       // Sort rated by rating descending
       exportData.rated.sort((a, b) => b.rating - a.rating);
@@ -1349,7 +1404,13 @@
 
       const getBase = (g) => g.gameDir.replace(/-expanded$|-polished$|-v2$/, '');
       const getVariantLabel = (g) => {
-        // Use polished field, not just dirname
+        // Check for user override first
+        const override = variantOverrides[g.id];
+        if (override === 'polished') return '⭐ Polished';
+        if (override === 'expanded') return '📈 Expanded';
+        if (override === 'v2') return '🔄 V2';
+        if (override === 'base') return '🎮 Base';
+        // Fall back to auto-detection
         if (g.polished) return '⭐ Polished';
         if (g.gameDir.includes('-expanded')) return '📈 Expanded';
         if (g.gameDir.includes('-v2')) return '🔄 V2';
