@@ -635,11 +635,74 @@
       background: rgba(255, 152, 0, 0.3);
       color: #ffb74d;
     }
+    /* Hamburger Menu */
+    .hamburger-menu {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+    }
+    .hamburger-btn {
+      background: #2a475e;
+      border: 1px solid #4a6572;
+      color: #c6d4df;
+      font-size: 20px;
+      padding: 8px 12px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .hamburger-btn:hover {
+      background: #3d5a6c;
+    }
+    .menu-dropdown {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background: #1b2838;
+      border: 1px solid #4a6572;
+      border-radius: 4px;
+      min-width: 200px;
+      z-index: 1000;
+      margin-top: 5px;
+    }
+    .menu-dropdown.show {
+      display: block;
+    }
+    .menu-dropdown button {
+      display: block;
+      width: 100%;
+      background: none;
+      border: none;
+      color: #c6d4df;
+      padding: 12px 15px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .menu-dropdown button:hover {
+      background: #2a475e;
+    }
+    .menu-dropdown hr {
+      border: none;
+      border-top: 1px solid #4a6572;
+      margin: 5px 0;
+    }
   </style>
 </head>
 <body>
   <div class="header">
     <h1>Game Library</h1>
+    <!-- Hamburger Menu -->
+    <div class="hamburger-menu">
+      <button class="hamburger-btn" onclick="toggleMenu()">☰</button>
+      <div class="menu-dropdown" id="menuDropdown">
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importNotes(event)">
+        <button onclick="document.getElementById('importFile').click()">📥 Import Notes</button>
+        <button onclick="exportNotes(); toggleMenu();">📤 Export Notes</button>
+        <hr>
+        <button id="markUpdatedMenuBtn" onclick="confirmMarkUpdated()">🔄 Mark Noted → Updated</button>
+      </div>
+    </div>
     <div class="stats-bar">
       <span id="totalGames">0 Games</span>
       <span id="playedGames">0 Played</span>
@@ -698,12 +761,6 @@
     </div>
     <div class="control-group">
       <input type="text" id="search" placeholder="Search games...">
-    </div>
-    <div class="control-group">
-      <button onclick="exportNotes()" style="background:#67c1f5;border:none;color:#fff;padding:8px 12px;border-radius:2px;cursor:pointer;font-size:13px;">Export Notes</button>
-    </div>
-    <div class="control-group">
-      <button id="markUpdatedBtn" onclick="confirmMarkUpdated()" style="background:#c97f00;border:none;color:#fff;padding:8px 12px;border-radius:2px;cursor:pointer;font-size:13px;">Mark Noted → Updated</button>
     </div>
   </div>
 
@@ -1065,6 +1122,62 @@
 
     // Note: Escape key handling is done in the popstate/escape listener above
 
+    // Hamburger menu toggle
+    function toggleMenu() {
+      const dropdown = document.getElementById('menuDropdown');
+      dropdown.classList.toggle('show');
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+      const menu = document.querySelector('.hamburger-menu');
+      if (menu && !menu.contains(e.target)) {
+        document.getElementById('menuDropdown').classList.remove('show');
+      }
+    });
+
+    // Import notes from JSON file
+    function importNotes(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          let imported = 0;
+
+          // Handle game-status.json format (has games array)
+          if (data.games && Array.isArray(data.games)) {
+            data.games.forEach(g => {
+              if (g.notes) { gameNotes[g.id] = g.notes; imported++; }
+              if (g.broken) { brokenGames[g.id] = true; }
+              if (g.finalRating) { finalRatings[g.id] = g.finalRating; }
+            });
+          }
+          // Handle direct localStorage format
+          else if (typeof data === 'object') {
+            // Check if it's gameNotes format (id -> string)
+            Object.keys(data).forEach(key => {
+              if (typeof data[key] === 'string') {
+                gameNotes[key] = data[key];
+                imported++;
+              }
+            });
+          }
+
+          saveData();
+          renderGames();
+          toggleMenu();
+          alert('Imported ' + imported + ' notes successfully!');
+        } catch (err) {
+          alert('Error importing file: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = ''; // Reset file input
+    }
+
     function exportNotes() {
       const exportData = { games: [], broken: [], rated: [], summary: {} };
 
@@ -1121,7 +1234,7 @@
     let markUpdatedTimeout = null;
 
     function confirmMarkUpdated() {
-      const btn = document.getElementById('markUpdatedBtn');
+      const btn = document.getElementById('markUpdatedMenuBtn');
       const noteCount = Object.keys(gameNotes).length;
 
       if (noteCount === 0) {
