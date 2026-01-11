@@ -875,6 +875,7 @@
     let currentNoteGameId = null;
     let currentPlayerGame = null;
     let savedScrollPosition = 0;
+    let notesLoaded = false; // CRITICAL: Prevents saving before notes are loaded
 
     // Load notes, broken status, and ratings from server (falls back to localStorage)
     async function loadNotes() {
@@ -897,6 +898,8 @@
         finalRatings = JSON.parse(localStorage.getItem('finalRatings') || '{}');
         variantOverrides = JSON.parse(localStorage.getItem('variantOverrides') || '{}');
       }
+      notesLoaded = true; // CRITICAL: Mark notes as loaded
+      console.log('[Notes] Loaded', Object.keys(gameNotes).length, 'notes from storage');
     }
 
     async function toggleBroken(e, gameId) {
@@ -913,11 +916,17 @@
     }
 
     async function saveData() {
+      // CRITICAL: Never save if notes haven't been loaded yet - prevents data wipe!
+      if (!notesLoaded) {
+        console.error('[Notes] BLOCKED save attempt before notes loaded! This would have wiped data.');
+        return;
+      }
       // Always save to localStorage first (GitHub Pages has no backend)
       localStorage.setItem('gameNotes', JSON.stringify(gameNotes));
       localStorage.setItem('brokenGames', JSON.stringify(brokenGames));
       localStorage.setItem('finalRatings', JSON.stringify(finalRatings));
       localStorage.setItem('variantOverrides', JSON.stringify(variantOverrides));
+      console.log('[Notes] Saved', Object.keys(gameNotes).length, 'notes to storage');
       // Try server API if available (for local dev)
       try {
         const resp = await fetch('/api/notes', {
