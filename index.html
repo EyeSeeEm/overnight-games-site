@@ -253,7 +253,7 @@
     /* Notes indicator */
     .notes-btn {
       position: absolute;
-      top: 8px;
+      top: 38px;
       left: 8px;
       background: rgba(0,0,0,0.7);
       border: none;
@@ -278,7 +278,7 @@
     /* Broken button */
     .broken-btn {
       position: absolute;
-      top: 8px;
+      top: 38px;
       left: 42px;
       background: rgba(0,0,0,0.7);
       border: none;
@@ -300,29 +300,36 @@
       color: #fff;
     }
 
-    /* Final rating display on card */
-    .final-rating {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: rgba(0,0,0,0.8);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 12px;
-      z-index: 10;
-    }
-    .final-rating .star { color: #ffd700; }
-    .final-rating .star.empty { color: #444; }
-    .agent-rating {
+    /* Card rating (clickable 5-star) */
+    .card-rating {
       position: absolute;
       top: 8px;
       left: 8px;
-      background: rgba(76, 175, 80, 0.9);
-      color: #fff;
-      padding: 2px 6px;
+      background: rgba(0,0,0,0.8);
+      padding: 2px 4px;
       border-radius: 4px;
-      font-size: 11px;
+      font-size: 14px;
       z-index: 10;
+      display: flex;
+      gap: 1px;
+    }
+    .card-rating .star-click {
+      cursor: pointer;
+      transition: color 0.1s, transform 0.1s;
+      padding: 0 1px;
+    }
+    .card-rating .star-click:hover {
+      transform: scale(1.2);
+    }
+    .card-rating.user-rated .star-click { color: #ffd700; }
+    .card-rating.user-rated .star-click.empty { color: #444; }
+    .card-rating.agent-rated .star-click { color: #666; }
+    .card-rating.agent-rated .star-click.filled { color: #888; }
+    .card-rating .rating-label {
+      font-size: 9px;
+      color: #888;
+      margin-left: 4px;
+      align-self: center;
     }
 
     /* Star rating component */
@@ -735,11 +742,9 @@
     <div class="stats-bar">
       <span id="totalGames">0 Games</span>
       <span id="playedGames">0 Played</span>
-      <span id="polishedGames">0 Polished</span>
-      <span id="ratedGames" style="color:#ffd700;">0 Rated</span>
-      <span id="updatedGamesCount" style="color:#ffd700;">0 Updated</span>
-      <span id="brokenGames" style="color:#ff6666;">0 Broken</span>
-      <span style="color:#67c1f5; font-size:11px; margin-left:20px;">v2026.01.11</span>
+      <span id="ratedGames" style="color:#ffd700;">Rated 0/0</span>
+      <span id="updatedGamesCount" style="color:#ffb74d;">0 Updated</span>
+      <span style="color:#67c1f5; font-size:11px; margin-left:20px;">v2026.01.11b</span>
     </div>
   </div>
 
@@ -1135,6 +1140,19 @@
       updateModalStars();
     }
 
+    // Rate game directly from card
+    async function rateGame(e, gameId, rating) {
+      e.stopPropagation();
+      // Toggle off if clicking same rating
+      if (finalRatings[gameId] === rating) {
+        delete finalRatings[gameId];
+      } else {
+        finalRatings[gameId] = rating;
+      }
+      await saveData();
+      renderGames();
+    }
+
     function setModalVariant(variant) {
       currentModalVariant = variant;
     }
@@ -1397,10 +1415,8 @@
       const sortBy = document.getElementById('sortBy').value;
       document.getElementById('totalGames').textContent = allGames.length + ' Games';
       document.getElementById('playedGames').textContent = allGames.filter(g => g.played).length + ' Played';
-      document.getElementById('polishedGames').textContent = allGames.filter(g => g.polished).length + ' Polished';
-      document.getElementById('ratedGames').textContent = Object.keys(finalRatings).length + ' Rated';
+      document.getElementById('ratedGames').textContent = 'Rated ' + Object.keys(finalRatings).length + '/' + allGames.length;
       document.getElementById('updatedGamesCount').textContent = allGames.filter(g => isGameUpdated(g.id)).length + ' Updated';
-      document.getElementById('brokenGames').textContent = Object.keys(brokenGames).length + ' Broken';
 
       const getBase = (g) => g.gameDir.replace(/-expanded$|-polished$|-v2$/, '');
       const getVariantLabel = (g) => {
@@ -1437,12 +1453,21 @@
 
         const variantLabel = sortBy === 'grouped' ? getVariantLabel(g) : '';
 
+        const userRating = finalRatings[g.id] || 0;
+        const agentRating = g.rating || 0;
+        const hasUserRating = userRating > 0;
+        const ratingToShow = hasUserRating ? userRating : agentRating;
+        const ratingClass = hasUserRating ? 'user-rated' : 'agent-rated';
+        const ratingLabel = hasUserRating ? '' : (agentRating ? '<span class="rating-label">AI</span>' : '');
+
         html += `
         <div class="game-card ${g.played && !isGameUpdated(g.id) ? 'played' : ''} ${isGameUpdated(g.id) ? 'updated' : ''} ${brokenGames[g.id] ? 'broken' : ''}" onclick="playGame('${g.id}', '${g.path}')">
           <button class="notes-btn ${gameNotes[g.id] ? 'has-notes' : ''}" onclick="openNotes(event, '${g.id}', '${g.name.replace(/'/g, "\\'")}')">📝</button>
           <button class="broken-btn ${brokenGames[g.id] ? 'is-broken' : ''}" onclick="toggleBroken(event, '${g.id}')" title="Mark as broken">✕</button>
-          ${finalRatings[g.id] ? `<div class="final-rating">${'<span class="star">★</span>'.repeat(finalRatings[g.id])}${'<span class="star empty">★</span>'.repeat(5-finalRatings[g.id])}</div>` : ''}
-          ${g.rating ? `<div class="agent-rating" title="Agent self-rating">${g.rating}/5</div>` : ''}
+          <div class="card-rating ${ratingClass}" onclick="event.stopPropagation()">
+            ${[1,2,3,4,5].map(n => `<span class="star-click ${n <= ratingToShow ? 'filled' : 'empty'}" onclick="rateGame(event, '${g.id}', ${n})">★</span>`).join('')}
+            ${ratingLabel}
+          </div>
           ${g.screenshot
             ? `<img class="screenshot" src="${g.path}${g.screenshot}" alt="${g.name}" onerror="this.outerHTML='<div class=no-screenshot>🎮</div>'">`
             : '<div class="no-screenshot">🎮</div>'
