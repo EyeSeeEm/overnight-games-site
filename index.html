@@ -698,7 +698,7 @@
       <button onclick="exportNotes()" style="background:#67c1f5;border:none;color:#fff;padding:8px 12px;border-radius:2px;cursor:pointer;font-size:13px;">Export Notes</button>
     </div>
     <div class="control-group">
-      <button onclick="markAllNotedAsUpdated()" style="background:#c97f00;border:none;color:#fff;padding:8px 12px;border-radius:2px;cursor:pointer;font-size:13px;">Mark Noted → Updated</button>
+      <button id="markUpdatedBtn" onclick="confirmMarkUpdated()" style="background:#c97f00;border:none;color:#fff;padding:8px 12px;border-radius:2px;cursor:pointer;font-size:13px;">Mark Noted → Updated</button>
     </div>
   </div>
 
@@ -1100,6 +1100,46 @@
       a.href = URL.createObjectURL(blob);
       a.download = 'game-status.json';
       a.click();
+    }
+
+    // Confirmation state for mark updated button
+    let markUpdatedPending = false;
+    let markUpdatedTimeout = null;
+
+    function confirmMarkUpdated() {
+      const btn = document.getElementById('markUpdatedBtn');
+      const noteCount = Object.keys(gameNotes).length;
+
+      if (noteCount === 0) {
+        btn.textContent = 'No notes to clear!';
+        btn.style.background = '#666';
+        setTimeout(() => {
+          btn.textContent = 'Mark Noted → Updated';
+          btn.style.background = '#c97f00';
+        }, 2000);
+        return;
+      }
+
+      if (!markUpdatedPending) {
+        markUpdatedPending = true;
+        btn.textContent = `Confirm? (${noteCount} games)`;
+        btn.style.background = '#cc0000';
+        markUpdatedTimeout = setTimeout(() => {
+          markUpdatedPending = false;
+          btn.textContent = 'Mark Noted → Updated';
+          btn.style.background = '#c97f00';
+        }, 3000);
+      } else {
+        clearTimeout(markUpdatedTimeout);
+        markUpdatedPending = false;
+        markAllNotedAsUpdated();
+        btn.textContent = 'Done!';
+        btn.style.background = '#4c6b22';
+        setTimeout(() => {
+          btn.textContent = 'Mark Noted → Updated';
+          btn.style.background = '#c97f00';
+        }, 2000);
+      }
     }
 
     // Mark games as updated (call from console: markUpdated(['game-id-1', 'game-id-2']))
