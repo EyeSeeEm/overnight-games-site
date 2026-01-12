@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Star of Providence Clone</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a12;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      font-family: 'Courier New', monospace;
+    }
+    #gameContainer {
+      position: relative;
+    }
+    canvas {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    #ui {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      pointer-events: none;
+      color: #fff;
+      font-size: 12px;
+      padding: 8px;
+    }
+    #startScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: rgba(10, 10, 18, 0.95);
+      color: #00ff88;
+      text-align: center;
+    }
+    #startScreen h1 {
+      font-size: 32px;
+      margin-bottom: 20px;
+      text-shadow: 0 0 20px #00ff88;
+    }
+    #startScreen p {
+      margin: 5px 0;
+      color: #aaa;
+    }
+    #startScreen .controls {
+      margin-top: 20px;
+      color: #888;
+      font-size: 11px;
+    }
+    #startScreen button {
+      margin-top: 30px;
+      padding: 15px 40px;
+      font-size: 18px;
+      background: #00ff88;
+      color: #000;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    #startScreen button:hover {
+      background: #00ffaa;
+    }
+    .hidden { display: none !important; }
+    #difficultySelector {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    .diff-btn {
+      padding: 10px 15px;
+      font-size: 12px;
+      background: #333;
+      color: #888;
+      border: 2px solid #444;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .diff-btn:hover {
+      border-color: #666;
+      color: #aaa;
+    }
+    .diff-btn.selected {
+      border-color: var(--diff-color, #4488ff);
+      color: var(--diff-color, #4488ff);
+      background: rgba(68, 136, 255, 0.1);
+    }
+    .diff-btn.mild { --diff-color: #44ff44; }
+    .diff-btn.normal { --diff-color: #4488ff; }
+    .diff-btn.intense { --diff-color: #ff8844; }
+    .diff-btn.sudden { --diff-color: #ff4444; }
+    #difficultyDesc {
+      margin-top: 5px;
+      color: #666;
+      font-size: 11px;
+      height: 14px;
+    }
+    #shipSelector {
+      margin-top: 15px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      max-width: 500px;
+    }
+    .ship-btn {
+      padding: 8px 12px;
+      font-size: 11px;
+      background: #222;
+      color: #888;
+      border: 2px solid #333;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .ship-btn:hover {
+      border-color: #555;
+      color: #aaa;
+    }
+    .ship-btn.selected {
+      border-color: var(--ship-color, #00ff88);
+      color: var(--ship-color, #00ff88);
+      background: rgba(0, 255, 136, 0.1);
+    }
+    #shipDesc {
+      margin-top: 5px;
+      color: #666;
+      font-size: 11px;
+      height: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="startScreen">
+      <h1>STAR OF PROVIDENCE</h1>
+      <p>A Bullet-Hell Roguelike</p>
+      <div class="controls">
+        <p>WASD/Arrows - Move</p>
+        <p>SHIFT - Focus (slow movement)</p>
+        <p>SPACE/Click - Fire</p>
+        <p>X - Bomb</p>
+        <p>Z - Dash</p>
+        <p>TAB - Map</p>
+      </div>
+      <div id="difficultySelector">
+        <button class="diff-btn mild" data-difficulty="MILD">MILD</button>
+        <button class="diff-btn normal selected" data-difficulty="NORMAL">NORMAL</button>
+        <button class="diff-btn intense" data-difficulty="INTENSE">INTENSE</button>
+        <button class="diff-btn sudden" data-difficulty="SUDDEN_DEATH">SUDDEN DEATH</button>
+      </div>
+      <div id="difficultyDesc">Standard difficulty, recommended</div>
+      <div id="shipSelector">
+        <button class="ship-btn selected" data-ship="STANDARD" style="--ship-color: #00ff88">STANDARD</button>
+        <button class="ship-btn" data-ship="TANK" style="--ship-color: #4488ff">TANK</button>
+        <button class="ship-btn" data-ship="SPEEDSTER" style="--ship-color: #ffff44">SPEEDSTER</button>
+        <button class="ship-btn" data-ship="BOMBER" style="--ship-color: #ff44ff">BOMBER</button>
+        <button class="ship-btn" data-ship="GLASS_CANNON" style="--ship-color: #ff4444">GLASS CANNON</button>
+        <button class="ship-btn" data-ship="VAMPIRE" style="--ship-color: #880088">VAMPIRE</button>
+        <button class="ship-btn" data-ship="ROGUE" style="--ship-color: #888888">ROGUE</button>
+      </div>
+      <div id="shipDesc">Balanced stats, good for beginners</div>
+      <button id="startBtn">START GAME</button>
+    </div>
+  </div>
+
+  <script src="test-harness-base.js"></script>
+  <script src="game.js"></script>
+  <script src="test-config.js"></script>
+</body>
+</html>
