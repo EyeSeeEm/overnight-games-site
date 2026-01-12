@@ -1,2470 +1,1806 @@
-// Basement Tears - Binding of Isaac Style Roguelike
-// 20 Expand + 20 Polish passes
+/**
+ * Basement Tears - Binding of Isaac Clone
+ * Night 6 Implementation with Test Harness
+ */
 
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+'use strict';
 
-canvas.width = 960;
-canvas.height = 720;
+// ═══════════════════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════════════════
 
+const CANVAS_WIDTH = 960;
+const CANVAS_HEIGHT = 720;
 const TILE_SIZE = 48;
-const ROOM_WIDTH = 13;
-const ROOM_HEIGHT = 7;
-const ROOM_OFFSET_X = (canvas.width - ROOM_WIDTH * TILE_SIZE) / 2;
-const ROOM_OFFSET_Y = 100;
+const ROOM_TILES_X = 13;
+const ROOM_TILES_Y = 7;
+const ROOM_WIDTH = ROOM_TILES_X * TILE_SIZE;  // 624
+const ROOM_HEIGHT = ROOM_TILES_Y * TILE_SIZE; // 336
+const ROOM_OFFSET_X = (CANVAS_WIDTH - ROOM_WIDTH) / 2;   // 168
+const ROOM_OFFSET_Y = (CANVAS_HEIGHT - ROOM_HEIGHT) / 2; // 192
+
+const DOOR_SPAWN_OFFSET = 24;
+const PLAYER_SIZE = 32;
+const TEAR_SIZE = 12;
+const ENEMY_WAKE_DELAY = 500;
+const SPAWN_ANIMATION_DURATION = 500;
 
 // Colors
 const COLORS = {
-    floor: '#2A2018',
-    floorAlt: '#231A12',
-    wall: '#4A4A4A',
-    wallDark: '#2A2A2A',
-    wallLight: '#5A5A5A',
-    door: '#4A3A2A',
-    doorFrame: '#1A1A1A',
-    player: '#EECCBB',
-    playerOutline: '#AA8877',
-    tear: '#6688CC',
-    tearRed: '#CC4444',
-    tearHighlight: '#99BBEE',
-    blood: '#AA2222',
-    bloodDark: '#661111',
-    rock: '#6A6A6A',
-    rockDark: '#4A4A4A',
-    poop: '#6A4A2A',
-    poopDark: '#4A3A1A',
-    heart: '#CC2222',
-    heartEmpty: '#222222',
-    heartSoul: '#4466AA',
-    coin: '#FFDD44',
-    bomb: '#444444',
-    key: '#FFCC22',
-    fly: '#3A3A3A',
-    gaper: '#DDAA88',
-    spider: '#3A3020',
-    fire: '#FF6622',
-    spike: '#666666'
+    background: '#1a1a1a',
+    floor: '#3d2b1f',
+    floorAlt: '#4a3728',
+    wall: '#2a2a2a',
+    wallBorder: '#1a1a1a',
+    player: '#f5deb3',
+    playerOutline: '#000',
+    tear: '#87ceeb',
+    tearOutline: '#5f9ea0',
+    rock: '#666',
+    rockDark: '#444',
+    poop: '#8b4513',
+    poopDark: '#654321',
+    door: '#8b7355',
+    doorOpen: '#5c4a3d',
+    heart: '#ff3333',
+    heartEmpty: '#333',
+    soulHeart: '#4169e1',
+    blackHeart: '#1a1a1a',
+    coin: '#ffd700',
+    bomb: '#333',
+    key: '#ffd700'
 };
 
-// Enemy data
+// Enemy definitions
 const ENEMY_DATA = {
-    fly: { health: 4, speed: 70, damage: 1, width: 18, height: 18 },
-    redFly: { health: 6, speed: 80, damage: 1, width: 18, height: 18 },
-    gaper: { health: 12, speed: 45, damage: 1, width: 30, height: 30 },
-    frowningGaper: { health: 18, speed: 55, damage: 1, width: 30, height: 30 },
-    spider: { health: 6, speed: 90, damage: 1, width: 22, height: 22 },
-    bigSpider: { health: 15, speed: 60, damage: 1, width: 36, height: 36 },
-    hopper: { health: 8, speed: 0, damage: 1, width: 24, height: 24, jumps: true },
-    host: { health: 20, speed: 0, damage: 1, width: 28, height: 28, hides: true },
-    leaper: { health: 14, speed: 50, damage: 1, width: 26, height: 26, leaps: true },
-    charger: { health: 10, speed: 150, damage: 1, width: 26, height: 26, charges: true },
-    globin: { health: 22, speed: 40, damage: 1, width: 28, height: 28, regenerates: true },
-    bony: { health: 8, speed: 35, damage: 1, width: 24, height: 24, shoots: true },
-    boss_monstro: { health: 200, speed: 30, damage: 2, width: 80, height: 80, isBoss: true }
+    fly: { health: 4, speed: 2, damage: 1, width: 24, height: 24, flying: true, behavior: 'wander' },
+    redFly: { health: 6, speed: 2.5, damage: 1, width: 24, height: 24, flying: true, behavior: 'chase' },
+    gaper: { health: 12, speed: 1.5, damage: 1, width: 32, height: 32, flying: false, behavior: 'chase' },
+    frowningGaper: { health: 15, speed: 1.8, damage: 1, width: 32, height: 32, flying: false, behavior: 'chase' },
+    spider: { health: 6, speed: 3, damage: 1, width: 20, height: 20, flying: false, behavior: 'erratic' },
+    bigSpider: { health: 10, speed: 2.5, damage: 1, width: 28, height: 28, flying: false, behavior: 'erratic' },
+    hopper: { health: 10, speed: 2, damage: 1, width: 28, height: 28, flying: false, behavior: 'hop' },
+    charger: { health: 15, speed: 1, damage: 1, width: 36, height: 24, flying: false, behavior: 'charge' },
+    clotty: { health: 10, speed: 1, damage: 1, width: 28, height: 28, flying: false, behavior: 'shoot4' },
+    pooter: { health: 8, speed: 1, damage: 1, width: 28, height: 28, flying: true, behavior: 'shootChase' },
+    host: { health: 10, speed: 0, damage: 1, width: 32, height: 32, flying: false, behavior: 'host' },
+    boss_monstro: { health: 250, speed: 2, damage: 1, width: 80, height: 80, flying: false, behavior: 'boss_monstro', isBoss: true }
 };
 
-// Champion types and modifiers
-const CHAMPION_TYPES = {
-    none: { hpMult: 1, speedMult: 1, dmgMult: 1, color: null },
-    red: { hpMult: 2, speedMult: 1, dmgMult: 1, color: '#FF4444' },
-    yellow: { hpMult: 1, speedMult: 1.5, dmgMult: 1, color: '#FFFF44' },
-    blue: { hpMult: 1.2, speedMult: 1, dmgMult: 1, color: '#4444FF', extraShots: true },
-    green: { hpMult: 1, speedMult: 1, dmgMult: 1, color: '#44FF44', spawnFlyOnDeath: true },
-    black: { hpMult: 1.5, speedMult: 1, dmgMult: 2, color: '#222222' }
+// Item definitions
+const ITEM_DATA = {
+    sadOnion: { name: 'Sad Onion', desc: 'Tears up', effect: { tears: 0.7 }, pool: 'treasure' },
+    innerEye: { name: 'The Inner Eye', desc: 'Triple shot', effect: { multishot: 3, tears: -3 }, pool: 'treasure' },
+    spoonBender: { name: 'Spoon Bender', desc: 'Homing tears', effect: { homing: true }, pool: 'treasure' },
+    magicMushroom: { name: 'Magic Mushroom', desc: 'All stats up!', effect: { damage: 1, health: 2, speed: 0.3, range: 1.5 }, pool: 'treasure' },
+    cricketHead: { name: "Cricket's Head", desc: 'DMG up', effect: { damage: 1, damageMult: 0.5 }, pool: 'treasure' },
+    steroidS: { name: 'Steroids', desc: 'Speed + Range up', effect: { speed: 0.3, range: 2 }, pool: 'treasure' },
+    lunchBox: { name: 'Lunch', desc: 'HP up', effect: { health: 2 }, pool: 'boss' },
+    dinner: { name: 'Dinner', desc: 'HP up', effect: { health: 2 }, pool: 'boss' },
+    dessert: { name: 'Dessert', desc: 'HP up', effect: { health: 2 }, pool: 'boss' },
+    breakfast: { name: 'Breakfast', desc: 'HP up', effect: { health: 2 }, pool: 'boss' },
+    pentagram: { name: 'Pentagram', desc: 'DMG up', effect: { damage: 1 }, pool: 'devil' },
+    theMarkItem: { name: 'The Mark', desc: 'DMG + Speed up', effect: { damage: 1, speed: 0.2 }, pool: 'devil' },
+    cupidsArrow: { name: "Cupid's Arrow", desc: 'Piercing tears', effect: { piercing: true }, pool: 'treasure' },
+    myReflection: { name: 'My Reflection', desc: 'Boomerang tears', effect: { boomerang: true }, pool: 'treasure' },
+    numberOfOne: { name: 'Number One', desc: 'Tears way up', effect: { tears: 1.5, range: -1 }, pool: 'treasure' },
+    bloodOfMartyr: { name: 'Blood of the Martyr', desc: 'DMG up', effect: { damage: 1 }, pool: 'angel' },
+    sacredHeart: { name: 'Sacred Heart', desc: 'Homing + DMG up', effect: { damage: 2, damageMult: 1.0, homing: true }, pool: 'angel' },
+    theHalo: { name: 'The Halo', desc: 'All stats up', effect: { damage: 0.3, health: 2, speed: 0.2, tears: 0.2, range: 0.5 }, pool: 'angel' },
+    wire: { name: 'Wire Coat Hanger', desc: 'Tears up', effect: { tears: 0.7 }, pool: 'treasure' },
+    toothPicks: { name: 'Toothpicks', desc: 'Tears + Shot speed up', effect: { tears: 0.7, shotSpeed: 0.16 }, pool: 'treasure' },
+    stigmata: { name: 'Stigmata', desc: 'DMG + HP up', effect: { damage: 0.3, health: 2 }, pool: 'treasure' },
+    polyphemus: { name: 'Polyphemus', desc: 'Mega tears', effect: { damage: 4, tears: -2, tearSize: 2 }, pool: 'treasure' },
+    rubberCement: { name: 'Rubber Cement', desc: 'Bouncing tears', effect: { bouncing: true }, pool: 'treasure' },
+    deadCat: { name: 'Dead Cat', desc: '9 lives', effect: { lives: 9, maxHealth: -4 }, pool: 'devil' },
+    cricketBody: { name: "Cricket's Body", desc: 'Splash tears', effect: { splash: true, tears: 0.5 }, pool: 'treasure' },
+    lumpOfCoal: { name: 'Lump of Coal', desc: 'Damage up over distance', effect: { coalDamage: true }, pool: 'treasure' },
+    holyMantle: { name: 'Holy Mantle', desc: 'Shield per room', effect: { shield: true }, pool: 'angel' },
+    godhead: { name: 'Godhead', desc: 'Homing + Aura', effect: { homing: true, aura: true, damage: 0.5 }, pool: 'angel' },
+    ipecac: { name: 'Ipecac', desc: 'Explosive tears', effect: { explosive: true, damage: 40, tears: -2 }, pool: 'treasure' }
 };
 
-// Item data
-const ITEMS = {
-    sad_onion: { name: 'Sad Onion', stat: 'tearDelay', value: -0.08, desc: 'Tears up' },
-    spinach: { name: 'Spinach', stat: 'damage', value: 1.2, desc: 'Damage up' },
-    growth_hormones: { name: 'Growth Hormones', stat: 'damage', value: 0.8, desc: 'Damage + Speed up' },
-    cat_o_nine: { name: "Cat-o-nine-tails", stat: 'range', value: 50, desc: 'Range up' },
-    jesus_juice: { name: 'Jesus Juice', stat: 'damage', value: 0.5, desc: 'Damage up' },
-    magic_mushroom: { name: 'Magic Mushroom', stat: 'damage', value: 1.5, desc: 'All stats up!' },
-    pentagram: { name: 'Pentagram', stat: 'damage', value: 1, desc: 'Damage up' },
-    mark: { name: 'The Mark', stat: 'damage', value: 1, desc: 'Damage + Speed up' },
-    wire_coat_hanger: { name: 'Wire Coat Hanger', stat: 'tearDelay', value: -0.05, desc: 'Tears up' },
-    inner_eye: { name: 'Inner Eye', stat: 'multishot', value: 3, desc: 'Triple shot' },
-    spoon_bender: { name: 'Spoon Bender', stat: 'homing', value: true, desc: 'Homing tears' },
-    cupids_arrow: { name: "Cupid's Arrow", stat: 'piercing', value: true, desc: 'Piercing tears' },
-    rubber_cement: { name: 'Rubber Cement', stat: 'bouncing', value: true, desc: 'Bouncing tears' },
-    black_heart: { name: 'Black Heart', stat: 'blackHearts', value: 2, desc: 'Black hearts' },
-    dead_cat: { name: 'Dead Cat', stat: 'lives', value: 9, desc: '9 Lives' },
-    crickets_head: { name: "Cricket's Head", stat: 'damageMult', value: 1.5, desc: 'Damage x1.5' },
-    polyphemus: { name: 'Polyphemus', stat: 'damage', value: 4, desc: 'HUGE damage up' },
-    steven: { name: 'Steven', stat: 'damage', value: 1, desc: 'Damage up' },
-    stigmata: { name: 'Stigmata', stat: 'damage', value: 0.3, desc: 'HP + Damage up' }
-};
+// ═══════════════════════════════════════════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════════════════════════════════════════
 
-// Active items
-const ACTIVE_ITEMS = {
-    yum_heart: { name: 'Yum Heart', charges: 4, desc: 'Heal 1 heart' },
-    book_of_belial: { name: 'Book of Belial', charges: 3, desc: '+2 damage this room' },
-    the_poop: { name: 'The Poop', charges: 1, desc: 'Spawn poop' },
-    lemon_mishap: { name: 'Lemon Mishap', charges: 2, desc: 'Create creep' },
-    shoop_da_whoop: { name: 'Shoop Da Whoop', charges: 4, desc: 'Fire beam' }
-};
-
-// Game state
-let gameState = 'title';
+let canvas, ctx;
+let gameState = 'title'; // 'title', 'playing', 'paused', 'gameover', 'win'
+let keys = {};
 let player = null;
 let tears = [];
 let enemies = [];
 let pickups = [];
 let obstacles = [];
-let particles = [];
-let bloodStains = [];
 let doors = [];
 let items = [];
+let bombs = [];
+let explosions = [];
+let trapdoor = null;
 
 // Floor state
-let currentRoom = { x: 4, y: 4 };
-let floorMap = [];
-let visitedRooms = new Set();
-let roomStates = {}; // Stores persistent state for visited rooms
-let roomEntryPause = 0; // Brief pause when entering a room
 let floorNum = 1;
-let totalKills = 0;
-let trapdoor = null; // Trapdoor to next floor
+let floorMap = [];
+let currentRoom = { x: 4, y: 3 };
+let visitedRooms = new Set();
+let roomStates = {};
 let bossDefeated = false;
-let creepPools = []; // Lemon mishap damaging creep
+let totalKills = 0;
 
-// Input
-const keys = {};
-let lastFireDir = { x: 0, y: 1 };
-let screenShakeAmount = 0;
-let screenShakeDuration = 0;
-let flashAlpha = 0;
-let floatingTexts = [];
-let isPaused = false;
+// Timing
+let lastTime = 0;
+let deltaTime = 0;
+let roomTransitionTimer = 0;
+let roomEntryPauseTimer = 0;
 
-// Helper functions
-function addFloatingText(x, y, text, color, scale = 1) {
-    floatingTexts.push({
-        x, y, text, color, scale,
-        life: 1.0, maxLife: 1.0,
-        vy: -80
-    });
+// Screen shake
+let screenShake = { x: 0, y: 0, intensity: 0, duration: 0 };
+
+// Particles
+let particles = [];
+
+function triggerScreenShake(intensity, duration) {
+    screenShake.intensity = intensity;
+    screenShake.duration = duration;
 }
 
-function screenShake(amount, duration) {
-    screenShakeAmount = Math.max(screenShakeAmount, amount);
-    screenShakeDuration = Math.max(screenShakeDuration, duration);
+function updateScreenShake(dt) {
+    if (screenShake.duration > 0) {
+        screenShake.duration -= dt;
+        screenShake.x = (Math.random() - 0.5) * screenShake.intensity * 2;
+        screenShake.y = (Math.random() - 0.5) * screenShake.intensity * 2;
+    } else {
+        screenShake.x = 0;
+        screenShake.y = 0;
+        screenShake.intensity = 0;
+    }
 }
 
-// Debug mode
-let debugMode = false;
-let fps = 60;
-let frameCount = 0;
-let fpsTimer = 0;
-
-// Player class
-class Player {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.width = 32;
-        this.height = 32;
-        this.speed = 160;
-        this.health = 6;
-        this.maxHealth = 6;
-        this.soulHearts = 0;
-        this.blackHearts = 0;
-        this.coins = 0;
-        this.bombs = 1;
-        this.keys = 1;
-        this.damage = 3.5;
-        this.damageMult = 1;
-        this.tearDelay = 0.35;
-        this.fireTimer = 0;
-        this.range = 220;
-        this.shotSpeed = 320;
-        this.invulnTimer = 0;
-        this.headAngle = 0;
-        this.bodyBob = 0;
-        this.blinkTimer = 0;
-        this.multishot = 1;
-        this.tearColor = COLORS.tear;
-        this.collectedItems = [];
-        // Tear modifiers
-        this.homing = false;
-        this.piercing = false;
-        this.bouncing = false;
-        // Active items
-        this.activeItem = null;
-        this.activeCharges = 0;
-        this.maxCharges = 0;
-        // Temp bonuses
-        this.tempDamageBonus = 0;
-        this.tempDamageTimer = 0;
-        // Extra lives
-        this.lives = 0;
-    }
-
-    update(dt) {
-        // Brief pause on room entry - player can't move but can still look around
-        if (roomEntryPause > 0) {
-            roomEntryPause -= dt;
-            return; // Skip movement during pause
-        }
-
-        // Movement: WASD only
-        let dx = 0, dy = 0;
-        if (keys['w']) dy = -1;
-        if (keys['s']) dy = 1;
-        if (keys['a']) dx = -1;
-        if (keys['d']) dx = 1;
-
-        if (dx && dy) { dx *= 0.707; dy *= 0.707; }
-
-        if (dx || dy) this.bodyBob += dt * 15;
-
-        const newX = this.x + dx * this.speed * dt;
-        const newY = this.y + dy * this.speed * dt;
-
-        const minX = ROOM_OFFSET_X + TILE_SIZE + this.width / 2;
-        const maxX = ROOM_OFFSET_X + (ROOM_WIDTH - 1) * TILE_SIZE - this.width / 2;
-        const minY = ROOM_OFFSET_Y + TILE_SIZE + this.height / 2;
-        const maxY = ROOM_OFFSET_Y + (ROOM_HEIGHT - 1) * TILE_SIZE - this.height / 2;
-
-        let canMoveX = !checkObstacleCollision(newX, this.y, this.width * 0.6, this.height * 0.6);
-        let canMoveY = !checkObstacleCollision(this.x, newY, this.width * 0.6, this.height * 0.6);
-
-        if (canMoveX && newX > minX && newX < maxX) this.x = newX;
-        if (canMoveY && newY > minY && newY < maxY) this.y = newY;
-
-        // Shooting: Arrow keys
-        let fireX = 0, fireY = 0;
-        if (keys['arrowup']) fireY = -1;
-        if (keys['arrowdown']) fireY = 1;
-        if (keys['arrowleft']) fireX = -1;
-        if (keys['arrowright']) fireX = 1;
-
-        // Cardinal direction only
-        if (Math.abs(fireX) > 0 && Math.abs(fireY) > 0) {
-            if (Math.random() > 0.5) fireY = 0;
-            else fireX = 0;
-        }
-
-        if (fireX || fireY) {
-            lastFireDir = { x: fireX, y: fireY };
-            this.headAngle = Math.atan2(fireY, fireX);
-        }
-
-        this.fireTimer -= dt;
-        if ((fireX || fireY) && this.fireTimer <= 0) {
-            this.shoot(fireX, fireY);
-        }
-
-        // Place bomb
-        if (keys['e'] && this.bombs > 0 && !this.bombCooldown) {
-            this.placeBomb();
-            this.bombCooldown = true;
-        }
-        if (!keys['e']) this.bombCooldown = false;
-
-        // Use active item
-        if (keys['q'] && this.activeItem && this.activeCharges >= this.maxCharges && !this.activeCooldown) {
-            this.useActiveItem();
-            this.activeCooldown = true;
-        }
-        if (!keys['q']) this.activeCooldown = false;
-
-        if (this.invulnTimer > 0) this.invulnTimer -= dt;
-
-        // Update temp damage bonus
-        if (this.tempDamageTimer > 0) {
-            this.tempDamageTimer -= dt;
-            if (this.tempDamageTimer <= 0) {
-                this.tempDamageBonus = 0;
-            }
-        }
-
-        this.blinkTimer -= dt;
-        if (this.blinkTimer <= 0) this.blinkTimer = 3 + Math.random() * 2;
-
-        this.checkDoors();
-        this.checkSpikes(dt);
-        this.checkTrapdoor();
-    }
-
-    useActiveItem() {
-        if (!this.activeItem) return;
-
-        screenShake(5, 0.1);
-        this.activeCharges = 0;
-
-        switch (this.activeItem) {
-            case 'yum_heart':
-                if (this.health < this.maxHealth) {
-                    this.health = Math.min(this.health + 2, this.maxHealth);
-                    addFloatingText(this.x, this.y - 30, '+1 HP', '#FF4444', 1.2);
-                }
-                break;
-            case 'book_of_belial':
-                this.tempDamageBonus = 2;
-                this.tempDamageTimer = 30; // Whole room
-                addFloatingText(this.x, this.y - 30, 'DMG UP!', '#FF0000', 1.5);
-                break;
-            case 'the_poop':
-                obstacles.push({
-                    x: this.x,
-                    y: this.y + 30,
-                    width: 32,
-                    height: 32,
-                    type: 'poop',
-                    health: 3,
-                    maxHealth: 3
-                });
-                break;
-            case 'lemon_mishap':
-                creepPools.push({
-                    x: this.x,
-                    y: this.y,
-                    radius: 50,
-                    damage: 1,
-                    timer: 3.0
-                });
-                break;
-            case 'shoop_da_whoop':
-                // Fire a beam in the last fire direction
-                for (let i = 0; i < 10; i++) {
-                    const bx = this.x + lastFireDir.x * 50 * i;
-                    const by = this.y + lastFireDir.y * 50 * i;
-                    particles.push({
-                        x: bx, y: by,
-                        vx: 0, vy: 0,
-                        life: 0.3, maxLife: 0.3,
-                        color: '#FFFF00', size: 20
-                    });
-                    // Damage enemies in path
-                    for (let e of enemies) {
-                        const dist = Math.sqrt(Math.pow(e.x - bx, 2) + Math.pow(e.y - by, 2));
-                        if (dist < 40) {
-                            e.takeDamage(this.damage * 2, lastFireDir.x * 100, lastFireDir.y * 100);
-                        }
-                    }
-                }
-                break;
-        }
-    }
-
-    checkTrapdoor() {
-        if (!trapdoor) return;
-        const dist = Math.sqrt(Math.pow(this.x - trapdoor.x, 2) + Math.pow(this.y - trapdoor.y, 2));
-        if (dist < 30) {
-            // Go to next floor
-            floorNum++;
-            trapdoor = null;
-            bossDefeated = false;
-            roomStates = {};
-            generateFloor();
-            generateRoom(floorMap[currentRoom.y][currentRoom.x]);
-            this.x = ROOM_OFFSET_X + ROOM_WIDTH * TILE_SIZE / 2;
-            this.y = ROOM_OFFSET_Y + ROOM_HEIGHT * TILE_SIZE / 2;
-            addFloatingText(this.x, this.y - 30, 'FLOOR ' + floorNum, '#FFFFFF', 2);
-            screenShake(10, 0.3);
-        }
-    }
-
-    shoot(dx, dy) {
-        const spread = this.multishot > 1 ? 0.15 : 0;
-        const totalDamage = (this.damage + this.tempDamageBonus) * this.damageMult;
-        for (let i = 0; i < this.multishot; i++) {
-            const angle = Math.atan2(dy, dx) + (i - (this.multishot - 1) / 2) * spread;
-            const vx = Math.cos(angle) * this.shotSpeed;
-            const vy = Math.sin(angle) * this.shotSpeed;
-            const tear = new Tear(this.x, this.y - 10, vx, vy, totalDamage, this.range, this.tearColor);
-            tear.homing = this.homing;
-            tear.piercing = this.piercing;
-            tear.bouncing = this.bouncing;
-            tears.push(tear);
-        }
-        this.fireTimer = this.tearDelay;
-        this.blinkTimer = 0.1;
-    }
-
-    placeBomb() {
-        this.bombs--;
-        obstacles.push({
-            x: this.x,
-            y: this.y,
-            width: 32,
-            height: 32,
-            type: 'bomb',
-            timer: 2.0
+function spawnTearSplash(x, y, color = COLORS.tear) {
+    const numParticles = 4 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < numParticles; i++) {
+        const angle = (Math.PI * 2 / numParticles) * i + Math.random() * 0.5;
+        const speed = 50 + Math.random() * 100;
+        particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            size: 3 + Math.random() * 3,
+            color: color,
+            life: 0.3 + Math.random() * 0.2,
+            maxLife: 0.5
         });
     }
+}
 
-    takeDamage(amount) {
-        if (this.invulnTimer > 0) return;
-
-        // Black hearts take damage first and damage nearby enemies
-        if (this.blackHearts > 0) {
-            this.blackHearts -= amount;
-            // Damage all enemies in room when black heart is lost
-            for (let e of enemies) {
-                e.takeDamage(40, 0, 0);
-            }
-            // Black heart explosion effect
-            for (let i = 0; i < 20; i++) {
-                particles.push({
-                    x: this.x, y: this.y,
-                    vx: (Math.random() - 0.5) * 400,
-                    vy: (Math.random() - 0.5) * 400,
-                    life: 0.8, maxLife: 0.8,
-                    color: '#222222', size: 8
-                });
-            }
-            screenShake(15, 0.3);
-            if (this.blackHearts < 0) {
-                amount = -this.blackHearts;
-                this.blackHearts = 0;
-            } else {
-                amount = 0;
-            }
-        }
-
-        // Soul hearts take damage next
-        if (this.soulHearts > 0 && amount > 0) {
-            this.soulHearts -= amount;
-            if (this.soulHearts < 0) {
-                amount = -this.soulHearts;
-                this.soulHearts = 0;
-            } else {
-                amount = 0;
-            }
-        }
-
-        this.health -= amount;
-        this.invulnTimer = 1.5;
-        screenShake(10, 0.15);
-        flashAlpha = 0.4;
-
-        for (let i = 0; i < 12; i++) {
-            particles.push({
-                x: this.x, y: this.y,
-                vx: (Math.random() - 0.5) * 250,
-                vy: (Math.random() - 0.5) * 250,
-                life: 0.6, maxLife: 0.6,
-                color: COLORS.blood, size: 5
-            });
-        }
-
-        if (this.health <= 0) {
-            // Check for extra lives
-            if (this.lives > 0) {
-                this.lives--;
-                this.health = 2; // Revive with 1 heart
-                addFloatingText(this.x, this.y - 30, 'REVIVED!', '#FFFF00', 1.5);
-                screenShake(10, 0.3);
-            } else {
-                gameState = 'gameover';
-            }
-        }
-    }
-
-    checkDoors() {
-        // Don't check doors during room entry pause
-        if (roomEntryPause > 0) return;
-
-        doors.forEach(door => {
-            if (!door.open) return;
-            const dist = Math.sqrt(Math.pow(this.x - door.x, 2) + Math.pow(this.y - door.y, 2));
-            if (dist < 60) transitionRoom(door.direction);
+function spawnBloodSplash(x, y) {
+    const numParticles = 6 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < numParticles; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 30 + Math.random() * 80;
+        particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            size: 2 + Math.random() * 4,
+            color: '#8b0000',
+            life: 0.4 + Math.random() * 0.3,
+            maxLife: 0.7
         });
     }
-
-    checkSpikes(dt) {
-        for (let obs of obstacles) {
-            if (obs.type !== 'spike') continue;
-            const dist = Math.sqrt(Math.pow(this.x - obs.x, 2) + Math.pow(this.y - obs.y, 2));
-            if (dist < 25) {
-                this.takeDamage(1);
-            }
-        }
-    }
-
-    draw() {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-
-        if (this.invulnTimer > 0 && Math.floor(this.invulnTimer * 10) % 2 === 0) {
-            ctx.globalAlpha = 0.5;
-        }
-
-        // Low health pulse
-        if (this.health <= 2) {
-            const pulse = Math.sin(Date.now() / 150) * 0.2 + 0.8;
-            ctx.globalAlpha *= pulse;
-        }
-
-        // Shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-        ctx.beginPath();
-        ctx.ellipse(0, 16, 14, 5, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Body
-        const bobOffset = Math.sin(this.bodyBob) * 2;
-        ctx.fillStyle = COLORS.player;
-        ctx.beginPath();
-        ctx.ellipse(0, 6 + bobOffset, 12, 10, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Head
-        ctx.fillStyle = COLORS.player;
-        ctx.beginPath();
-        ctx.arc(0, -8, 16, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = COLORS.playerOutline;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Eyes
-        const eyeOffset = 5;
-        const blinking = this.blinkTimer < 0.1;
-
-        ctx.fillStyle = '#000';
-        if (blinking) {
-            ctx.fillRect(-eyeOffset - 3, -10, 6, 2);
-            ctx.fillRect(eyeOffset - 3, -10, 6, 2);
-        } else {
-            ctx.beginPath();
-            ctx.ellipse(-eyeOffset, -9, 4, 6, 0, 0, Math.PI * 2);
-            ctx.ellipse(eyeOffset, -9, 4, 6, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#222';
-            ctx.beginPath();
-            ctx.arc(-eyeOffset + lastFireDir.x * 1.5, -9 + lastFireDir.y * 1.5, 2.5, 0, Math.PI * 2);
-            ctx.arc(eyeOffset + lastFireDir.x * 1.5, -9 + lastFireDir.y * 1.5, 2.5, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        // Tears streaming when shooting
-        if (this.fireTimer > this.tearDelay - 0.15) {
-            ctx.fillStyle = this.tearColor;
-            ctx.beginPath();
-            ctx.ellipse(-eyeOffset, 0, 2.5, 8, 0, 0, Math.PI * 2);
-            ctx.ellipse(eyeOffset, 0, 2.5, 8, 0, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        // Mouth (sad)
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(0, 0, 5, 0.2, Math.PI - 0.2);
-        ctx.stroke();
-
-        ctx.restore();
-    }
 }
 
-// Tear class
-class Tear {
-    constructor(x, y, vx, vy, damage, range, color) {
-        this.x = x;
-        this.y = y;
-        this.vx = vx;
-        this.vy = vy;
-        this.damage = damage;
-        this.range = range;
-        this.color = color || COLORS.tear;
-        this.distanceTraveled = 0;
-        this.size = 10;
-        this.height = 0;
-        // Tear modifiers (set by player)
-        this.homing = false;
-        this.piercing = false;
-        this.bouncing = false;
-        this.hitEnemies = new Set(); // Track hit enemies for piercing
-        this.bounceCount = 0;
-    }
-
-    update(dt) {
-        // Full homing (Spoon Bender) - stronger than auto-aim
-        if (this.homing && enemies.length > 0) {
-            let nearest = null;
-            let nearestDist = 200;  // Longer range for full homing
-            for (const e of enemies) {
-                if (this.hitEnemies.has(e)) continue; // Don't home to already-hit enemies
-                const dist = Math.sqrt(Math.pow(this.x - e.x, 2) + Math.pow(this.y - e.y, 2));
-                if (dist < nearestDist) {
-                    nearestDist = dist;
-                    nearest = e;
-                }
-            }
-            if (nearest) {
-                const targetAngle = Math.atan2(nearest.y - this.y, nearest.x - this.x);
-                const tearAngle = Math.atan2(this.vy, this.vx);
-                let angleDiff = targetAngle - tearAngle;
-                while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
-                while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-                // Full homing - curves strongly toward any enemy
-                const homeStrength = 5.0 * dt;
-                const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-                const newAngle = tearAngle + angleDiff * homeStrength;
-                this.vx = Math.cos(newAngle) * speed;
-                this.vy = Math.sin(newAngle) * speed;
-            }
-        }
-        // Auto-aim assist (gentle homing for non-homing tears)
-        else if (enemies.length > 0) {
-            let nearest = null;
-            let nearestDist = 120;  // Max homing range
-            for (const e of enemies) {
-                const dist = Math.sqrt(Math.pow(this.x - e.x, 2) + Math.pow(this.y - e.y, 2));
-                if (dist < nearestDist) {
-                    nearestDist = dist;
-                    nearest = e;
-                }
-            }
-            if (nearest) {
-                const targetAngle = Math.atan2(nearest.y - this.y, nearest.x - this.x);
-                const tearAngle = Math.atan2(this.vy, this.vx);
-                let angleDiff = targetAngle - tearAngle;
-                // Normalize
-                while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
-                while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-                // Only curve if within 30 degrees
-                if (Math.abs(angleDiff) < Math.PI / 6) {
-                    const homeStrength = 2.0 * dt;
-                    const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-                    const newAngle = tearAngle + angleDiff * homeStrength;
-                    this.vx = Math.cos(newAngle) * speed;
-                    this.vy = Math.sin(newAngle) * speed;
-                }
-            }
-        }
-
-        const dx = this.vx * dt;
-        const dy = this.vy * dt;
-
-        this.x += dx;
-        this.y += dy;
-        this.distanceTraveled += Math.sqrt(dx * dx + dy * dy);
-
-        const progress = this.distanceTraveled / this.range;
-        this.height = Math.sin(progress * Math.PI) * 18;
-
-        if (progress > 0.7) {
-            this.size = 10 * (1 - (progress - 0.7) / 0.3);
-        }
-
-        // Wall collision with bouncing
-        const hitWall = this.x < ROOM_OFFSET_X + TILE_SIZE ||
-            this.x > ROOM_OFFSET_X + (ROOM_WIDTH - 1) * TILE_SIZE ||
-            this.y < ROOM_OFFSET_Y + TILE_SIZE ||
-            this.y > ROOM_OFFSET_Y + (ROOM_HEIGHT - 1) * TILE_SIZE;
-
-        if (hitWall) {
-            if (this.bouncing && this.bounceCount < 3) {
-                // Bounce off walls
-                if (this.x < ROOM_OFFSET_X + TILE_SIZE || this.x > ROOM_OFFSET_X + (ROOM_WIDTH - 1) * TILE_SIZE) {
-                    this.vx = -this.vx;
-                    this.x = Math.max(ROOM_OFFSET_X + TILE_SIZE + 5, Math.min(ROOM_OFFSET_X + (ROOM_WIDTH - 1) * TILE_SIZE - 5, this.x));
-                }
-                if (this.y < ROOM_OFFSET_Y + TILE_SIZE || this.y > ROOM_OFFSET_Y + (ROOM_HEIGHT - 1) * TILE_SIZE) {
-                    this.vy = -this.vy;
-                    this.y = Math.max(ROOM_OFFSET_Y + TILE_SIZE + 5, Math.min(ROOM_OFFSET_Y + (ROOM_HEIGHT - 1) * TILE_SIZE - 5, this.y));
-                }
-                this.bounceCount++;
-            } else {
-                this.splash();
-                return false;
-            }
-        }
-
-        // Check for poop collision first (destructible)
-        if (checkAndDamagePoop(this.x, this.y, 4, 4, 1)) {
-            if (!this.piercing) {
-                this.splash();
-                return false;
-            }
-        }
-
-        // Check other obstacles (rocks, etc.)
-        if (checkObstacleCollision(this.x, this.y, 4, 4)) {
-            if (this.bouncing && this.bounceCount < 3) {
-                this.vx = -this.vx;
-                this.vy = -this.vy;
-                this.bounceCount++;
-            } else {
-                this.splash();
-                return false;
-            }
-        }
-
-        // Enemy collision
-        for (let e of enemies) {
-            if (this.hitEnemies.has(e)) continue; // Skip already-hit enemies (piercing)
-            const dist = Math.sqrt(Math.pow(this.x - e.x, 2) + Math.pow(this.y - e.y, 2));
-            if (dist < e.width / 2 + this.size) {
-                // Critical hit chance (10%)
-                const isCrit = Math.random() < 0.1;
-                const finalDamage = isCrit ? this.damage * 2 : this.damage;
-
-                if (isCrit) {
-                    addFloatingText(e.x, e.y - 30, 'CRITICAL!', '#FF4400', 1.5);
-                    screenShake(5, 0.08);
-                }
-
-                e.takeDamage(finalDamage, this.vx, this.vy);
-
-                if (this.piercing) {
-                    this.hitEnemies.add(e);
-                    // Continue through
-                } else {
-                    this.splash();
-                    return false;
-                }
-            }
-        }
-
-        return this.distanceTraveled < this.range;
-    }
-
-    splash() {
-        for (let i = 0; i < 6; i++) {
-            particles.push({
-                x: this.x, y: this.y - this.height,
-                vx: (Math.random() - 0.5) * 120,
-                vy: (Math.random() - 0.5) * 120,
-                life: 0.35, maxLife: 0.35,
-                color: this.color, size: 4
-            });
-        }
-    }
-
-    draw() {
-        ctx.save();
-        ctx.translate(this.x, this.y - this.height);
-
-        // Glow
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = this.color;
-
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(0, 0, this.size, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#FFFFFF';
-        ctx.globalAlpha = 0.6;
-        ctx.beginPath();
-        ctx.arc(-this.size * 0.3, -this.size * 0.3, this.size * 0.35, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
-    }
-}
-
-// Enemy class
-class Enemy {
-    constructor(x, y, type, championType = 'none') {
-        this.x = x;
-        this.y = y;
-        this.type = type;
-        const data = ENEMY_DATA[type] || ENEMY_DATA.fly;
-
-        // Champion modifiers
-        this.champion = championType;
-        const champMod = CHAMPION_TYPES[championType] || CHAMPION_TYPES.none;
-
-        this.width = data.width || 24;
-        this.height = data.height || 24;
-        this.speed = (data.speed || 50) * champMod.speedMult;
-        this.health = Math.floor((data.health || 10) * champMod.hpMult);
-        this.maxHealth = this.health;
-        this.damage = (data.damage || 1) * champMod.dmgMult;
-        this.isBoss = data.isBoss || false;
-        this.championColor = champMod.color;
-        this.extraShots = champMod.extraShots || false;
-        this.spawnFlyOnDeath = champMod.spawnFlyOnDeath || false;
-
-        this.hitFlash = 0;
-        this.knockbackX = 0;
-        this.knockbackY = 0;
-        this.floatPhase = Math.random() * Math.PI * 2;
-        this.moveTimer = 0;
-        this.moveDir = { x: 0, y: 0 };
-        this.state = 'idle';
-        this.stateTimer = 0;
-        this.fireTimer = 0;
-        this.hideTimer = 0;
-        this.jumping = false;
-        this.jumpHeight = 0;
-        this.spawnAnim = 0.6; // Increased wake-up delay (was 0.5)
-        this.alive = true; // Track alive state to prevent errors
-    }
-
-    update(dt) {
-        // Spawn animation
-        if (this.spawnAnim > 0) {
-            this.spawnAnim -= dt;
-            return true;
-        }
-
-        this.x += this.knockbackX * dt;
-        this.y += this.knockbackY * dt;
-        this.knockbackX *= 0.9;
-        this.knockbackY *= 0.9;
-
-        if (this.hitFlash > 0) this.hitFlash -= dt;
-
-        this.updateBehavior(dt);
-
-        // Keep in bounds
-        const minX = ROOM_OFFSET_X + TILE_SIZE + this.width / 2;
-        const maxX = ROOM_OFFSET_X + (ROOM_WIDTH - 1) * TILE_SIZE - this.width / 2;
-        const minY = ROOM_OFFSET_Y + TILE_SIZE + this.height / 2;
-        const maxY = ROOM_OFFSET_Y + (ROOM_HEIGHT - 1) * TILE_SIZE - this.height / 2;
-
-        this.x = Math.max(minX, Math.min(maxX, this.x));
-        this.y = Math.max(minY, Math.min(maxY, this.y));
-
-        // Player collision (not while jumping)
-        if (player && !this.jumping && this.spawnAnim <= 0) {
-            const dist = Math.sqrt(Math.pow(this.x - player.x, 2) + Math.pow(this.y - player.y, 2));
-            if (dist < (this.width + player.width) / 2) {
-                player.takeDamage(this.damage);
-            }
-        }
-
-        return this.health > 0;
-    }
-
-    updateBehavior(dt) {
-        switch (this.type) {
-            case 'fly':
-            case 'redFly':
-                this.updateFly(dt);
-                break;
-            case 'gaper':
-            case 'frowningGaper':
-                this.updateGaper(dt);
-                break;
-            case 'spider':
-            case 'bigSpider':
-                this.updateSpider(dt);
-                break;
-            case 'hopper':
-                this.updateHopper(dt);
-                break;
-            case 'host':
-                this.updateHost(dt);
-                break;
-            case 'leaper':
-                this.updateLeaper(dt);
-                break;
-            case 'charger':
-                this.updateCharger(dt);
-                break;
-            case 'bony':
-                this.updateBony(dt);
-                break;
-            case 'boss_monstro':
-                this.updateMonstro(dt);
-                break;
-            default:
-                this.updateGaper(dt);
-        }
-    }
-
-    updateFly(dt) {
-        this.floatPhase += dt * 5;
-        if (player) {
-            const dx = player.x - this.x;
-            const dy = player.y - this.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist > 0) {
-                this.x += (dx / dist) * this.speed * dt + (Math.random() - 0.5) * 30 * dt;
-                this.y += (dy / dist) * this.speed * dt + (Math.random() - 0.5) * 30 * dt;
-            }
-        }
-    }
-
-    updateGaper(dt) {
-        if (player) {
-            const dx = player.x - this.x;
-            const dy = player.y - this.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist > 0) {
-                const newX = this.x + (dx / dist) * this.speed * dt;
-                const newY = this.y + (dy / dist) * this.speed * dt;
-                if (!checkObstacleCollision(newX, this.y, this.width * 0.7, this.height * 0.7)) this.x = newX;
-                if (!checkObstacleCollision(this.x, newY, this.width * 0.7, this.height * 0.7)) this.y = newY;
-            }
-        }
-    }
-
-    updateSpider(dt) {
-        this.moveTimer -= dt;
-        if (this.moveTimer <= 0) {
-            this.moveTimer = 0.3 + Math.random() * 0.4;
-            if (player && Math.random() < 0.7) {
-                const dx = player.x - this.x;
-                const dy = player.y - this.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                this.moveDir = { x: dx / dist, y: dy / dist };
-            } else {
-                const angle = Math.random() * Math.PI * 2;
-                this.moveDir = { x: Math.cos(angle), y: Math.sin(angle) };
-            }
-        }
-        const newX = this.x + this.moveDir.x * this.speed * dt;
-        const newY = this.y + this.moveDir.y * this.speed * dt;
-        if (!checkObstacleCollision(newX, this.y, this.width * 0.7, this.height * 0.7)) this.x = newX;
-        if (!checkObstacleCollision(this.x, newY, this.width * 0.7, this.height * 0.7)) this.y = newY;
-    }
-
-    updateHopper(dt) {
-        this.stateTimer -= dt;
-        if (this.state === 'idle' && this.stateTimer <= 0) {
-            this.state = 'jump';
-            this.stateTimer = 0.5;
-            this.jumping = true;
-            if (player) {
-                const dx = player.x - this.x;
-                const dy = player.y - this.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                this.moveDir = { x: dx / dist, y: dy / dist };
-            }
-        } else if (this.state === 'jump') {
-            const progress = 1 - this.stateTimer / 0.5;
-            this.jumpHeight = Math.sin(progress * Math.PI) * 40;
-            this.x += this.moveDir.x * 150 * dt;
-            this.y += this.moveDir.y * 150 * dt;
-            if (this.stateTimer <= 0) {
-                this.state = 'idle';
-                this.stateTimer = 1 + Math.random();
-                this.jumping = false;
-                this.jumpHeight = 0;
-            }
-        }
-    }
-
-    updateHost(dt) {
-        this.stateTimer -= dt;
-        if (this.state === 'hidden') {
-            if (player) {
-                const dist = Math.sqrt(Math.pow(this.x - player.x, 2) + Math.pow(this.y - player.y, 2));
-                if (dist < 150 && this.stateTimer <= 0) {
-                    this.state = 'attack';
-                    this.stateTimer = 1.5;
-                }
-            }
-        } else if (this.state === 'attack') {
-            this.fireTimer -= dt;
-            if (this.fireTimer <= 0 && player) {
-                this.fireTimer = 0.4;
-                const angle = Math.atan2(player.y - this.y, player.x - this.x);
-                tears.push(new EnemyTear(this.x, this.y, Math.cos(angle) * 200, Math.sin(angle) * 200));
-            }
-            if (this.stateTimer <= 0) {
-                this.state = 'hidden';
-                this.stateTimer = 2;
-            }
-        }
-    }
-
-    updateLeaper(dt) {
-        this.stateTimer -= dt;
-        if (this.state === 'idle' && this.stateTimer <= 0 && player) {
-            const dist = Math.sqrt(Math.pow(this.x - player.x, 2) + Math.pow(this.y - player.y, 2));
-            if (dist < 200) {
-                this.state = 'leap';
-                this.stateTimer = 0.4;
-                this.jumping = true;
-                this.moveDir = { x: (player.x - this.x) / dist, y: (player.y - this.y) / dist };
-            }
-        } else if (this.state === 'leap') {
-            const progress = 1 - this.stateTimer / 0.4;
-            this.jumpHeight = Math.sin(progress * Math.PI) * 50;
-            this.x += this.moveDir.x * 200 * dt;
-            this.y += this.moveDir.y * 200 * dt;
-            if (this.stateTimer <= 0) {
-                this.state = 'idle';
-                this.stateTimer = 1.5;
-                this.jumping = false;
-                this.jumpHeight = 0;
-            }
-        }
-    }
-
-    updateCharger(dt) {
-        this.stateTimer -= dt;
-        if (this.state === 'idle' && this.stateTimer <= 0 && player) {
-            const dx = player.x - this.x;
-            const dy = player.y - this.y;
-            if (Math.abs(dx) < 30 || Math.abs(dy) < 30) {
-                this.state = 'charge';
-                this.stateTimer = 0.8;
-                this.moveDir = { x: Math.abs(dx) > Math.abs(dy) ? Math.sign(dx) : 0, y: Math.abs(dy) >= Math.abs(dx) ? Math.sign(dy) : 0 };
-            }
-        } else if (this.state === 'charge') {
-            const newX = this.x + this.moveDir.x * this.speed * dt;
-            const newY = this.y + this.moveDir.y * this.speed * dt;
-            if (checkObstacleCollision(newX, newY, this.width, this.height)) {
-                this.state = 'idle';
-                this.stateTimer = 1;
-                screenShake(5, 0.1);
-            } else {
-                this.x = newX;
-                this.y = newY;
-            }
-            if (this.stateTimer <= 0) {
-                this.state = 'idle';
-                this.stateTimer = 1;
-            }
-        }
-    }
-
-    updateBony(dt) {
-        this.updateGaper(dt);
-        this.fireTimer -= dt;
-        if (this.fireTimer <= 0 && player) {
-            const dist = Math.sqrt(Math.pow(this.x - player.x, 2) + Math.pow(this.y - player.y, 2));
-            if (dist < 250) {
-                this.fireTimer = 2;
-                const angle = Math.atan2(player.y - this.y, player.x - this.x);
-                tears.push(new EnemyTear(this.x, this.y, Math.cos(angle) * 180, Math.sin(angle) * 180));
-            }
-        }
-    }
-
-    updateMonstro(dt) {
-        this.stateTimer -= dt;
-        if (this.state === 'idle' && this.stateTimer <= 0) {
-            const attacks = ['jump', 'spit'];
-            this.state = attacks[Math.floor(Math.random() * attacks.length)];
-            this.stateTimer = this.state === 'jump' ? 1.0 : 0.8;
-            if (this.state === 'jump' && player) {
-                this.moveDir = { x: player.x - this.x, y: player.y - this.y };
-            }
-        } else if (this.state === 'jump') {
-            const progress = 1 - this.stateTimer / 1.0;
-            this.jumpHeight = Math.sin(progress * Math.PI) * 100;
-            this.x += this.moveDir.x * dt;
-            this.y += this.moveDir.y * dt;
-            if (this.stateTimer <= 0) {
-                this.state = 'idle';
-                this.stateTimer = 1.5;
-                this.jumpHeight = 0;
-                screenShake(15, 0.2);
-                // Spawn tears on landing
-                for (let i = 0; i < 8; i++) {
-                    const angle = (i / 8) * Math.PI * 2;
-                    tears.push(new EnemyTear(this.x, this.y, Math.cos(angle) * 150, Math.sin(angle) * 150));
-                }
-            }
-        } else if (this.state === 'spit') {
-            if (this.stateTimer <= 0.3 && this.stateTimer > 0.2 && player) {
-                for (let i = 0; i < 5; i++) {
-                    const spread = (Math.random() - 0.5) * 0.8;
-                    const angle = Math.atan2(player.y - this.y, player.x - this.x) + spread;
-                    tears.push(new EnemyTear(this.x, this.y - 20, Math.cos(angle) * 220, Math.sin(angle) * 220));
-                }
-                this.stateTimer = 0.2;
-            }
-            if (this.stateTimer <= 0) {
-                this.state = 'idle';
-                this.stateTimer = 2;
-            }
-        }
-    }
-
-    takeDamage(amount, knockX, knockY) {
-        if (this.state === 'hidden') return; // Host is invulnerable when hidden
-
-        this.health -= amount;
-        this.hitFlash = 0.15;
-        screenShake(3, 0.08);
-
-        const knockForce = this.isBoss ? 50 : 180;
-        const knockLen = Math.sqrt(knockX * knockX + knockY * knockY);
-        if (knockLen > 0) {
-            this.knockbackX = (knockX / knockLen) * knockForce;
-            this.knockbackY = (knockY / knockLen) * knockForce;
-        }
-
-        if (this.health <= 0) this.die();
-    }
-
-    die() {
-        if (!this.alive) return; // Prevent double death
-        this.alive = false;
-        totalKills++;
-
-        // Screen shake on kill
-        screenShake(this.isBoss ? 15 : 5, this.isBoss ? 0.3 : 0.1);
-
-        // Blood splatter
-        const bloodColor = this.championColor || COLORS.blood;
-        for (let i = 0; i < 15; i++) {
-            particles.push({
-                x: this.x, y: this.y,
-                vx: (Math.random() - 0.5) * 250,
-                vy: (Math.random() - 0.5) * 250,
-                life: 0.6, maxLife: 0.6,
-                color: bloodColor, size: 6
-            });
-        }
-
-        // Blood stain
-        bloodStains.push({ x: this.x, y: this.y, size: 15 + Math.random() * 15, color: bloodColor });
-
-        // Champion effect: spawn fly on death
-        if (this.spawnFlyOnDeath && !this.isBoss) {
-            enemies.push(new Enemy(this.x + 20, this.y, 'fly'));
-        }
-
-        // Boss death: spawn trapdoor and give charges
-        if (this.isBoss) {
-            bossDefeated = true;
-            trapdoor = {
-                x: this.x,
-                y: this.y,
-                pulsePhase: 0
-            };
-            // Give player charges on boss kill
-            if (player && player.activeItem) {
-                player.activeCharges = Math.min(player.activeCharges + 2, player.maxCharges);
-            }
-            addFloatingText(this.x, this.y - 50, 'BOSS DEFEATED!', '#FFFF00', 2);
-        }
-
-        // Drop chance - don't drop items in normal rooms, only pickups
-        // Champions have better drop rates
-        const dropChance = this.isBoss ? 1.0 : (this.champion !== 'none' ? 0.5 : 0.25);
-        if (Math.random() < dropChance) {
-            const types = this.isBoss ? ['heart', 'heart', 'soulHeart'] : ['heart', 'coin', 'coin', 'bomb', 'key'];
-            // Champions can drop soul hearts
-            if (this.champion !== 'none' && Math.random() < 0.2) {
-                pickups.push({ x: this.x, y: this.y, type: 'soulHeart', bobPhase: 0 });
-            } else {
-                const type = types[Math.floor(Math.random() * types.length)];
-                pickups.push({ x: this.x, y: this.y, type: type, bobPhase: 0 });
-            }
-        }
-    }
-
-    draw() {
-        // Draw spawn shadow effect first
-        if (this.spawnAnim > 0) {
-            const progress = 1 - this.spawnAnim / 0.6;
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-            ctx.beginPath();
-            ctx.ellipse(0, 8, this.width / 2 * progress, 4 * progress, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            ctx.globalAlpha = progress;
-        }
-
-        ctx.save();
-        ctx.translate(this.x, this.y - (this.jumpHeight || 0));
-
-        // Scale effect during spawn - enemy grows from small
-        if (this.spawnAnim > 0) {
-            const progress = 1 - this.spawnAnim / 0.6;
-            ctx.scale(0.5 + progress * 0.5, 0.5 + progress * 0.5);
-        }
-
-        // Champion glow effect
-        if (this.championColor && !this.hitFlash) {
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = this.championColor;
-        }
-
-        if (this.hitFlash > 0) ctx.fillStyle = '#FFFFFF';
-
-        switch (this.type) {
-            case 'fly':
-            case 'redFly':
-                this.drawFly();
-                break;
-            case 'gaper':
-            case 'frowningGaper':
-                this.drawGaper();
-                break;
-            case 'spider':
-            case 'bigSpider':
-                this.drawSpider();
-                break;
-            case 'hopper':
-                this.drawHopper();
-                break;
-            case 'host':
-                this.drawHost();
-                break;
-            case 'leaper':
-                this.drawLeaper();
-                break;
-            case 'charger':
-                this.drawCharger();
-                break;
-            case 'bony':
-                this.drawBony();
-                break;
-            case 'boss_monstro':
-                this.drawMonstro();
-                break;
-            default:
-                this.drawGaper();
-        }
-
-        ctx.restore();
-        ctx.globalAlpha = 1;
-    }
-
-    drawFly() {
-        const bobY = Math.sin(this.floatPhase) * 4;
-        const isRed = this.type === 'redFly';
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx.beginPath();
-        ctx.ellipse(0, 10 - bobY / 2, 7, 2, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Wings
-        ctx.fillStyle = this.hitFlash > 0 ? '#FFF' : '#555';
-        const wingPhase = Date.now() / 25;
-        ctx.beginPath();
-        ctx.ellipse(-7 + Math.sin(wingPhase) * 2, bobY - 2, 5, 7, -0.3, 0, Math.PI * 2);
-        ctx.ellipse(7 - Math.sin(wingPhase) * 2, bobY - 2, 5, 7, 0.3, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = this.hitFlash > 0 ? '#FFF' : (isRed ? '#882222' : COLORS.fly);
-        ctx.beginPath();
-        ctx.arc(0, bobY, 8, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = isRed ? '#FF4444' : '#FF0000';
-        ctx.beginPath();
-        ctx.arc(-2, bobY - 2, 2.5, 0, Math.PI * 2);
-        ctx.arc(2, bobY - 2, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    drawGaper() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx.beginPath();
-        ctx.ellipse(0, 16, 14, 5, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = this.hitFlash > 0 ? '#FFF' : COLORS.gaper;
-        ctx.beginPath();
-        ctx.arc(0, 0, 16, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = '#8A6A4A';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        ctx.fillStyle = '#000';
-        ctx.beginPath();
-        ctx.ellipse(-5, -3, 5, 6, 0, 0, Math.PI * 2);
-        ctx.ellipse(5, -3, 5, 6, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = this.type === 'frowningGaper' ? '#661111' : '#4A2A1A';
-        ctx.beginPath();
-        ctx.ellipse(0, 8, 7, 6, 0, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    drawSpider() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx.beginPath();
-        ctx.ellipse(0, 10, 10, 3, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = this.hitFlash > 0 ? '#FFF' : COLORS.spider;
-        ctx.lineWidth = this.type === 'bigSpider' ? 3 : 2;
-        const legPhase = Date.now() / 80;
-        for (let i = 0; i < 4; i++) {
-            const angle = (i / 4) * Math.PI - Math.PI / 2;
-            const legMove = Math.sin(legPhase + i) * 3;
-            ctx.beginPath();
-            ctx.moveTo(Math.cos(angle) * 6, Math.sin(angle) * 4);
-            ctx.lineTo(Math.cos(angle) * 14 + legMove, Math.sin(angle) * 8 + 3);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(-Math.cos(angle) * 6, Math.sin(angle) * 4);
-            ctx.lineTo(-Math.cos(angle) * 14 - legMove, Math.sin(angle) * 8 + 3);
-            ctx.stroke();
-        }
-
-        ctx.fillStyle = this.hitFlash > 0 ? '#FFF' : COLORS.spider;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, this.width / 2 - 2, this.height / 2 - 4, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#FF0000';
-        ctx.beginPath();
-        ctx.arc(-3, -2, 2, 0, Math.PI * 2);
-        ctx.arc(3, -2, 2, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    drawHopper() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx.beginPath();
-        ctx.ellipse(0, 12, 10, 4, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = this.hitFlash > 0 ? '#FFF' : '#556644';
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 12, 10, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#FF0000';
-        ctx.beginPath();
-        ctx.arc(0, -2, 4, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    drawHost() {
-        if (this.state === 'hidden') {
-            ctx.fillStyle = this.hitFlash > 0 ? '#FFF' : '#AA8866';
-            ctx.beginPath();
-            ctx.arc(0, 0, 14, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#886644';
-            ctx.beginPath();
-            ctx.arc(0, 0, 10, 0, Math.PI * 2);
-            ctx.fill();
-        } else {
-            ctx.fillStyle = this.hitFlash > 0 ? '#FFF' : '#DDAA88';
-            ctx.beginPath();
-            ctx.arc(0, -5, 14, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#000';
-            ctx.beginPath();
-            ctx.ellipse(-4, -6, 3, 4, 0, 0, Math.PI * 2);
-            ctx.ellipse(4, -6, 3, 4, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#662222';
-            ctx.beginPath();
-            ctx.ellipse(0, 3, 6, 4, 0, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    }
-
-    drawLeaper() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx.beginPath();
-        ctx.ellipse(0, 12, 10, 4, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = this.hitFlash > 0 ? '#FFF' : '#AA6644';
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 13, 11, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#000';
-        ctx.beginPath();
-        ctx.ellipse(-4, -2, 3, 4, 0, 0, Math.PI * 2);
-        ctx.ellipse(4, -2, 3, 4, 0, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    drawCharger() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx.beginPath();
-        ctx.ellipse(0, 12, 10, 4, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = this.hitFlash > 0 ? '#FFF' : '#664422';
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 13, 10, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#FF4400';
-        ctx.beginPath();
-        ctx.arc(-4, -2, 3, 0, Math.PI * 2);
-        ctx.arc(4, -2, 3, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    drawBony() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx.beginPath();
-        ctx.ellipse(0, 12, 10, 4, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = this.hitFlash > 0 ? '#FFF' : '#DDDDCC';
-        ctx.beginPath();
-        ctx.arc(0, 0, 12, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#000';
-        ctx.beginPath();
-        ctx.ellipse(-4, -2, 3, 4, 0, 0, Math.PI * 2);
-        ctx.ellipse(4, -2, 3, 4, 0, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    drawMonstro() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-        ctx.beginPath();
-        ctx.ellipse(0, 35, 35, 12, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = this.hitFlash > 0 ? '#FFF' : '#DDAA88';
-        ctx.beginPath();
-        ctx.arc(0, 0, 40, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = '#AA7755';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        ctx.fillStyle = '#000';
-        ctx.beginPath();
-        ctx.ellipse(-12, -8, 8, 12, 0, 0, Math.PI * 2);
-        ctx.ellipse(12, -8, 8, 12, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#662222';
-        ctx.beginPath();
-        ctx.ellipse(0, 18, 18, 12, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Teeth
-        ctx.fillStyle = '#EEEECC';
-        for (let i = -3; i <= 3; i++) {
-            ctx.beginPath();
-            ctx.moveTo(i * 4 - 2, 12);
-            ctx.lineTo(i * 4 + 2, 12);
-            ctx.lineTo(i * 4, 20);
-            ctx.fill();
-        }
-    }
-}
-
-// Enemy tear
-class EnemyTear {
-    constructor(x, y, vx, vy) {
-        this.x = x;
-        this.y = y;
-        this.vx = vx;
-        this.vy = vy;
-        this.life = 2;
-        this.size = 8;
-    }
-
-    update(dt) {
-        this.x += this.vx * dt;
-        this.y += this.vy * dt;
-        this.life -= dt;
-
-        if (this.x < ROOM_OFFSET_X + TILE_SIZE ||
-            this.x > ROOM_OFFSET_X + (ROOM_WIDTH - 1) * TILE_SIZE ||
-            this.y < ROOM_OFFSET_Y + TILE_SIZE ||
-            this.y > ROOM_OFFSET_Y + (ROOM_HEIGHT - 1) * TILE_SIZE) {
-            return false;
-        }
-
-        if (player) {
-            const dist = Math.sqrt(Math.pow(this.x - player.x, 2) + Math.pow(this.y - player.y, 2));
-            if (dist < player.width / 2 + this.size) {
-                player.takeDamage(1);
-                return false;
-            }
-        }
-
-        return this.life > 0;
-    }
-
-    draw() {
-        ctx.fillStyle = COLORS.bloodDark;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = COLORS.blood;
-        ctx.beginPath();
-        ctx.arc(this.x - 2, this.y - 2, this.size * 0.5, 0, Math.PI * 2);
-        ctx.fill();
-    }
-}
-
-// Utility
-function checkObstacleCollision(x, y, w, h) {
-    for (let obs of obstacles) {
-        if (obs.type === 'bomb' || obs.type === 'spike') continue;
-        if (x - w / 2 < obs.x + obs.width / 2 &&
-            x + w / 2 > obs.x - obs.width / 2 &&
-            y - h / 2 < obs.y + obs.height / 2 &&
-            y + h / 2 > obs.y - obs.height / 2) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// Check for poop collision and damage it - returns the poop if hit, null otherwise
-function checkAndDamagePoop(x, y, w, h, damage) {
-    for (let i = obstacles.length - 1; i >= 0; i--) {
-        const obs = obstacles[i];
-        if (obs.type !== 'poop') continue;
-        if (x - w / 2 < obs.x + obs.width / 2 &&
-            x + w / 2 > obs.x - obs.width / 2 &&
-            y - h / 2 < obs.y + obs.height / 2 &&
-            y + h / 2 > obs.y - obs.height / 2) {
-            // Damage the poop
-            obs.health -= damage;
-            // Spawn brown particles
-            for (let j = 0; j < 4; j++) {
-                particles.push({
-                    x: obs.x, y: obs.y,
-                    vx: (Math.random() - 0.5) * 80,
-                    vy: (Math.random() - 0.5) * 80,
-                    life: 0.3, maxLife: 0.3,
-                    color: COLORS.poop, size: 5
-                });
-            }
-            // Destroy poop if health depleted
-            if (obs.health <= 0) {
-                // Spawn more particles on destruction
-                for (let j = 0; j < 10; j++) {
-                    particles.push({
-                        x: obs.x, y: obs.y,
-                        vx: (Math.random() - 0.5) * 150,
-                        vy: (Math.random() - 0.5) * 150,
-                        life: 0.5, maxLife: 0.5,
-                        color: COLORS.poopDark, size: 6
-                    });
-                }
-                // Maybe drop a pickup
-                if (Math.random() < 0.3) {
-                    const dropTypes = ['coin', 'coin', 'heart', 'bomb'];
-                    pickups.push({
-                        x: obs.x,
-                        y: obs.y,
-                        type: dropTypes[Math.floor(Math.random() * dropTypes.length)]
-                    });
-                }
-                obstacles.splice(i, 1);
-            }
-            return obs;
-        }
-    }
-    return null;
-}
-
-function weightedRandom(items, weights) {
-    const total = weights.reduce((a, b) => a + b, 0);
-    let r = Math.random() * total;
-    for (let i = 0; i < items.length; i++) {
-        if (r < weights[i]) return items[i];
-        r -= weights[i];
-    }
-    return items[0];
-}
-
-// Floor generation
-function generateFloor() {
-    floorMap = [];
-    for (let y = 0; y < 9; y++) {
-        floorMap[y] = [];
-        for (let x = 0; x < 9; x++) {
-            floorMap[y][x] = null;
-        }
-    }
-
-    floorMap[4][4] = { type: 'start', cleared: true };
-
-    const roomCount = 8 + floorNum * 2;
-    const roomPositions = [{ x: 4, y: 4 }];
-
-    while (roomPositions.length < roomCount) {
-        const room = roomPositions[Math.floor(Math.random() * roomPositions.length)];
-        const dirs = [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }];
-        const dir = dirs[Math.floor(Math.random() * dirs.length)];
-        const newX = room.x + dir.x;
-        const newY = room.y + dir.y;
-
-        if (newX >= 0 && newX < 9 && newY >= 0 && newY < 9 && !floorMap[newY][newX]) {
-            floorMap[newY][newX] = { type: 'normal', cleared: false };
-            roomPositions.push({ x: newX, y: newY });
-        }
-    }
-
-    // Boss room
-    let farthest = { x: 4, y: 4 };
-    let maxDist = 0;
-    for (let pos of roomPositions) {
-        const dist = Math.abs(pos.x - 4) + Math.abs(pos.y - 4);
-        if (dist > maxDist && !(pos.x === 4 && pos.y === 4)) {
-            maxDist = dist;
-            farthest = pos;
-        }
-    }
-    floorMap[farthest.y][farthest.x] = { type: 'boss', cleared: false };
-
-    // Treasure room
-    for (let pos of roomPositions) {
-        if (floorMap[pos.y][pos.x].type === 'normal') {
-            floorMap[pos.y][pos.x] = { type: 'treasure', cleared: false };
-            break;
-        }
-    }
-
-    // Shop room
-    for (let pos of roomPositions) {
-        if (floorMap[pos.y][pos.x].type === 'normal') {
-            floorMap[pos.y][pos.x] = { type: 'shop', cleared: true };
-            break;
-        }
-    }
-
-    currentRoom = { x: 4, y: 4 };
-    visitedRooms.clear();
-    visitedRooms.add('4,4');
-    roomStates = {}; // Clear saved room states for new floor
-}
-
-function generateRoom(roomData) {
-    enemies = [];
-    obstacles = [];
-    pickups = [];
-    doors = [];
-    items = [];
-    bloodStains = [];
-
-    // Enemy tears from previous room
-    tears = tears.filter(t => !(t instanceof EnemyTear));
-
-    if (!roomData) return;
-
-    // Generate doors
-    const dirs = [
-        { x: 0, y: -1, doorX: ROOM_OFFSET_X + ROOM_WIDTH * TILE_SIZE / 2, doorY: ROOM_OFFSET_Y + TILE_SIZE / 2 },
-        { x: 0, y: 1, doorX: ROOM_OFFSET_X + ROOM_WIDTH * TILE_SIZE / 2, doorY: ROOM_OFFSET_Y + (ROOM_HEIGHT - 0.5) * TILE_SIZE },
-        { x: -1, y: 0, doorX: ROOM_OFFSET_X + TILE_SIZE / 2, doorY: ROOM_OFFSET_Y + ROOM_HEIGHT * TILE_SIZE / 2 },
-        { x: 1, y: 0, doorX: ROOM_OFFSET_X + (ROOM_WIDTH - 0.5) * TILE_SIZE, doorY: ROOM_OFFSET_Y + ROOM_HEIGHT * TILE_SIZE / 2 }
-    ];
-
-    for (let dir of dirs) {
-        const adjX = currentRoom.x + dir.x;
-        const adjY = currentRoom.y + dir.y;
-        if (adjX >= 0 && adjX < 9 && adjY >= 0 && adjY < 9 && floorMap[adjY][adjX]) {
-            const adjRoom = floorMap[adjY][adjX];
-            doors.push({
-                x: dir.doorX,
-                y: dir.doorY,
-                direction: dir,
-                open: roomData.cleared,
-                locked: adjRoom.type === 'treasure' || adjRoom.type === 'shop'
-            });
-        }
-    }
-
-    // Check if we have saved state for this room
-    const roomKey = `${currentRoom.x},${currentRoom.y}`;
-    if (roomStates[roomKey]) {
-        // Restore saved state
-        obstacles = roomStates[roomKey].obstacles.map(o => ({ ...o }));
-        pickups = roomStates[roomKey].pickups.map(p => ({ ...p }));
-        items = roomStates[roomKey].items.map(i => ({ ...i }));
-        bloodStains = roomStates[roomKey].bloodStains.map(b => ({ ...b }));
-        return; // Don't regenerate, use saved state
-    }
-
-    if (roomData.cleared || roomData.type === 'start') return;
-
-    // Spawn obstacles
-    const obstacleCount = 2 + Math.floor(Math.random() * 4);
-    for (let i = 0; i < obstacleCount; i++) {
-        const ox = ROOM_OFFSET_X + (2 + Math.random() * (ROOM_WIDTH - 4)) * TILE_SIZE;
-        const oy = ROOM_OFFSET_Y + (2 + Math.random() * (ROOM_HEIGHT - 4)) * TILE_SIZE;
-        const types = ['rock', 'rock', 'poop', 'spike'];
-        const obsType = types[Math.floor(Math.random() * types.length)];
-        const obs = {
-            x: ox, y: oy,
-            width: TILE_SIZE - 8, height: TILE_SIZE - 8,
-            type: obsType
-        };
-        // Poops are destructible with 3 HP
-        if (obsType === 'poop') {
-            obs.health = 3;
-            obs.maxHealth = 3;
-        }
-        obstacles.push(obs);
-    }
-
-    // Spawn enemies
-    if (roomData.type === 'normal') {
-        const enemyCount = 2 + Math.floor(Math.random() * 3) + floorNum;
-        const types = ['fly', 'redFly', 'gaper', 'frowningGaper', 'spider', 'bigSpider', 'hopper', 'charger', 'leaper', 'bony'];
-        const championTypes = ['none', 'red', 'yellow', 'blue', 'green', 'black'];
-        // Champion chance increases with floor number
-        const championChance = Math.min(0.1 + floorNum * 0.05, 0.5);
-        for (let i = 0; i < enemyCount; i++) {
-            const ex = ROOM_OFFSET_X + (2 + Math.random() * (ROOM_WIDTH - 4)) * TILE_SIZE;
-            const ey = ROOM_OFFSET_Y + (2 + Math.random() * (ROOM_HEIGHT - 4)) * TILE_SIZE;
-            const enemyType = types[Math.floor(Math.random() * types.length)];
-            // Determine if this enemy is a champion
-            let champion = 'none';
-            if (Math.random() < championChance) {
-                champion = championTypes[1 + Math.floor(Math.random() * (championTypes.length - 1))];
-            }
-            enemies.push(new Enemy(ex, ey, enemyType, champion));
-        }
-    } else if (roomData.type === 'boss') {
-        const bx = ROOM_OFFSET_X + ROOM_WIDTH * TILE_SIZE / 2;
-        const by = ROOM_OFFSET_Y + ROOM_HEIGHT * TILE_SIZE / 2;
-        enemies.push(new Enemy(bx, by, 'boss_monstro', 'none'));
-    } else if (roomData.type === 'treasure') {
-        // 20% chance for active item, 80% for passive
-        const isActiveItem = Math.random() < 0.2;
-        if (isActiveItem) {
-            const activeKeys = Object.keys(ACTIVE_ITEMS);
-            const randomActive = activeKeys[Math.floor(Math.random() * activeKeys.length)];
-            items.push({
-                x: ROOM_OFFSET_X + ROOM_WIDTH * TILE_SIZE / 2,
-                y: ROOM_OFFSET_Y + ROOM_HEIGHT * TILE_SIZE / 2 - 20,
-                id: randomActive,
-                stat: 'active',
-                ...ACTIVE_ITEMS[randomActive]
-            });
-        } else {
-            const itemKeys = Object.keys(ITEMS);
-            const randomItem = itemKeys[Math.floor(Math.random() * itemKeys.length)];
-            items.push({
-                x: ROOM_OFFSET_X + ROOM_WIDTH * TILE_SIZE / 2,
-                y: ROOM_OFFSET_Y + ROOM_HEIGHT * TILE_SIZE / 2 - 20,
-                id: randomItem,
-                ...ITEMS[randomItem]
-            });
-        }
-        roomData.cleared = true;
-        doors.forEach(d => d.open = true);
-    } else if (roomData.type === 'shop') {
-        pickups.push({ x: ROOM_OFFSET_X + 5 * TILE_SIZE, y: ROOM_OFFSET_Y + 3 * TILE_SIZE, type: 'heart', price: 3 });
-        pickups.push({ x: ROOM_OFFSET_X + 7 * TILE_SIZE, y: ROOM_OFFSET_Y + 3 * TILE_SIZE, type: 'bomb', price: 5 });
-        pickups.push({ x: ROOM_OFFSET_X + 9 * TILE_SIZE, y: ROOM_OFFSET_Y + 3 * TILE_SIZE, type: 'key', price: 5 });
-    }
-}
-
-function transitionRoom(dir) {
-    const newX = currentRoom.x + dir.x;
-    const newY = currentRoom.y + dir.y;
-
-    // Safety checks - validate new room exists
-    if (newY < 0 || newY >= 9 || newX < 0 || newX >= 9) {
-        console.warn('Attempted transition to out-of-bounds room:', newX, newY);
-        return;
-    }
-    if (!floorMap[newY] || !floorMap[newY][newX]) {
-        console.warn('Attempted transition to non-existent room:', newX, newY);
-        return;
-    }
-
-    // Save current room state before leaving
-    const oldRoomKey = `${currentRoom.x},${currentRoom.y}`;
-    roomStates[oldRoomKey] = {
-        obstacles: obstacles.map(o => ({ ...o })), // Deep copy obstacles
-        pickups: pickups.map(p => ({ ...p })),     // Deep copy pickups
-        items: items.map(i => ({ ...i })),         // Deep copy items
-        bloodStains: bloodStains.map(b => ({ ...b })) // Deep copy blood stains
-    };
-
-    currentRoom.x = newX;
-    currentRoom.y = newY;
-    visitedRooms.add(`${currentRoom.x},${currentRoom.y}`);
-
-    generateRoom(floorMap[currentRoom.y][currentRoom.x]);
-
-    // Spawn player far enough from door to not immediately trigger it again
-    // Door transition distance is 60px, spawn at 2.0 tiles from edge (~80px from door)
-    if (dir.x > 0) player.x = ROOM_OFFSET_X + 2.0 * TILE_SIZE + player.width / 2;
-    if (dir.x < 0) player.x = ROOM_OFFSET_X + (ROOM_WIDTH - 2.0) * TILE_SIZE - player.width / 2;
-    if (dir.y > 0) player.y = ROOM_OFFSET_Y + 2.0 * TILE_SIZE + player.height / 2;
-    if (dir.y < 0) player.y = ROOM_OFFSET_Y + (ROOM_HEIGHT - 2.0) * TILE_SIZE - player.height / 2;
-
-    // Brief movement pause on room entry (0.25 seconds)
-    roomEntryPause = 0.25;
-}
-
-// Drawing
-function drawRoom() {
-    // Blood stains
-    ctx.fillStyle = COLORS.bloodDark;
-    for (let stain of bloodStains) {
-        ctx.globalAlpha = 0.4;
-        ctx.beginPath();
-        ctx.arc(stain.x, stain.y, stain.size, 0, Math.PI * 2);
-        ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-
-    // Floor
-    for (let y = 1; y < ROOM_HEIGHT - 1; y++) {
-        for (let x = 1; x < ROOM_WIDTH - 1; x++) {
-            const px = ROOM_OFFSET_X + x * TILE_SIZE;
-            const py = ROOM_OFFSET_Y + y * TILE_SIZE;
-            ctx.fillStyle = (x + y) % 2 === 0 ? COLORS.floor : COLORS.floorAlt;
-            ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-
-            // Floor detail
-            if (Math.random() < 0.03) {
-                ctx.fillStyle = 'rgba(0,0,0,0.1)';
-                ctx.beginPath();
-                ctx.arc(px + Math.random() * TILE_SIZE, py + Math.random() * TILE_SIZE, 3 + Math.random() * 3, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-    }
-
-    // Walls
-    ctx.fillStyle = COLORS.wall;
-    ctx.fillRect(ROOM_OFFSET_X, ROOM_OFFSET_Y, ROOM_WIDTH * TILE_SIZE, TILE_SIZE);
-    ctx.fillRect(ROOM_OFFSET_X, ROOM_OFFSET_Y + (ROOM_HEIGHT - 1) * TILE_SIZE, ROOM_WIDTH * TILE_SIZE, TILE_SIZE);
-    ctx.fillRect(ROOM_OFFSET_X, ROOM_OFFSET_Y, TILE_SIZE, ROOM_HEIGHT * TILE_SIZE);
-    ctx.fillRect(ROOM_OFFSET_X + (ROOM_WIDTH - 1) * TILE_SIZE, ROOM_OFFSET_Y, TILE_SIZE, ROOM_HEIGHT * TILE_SIZE);
-
-    // Wall texture
-    ctx.fillStyle = COLORS.wallDark;
-    for (let i = 0; i < ROOM_WIDTH; i++) {
-        ctx.fillRect(ROOM_OFFSET_X + i * TILE_SIZE + 3, ROOM_OFFSET_Y + 3, TILE_SIZE - 6, 12);
-        ctx.fillRect(ROOM_OFFSET_X + i * TILE_SIZE + 6, ROOM_OFFSET_Y + 18, TILE_SIZE - 12, 12);
-        ctx.fillRect(ROOM_OFFSET_X + i * TILE_SIZE + 3, ROOM_OFFSET_Y + (ROOM_HEIGHT - 1) * TILE_SIZE + 3, TILE_SIZE - 6, 12);
-    }
-    for (let i = 0; i < ROOM_HEIGHT; i++) {
-        ctx.fillRect(ROOM_OFFSET_X + 3, ROOM_OFFSET_Y + i * TILE_SIZE + 3, 12, TILE_SIZE - 6);
-        ctx.fillRect(ROOM_OFFSET_X + (ROOM_WIDTH - 1) * TILE_SIZE + 3, ROOM_OFFSET_Y + i * TILE_SIZE + 3, 12, TILE_SIZE - 6);
-    }
-
-    // Doors
-    doors.forEach(door => {
-        ctx.fillStyle = COLORS.doorFrame;
-        const isVertical = door.direction.y !== 0;
-
-        if (isVertical) {
-            ctx.fillRect(door.x - 30, door.y - 6, 60, 12);
-        } else {
-            ctx.fillRect(door.x - 6, door.y - 30, 12, 60);
-        }
-
-        ctx.fillStyle = door.open ? COLORS.floor : (door.locked ? COLORS.key : COLORS.door);
-        if (isVertical) {
-            ctx.fillRect(door.x - 24, door.y - 4, 48, 8);
-        } else {
-            ctx.fillRect(door.x - 4, door.y - 24, 8, 48);
-        }
+function spawnDustParticle(x, y) {
+    if (Math.random() > 0.15) return; // Only spawn occasionally
+    particles.push({
+        x: x + (Math.random() - 0.5) * 10,
+        y: y + 10,
+        vx: (Math.random() - 0.5) * 20,
+        vy: -10 - Math.random() * 20,
+        size: 2 + Math.random() * 2,
+        color: '#8b7355',
+        life: 0.2 + Math.random() * 0.2,
+        maxLife: 0.4
     });
-
-    // Obstacles
-    obstacles.forEach(obs => {
-        ctx.save();
-        ctx.translate(obs.x, obs.y);
-
-        if (obs.type === 'rock') {
-            ctx.fillStyle = COLORS.rock;
-            ctx.beginPath();
-            ctx.moveTo(-16, 10);
-            ctx.lineTo(-10, -14);
-            ctx.lineTo(10, -14);
-            ctx.lineTo(16, 10);
-            ctx.closePath();
-            ctx.fill();
-            ctx.fillStyle = COLORS.rockDark;
-            ctx.beginPath();
-            ctx.moveTo(-12, 10);
-            ctx.lineTo(-6, -8);
-            ctx.lineTo(6, -8);
-            ctx.lineTo(12, 10);
-            ctx.closePath();
-            ctx.fill();
-        } else if (obs.type === 'poop') {
-            // Visual damage states based on health
-            const healthRatio = (obs.health || 3) / (obs.maxHealth || 3);
-            const scale = 0.5 + healthRatio * 0.5;  // Shrinks as damaged
-            ctx.scale(scale, scale);
-
-            // Darker color when damaged
-            const damageLevel = 1 - healthRatio;
-            const r = parseInt(COLORS.poop.slice(1,3), 16);
-            const g = parseInt(COLORS.poop.slice(3,5), 16);
-            const b = parseInt(COLORS.poop.slice(5,7), 16);
-            const dr = Math.floor(r * (1 - damageLevel * 0.4));
-            const dg = Math.floor(g * (1 - damageLevel * 0.4));
-            const db = Math.floor(b * (1 - damageLevel * 0.4));
-            ctx.fillStyle = `rgb(${dr},${dg},${db})`;
-
-            // Full poop at health 3, missing top at 2, crumbling at 1
-            ctx.beginPath();
-            ctx.arc(0, 5, 14, 0, Math.PI * 2);
-            ctx.fill();
-
-            if (healthRatio > 0.33) {
-                ctx.beginPath();
-                ctx.arc(-5, -4, 10, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(5, -2, 8, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            if (healthRatio > 0.66) {
-                ctx.beginPath();
-                ctx.arc(0, -12, 5, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // Dark highlight
-            const ddr = Math.floor(parseInt(COLORS.poopDark.slice(1,3), 16) * (1 - damageLevel * 0.4));
-            const ddg = Math.floor(parseInt(COLORS.poopDark.slice(3,5), 16) * (1 - damageLevel * 0.4));
-            const ddb = Math.floor(parseInt(COLORS.poopDark.slice(5,7), 16) * (1 - damageLevel * 0.4));
-            ctx.fillStyle = `rgb(${ddr},${ddg},${ddb})`;
-            ctx.beginPath();
-            ctx.arc(-2, 7, 5, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Cracks for damaged state
-            if (healthRatio <= 0.66) {
-                ctx.strokeStyle = '#2A1A0A';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(-8, 2);
-                ctx.lineTo(-2, 8);
-                ctx.stroke();
-            }
-            if (healthRatio <= 0.33) {
-                ctx.beginPath();
-                ctx.moveTo(5, 0);
-                ctx.lineTo(10, 8);
-                ctx.stroke();
-            }
-        } else if (obs.type === 'spike') {
-            ctx.fillStyle = COLORS.spike;
-            for (let i = 0; i < 4; i++) {
-                const angle = (i / 4) * Math.PI * 2;
-                ctx.beginPath();
-                ctx.moveTo(Math.cos(angle) * 4, Math.sin(angle) * 4);
-                ctx.lineTo(Math.cos(angle + 0.3) * 16, Math.sin(angle + 0.3) * 16);
-                ctx.lineTo(Math.cos(angle - 0.3) * 16, Math.sin(angle - 0.3) * 16);
-                ctx.fill();
-            }
-        } else if (obs.type === 'bomb') {
-            ctx.fillStyle = '#222';
-            ctx.beginPath();
-            ctx.arc(0, 0, 14, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#AA6622';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, -14);
-            ctx.quadraticCurveTo(6, -20, 4, -26);
-            ctx.stroke();
-            // Flash
-            if (obs.timer < 0.5 && Math.floor(obs.timer * 10) % 2 === 0) {
-                ctx.fillStyle = '#FF0000';
-                ctx.beginPath();
-                ctx.arc(0, 0, 10, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        ctx.restore();
-    });
-
-    // Items on pedestals
-    items.forEach(item => {
-        ctx.save();
-        ctx.translate(item.x, item.y);
-
-        // Pedestal
-        ctx.fillStyle = '#555555';
-        ctx.fillRect(-20, 20, 40, 20);
-        ctx.fillStyle = '#666666';
-        ctx.fillRect(-18, 22, 36, 16);
-
-        // Glow
-        const pulse = Math.sin(Date.now() / 200) * 0.3 + 0.7;
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = '#FFDD44';
-        ctx.globalAlpha = pulse;
-
-        // Item icon
-        ctx.fillStyle = '#FFDD44';
-        ctx.beginPath();
-        ctx.arc(0, 0, 12, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
-
-        // Item name
-        if (Math.sqrt(Math.pow(item.x - player.x, 2) + Math.pow(item.y - player.y, 2)) < 60) {
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 14px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText(item.name, item.x, item.y - 40);
-            ctx.font = '12px monospace';
-            ctx.fillStyle = '#AAAAAA';
-            ctx.fillText(item.desc, item.x, item.y - 25);
-            ctx.textAlign = 'left';
-        }
-    });
-
-    // Pickups
-    pickups.forEach(pickup => {
-        ctx.save();
-        pickup.bobPhase = (pickup.bobPhase || 0) + 0.05;
-        const bobY = Math.sin(pickup.bobPhase) * 3;
-        ctx.translate(pickup.x, pickup.y + bobY);
-
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = pickup.type === 'heart' ? COLORS.heart :
-                          pickup.type === 'coin' ? COLORS.coin :
-                          pickup.type === 'bomb' ? '#666' : COLORS.key;
-
-        switch (pickup.type) {
-            case 'heart':
-                ctx.fillStyle = COLORS.heart;
-                ctx.beginPath();
-                ctx.moveTo(0, 5);
-                ctx.bezierCurveTo(-10, -5, -10, -12, 0, -7);
-                ctx.bezierCurveTo(10, -12, 10, -5, 0, 5);
-                ctx.fill();
-                break;
-            case 'coin':
-                ctx.fillStyle = COLORS.coin;
-                ctx.beginPath();
-                ctx.arc(0, 0, 10, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#AA9922';
-                ctx.beginPath();
-                ctx.arc(0, 0, 6, 0, Math.PI * 2);
-                ctx.fill();
-                break;
-            case 'bomb':
-                ctx.fillStyle = COLORS.bomb;
-                ctx.beginPath();
-                ctx.arc(0, 3, 10, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = '#AA6622';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(0, -7);
-                ctx.quadraticCurveTo(5, -12, 3, -16);
-                ctx.stroke();
-                break;
-            case 'key':
-                ctx.fillStyle = COLORS.key;
-                ctx.beginPath();
-                ctx.arc(0, -7, 6, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillRect(-2.5, -2, 5, 14);
-                ctx.fillRect(0, 7, 5, 2.5);
-                ctx.fillRect(0, 3, 5, 2.5);
-                break;
-        }
-
-        // Price tag
-        if (pickup.price) {
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = '12px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('$' + pickup.price, 0, 25);
-            ctx.textAlign = 'left';
-        }
-
-        ctx.restore();
-    });
-
-    // Draw trapdoor
-    if (trapdoor) {
-        ctx.save();
-        ctx.translate(trapdoor.x, trapdoor.y);
-
-        // Pulse animation
-        trapdoor.pulsePhase = (trapdoor.pulsePhase || 0) + 0.05;
-        const pulse = Math.sin(trapdoor.pulsePhase) * 0.3 + 0.7;
-
-        // Glow effect
-        ctx.shadowBlur = 30 * pulse;
-        ctx.shadowColor = '#000000';
-
-        // Dark hole
-        ctx.fillStyle = '#000';
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 30, 20, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Stone border
-        ctx.strokeStyle = '#666';
-        ctx.lineWidth = 4;
-        ctx.stroke();
-
-        // Stairs hint
-        ctx.fillStyle = '#333';
-        for (let i = 0; i < 3; i++) {
-            ctx.fillRect(-15 + i * 5, -5 + i * 5, 30 - i * 10, 3);
-        }
-
-        // "Next Floor" text when close
-        const playerDist = player ? Math.sqrt(Math.pow(player.x - trapdoor.x, 2) + Math.pow(player.y - trapdoor.y, 2)) : 999;
-        if (playerDist < 60) {
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 12px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('NEXT FLOOR', 0, -35);
-            ctx.textAlign = 'left';
-        }
-
-        ctx.restore();
-    }
-
-    // Draw creep pools
-    for (const creep of creepPools) {
-        ctx.save();
-        ctx.translate(creep.x, creep.y);
-        ctx.globalAlpha = 0.6 * (creep.timer / 3.0);
-        ctx.fillStyle = '#FFFF00';
-        ctx.beginPath();
-        ctx.ellipse(0, 0, creep.radius, creep.radius * 0.5, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-    }
 }
 
-function drawHUD() {
-    // Top HUD
-    ctx.fillStyle = '#0A0A0A';
-    ctx.fillRect(0, 0, canvas.width, 95);
-
-    // Hearts
-    const heartSize = 24;
-    for (let i = 0; i < Math.ceil(player.maxHealth / 2); i++) {
-        const hx = 25 + i * (heartSize + 5);
-        const fullHearts = Math.floor(player.health / 2);
-        const halfHeart = player.health % 2;
-
-        if (i < fullHearts) {
-            drawHeart(hx, 20, heartSize, COLORS.heart);
-        } else if (i === fullHearts && halfHeart) {
-            drawHeart(hx, 20, heartSize, COLORS.heart, true);
-        } else {
-            drawHeart(hx, 20, heartSize, COLORS.heartEmpty);
-        }
-    }
-
-    // Soul hearts
-    let extraHeartOffset = Math.ceil(player.maxHealth / 2);
-    for (let i = 0; i < Math.ceil(player.soulHearts / 2); i++) {
-        const hx = 25 + (extraHeartOffset + i) * (heartSize + 5);
-        drawHeart(hx, 20, heartSize, COLORS.heartSoul);
-    }
-    extraHeartOffset += Math.ceil(player.soulHearts / 2);
-
-    // Black hearts
-    for (let i = 0; i < Math.ceil(player.blackHearts / 2); i++) {
-        const hx = 25 + (extraHeartOffset + i) * (heartSize + 5);
-        drawHeart(hx, 20, heartSize, '#222222');
-    }
-
-    // Active item display
-    if (player.activeItem) {
-        const activeItemData = ACTIVE_ITEMS[player.activeItem];
-        if (activeItemData) {
-            // Draw active item box
-            ctx.fillStyle = '#333';
-            ctx.fillRect(canvas.width - 120, 10, 100, 50);
-            ctx.strokeStyle = player.activeCharges >= player.maxCharges ? '#FFFF00' : '#666';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(canvas.width - 120, 10, 100, 50);
-
-            // Item name
-            ctx.fillStyle = '#FFF';
-            ctx.font = '10px monospace';
-            ctx.fillText(activeItemData.name, canvas.width - 115, 25);
-
-            // Charge bar
-            const chargeWidth = 80 * (player.activeCharges / player.maxCharges);
-            ctx.fillStyle = '#444';
-            ctx.fillRect(canvas.width - 115, 32, 80, 10);
-            ctx.fillStyle = player.activeCharges >= player.maxCharges ? '#FFFF00' : '#888';
-            ctx.fillRect(canvas.width - 115, 32, chargeWidth, 10);
-
-            // Q to use
-            ctx.fillStyle = '#AAA';
-            ctx.fillText('[Q] to use', canvas.width - 115, 55);
-        }
-    }
-
-    // Pickups
-    ctx.font = 'bold 16px monospace';
-
-    ctx.fillStyle = COLORS.coin;
-    ctx.beginPath();
-    ctx.arc(30, 55, 9, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(player.coins.toString().padStart(2, '0'), 48, 60);
-
-    ctx.fillStyle = COLORS.bomb;
-    ctx.beginPath();
-    ctx.arc(100, 55, 9, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(player.bombs.toString().padStart(2, '0'), 118, 60);
-
-    ctx.fillStyle = COLORS.key;
-    ctx.beginPath();
-    ctx.arc(170, 51, 6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillRect(168, 55, 4, 12);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(player.keys.toString().padStart(2, '0'), 188, 60);
-
-    // Floor info
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '14px monospace';
-    ctx.fillText('Basement ' + floorNum, 25, 85);
-
-    // Player stats (shown on left side of HUD)
-    ctx.font = '11px monospace';
-    ctx.fillStyle = '#AAAAAA';
-    const statsX = 250;
-    ctx.fillText(`DMG: ${player.damage.toFixed(1)}`, statsX, 25);
-    ctx.fillText(`SPD: ${(player.speed / 160).toFixed(1)}`, statsX, 40);
-    ctx.fillText(`TEARS: ${(1 / player.tearDelay).toFixed(1)}/s`, statsX + 80, 25);
-    ctx.fillText(`RANGE: ${(player.range / 220).toFixed(1)}`, statsX + 80, 40);
-
-    // Show collected items count
-    if (player.collectedItems && player.collectedItems.length > 0) {
-        ctx.fillStyle = '#FFCC44';
-        ctx.fillText(`Items: ${player.collectedItems.length}`, statsX, 55);
-    }
-
-    // Minimap
-    drawMinimap();
-
-    // Boss health bar
-    const boss = enemies.find(e => e.isBoss);
-    if (boss) {
-        const barWidth = 300;
-        const barX = (canvas.width - barWidth) / 2;
-        ctx.fillStyle = '#222';
-        ctx.fillRect(barX, 70, barWidth, 16);
-        ctx.fillStyle = COLORS.heart;
-        ctx.fillRect(barX + 2, 72, (barWidth - 4) * (boss.health / boss.maxHealth), 12);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 12px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('MONSTRO', canvas.width / 2, 84);
-        ctx.textAlign = 'left';
-    }
-}
-
-function drawHeart(x, y, size, color, isHalf = false) {
-    ctx.save();
-    ctx.translate(x, y);
-
-    if (isHalf) {
-        ctx.beginPath();
-        ctx.rect(-size / 2, -size / 2, size / 2, size);
-        ctx.clip();
-    }
-
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    const s = size / 2;
-    ctx.moveTo(0, s * 0.6);
-    ctx.bezierCurveTo(-s, -s * 0.3, -s, -s, 0, -s * 0.4);
-    ctx.bezierCurveTo(s, -s, s, -s * 0.3, 0, s * 0.6);
-    ctx.fill();
-
-    ctx.restore();
-
-    if (isHalf) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.beginPath();
-        ctx.rect(0, -size / 2, size / 2, size);
-        ctx.clip();
-        ctx.fillStyle = COLORS.heartEmpty;
-        ctx.beginPath();
-        const s2 = size / 2;
-        ctx.moveTo(0, s2 * 0.6);
-        ctx.bezierCurveTo(-s2, -s2 * 0.3, -s2, -s2, 0, -s2 * 0.4);
-        ctx.bezierCurveTo(s2, -s2, s2, -s2 * 0.3, 0, s2 * 0.6);
-        ctx.fill();
-        ctx.restore();
-    }
-}
-
-function drawMinimap() {
-    const mapX = canvas.width - 110;
-    const mapY = 15;
-    const cellSize = 11;
-
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-    ctx.fillRect(mapX - 8, mapY - 8, 105, 105);
-
-    // Helper to check if room is adjacent to any visited room
-    function isAdjacentToVisited(x, y) {
-        const dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
-        for (const [dx, dy] of dirs) {
-            if (visitedRooms.has(`${x + dx},${y + dy}`)) return true;
-        }
-        return false;
-    }
-
-    for (let y = 0; y < 9; y++) {
-        for (let x = 0; x < 9; x++) {
-            const room = floorMap[y]?.[x];
-            if (!room) continue;
-
-            const px = mapX + x * cellSize;
-            const py = mapY + y * cellSize;
-            const isVisited = visitedRooms.has(`${x},${y}`);
-            const isCurrent = x === currentRoom.x && y === currentRoom.y;
-            const isAdjacent = isAdjacentToVisited(x, y);
-
-            // Only show visited rooms and rooms adjacent to visited ones (fog of war)
-            if (!isVisited && !isAdjacent) continue;
-
-            if (isCurrent) {
-                ctx.fillStyle = '#FFFFFF';
-            } else if (isVisited) {
-                switch (room.type) {
-                    case 'boss': ctx.fillStyle = '#CC4444'; break;
-                    case 'treasure': ctx.fillStyle = '#CCCC44'; break;
-                    case 'shop': ctx.fillStyle = '#44CC44'; break;
-                    default: ctx.fillStyle = '#666666';
-                }
-            } else {
-                // Adjacent but not visited - show as dim outline
-                ctx.fillStyle = '#222222';
-                ctx.fillRect(px, py, cellSize - 1, cellSize - 1);
-                // Show special room type icons for adjacent rooms
-                if (room.type === 'boss') {
-                    ctx.fillStyle = '#662222';
-                } else if (room.type === 'treasure') {
-                    ctx.fillStyle = '#666622';
-                } else if (room.type === 'shop') {
-                    ctx.fillStyle = '#226622';
-                } else {
-                    ctx.fillStyle = '#333333';
-                }
-            }
-
-            ctx.fillRect(px, py, cellSize - 1, cellSize - 1);
-        }
-    }
-}
-
-function drawParticles() {
-    for (let p of particles) {
-        const alpha = p.life / p.maxLife;
-
-        if (p.isText) {
-            ctx.globalAlpha = alpha;
-            ctx.fillStyle = '#FFFF44';
-            ctx.font = 'bold 14px monospace';
-            ctx.fillText(p.text, p.x, p.y);
-        } else {
-            ctx.globalAlpha = alpha;
-            ctx.fillStyle = p.color;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    }
-    ctx.globalAlpha = 1;
-}
-
-function drawTitle() {
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = '#DDCCBB';
-    ctx.font = 'bold 56px serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('BASEMENT TEARS', canvas.width / 2, 200);
-
-    ctx.font = '22px serif';
-    ctx.fillStyle = '#AA9988';
-    ctx.fillText('A Roguelike Dungeon Crawler', canvas.width / 2, 260);
-
-    ctx.font = '18px monospace';
-    ctx.fillStyle = '#DDCCBB';
-    ctx.fillText('WASD - Move', canvas.width / 2, 340);
-    ctx.fillText('Arrow Keys - Shoot', canvas.width / 2, 370);
-    ctx.fillText('E - Place Bomb', canvas.width / 2, 400);
-    ctx.fillText('Q - Use Active Item', canvas.width / 2, 430);
-    ctx.fillText('ESC - Pause', canvas.width / 2, 460);
-
-    ctx.fillStyle = Math.sin(Date.now() / 300) > 0 ? '#FFCC44' : '#AA9944';
-    ctx.font = 'bold 28px serif';
-    ctx.fillText('Press SPACE to Start', canvas.width / 2, 550);
-
-    ctx.textAlign = 'left';
-}
-
-function drawGameOver() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = COLORS.blood;
-    ctx.font = 'bold 56px serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('YOU DIED', canvas.width / 2, 280);
-
-    ctx.fillStyle = '#DDCCBB';
-    ctx.font = '22px monospace';
-    ctx.fillText('Rooms Explored: ' + visitedRooms.size, canvas.width / 2, 360);
-    ctx.fillText('Enemies Killed: ' + totalKills, canvas.width / 2, 395);
-
-    ctx.fillStyle = Math.sin(Date.now() / 300) > 0 ? '#FFCC44' : '#AA9944';
-    ctx.font = 'bold 24px serif';
-    ctx.fillText('Press SPACE to Restart', canvas.width / 2, 500);
-
-    ctx.textAlign = 'left';
-}
-
-// Update functions
 function updateParticles(dt) {
     for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx * dt;
         p.y += p.vy * dt;
-        p.vx *= 0.95;
-        p.vy *= 0.95;
+        p.vy += 200 * dt; // Gravity
         p.life -= dt;
-        if (p.life <= 0) particles.splice(i, 1);
+        if (p.life <= 0) {
+            particles.splice(i, 1);
+        }
     }
 }
 
-function updatePickups() {
-    for (let i = pickups.length - 1; i >= 0; i--) {
-        const p = pickups[i];
-        const dist = Math.sqrt(Math.pow(p.x - player.x, 2) + Math.pow(p.y - player.y, 2));
+function drawParticles(ctx) {
+    for (const p of particles) {
+        const alpha = p.life / p.maxLife;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}
 
-        if (dist < 30) {
-            if (p.price) {
-                if (player.coins >= p.price) {
-                    player.coins -= p.price;
-                } else {
-                    continue;
+// ═══════════════════════════════════════════════════════════════════════════
+// PLAYER CLASS
+// ═══════════════════════════════════════════════════════════════════════════
+
+class Player {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = PLAYER_SIZE;
+        this.height = PLAYER_SIZE;
+        this.speed = 3;
+        this.health = 6;
+        this.maxHealth = 6;
+        this.soulHearts = 0;
+        this.blackHearts = 0;
+        this.damage = 3.5;
+        this.damageMult = 1;
+        this.tempDamageBonus = 0;
+        this.tearDelay = 10;
+        this.tearTimer = 0;
+        this.range = 23.75;
+        this.shotSpeed = 1;
+        this.coins = 0;
+        this.bombs = 1;
+        this.keys = 1;
+        this.invulnTimer = 0;
+        this.homing = false;
+        this.piercing = false;
+        this.bouncing = false;
+        this.boomerang = false;
+        this.multishot = 1;
+        this.tearSize = 1;
+        this.explosiveTears = false;
+        this.splashTears = false;
+        this.coalDamage = false;
+        this.hasShield = false;
+        this.shieldActive = false;
+        this.activeItem = null;
+        this.activeCharges = 0;
+        this.maxCharges = 0;
+        this.collectedItems = [];
+        this.lives = 0;
+        this.canMove = true;
+        this.facingDir = 'down';
+        this.animFrame = 0;
+        this.animTimer = 0;
+    }
+
+    update(dt) {
+        if (!this.canMove) return;
+
+        // Movement
+        let dx = 0, dy = 0;
+        if (keys['w'] || keys['arrowup'] && !keys['arrowdown'] && !keys['arrowleft'] && !keys['arrowright']) {
+            if (keys['w']) dy = -1;
+        }
+        if (keys['s']) dy = 1;
+        if (keys['a']) dx = -1;
+        if (keys['d']) dx = 1;
+
+        // Normalize diagonal movement
+        if (dx !== 0 && dy !== 0) {
+            dx *= 0.707;
+            dy *= 0.707;
+        }
+
+        const moveSpeed = this.speed * 60 * dt;
+        const newX = this.x + dx * moveSpeed;
+        const newY = this.y + dy * moveSpeed;
+
+        // Collision check
+        if (this.canMoveTo(newX, this.y)) this.x = newX;
+        if (this.canMoveTo(this.x, newY)) this.y = newY;
+
+        // Update facing direction
+        if (dx > 0) this.facingDir = 'right';
+        else if (dx < 0) this.facingDir = 'left';
+        else if (dy > 0) this.facingDir = 'down';
+        else if (dy < 0) this.facingDir = 'up';
+
+        // Animation
+        if (dx !== 0 || dy !== 0) {
+            this.animTimer += dt;
+            if (this.animTimer > 0.1) {
+                this.animFrame = (this.animFrame + 1) % 4;
+                this.animTimer = 0;
+            }
+            // Dust particles
+            spawnDustParticle(this.x, this.y);
+        }
+
+        // Shooting (Arrow keys)
+        this.tearTimer -= dt;
+        let shootDir = null;
+        if (keys['arrowup']) shootDir = { x: 0, y: -1 };
+        else if (keys['arrowdown']) shootDir = { x: 0, y: 1 };
+        else if (keys['arrowleft']) shootDir = { x: -1, y: 0 };
+        else if (keys['arrowright']) shootDir = { x: 1, y: 0 };
+
+        if (shootDir && this.tearTimer <= 0) {
+            this.shoot(shootDir);
+            this.tearTimer = (this.tearDelay + 1) / 30;
+        }
+
+        // Invulnerability timer
+        if (this.invulnTimer > 0) {
+            this.invulnTimer -= dt;
+        }
+
+        // Clamp to room bounds
+        const minX = ROOM_OFFSET_X + TILE_SIZE + this.width / 2;
+        const maxX = ROOM_OFFSET_X + ROOM_WIDTH - TILE_SIZE - this.width / 2;
+        const minY = ROOM_OFFSET_Y + TILE_SIZE + this.height / 2;
+        const maxY = ROOM_OFFSET_Y + ROOM_HEIGHT - TILE_SIZE - this.height / 2;
+        this.x = Math.max(minX, Math.min(maxX, this.x));
+        this.y = Math.max(minY, Math.min(maxY, this.y));
+    }
+
+    canMoveTo(x, y) {
+        const halfW = this.width / 2 - 4;
+        const halfH = this.height / 2 - 4;
+
+        // Check obstacles
+        for (const obs of obstacles) {
+            if (this.rectCollide(x, y, halfW, halfH, obs.x, obs.y, obs.width / 2, obs.height / 2)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    rectCollide(x1, y1, hw1, hh1, x2, y2, hw2, hh2) {
+        return Math.abs(x1 - x2) < hw1 + hw2 && Math.abs(y1 - y2) < hh1 + hh2;
+    }
+
+    shoot(dir) {
+        const tearSpeed = this.shotSpeed * 7.5;
+        const numTears = this.multishot;
+
+        for (let i = 0; i < numTears; i++) {
+            let angle = Math.atan2(dir.y, dir.x);
+            if (numTears > 1) {
+                const spread = 0.3;
+                angle += (i - (numTears - 1) / 2) * spread;
+            }
+
+            const tear = {
+                x: this.x,
+                y: this.y,
+                vx: Math.cos(angle) * tearSpeed * 60,
+                vy: Math.sin(angle) * tearSpeed * 60,
+                damage: (this.damage + this.tempDamageBonus) * this.damageMult,
+                range: this.range * 10,
+                traveled: 0,
+                homing: this.homing,
+                piercing: this.piercing,
+                bouncing: this.bouncing,
+                boomerang: this.boomerang,
+                hitEnemies: new Set(),
+                returning: false,
+                tearSize: this.tearSize,
+                explosive: this.explosiveTears,
+                coalDamage: this.coalDamage
+            };
+            tears.push(tear);
+        }
+    }
+
+    takeDamage(amount) {
+        if (this.invulnTimer > 0) return false;
+
+        // Damage priority: Soul hearts first, then red hearts
+        if (this.soulHearts > 0) {
+            this.soulHearts -= amount * 2;
+            if (this.soulHearts < 0) {
+                const overflow = -this.soulHearts / 2;
+                this.soulHearts = 0;
+                this.health -= overflow;
+            }
+        } else {
+            this.health -= amount * 2;
+        }
+
+        this.invulnTimer = 1.0;
+
+        // Screen shake on damage
+        triggerScreenShake(8, 0.2);
+
+        if (this.health <= 0 && this.soulHearts <= 0) {
+            if (this.lives > 0) {
+                this.lives--;
+                this.health = 2;
+                this.invulnTimer = 2.0;
+            } else {
+                gameState = 'gameover';
+                triggerScreenShake(15, 0.5);
+            }
+        }
+
+        return true;
+    }
+
+    heal(amount) {
+        this.health = Math.min(this.maxHealth, this.health + amount);
+    }
+
+    addItem(itemId) {
+        const item = ITEM_DATA[itemId];
+        if (!item) return;
+
+        this.collectedItems.push(itemId);
+        const eff = item.effect;
+
+        if (eff.damage) this.damage += eff.damage;
+        if (eff.damageMult) this.damageMult += eff.damageMult;
+        if (eff.health) {
+            this.maxHealth += eff.health;
+            this.health += eff.health;
+        }
+        if (eff.speed) this.speed += eff.speed;
+        if (eff.tears) this.tearDelay = Math.max(1, this.tearDelay - eff.tears * 2);
+        if (eff.range) this.range += eff.range;
+        if (eff.shotSpeed) this.shotSpeed += eff.shotSpeed;
+        if (eff.homing) this.homing = true;
+        if (eff.piercing) this.piercing = true;
+        if (eff.bouncing) this.bouncing = true;
+        if (eff.boomerang) this.boomerang = true;
+        if (eff.multishot) this.multishot = Math.max(this.multishot, eff.multishot);
+        if (eff.tearSize) this.tearSize = (this.tearSize || 1) * eff.tearSize;
+        if (eff.lives) this.lives += eff.lives;
+        if (eff.shield) this.hasShield = true;
+        if (eff.explosive) this.explosiveTears = true;
+        if (eff.splash) this.splashTears = true;
+        if (eff.coalDamage) this.coalDamage = true;
+        if (eff.maxHealth && eff.maxHealth < 0) {
+            this.maxHealth = Math.max(2, this.maxHealth + eff.maxHealth);
+            this.health = Math.min(this.health, this.maxHealth);
+        }
+    }
+
+    draw(ctx) {
+        const blinkRate = 0.1;
+        if (this.invulnTimer > 0 && Math.floor(this.invulnTimer / blinkRate) % 2 === 0) {
+            return; // Blink effect
+        }
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Body
+        ctx.fillStyle = COLORS.player;
+        ctx.beginPath();
+        ctx.ellipse(0, 4, 14, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = COLORS.playerOutline;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Head
+        ctx.fillStyle = COLORS.player;
+        ctx.beginPath();
+        ctx.arc(0, -8, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Eyes
+        const eyeOffsetX = 5;
+        const eyeY = -10;
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.ellipse(-eyeOffsetX, eyeY, 4, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(eyeOffsetX, eyeY, 4, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Tear (crying effect)
+        if (Math.random() > 0.7) {
+            ctx.fillStyle = COLORS.tear;
+            ctx.beginPath();
+            ctx.ellipse(eyeOffsetX + 2, eyeY + 8, 2, 3, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        ctx.restore();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ENEMY CLASS
+// ═══════════════════════════════════════════════════════════════════════════
+
+class Enemy {
+    constructor(type, x, y) {
+        const data = ENEMY_DATA[type];
+        this.type = type;
+        this.x = x;
+        this.y = y;
+        this.health = data.health;
+        this.maxHealth = data.health;
+        this.speed = data.speed;
+        this.damage = data.damage;
+        this.width = data.width;
+        this.height = data.height;
+        this.flying = data.flying || false;
+        this.behavior = data.behavior;
+        this.isBoss = data.isBoss || false;
+
+        // Champion variant (10% chance for non-bosses)
+        this.championType = null;
+        if (!data.isBoss && Math.random() < 0.1) {
+            const champions = ['red', 'yellow', 'blue', 'green'];
+            this.championType = champions[Math.floor(Math.random() * champions.length)];
+            // Apply champion modifiers
+            switch (this.championType) {
+                case 'red': // Double health
+                    this.health *= 2;
+                    this.maxHealth *= 2;
+                    break;
+                case 'yellow': // Faster
+                    this.speed *= 1.5;
+                    break;
+                case 'blue': // Shoots more
+                    // Handled in behavior
+                    break;
+                case 'green': // Splits on death
+                    // Handled in death
+                    break;
+            }
+        }
+
+        // State
+        this.state = 'spawning';
+        this.canMove = false;
+        this.canFire = false;
+        this.invulnerable = true;
+        this.stunned = false;
+        this.stunTimer = 0;
+        this.spawnTimer = SPAWN_ANIMATION_DURATION / 1000;
+
+        // AI state
+        this.direction = { x: Math.random() - 0.5, y: Math.random() - 0.5 };
+        this.moveTimer = 0;
+        this.attackTimer = 0;
+        this.charging = false;
+        this.chargeDir = { x: 0, y: 0 };
+        this.hopTimer = 0;
+        this.isHopping = false;
+        this.hostHidden = true;
+        this.hostTimer = 2;
+
+        // Boss state
+        this.bossPhase = 0;
+        this.bossTimer = 0;
+        this.bossJumping = false;
+        this.targetPos = null;
+
+        // Animation
+        this.animFrame = 0;
+        this.animTimer = 0;
+        this.hitFlash = 0;
+    }
+
+    update(dt) {
+        // Spawn animation
+        if (this.state === 'spawning') {
+            this.spawnTimer -= dt;
+            if (this.spawnTimer <= 0) {
+                this.state = 'active';
+                this.canMove = true;
+                this.canFire = true;
+                this.invulnerable = false;
+            }
+            return;
+        }
+
+        // Stunned
+        if (this.stunned) {
+            this.stunTimer -= dt;
+            if (this.stunTimer <= 0) {
+                this.stunned = false;
+                this.canMove = true;
+                this.canFire = true;
+            }
+            return;
+        }
+
+        if (!this.canMove) return;
+
+        // Hit flash
+        if (this.hitFlash > 0) this.hitFlash -= dt;
+
+        // Behavior
+        switch (this.behavior) {
+            case 'wander': this.behaviorWander(dt); break;
+            case 'chase': this.behaviorChase(dt); break;
+            case 'erratic': this.behaviorErratic(dt); break;
+            case 'hop': this.behaviorHop(dt); break;
+            case 'charge': this.behaviorCharge(dt); break;
+            case 'shoot4': this.behaviorShoot4(dt); break;
+            case 'shootChase': this.behaviorShootChase(dt); break;
+            case 'host': this.behaviorHost(dt); break;
+            case 'boss_monstro': this.behaviorMonstro(dt); break;
+        }
+
+        // Animation
+        this.animTimer += dt;
+        if (this.animTimer > 0.15) {
+            this.animFrame = (this.animFrame + 1) % 4;
+            this.animTimer = 0;
+        }
+    }
+
+    behaviorWander(dt) {
+        this.moveTimer -= dt;
+        if (this.moveTimer <= 0) {
+            this.direction = { x: Math.random() - 0.5, y: Math.random() - 0.5 };
+            this.moveTimer = 1 + Math.random() * 2;
+        }
+        this.move(this.direction, dt);
+    }
+
+    behaviorChase(dt) {
+        if (!player) return;
+        const dx = player.x - this.x;
+        const dy = player.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 0) {
+            this.direction = { x: dx / dist, y: dy / dist };
+        }
+        this.move(this.direction, dt);
+    }
+
+    behaviorErratic(dt) {
+        this.moveTimer -= dt;
+        if (this.moveTimer <= 0) {
+            // Sometimes chase, sometimes random
+            if (Math.random() > 0.5 && player) {
+                const dx = player.x - this.x;
+                const dy = player.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 0) {
+                    this.direction = { x: dx / dist, y: dy / dist };
+                }
+            } else {
+                this.direction = { x: Math.random() - 0.5, y: Math.random() - 0.5 };
+            }
+            this.moveTimer = 0.2 + Math.random() * 0.5;
+        }
+        this.move(this.direction, dt, 1.5);
+    }
+
+    behaviorHop(dt) {
+        this.hopTimer -= dt;
+        if (!this.isHopping && this.hopTimer <= 0) {
+            this.isHopping = true;
+            if (player) {
+                const dx = player.x - this.x;
+                const dy = player.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 0) {
+                    this.direction = { x: dx / dist, y: dy / dist };
+                }
+            }
+            this.hopTimer = 0.3;
+        }
+
+        if (this.isHopping) {
+            this.move(this.direction, dt, 3);
+            if (this.hopTimer <= 0) {
+                this.isHopping = false;
+                this.hopTimer = 0.8 + Math.random() * 0.5;
+            }
+        }
+    }
+
+    behaviorCharge(dt) {
+        if (this.charging) {
+            this.move(this.chargeDir, dt, 5);
+            // Check if hit wall
+            if (this.x <= ROOM_OFFSET_X + TILE_SIZE + this.width / 2 ||
+                this.x >= ROOM_OFFSET_X + ROOM_WIDTH - TILE_SIZE - this.width / 2 ||
+                this.y <= ROOM_OFFSET_Y + TILE_SIZE + this.height / 2 ||
+                this.y >= ROOM_OFFSET_Y + ROOM_HEIGHT - TILE_SIZE - this.height / 2) {
+                this.charging = false;
+                this.stunned = true;
+                this.stunTimer = 0.5;
+                this.canMove = false;
+            }
+        } else {
+            this.behaviorWander(dt);
+            // Check if player in line
+            if (player) {
+                const dx = Math.abs(player.x - this.x);
+                const dy = Math.abs(player.y - this.y);
+                if ((dx < 20 || dy < 20) && (dx < 200 && dy < 200)) {
+                    this.charging = true;
+                    const pdx = player.x - this.x;
+                    const pdy = player.y - this.y;
+                    if (dx < dy) {
+                        this.chargeDir = { x: 0, y: pdy > 0 ? 1 : -1 };
+                    } else {
+                        this.chargeDir = { x: pdx > 0 ? 1 : -1, y: 0 };
+                    }
+                }
+            }
+        }
+    }
+
+    behaviorShoot4(dt) {
+        this.behaviorWander(dt);
+        this.attackTimer -= dt;
+        if (this.attackTimer <= 0 && this.canFire) {
+            this.shoot4Dir();
+            this.attackTimer = 2 + Math.random();
+        }
+    }
+
+    behaviorShootChase(dt) {
+        this.behaviorChase(dt);
+        this.attackTimer -= dt;
+        if (this.attackTimer <= 0 && this.canFire && player) {
+            this.shootAtPlayer();
+            this.attackTimer = 1.5 + Math.random();
+        }
+    }
+
+    behaviorHost(dt) {
+        this.hostTimer -= dt;
+        if (this.hostHidden) {
+            this.invulnerable = true;
+            if (this.hostTimer <= 0) {
+                this.hostHidden = false;
+                this.hostTimer = 1 + Math.random();
+                this.invulnerable = false;
+            }
+        } else {
+            if (this.attackTimer <= 0 && player) {
+                this.shootAtPlayer();
+                this.attackTimer = 0.3;
+            }
+            this.attackTimer -= dt;
+            if (this.hostTimer <= 0) {
+                this.hostHidden = true;
+                this.hostTimer = 2 + Math.random();
+                this.invulnerable = true;
+            }
+        }
+    }
+
+    behaviorMonstro(dt) {
+        this.bossTimer -= dt;
+
+        if (this.bossJumping) {
+            // Landing
+            if (this.bossTimer <= 0) {
+                this.bossJumping = false;
+                this.x = this.targetPos.x;
+                this.y = this.targetPos.y;
+                this.invulnerable = false;
+                // Radial burst
+                for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+                    this.spawnProjectile(Math.cos(angle), Math.sin(angle));
+                }
+                this.bossTimer = 1.5;
+                this.bossPhase = 0;
+            }
+            return;
+        }
+
+        if (this.bossTimer <= 0) {
+            this.bossPhase = (this.bossPhase + 1) % 3;
+
+            switch (this.bossPhase) {
+                case 0: // Hop toward player
+                    if (player) {
+                        const dx = player.x - this.x;
+                        const dy = player.y - this.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist > 0) {
+                            this.x += (dx / dist) * 50;
+                            this.y += (dy / dist) * 50;
+                        }
+                    }
+                    this.bossTimer = 0.8;
+                    break;
+                case 1: // Spit blood
+                    if (player) {
+                        const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                        for (let i = -3; i <= 3; i++) {
+                            this.spawnProjectile(
+                                Math.cos(angle + i * 0.2),
+                                Math.sin(angle + i * 0.2)
+                            );
+                        }
+                    }
+                    this.bossTimer = 1.2;
+                    break;
+                case 2: // Jump
+                    if (player) {
+                        this.bossJumping = true;
+                        this.invulnerable = true;
+                        this.targetPos = { x: player.x, y: player.y };
+                        this.bossTimer = 1.5;
+                    } else {
+                        this.bossTimer = 1;
+                    }
+                    break;
+            }
+        }
+
+        // Clamp boss position
+        this.x = Math.max(ROOM_OFFSET_X + TILE_SIZE + this.width / 2,
+                  Math.min(ROOM_OFFSET_X + ROOM_WIDTH - TILE_SIZE - this.width / 2, this.x));
+        this.y = Math.max(ROOM_OFFSET_Y + TILE_SIZE + this.height / 2,
+                  Math.min(ROOM_OFFSET_Y + ROOM_HEIGHT - TILE_SIZE - this.height / 2, this.y));
+    }
+
+    shoot4Dir() {
+        const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+        for (const [dx, dy] of dirs) {
+            this.spawnProjectile(dx, dy);
+        }
+    }
+
+    shootAtPlayer() {
+        if (!player) return;
+        const dx = player.x - this.x;
+        const dy = player.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 0) {
+            this.spawnProjectile(dx / dist, dy / dist);
+        }
+    }
+
+    spawnProjectile(dx, dy) {
+        const proj = {
+            x: this.x,
+            y: this.y,
+            vx: dx * 150,
+            vy: dy * 150,
+            damage: this.damage,
+            enemy: true,
+            size: 8
+        };
+        tears.push(proj);
+    }
+
+    move(dir, dt, speedMult = 1) {
+        if (!this.canMove) return;
+
+        const moveSpeed = this.speed * speedMult * 60 * dt;
+        let newX = this.x + dir.x * moveSpeed;
+        let newY = this.y + dir.y * moveSpeed;
+
+        // Non-flying enemies collide with obstacles
+        if (!this.flying) {
+            for (const obs of obstacles) {
+                const hw = this.width / 2;
+                const hh = this.height / 2;
+                const ohw = obs.width / 2;
+                const ohh = obs.height / 2;
+
+                if (Math.abs(newX - obs.x) < hw + ohw && Math.abs(newY - obs.y) < hh + ohh) {
+                    // Try to slide around
+                    if (Math.abs(this.x - obs.x) >= hw + ohw) {
+                        newX = this.x;
+                    }
+                    if (Math.abs(this.y - obs.y) >= hh + ohh) {
+                        newY = this.y;
+                    }
+                }
+            }
+        }
+
+        // Room bounds
+        newX = Math.max(ROOM_OFFSET_X + TILE_SIZE + this.width / 2,
+                Math.min(ROOM_OFFSET_X + ROOM_WIDTH - TILE_SIZE - this.width / 2, newX));
+        newY = Math.max(ROOM_OFFSET_Y + TILE_SIZE + this.height / 2,
+                Math.min(ROOM_OFFSET_Y + ROOM_HEIGHT - TILE_SIZE - this.height / 2, newY));
+
+        this.x = newX;
+        this.y = newY;
+    }
+
+    takeDamage(amount) {
+        if (this.invulnerable) return false;
+        this.health -= amount;
+        this.hitFlash = 0.1;
+
+        if (this.health <= 0) {
+            return true; // Dead
+        }
+        return false;
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Spawn animation
+        if (this.state === 'spawning') {
+            const progress = 1 - (this.spawnTimer / (SPAWN_ANIMATION_DURATION / 1000));
+            ctx.globalAlpha = progress;
+            ctx.scale(progress, progress);
+        }
+
+        // Hit flash
+        if (this.hitFlash > 0) {
+            ctx.fillStyle = '#fff';
+        } else {
+            ctx.fillStyle = this.getColor();
+        }
+
+        // Draw based on type
+        this.drawType(ctx);
+
+        ctx.restore();
+
+        // Boss health bar
+        if (this.isBoss && this.state !== 'spawning') {
+            this.drawBossHealthBar(ctx);
+        }
+    }
+
+    getColor() {
+        // Champion colors override base color
+        if (this.championType) {
+            switch (this.championType) {
+                case 'red': return '#ff4444';
+                case 'yellow': return '#ffff44';
+                case 'blue': return '#4444ff';
+                case 'green': return '#44ff44';
+            }
+        }
+
+        switch (this.type) {
+            case 'fly': return '#444';
+            case 'redFly': return '#aa3333';
+            case 'gaper': return '#d4a574';
+            case 'frowningGaper': return '#c49464';
+            case 'spider': return '#333';
+            case 'bigSpider': return '#222';
+            case 'hopper': return '#8b4513';
+            case 'charger': return '#666';
+            case 'clotty': return '#8b0000';
+            case 'pooter': return '#a0522d';
+            case 'host': return this.hostHidden ? '#666' : '#8b4513';
+            case 'boss_monstro': return '#c4a484';
+            default: return '#888';
+        }
+    }
+
+    drawType(ctx) {
+        const hw = this.width / 2;
+        const hh = this.height / 2;
+
+        if (this.type === 'fly' || this.type === 'redFly') {
+            // Fly body
+            ctx.beginPath();
+            ctx.ellipse(0, 0, hw * 0.7, hh * 0.7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // Wings
+            ctx.fillStyle = 'rgba(200,200,200,0.5)';
+            const wingOffset = Math.sin(this.animTimer * 30) * 3;
+            ctx.beginPath();
+            ctx.ellipse(-hw * 0.5, -hh * 0.3 + wingOffset, hw * 0.4, hh * 0.6, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(hw * 0.5, -hh * 0.3 - wingOffset, hw * 0.4, hh * 0.6, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (this.type === 'spider' || this.type === 'bigSpider') {
+            // Spider body
+            ctx.beginPath();
+            ctx.ellipse(0, 0, hw * 0.6, hh * 0.6, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // Legs
+            ctx.strokeStyle = ctx.fillStyle;
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 4; i++) {
+                const angle = (i / 4) * Math.PI - Math.PI / 2;
+                const legX = Math.cos(angle) * hw;
+                const legY = Math.sin(angle) * hh * 0.5;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(legX, legY);
+                ctx.lineTo(legX * 1.3, legY + hh * 0.5);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(-legX, legY);
+                ctx.lineTo(-legX * 1.3, legY + hh * 0.5);
+                ctx.stroke();
+            }
+        } else if (this.type === 'boss_monstro') {
+            // Monstro body
+            if (this.bossJumping) {
+                ctx.globalAlpha = 0.3;
+            }
+            ctx.beginPath();
+            ctx.ellipse(0, hh * 0.2, hw, hh * 0.8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // Face
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(-hw * 0.3, -hh * 0.2, hw * 0.15, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(hw * 0.3, -hh * 0.2, hw * 0.15, 0, Math.PI * 2);
+            ctx.fill();
+            // Mouth
+            ctx.beginPath();
+            ctx.arc(0, hh * 0.2, hw * 0.5, 0, Math.PI);
+            ctx.fill();
+        } else {
+            // Generic humanoid (gaper, etc)
+            // Body
+            ctx.beginPath();
+            ctx.ellipse(0, hh * 0.3, hw * 0.7, hh * 0.6, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // Head
+            ctx.beginPath();
+            ctx.arc(0, -hh * 0.3, hw * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+            // Eyes
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(-hw * 0.2, -hh * 0.35, hw * 0.12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(hw * 0.2, -hh * 0.35, hw * 0.12, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    drawBossHealthBar(ctx) {
+        const barWidth = 200;
+        const barHeight = 16;
+        const barX = CANVAS_WIDTH / 2 - barWidth / 2;
+        const barY = CANVAS_HEIGHT - 50;
+
+        ctx.fillStyle = '#333';
+        ctx.fillRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4);
+
+        const healthPct = this.health / this.maxHealth;
+        ctx.fillStyle = '#ff3333';
+        ctx.fillRect(barX, barY, barWidth * healthPct, barHeight);
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '12px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(this.type.toUpperCase(), CANVAS_WIDTH / 2, barY - 5);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ROOM GENERATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+function generateFloor(floorNumber) {
+    const targetRoomCount = Math.floor(Math.random() * 2) + 5 + Math.floor(floorNumber * 2.6);
+    const grid = [];
+    for (let y = 0; y < 8; y++) {
+        grid[y] = [];
+        for (let x = 0; x < 9; x++) {
+            grid[y][x] = null;
+        }
+    }
+
+    // Start room at center
+    const startX = 4, startY = 3;
+    grid[startY][startX] = { type: 'start', enemies: [], obstacles: [], pickups: [], items: [] };
+
+    const queue = [{ x: startX, y: startY }];
+    const allRooms = [{ x: startX, y: startY }];
+    const deadEnds = [];
+
+    // Breadth-first expansion
+    while (queue.length > 0 && allRooms.length < targetRoomCount) {
+        const current = queue.shift();
+        let expandedAny = false;
+
+        const directions = [
+            { dx: 0, dy: -1 },
+            { dx: 0, dy: 1 },
+            { dx: -1, dy: 0 },
+            { dx: 1, dy: 0 }
+        ];
+
+        // Shuffle directions
+        for (let i = directions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [directions[i], directions[j]] = [directions[j], directions[i]];
+        }
+
+        for (const dir of directions) {
+            const newX = current.x + dir.dx;
+            const newY = current.y + dir.dy;
+
+            if (newX < 0 || newX > 8 || newY < 0 || newY > 7) continue;
+            if (grid[newY][newX]) continue;
+
+            // Check neighbor count (prevent loops)
+            let neighborCount = 0;
+            if (newY > 0 && grid[newY - 1][newX]) neighborCount++;
+            if (newY < 7 && grid[newY + 1][newX]) neighborCount++;
+            if (newX > 0 && grid[newY][newX - 1]) neighborCount++;
+            if (newX < 8 && grid[newY][newX + 1]) neighborCount++;
+
+            if (neighborCount >= 2) continue;
+            if (allRooms.length >= targetRoomCount) continue;
+            if (Math.random() < 0.4) continue;
+
+            grid[newY][newX] = { type: 'normal', enemies: [], obstacles: [], pickups: [], items: [] };
+            const newRoom = { x: newX, y: newY };
+            queue.push(newRoom);
+            allRooms.push(newRoom);
+            expandedAny = true;
+        }
+
+        if (!expandedAny && (current.x !== startX || current.y !== startY)) {
+            deadEnds.push(current);
+        }
+    }
+
+    // Place special rooms
+    placeBossRoom(grid, deadEnds, startX, startY);
+    placeTreasureRoom(grid, deadEnds);
+    placeShopRoom(grid, allRooms);
+
+    return grid;
+}
+
+function placeBossRoom(grid, deadEnds, startX, startY) {
+    let furthest = deadEnds[0];
+    let maxDist = 0;
+    for (const room of deadEnds) {
+        const dist = Math.abs(room.x - startX) + Math.abs(room.y - startY);
+        if (dist > maxDist) {
+            maxDist = dist;
+            furthest = room;
+        }
+    }
+    if (furthest && grid[furthest.y][furthest.x]) {
+        grid[furthest.y][furthest.x].type = 'boss';
+        deadEnds.splice(deadEnds.indexOf(furthest), 1);
+    }
+}
+
+function placeTreasureRoom(grid, deadEnds) {
+    if (deadEnds.length > 0) {
+        const idx = Math.floor(Math.random() * deadEnds.length);
+        const room = deadEnds[idx];
+        if (grid[room.y][room.x]) {
+            grid[room.y][room.x].type = 'treasure';
+            deadEnds.splice(idx, 1);
+        }
+    }
+}
+
+function placeShopRoom(grid, allRooms) {
+    // Find an empty adjacent spot
+    for (const room of allRooms) {
+        const dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+        for (const [dx, dy] of dirs) {
+            const nx = room.x + dx;
+            const ny = room.y + dy;
+            if (nx >= 0 && nx < 9 && ny >= 0 && ny < 8 && !grid[ny][nx]) {
+                grid[ny][nx] = { type: 'shop', enemies: [], obstacles: [], pickups: [], items: [] };
+                return;
+            }
+        }
+    }
+}
+
+function generateRoomContent(room, roomType, floorNum) {
+    room.obstacles = [];
+    room.enemies = [];
+    room.pickups = [];
+    room.items = [];
+
+    if (roomType === 'start') return;
+
+    // Generate obstacles
+    const numObstacles = Math.floor(Math.random() * 5) + 2;
+    for (let i = 0; i < numObstacles; i++) {
+        const gx = 1 + Math.floor(Math.random() * (ROOM_TILES_X - 2));
+        const gy = 1 + Math.floor(Math.random() * (ROOM_TILES_Y - 2));
+        const type = Math.random() > 0.6 ? 'poop' : 'rock';
+        room.obstacles.push({
+            type: type,
+            gridX: gx,
+            gridY: gy,
+            x: ROOM_OFFSET_X + (gx + 0.5) * TILE_SIZE,
+            y: ROOM_OFFSET_Y + (gy + 0.5) * TILE_SIZE,
+            width: TILE_SIZE - 8,
+            height: TILE_SIZE - 8,
+            health: type === 'poop' ? 3 : 999,
+            maxHealth: type === 'poop' ? 3 : 999,
+            destructible: type === 'poop'
+        });
+    }
+
+    // Generate enemies
+    if (roomType === 'normal') {
+        const numEnemies = Math.floor(Math.random() * 3) + 2 + Math.floor(floorNum / 2);
+        const enemyTypes = ['fly', 'redFly', 'gaper', 'frowningGaper', 'spider', 'bigSpider', 'hopper', 'charger', 'clotty', 'pooter', 'host'];
+        for (let i = 0; i < numEnemies; i++) {
+            const gx = 1 + Math.floor(Math.random() * (ROOM_TILES_X - 2));
+            const gy = 1 + Math.floor(Math.random() * (ROOM_TILES_Y - 2));
+            const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+            room.enemies.push({
+                type: type,
+                x: ROOM_OFFSET_X + (gx + 0.5) * TILE_SIZE,
+                y: ROOM_OFFSET_Y + (gy + 0.5) * TILE_SIZE
+            });
+        }
+    } else if (roomType === 'boss') {
+        room.enemies.push({
+            type: 'boss_monstro',
+            x: ROOM_OFFSET_X + ROOM_WIDTH / 2,
+            y: ROOM_OFFSET_Y + ROOM_HEIGHT / 2
+        });
+    } else if (roomType === 'treasure') {
+        // Item pedestal
+        const itemKeys = Object.keys(ITEM_DATA).filter(k => ITEM_DATA[k].pool === 'treasure');
+        const itemId = itemKeys[Math.floor(Math.random() * itemKeys.length)];
+        room.items.push({
+            id: itemId,
+            name: ITEM_DATA[itemId].name,
+            desc: ITEM_DATA[itemId].desc,
+            x: ROOM_OFFSET_X + ROOM_WIDTH / 2,
+            y: ROOM_OFFSET_Y + ROOM_HEIGHT / 2
+        });
+    } else if (roomType === 'shop') {
+        // Shop items
+        const shopItems = Object.keys(ITEM_DATA).filter(k => ['treasure', 'boss'].includes(ITEM_DATA[k].pool));
+        for (let i = 0; i < 3; i++) {
+            const itemId = shopItems[Math.floor(Math.random() * shopItems.length)];
+            room.items.push({
+                id: itemId,
+                name: ITEM_DATA[itemId].name,
+                desc: ITEM_DATA[itemId].desc,
+                x: ROOM_OFFSET_X + (3 + i * 3.5) * TILE_SIZE,
+                y: ROOM_OFFSET_Y + ROOM_HEIGHT / 2,
+                price: 15 + Math.floor(Math.random() * 10)
+            });
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ROOM MANAGEMENT
+// ═══════════════════════════════════════════════════════════════════════════
+
+function loadRoom(roomX, roomY, entryDir) {
+    const roomKey = `${roomX},${roomY}`;
+    const roomData = floorMap[roomY]?.[roomX];
+    if (!roomData) return;
+
+    // Save current room state
+    saveRoomState();
+
+    // Load or generate room content
+    if (roomStates[roomKey]) {
+        // Restore saved state
+        const state = roomStates[roomKey];
+        obstacles = state.obstacles.map(o => ({ ...o }));
+        enemies = state.enemies.map(e => new Enemy(e.type, e.x, e.y));
+        pickups = state.pickups.map(p => ({ ...p }));
+        items = state.items.map(i => ({ ...i }));
+    } else {
+        // Generate new room
+        if (!roomData.generated) {
+            generateRoomContent(roomData, roomData.type, floorNum);
+            roomData.generated = true;
+        }
+        obstacles = roomData.obstacles.map(o => ({ ...o }));
+        enemies = roomData.enemies.map(e => new Enemy(e.type, e.x, e.y));
+        pickups = roomData.pickups.map(p => ({ ...p }));
+        items = roomData.items.map(i => ({ ...i }));
+    }
+
+    // Update current room
+    currentRoom = { x: roomX, y: roomY };
+    visitedRooms.add(roomKey);
+
+    // Spawn player at entry door
+    spawnPlayerAtDoor(entryDir);
+
+    // Setup doors
+    setupDoors();
+
+    // Clear tears, projectiles, and particles
+    tears = [];
+    bombs = [];
+    explosions = [];
+    particles = [];
+
+    // Trapdoor in boss room after boss defeated
+    trapdoor = null;
+    if (roomData.type === 'boss' && bossDefeated) {
+        trapdoor = {
+            x: ROOM_OFFSET_X + ROOM_WIDTH / 2,
+            y: ROOM_OFFSET_Y + ROOM_HEIGHT / 2 + 50
+        };
+    }
+
+    // Movement pause on entry
+    if (player) {
+        player.canMove = false;
+        roomEntryPauseTimer = 0.1;
+    }
+}
+
+function saveRoomState() {
+    if (!currentRoom) return;
+    const roomKey = `${currentRoom.x},${currentRoom.y}`;
+    roomStates[roomKey] = {
+        obstacles: obstacles.map(o => ({ ...o })),
+        enemies: enemies.map(e => ({ type: e.type, x: e.x, y: e.y, health: e.health })),
+        pickups: pickups.map(p => ({ ...p })),
+        items: items.map(i => ({ ...i }))
+    };
+}
+
+function spawnPlayerAtDoor(entryDir) {
+    if (!player) return;
+
+    const centerX = ROOM_OFFSET_X + ROOM_WIDTH / 2;
+    const centerY = ROOM_OFFSET_Y + ROOM_HEIGHT / 2;
+
+    switch (entryDir) {
+        case 'north':
+            player.x = centerX;
+            player.y = ROOM_OFFSET_Y + TILE_SIZE + DOOR_SPAWN_OFFSET;
+            break;
+        case 'south':
+            player.x = centerX;
+            player.y = ROOM_OFFSET_Y + ROOM_HEIGHT - TILE_SIZE - DOOR_SPAWN_OFFSET;
+            break;
+        case 'east':
+            player.x = ROOM_OFFSET_X + ROOM_WIDTH - TILE_SIZE - DOOR_SPAWN_OFFSET;
+            player.y = centerY;
+            break;
+        case 'west':
+            player.x = ROOM_OFFSET_X + TILE_SIZE + DOOR_SPAWN_OFFSET;
+            player.y = centerY;
+            break;
+        default:
+            player.x = centerX;
+            player.y = centerY;
+    }
+}
+
+function setupDoors() {
+    doors = [];
+    const roomData = floorMap[currentRoom.y]?.[currentRoom.x];
+    if (!roomData) return;
+
+    const checkDirs = [
+        { dir: 'north', dx: 0, dy: -1, x: ROOM_OFFSET_X + ROOM_WIDTH / 2, y: ROOM_OFFSET_Y + TILE_SIZE / 2 },
+        { dir: 'south', dx: 0, dy: 1, x: ROOM_OFFSET_X + ROOM_WIDTH / 2, y: ROOM_OFFSET_Y + ROOM_HEIGHT - TILE_SIZE / 2 },
+        { dir: 'west', dx: -1, dy: 0, x: ROOM_OFFSET_X + TILE_SIZE / 2, y: ROOM_OFFSET_Y + ROOM_HEIGHT / 2 },
+        { dir: 'east', dx: 1, dy: 0, x: ROOM_OFFSET_X + ROOM_WIDTH - TILE_SIZE / 2, y: ROOM_OFFSET_Y + ROOM_HEIGHT / 2 }
+    ];
+
+    for (const d of checkDirs) {
+        const nx = currentRoom.x + d.dx;
+        const ny = currentRoom.y + d.dy;
+        if (floorMap[ny]?.[nx]) {
+            const targetRoom = floorMap[ny][nx];
+            const door = {
+                dir: d.dir,
+                x: d.x,
+                y: d.y,
+                targetX: nx,
+                targetY: ny,
+                open: enemies.length === 0,
+                type: targetRoom.type === 'boss' ? 'boss' : (targetRoom.type === 'treasure' ? 'treasure' : 'normal'),
+                locked: targetRoom.type === 'treasure' && floorNum > 1
+            };
+            doors.push(door);
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GAME UPDATE
+// ═══════════════════════════════════════════════════════════════════════════
+
+function update(dt) {
+    if (gameState !== 'playing') return;
+
+    // Update screen shake
+    updateScreenShake(dt);
+
+    // Update particles
+    updateParticles(dt);
+
+    // Room entry pause
+    if (roomEntryPauseTimer > 0) {
+        roomEntryPauseTimer -= dt;
+        if (roomEntryPauseTimer <= 0 && player) {
+            player.canMove = true;
+        }
+        return;
+    }
+
+    // Update player
+    if (player) {
+        player.update(dt);
+    }
+
+    // Update enemies
+    for (const enemy of enemies) {
+        enemy.update(dt);
+    }
+
+    // Update tears
+    updateTears(dt);
+
+    // Update bombs
+    updateBombs(dt);
+
+    // Update explosions
+    for (let i = explosions.length - 1; i >= 0; i--) {
+        explosions[i].timer -= dt;
+        if (explosions[i].timer <= 0) {
+            explosions.splice(i, 1);
+        }
+    }
+
+    // Check collisions
+    checkCollisions();
+
+    // Check door transitions
+    checkDoorTransitions();
+
+    // Check trapdoor
+    checkTrapdoor();
+
+    // Check pickups
+    checkPickups();
+
+    // Check item pedestals
+    checkItemPickup();
+
+    // Update doors (open when enemies cleared)
+    if (enemies.length === 0) {
+        for (const door of doors) {
+            if (!door.locked) door.open = true;
+        }
+
+        // Spawn trapdoor in boss room when boss killed
+        const roomData = floorMap[currentRoom.y]?.[currentRoom.x];
+        if (roomData?.type === 'boss' && !bossDefeated) {
+            bossDefeated = true;
+            trapdoor = {
+                x: ROOM_OFFSET_X + ROOM_WIDTH / 2,
+                y: ROOM_OFFSET_Y + ROOM_HEIGHT / 2 + 50
+            };
+            // Drop boss item
+            const bossItems = Object.keys(ITEM_DATA).filter(k => ITEM_DATA[k].pool === 'boss');
+            const itemId = bossItems[Math.floor(Math.random() * bossItems.length)];
+            items.push({
+                id: itemId,
+                name: ITEM_DATA[itemId].name,
+                desc: ITEM_DATA[itemId].desc,
+                x: ROOM_OFFSET_X + ROOM_WIDTH / 2,
+                y: ROOM_OFFSET_Y + ROOM_HEIGHT / 2
+            });
+        }
+    }
+}
+
+function updateTears(dt) {
+    for (let i = tears.length - 1; i >= 0; i--) {
+        const tear = tears[i];
+
+        // Move
+        tear.x += tear.vx * dt;
+        tear.y += tear.vy * dt;
+        tear.traveled = (tear.traveled || 0) + Math.sqrt(tear.vx * tear.vx + tear.vy * tear.vy) * dt;
+
+        // Homing
+        if (tear.homing && !tear.enemy) {
+            let closest = null;
+            let closestDist = 200;
+            for (const enemy of enemies) {
+                const dist = Math.sqrt(Math.pow(enemy.x - tear.x, 2) + Math.pow(enemy.y - tear.y, 2));
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    closest = enemy;
+                }
+            }
+            if (closest) {
+                const dx = closest.x - tear.x;
+                const dy = closest.y - tear.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 0) {
+                    const speed = Math.sqrt(tear.vx * tear.vx + tear.vy * tear.vy);
+                    tear.vx = tear.vx * 0.9 + (dx / dist) * speed * 0.1;
+                    tear.vy = tear.vy * 0.9 + (dy / dist) * speed * 0.1;
+                }
+            }
+        }
+
+        // Boomerang
+        if (tear.boomerang && !tear.returning && tear.traveled > 150) {
+            tear.returning = true;
+        }
+        if (tear.returning && player) {
+            const dx = player.x - tear.x;
+            const dy = player.y - tear.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 0) {
+                const speed = Math.sqrt(tear.vx * tear.vx + tear.vy * tear.vy) * 1.2;
+                tear.vx = (dx / dist) * speed;
+                tear.vy = (dy / dist) * speed;
+            }
+            if (dist < 20) {
+                tears.splice(i, 1);
+                continue;
+            }
+        }
+
+        // Check range / bounds
+        const outOfBounds = tear.x < ROOM_OFFSET_X || tear.x > ROOM_OFFSET_X + ROOM_WIDTH ||
+                           tear.y < ROOM_OFFSET_Y || tear.y > ROOM_OFFSET_Y + ROOM_HEIGHT;
+        const outOfRange = tear.range && tear.traveled > tear.range;
+
+        if (outOfBounds || outOfRange) {
+            if (tear.bouncing && outOfBounds) {
+                // Bounce off walls
+                if (tear.x < ROOM_OFFSET_X || tear.x > ROOM_OFFSET_X + ROOM_WIDTH) {
+                    tear.vx = -tear.vx;
+                    tear.x = Math.max(ROOM_OFFSET_X, Math.min(ROOM_OFFSET_X + ROOM_WIDTH, tear.x));
+                }
+                if (tear.y < ROOM_OFFSET_Y || tear.y > ROOM_OFFSET_Y + ROOM_HEIGHT) {
+                    tear.vy = -tear.vy;
+                    tear.y = Math.max(ROOM_OFFSET_Y, Math.min(ROOM_OFFSET_Y + ROOM_HEIGHT, tear.y));
+                }
+            } else {
+                tears.splice(i, 1);
+            }
+        }
+    }
+}
+
+function updateBombs(dt) {
+    for (let i = bombs.length - 1; i >= 0; i--) {
+        bombs[i].timer -= dt;
+        if (bombs[i].timer <= 0) {
+            // Explode
+            const bomb = bombs[i];
+            bombs.splice(i, 1);
+
+            explosions.push({
+                x: bomb.x,
+                y: bomb.y,
+                radius: 60,
+                timer: 0.3
+            });
+
+            // Damage in radius
+            const radius = 60;
+
+            // Enemies
+            for (let j = enemies.length - 1; j >= 0; j--) {
+                const enemy = enemies[j];
+                const dist = Math.sqrt(Math.pow(enemy.x - bomb.x, 2) + Math.pow(enemy.y - bomb.y, 2));
+                if (dist < radius + enemy.width / 2) {
+                    if (enemy.takeDamage(60)) {
+                        enemies.splice(j, 1);
+                        totalKills++;
+                        spawnPickupDrop(enemy.x, enemy.y);
+                    }
                 }
             }
 
-            switch (p.type) {
+            // Player
+            if (player) {
+                const dist = Math.sqrt(Math.pow(player.x - bomb.x, 2) + Math.pow(player.y - bomb.y, 2));
+                if (dist < radius + player.width / 2) {
+                    player.takeDamage(1);
+                }
+            }
+
+            // Obstacles
+            for (let j = obstacles.length - 1; j >= 0; j--) {
+                const obs = obstacles[j];
+                const dist = Math.sqrt(Math.pow(obs.x - bomb.x, 2) + Math.pow(obs.y - bomb.y, 2));
+                if (dist < radius + obs.width / 2) {
+                    if (obs.destructible || obs.type === 'rock') {
+                        obstacles.splice(j, 1);
+                    }
+                }
+            }
+        }
+    }
+}
+
+function checkCollisions() {
+    // Player tears vs enemies
+    for (let i = tears.length - 1; i >= 0; i--) {
+        const tear = tears[i];
+        if (tear.enemy) continue;
+
+        for (let j = enemies.length - 1; j >= 0; j--) {
+            const enemy = enemies[j];
+            if (tear.hitEnemies?.has(j)) continue;
+
+            const dist = Math.sqrt(Math.pow(tear.x - enemy.x, 2) + Math.pow(tear.y - enemy.y, 2));
+            if (dist < TEAR_SIZE / 2 + enemy.width / 2) {
+                // Spawn tear splash
+                spawnTearSplash(tear.x, tear.y);
+
+                if (enemy.takeDamage(tear.damage)) {
+                    enemies.splice(j, 1);
+                    totalKills++;
+                    spawnBloodSplash(enemy.x, enemy.y);
+                    spawnPickupDrop(enemy.x, enemy.y);
+                }
+
+                if (tear.piercing) {
+                    if (!tear.hitEnemies) tear.hitEnemies = new Set();
+                    tear.hitEnemies.add(j);
+                } else {
+                    tears.splice(i, 1);
+                    break;
+                }
+            }
+        }
+    }
+
+    // Enemy tears vs player
+    if (player) {
+        for (let i = tears.length - 1; i >= 0; i--) {
+            const tear = tears[i];
+            if (!tear.enemy) continue;
+
+            const dist = Math.sqrt(Math.pow(tear.x - player.x, 2) + Math.pow(tear.y - player.y, 2));
+            if (dist < (tear.size || TEAR_SIZE) / 2 + player.width / 2) {
+                player.takeDamage(tear.damage);
+                tears.splice(i, 1);
+            }
+        }
+
+        // Enemy contact damage
+        for (const enemy of enemies) {
+            if (enemy.state === 'spawning') continue;
+            const dist = Math.sqrt(Math.pow(enemy.x - player.x, 2) + Math.pow(enemy.y - player.y, 2));
+            if (dist < enemy.width / 2 + player.width / 2) {
+                player.takeDamage(enemy.damage);
+            }
+        }
+    }
+
+    // Tears vs obstacles (poops)
+    for (let i = tears.length - 1; i >= 0; i--) {
+        const tear = tears[i];
+        if (tear.enemy) continue;
+
+        for (let j = obstacles.length - 1; j >= 0; j--) {
+            const obs = obstacles[j];
+            if (!obs.destructible) continue;
+
+            const dist = Math.sqrt(Math.pow(tear.x - obs.x, 2) + Math.pow(tear.y - obs.y, 2));
+            if (dist < TEAR_SIZE / 2 + obs.width / 2) {
+                obs.health -= tear.damage;
+                if (obs.health <= 0) {
+                    obstacles.splice(j, 1);
+                    // Maybe spawn pickup
+                    if (Math.random() > 0.7) {
+                        pickups.push({
+                            type: Math.random() > 0.5 ? 'coin' : 'heart',
+                            x: obs.x,
+                            y: obs.y
+                        });
+                    }
+                }
+                if (!tear.piercing) {
+                    tears.splice(i, 1);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+function spawnPickupDrop(x, y) {
+    if (Math.random() > 0.33) return;
+
+    const types = ['heart', 'halfHeart', 'coin', 'bomb', 'key'];
+    const weights = [15, 20, 25, 10, 10];
+    const total = weights.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total;
+    let type = types[0];
+    for (let i = 0; i < weights.length; i++) {
+        r -= weights[i];
+        if (r <= 0) {
+            type = types[i];
+            break;
+        }
+    }
+
+    pickups.push({ type: type, x: x, y: y });
+}
+
+function checkDoorTransitions() {
+    if (!player) return;
+
+    for (const door of doors) {
+        if (!door.open) continue;
+
+        const dist = Math.sqrt(Math.pow(player.x - door.x, 2) + Math.pow(player.y - door.y, 2));
+        if (dist < TILE_SIZE) {
+            // Transition to new room
+            const entryDir = { north: 'south', south: 'north', east: 'west', west: 'east' }[door.dir];
+            loadRoom(door.targetX, door.targetY, entryDir);
+            return;
+        }
+    }
+}
+
+function checkTrapdoor() {
+    if (!trapdoor || !player) return;
+
+    const dist = Math.sqrt(Math.pow(player.x - trapdoor.x, 2) + Math.pow(player.y - trapdoor.y, 2));
+    if (dist < TILE_SIZE) {
+        // Next floor
+        floorNum++;
+        if (floorNum > 6) {
+            gameState = 'win';
+        } else {
+            bossDefeated = false;
+            roomStates = {};
+            visitedRooms.clear();
+            floorMap = generateFloor(floorNum);
+            currentRoom = { x: 4, y: 3 };
+            loadRoom(4, 3, null);
+        }
+    }
+}
+
+function checkPickups() {
+    if (!player) return;
+
+    for (let i = pickups.length - 1; i >= 0; i--) {
+        const pickup = pickups[i];
+        const dist = Math.sqrt(Math.pow(player.x - pickup.x, 2) + Math.pow(player.y - pickup.y, 2));
+
+        if (dist < TILE_SIZE) {
+            switch (pickup.type) {
                 case 'heart':
                     if (player.health < player.maxHealth) {
-                        player.health = Math.min(player.health + 2, player.maxHealth);
+                        player.heal(2);
                         pickups.splice(i, 1);
                     }
+                    break;
+                case 'halfHeart':
+                    if (player.health < player.maxHealth) {
+                        player.heal(1);
+                        pickups.splice(i, 1);
+                    }
+                    break;
+                case 'soulHeart':
+                    player.soulHearts += 2;
+                    pickups.splice(i, 1);
                     break;
                 case 'coin':
                     player.coins++;
@@ -2481,371 +1817,769 @@ function updatePickups() {
             }
         }
     }
+}
 
-    // Items
+function checkItemPickup() {
+    if (!player || items.length === 0) return;
+
     for (let i = items.length - 1; i >= 0; i--) {
         const item = items[i];
-        const dist = Math.sqrt(Math.pow(item.x - player.x, 2) + Math.pow(item.y - player.y, 2));
-        if (dist < 35) {
-            // Handle different stat types
-            switch (item.stat) {
-                case 'multishot':
-                    player.multishot = item.value;
-                    break;
-                case 'homing':
-                    player.homing = item.value;
-                    player.tearColor = '#FF88FF'; // Pink homing tears
-                    break;
-                case 'piercing':
-                    player.piercing = item.value;
-                    player.tearColor = '#FFFFFF'; // White piercing tears
-                    break;
-                case 'bouncing':
-                    player.bouncing = item.value;
-                    player.tearColor = '#88FF88'; // Green bouncing tears
-                    break;
-                case 'blackHearts':
-                    player.blackHearts += item.value;
-                    break;
-                case 'lives':
-                    player.lives = item.value;
-                    break;
-                case 'damageMult':
-                    player.damageMult *= item.value;
-                    break;
-                case 'active':
-                    // Active item pickup
-                    player.activeItem = item.id;
-                    player.maxCharges = ACTIVE_ITEMS[item.id].charges;
-                    player.activeCharges = 0;
-                    break;
-                default:
-                    player[item.stat] = (player[item.stat] || 0) + item.value;
-            }
+        const dist = Math.sqrt(Math.pow(player.x - item.x, 2) + Math.pow(player.y - item.y, 2));
 
-            player.collectedItems.push(item.id);
-            items.splice(i, 1);
+        if (dist < TILE_SIZE * 2.5) {
+            // Show tooltip from further away
+            item.showTooltip = true;
 
-            // Screen shake and visual feedback
-            screenShake(5, 0.1);
-
-            // Pickup text
-            particles.push({
-                x: player.x, y: player.y - 50,
-                vx: 0, vy: -30,
-                life: 1.5, maxLife: 1.5,
-                text: item.name + '!',
-                isText: true
-            });
-        }
-    }
-}
-
-function updateObstacles(dt) {
-    for (let i = obstacles.length - 1; i >= 0; i--) {
-        const obs = obstacles[i];
-        if (obs.type === 'bomb') {
-            obs.timer -= dt;
-            if (obs.timer <= 0) {
-                // Explode
-                screenShake(15, 0.2);
-                for (let j = 0; j < 20; j++) {
-                    particles.push({
-                        x: obs.x, y: obs.y,
-                        vx: (Math.random() - 0.5) * 300,
-                        vy: (Math.random() - 0.5) * 300,
-                        life: 0.5, maxLife: 0.5,
-                        color: COLORS.fire, size: 8
-                    });
-                }
-
-                // Damage enemies
-                for (let e of enemies) {
-                    const dist = Math.sqrt(Math.pow(e.x - obs.x, 2) + Math.pow(e.y - obs.y, 2));
-                    if (dist < 100) {
-                        e.takeDamage(60, e.x - obs.x, e.y - obs.y);
+            if (dist < TILE_SIZE * 0.8) {
+                // Pick up item
+                if (item.price) {
+                    if (player.coins >= item.price) {
+                        player.coins -= item.price;
+                        player.addItem(item.id);
+                        items.splice(i, 1);
                     }
+                } else {
+                    player.addItem(item.id);
+                    items.splice(i, 1);
                 }
-
-                // Damage player
-                const playerDist = Math.sqrt(Math.pow(player.x - obs.x, 2) + Math.pow(player.y - obs.y, 2));
-                if (playerDist < 80) {
-                    player.takeDamage(1);
-                }
-
-                // Destroy nearby obstacles
-                for (let j = obstacles.length - 1; j >= 0; j--) {
-                    if (i === j) continue;
-                    const other = obstacles[j];
-                    const dist = Math.sqrt(Math.pow(other.x - obs.x, 2) + Math.pow(other.y - obs.y, 2));
-                    if (dist < 80 && other.type !== 'spike') {
-                        obstacles.splice(j, 1);
-                        if (j < i) i--;
-                    }
-                }
-
-                obstacles.splice(i, 1);
             }
+        } else {
+            item.showTooltip = false;
         }
     }
 }
 
-function checkRoomCleared() {
-    const roomData = floorMap[currentRoom.y][currentRoom.x];
-    if (!roomData.cleared && enemies.length === 0) {
-        roomData.cleared = true;
-        doors.forEach(door => door.open = true);
-    }
-}
+// ═══════════════════════════════════════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════════════════════════════════════
 
-// Initialize
-function initGame() {
-    floorNum = 1;
-    totalKills = 0;
-    bloodStains = [];
-    generateFloor();
-    player = new Player(
-        ROOM_OFFSET_X + ROOM_WIDTH * TILE_SIZE / 2,
-        ROOM_OFFSET_Y + ROOM_HEIGHT * TILE_SIZE / 2
-    );
-    generateRoom(floorMap[4][4]);
-    tears = [];
-    particles = [];
-    gameState = 'playing';
-}
-
-// Isaac-style vignette/spotlight effect
-function drawVignette() {
-    // Get room center for the spotlight
-    const roomCenterX = ROOM_OFFSET_X + (ROOM_WIDTH * TILE_SIZE) / 2;
-    const roomCenterY = ROOM_OFFSET_Y + (ROOM_HEIGHT * TILE_SIZE) / 2;
-
-    // Create radial gradient for spotlight effect
-    const gradient = ctx.createRadialGradient(
-        roomCenterX, roomCenterY, 100,
-        roomCenterX, roomCenterY, 400
-    );
-
-    gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    gradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.1)');
-    gradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.25)');
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
-
-    ctx.fillStyle = gradient;
-    ctx.fillRect(ROOM_OFFSET_X, ROOM_OFFSET_Y, ROOM_WIDTH * TILE_SIZE, ROOM_HEIGHT * TILE_SIZE);
-
-    // Additional corner darkening for Isaac-style atmosphere
-    const corners = [
-        [ROOM_OFFSET_X, ROOM_OFFSET_Y],
-        [ROOM_OFFSET_X + ROOM_WIDTH * TILE_SIZE, ROOM_OFFSET_Y],
-        [ROOM_OFFSET_X, ROOM_OFFSET_Y + ROOM_HEIGHT * TILE_SIZE],
-        [ROOM_OFFSET_X + ROOM_WIDTH * TILE_SIZE, ROOM_OFFSET_Y + ROOM_HEIGHT * TILE_SIZE]
-    ];
-
-    corners.forEach(([cx, cy]) => {
-        const cornerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 200);
-        cornerGrad.addColorStop(0, 'rgba(0, 0, 0, 0.4)');
-        cornerGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = cornerGrad;
-        ctx.fillRect(ROOM_OFFSET_X, ROOM_OFFSET_Y, ROOM_WIDTH * TILE_SIZE, ROOM_HEIGHT * TILE_SIZE);
-    });
-}
-
-function drawDebugOverlay() {
-    if (!debugMode || !player) return;
-
-    ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-    ctx.fillRect(10, 100, 240, 200);
-
-    ctx.fillStyle = '#0f0';
-    ctx.font = '12px monospace';
-    let y = 118;
-    const line = (text) => { ctx.fillText(text, 20, y); y += 16; };
-
-    line('=== DEBUG (` to close) ===');
-    line(`Room: (${currentRoom.x}, ${currentRoom.y})`);
-    line(`Player: (${Math.round(player.x)}, ${Math.round(player.y)})`);
-    line(`HP: ${player.health}/${player.maxHealth}`);
-    line(`Damage: ${player.damage.toFixed(1)}`);
-    line(`Tear Delay: ${player.tearDelay.toFixed(2)}`);
-    line(`Enemies: ${enemies.length}`);
-    line(`Tears: ${tears.length}`);
-    line(`Floor: ${floorNum}`);
-    line(`Total Kills: ${totalKills}`);
-    line(`FPS: ${Math.round(fps)}`);
-
-    ctx.restore();
-}
-
-// Game loop
-let lastTime = 0;
-function gameLoop(timestamp) {
-    const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
-    lastTime = timestamp;
-
-    // FPS tracking
-    frameCount++;
-    fpsTimer += dt;
-    if (fpsTimer >= 1) {
-        fps = frameCount / fpsTimer;
-        frameCount = 0;
-        fpsTimer = 0;
-    }
-
-    // Screen shake
-    let shakeX = 0, shakeY = 0;
-    if (screenShakeDuration > 0) {
-        shakeX = (Math.random() - 0.5) * screenShakeAmount;
-        shakeY = (Math.random() - 0.5) * screenShakeAmount;
-        screenShakeDuration -= dt;
-        if (screenShakeDuration <= 0) {
-            screenShakeAmount = 0;
-            screenShakeDuration = 0;
-        }
-    }
-
-    ctx.save();
-    ctx.translate(shakeX, shakeY);
-
-    ctx.fillStyle = '#000';
-    ctx.fillRect(-10, -10, canvas.width + 20, canvas.height + 20);
+function draw() {
+    ctx.fillStyle = COLORS.background;
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     if (gameState === 'title') {
         drawTitle();
-    } else if (gameState === 'playing') {
-        // Pause handling
-        if (isPaused) {
-            // Draw game state but don't update
-            drawRoom();
-            enemies.forEach(e => e.draw());
-            tears.forEach(t => t.draw());
-            player.draw();
-            drawParticles();
-            drawVignette();
-            drawHUD();
+        return;
+    }
 
-            // Pause overlay
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 48px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
-            ctx.font = '20px monospace';
-            ctx.fillText('Press ESC to resume', canvas.width / 2, canvas.height / 2 + 40);
-            ctx.textAlign = 'left';
-        } else {
-            player.update(dt);
-
-            for (let i = tears.length - 1; i >= 0; i--) {
-                if (!tears[i].update(dt)) tears.splice(i, 1);
-            }
-
-            for (let i = enemies.length - 1; i >= 0; i--) {
-                if (!enemies[i].update(dt)) enemies.splice(i, 1);
-            }
-
-            updateObstacles(dt);
-            updateParticles(dt);
-            updatePickups();
-            checkRoomCleared();
-
-            // Update creep pools
-            for (let i = creepPools.length - 1; i >= 0; i--) {
-                const creep = creepPools[i];
-                creep.timer -= dt;
-                // Damage enemies in creep
-                for (let e of enemies) {
-                    const dist = Math.sqrt(Math.pow(e.x - creep.x, 2) + Math.pow(e.y - creep.y, 2));
-                    if (dist < creep.radius) {
-                        e.takeDamage(creep.damage * dt * 3, 0, 0);
-                    }
-                }
-                if (creep.timer <= 0) {
-                    creepPools.splice(i, 1);
-                }
-            }
-
-            // Update floating texts
-            for (let i = floatingTexts.length - 1; i >= 0; i--) {
-                const ft = floatingTexts[i];
-                ft.y += ft.vy * dt;
-                ft.life -= dt;
-                if (ft.life <= 0) floatingTexts.splice(i, 1);
-            }
-
-            if (flashAlpha > 0) flashAlpha -= dt * 3;
-
-            drawRoom();
-            enemies.forEach(e => e.draw());
-            tears.forEach(t => t.draw());
-            player.draw();
-            drawParticles();
-
-            // Draw floating texts
-            floatingTexts.forEach(ft => {
-                const alpha = ft.life / ft.maxLife;
-                ctx.save();
-                ctx.globalAlpha = alpha;
-                ctx.font = `bold ${Math.floor(14 * ft.scale)}px Arial`;
-                ctx.fillStyle = '#000';
-                ctx.fillText(ft.text, ft.x + 1, ft.y + 1);
-                ctx.fillStyle = ft.color;
-                ctx.fillText(ft.text, ft.x, ft.y);
-                ctx.restore();
-            });
-
-            // Isaac-style vignette spotlight effect
-            drawVignette();
-
-            drawHUD();
-
-            if (flashAlpha > 0) {
-                ctx.fillStyle = `rgba(255, 0, 0, ${flashAlpha})`;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
-            drawDebugOverlay();
-        }
-    } else if (gameState === 'gameover') {
-        drawRoom();
-        enemies.forEach(e => e.draw());
-        drawHUD();
+    if (gameState === 'gameover') {
         drawGameOver();
+        return;
+    }
+
+    if (gameState === 'win') {
+        drawWin();
+        return;
+    }
+
+    if (gameState === 'paused') {
+        // Draw game in background (no shake), then pause overlay
+        drawRoom();
+        for (const obs of obstacles) drawObstacle(obs);
+        for (const pickup of pickups) drawPickup(pickup);
+        for (const item of items) drawItem(item);
+        if (trapdoor) drawTrapdoor();
+        for (const tear of tears) drawTear(tear);
+        for (const enemy of enemies) enemy.draw(ctx);
+        if (player) player.draw(ctx);
+        for (const door of doors) drawDoor(door);
+        drawUI();
+        drawMinimap();
+        drawPaused();
+        return;
+    }
+
+    // Apply screen shake
+    ctx.save();
+    ctx.translate(screenShake.x, screenShake.y);
+
+    // Draw room
+    drawRoom();
+
+    // Draw obstacles
+    for (const obs of obstacles) {
+        drawObstacle(obs);
+    }
+
+    // Draw pickups
+    for (const pickup of pickups) {
+        drawPickup(pickup);
+    }
+
+    // Draw items
+    for (const item of items) {
+        drawItem(item);
+    }
+
+    // Draw trapdoor
+    if (trapdoor) {
+        drawTrapdoor();
+    }
+
+    // Draw tears
+    for (const tear of tears) {
+        drawTear(tear);
+    }
+
+    // Draw particles
+    drawParticles(ctx);
+
+    // Draw enemies
+    for (const enemy of enemies) {
+        enemy.draw(ctx);
+    }
+
+    // Draw player
+    if (player) {
+        player.draw(ctx);
+    }
+
+    // Draw bombs
+    for (const bomb of bombs) {
+        ctx.fillStyle = '#333';
+        ctx.beginPath();
+        ctx.arc(bomb.x, bomb.y, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ff0';
+        ctx.beginPath();
+        ctx.arc(bomb.x, bomb.y - 10, 4, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Draw explosions
+    for (const exp of explosions) {
+        const alpha = exp.timer / 0.3;
+        ctx.fillStyle = `rgba(255, 200, 100, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(exp.x, exp.y, exp.radius * (1 - alpha * 0.5), 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Draw doors
+    for (const door of doors) {
+        drawDoor(door);
+    }
+
+    // Restore from screen shake before UI
+    ctx.restore();
+
+    // Draw UI
+    drawUI();
+
+    // Draw minimap
+    drawMinimap();
+}
+
+function drawRoom() {
+    // Floor
+    ctx.fillStyle = COLORS.floor;
+    ctx.fillRect(ROOM_OFFSET_X + TILE_SIZE, ROOM_OFFSET_Y + TILE_SIZE,
+                 ROOM_WIDTH - TILE_SIZE * 2, ROOM_HEIGHT - TILE_SIZE * 2);
+
+    // Floor pattern
+    ctx.fillStyle = COLORS.floorAlt;
+    for (let x = 1; x < ROOM_TILES_X - 1; x++) {
+        for (let y = 1; y < ROOM_TILES_Y - 1; y++) {
+            if ((x + y) % 2 === 0) {
+                ctx.fillRect(ROOM_OFFSET_X + x * TILE_SIZE + 2,
+                            ROOM_OFFSET_Y + y * TILE_SIZE + 2,
+                            TILE_SIZE - 4, TILE_SIZE - 4);
+            }
+        }
+    }
+
+    // Walls
+    ctx.fillStyle = COLORS.wall;
+    // Top wall
+    ctx.fillRect(ROOM_OFFSET_X, ROOM_OFFSET_Y, ROOM_WIDTH, TILE_SIZE);
+    // Bottom wall
+    ctx.fillRect(ROOM_OFFSET_X, ROOM_OFFSET_Y + ROOM_HEIGHT - TILE_SIZE, ROOM_WIDTH, TILE_SIZE);
+    // Left wall
+    ctx.fillRect(ROOM_OFFSET_X, ROOM_OFFSET_Y, TILE_SIZE, ROOM_HEIGHT);
+    // Right wall
+    ctx.fillRect(ROOM_OFFSET_X + ROOM_WIDTH - TILE_SIZE, ROOM_OFFSET_Y, TILE_SIZE, ROOM_HEIGHT);
+
+    // Wall border
+    ctx.strokeStyle = COLORS.wallBorder;
+    ctx.lineWidth = 4;
+    ctx.strokeRect(ROOM_OFFSET_X + TILE_SIZE, ROOM_OFFSET_Y + TILE_SIZE,
+                   ROOM_WIDTH - TILE_SIZE * 2, ROOM_HEIGHT - TILE_SIZE * 2);
+}
+
+function drawObstacle(obs) {
+    ctx.save();
+    ctx.translate(obs.x, obs.y);
+
+    if (obs.type === 'rock') {
+        ctx.fillStyle = COLORS.rock;
+        ctx.beginPath();
+        ctx.moveTo(-obs.width / 2, obs.height / 4);
+        ctx.lineTo(-obs.width / 3, -obs.height / 2);
+        ctx.lineTo(obs.width / 3, -obs.height / 2);
+        ctx.lineTo(obs.width / 2, obs.height / 4);
+        ctx.lineTo(0, obs.height / 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = COLORS.rockDark;
+        ctx.beginPath();
+        ctx.moveTo(0, obs.height / 2);
+        ctx.lineTo(obs.width / 2, obs.height / 4);
+        ctx.lineTo(obs.width / 3, -obs.height / 2);
+        ctx.lineTo(0, -obs.height / 4);
+        ctx.closePath();
+        ctx.fill();
+    } else if (obs.type === 'poop') {
+        const healthPct = obs.health / obs.maxHealth;
+        ctx.fillStyle = COLORS.poop;
+        if (healthPct < 0.3) ctx.fillStyle = '#5a3010';
+        else if (healthPct < 0.6) ctx.fillStyle = '#6b3815';
+
+        // Poop pile
+        ctx.beginPath();
+        ctx.arc(0, obs.height / 4, obs.width / 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(-obs.width / 5, 0, obs.width / 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(obs.width / 5, 0, obs.width / 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(0, -obs.height / 4, obs.width / 5, 0, Math.PI * 2);
+        ctx.fill();
     }
 
     ctx.restore();
+}
+
+function drawPickup(pickup) {
+    ctx.save();
+    ctx.translate(pickup.x, pickup.y);
+
+    // Floating animation
+    const float = Math.sin(Date.now() / 200) * 3;
+    ctx.translate(0, float);
+
+    switch (pickup.type) {
+        case 'heart':
+        case 'halfHeart':
+            ctx.fillStyle = COLORS.heart;
+            drawHeart(ctx, 0, 0, 12);
+            if (pickup.type === 'halfHeart') {
+                ctx.fillStyle = COLORS.heartEmpty;
+                ctx.beginPath();
+                ctx.rect(0, -10, 15, 20);
+                ctx.fill();
+            }
+            break;
+        case 'soulHeart':
+            ctx.fillStyle = COLORS.soulHeart;
+            drawHeart(ctx, 0, 0, 12);
+            break;
+        case 'coin':
+            ctx.fillStyle = COLORS.coin;
+            ctx.beginPath();
+            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#b8860b';
+            ctx.font = 'bold 12px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('$', 0, 0);
+            break;
+        case 'bomb':
+            ctx.fillStyle = COLORS.bomb;
+            ctx.beginPath();
+            ctx.arc(0, 2, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#654321';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, -8);
+            ctx.lineTo(0, -14);
+            ctx.stroke();
+            break;
+        case 'key':
+            ctx.fillStyle = COLORS.key;
+            ctx.beginPath();
+            ctx.arc(0, -5, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillRect(-2, 0, 4, 12);
+            ctx.fillRect(-4, 8, 3, 4);
+            ctx.fillRect(1, 5, 3, 4);
+            break;
+    }
+
+    ctx.restore();
+}
+
+function drawItem(item) {
+    ctx.save();
+    ctx.translate(item.x, item.y);
+
+    // Pedestal
+    ctx.fillStyle = '#555';
+    ctx.fillRect(-20, 10, 40, 20);
+    ctx.fillStyle = '#666';
+    ctx.fillRect(-18, 8, 36, 4);
+
+    // Item glow
+    const glow = Math.sin(Date.now() / 300) * 0.3 + 0.7;
+    ctx.fillStyle = `rgba(255, 255, 200, ${glow * 0.3})`;
+    ctx.beginPath();
+    ctx.arc(0, -5, 25, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Item (simple representation)
+    ctx.fillStyle = '#ffcc00';
+    ctx.beginPath();
+    ctx.arc(0, -5, 15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('?', 0, -5);
+
+    // Price
+    if (item.price) {
+        ctx.fillStyle = '#fff';
+        ctx.font = '12px monospace';
+        ctx.fillText(`$${item.price}`, 0, 35);
+    }
+
+    // Tooltip
+    if (item.showTooltip) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+        ctx.fillRect(-80, -80, 160, 50);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 12px monospace';
+        ctx.fillText(item.name, 0, -65);
+        ctx.font = '10px monospace';
+        ctx.fillStyle = '#aaa';
+        ctx.fillText(item.desc, 0, -45);
+    }
+
+    ctx.restore();
+}
+
+function drawTrapdoor() {
+    ctx.save();
+    ctx.translate(trapdoor.x, trapdoor.y);
+
+    ctx.fillStyle = '#111';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 25, 20, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+function drawTear(tear) {
+    ctx.save();
+    ctx.translate(tear.x, tear.y);
+
+    if (tear.enemy) {
+        ctx.fillStyle = '#8b0000';
+    } else if (tear.explosive) {
+        ctx.fillStyle = '#90EE90';
+    } else {
+        ctx.fillStyle = COLORS.tear;
+    }
+
+    const baseSize = tear.size || TEAR_SIZE;
+    const size = baseSize * (tear.tearSize || 1);
+    ctx.beginPath();
+    ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = tear.enemy ? '#660000' : (tear.explosive ? '#228B22' : COLORS.tearOutline);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+function drawDoor(door) {
+    ctx.save();
+    ctx.translate(door.x, door.y);
+
+    // Rotate based on direction
+    if (door.dir === 'east') ctx.rotate(Math.PI / 2);
+    else if (door.dir === 'south') ctx.rotate(Math.PI);
+    else if (door.dir === 'west') ctx.rotate(-Math.PI / 2);
+
+    // Door frame
+    ctx.fillStyle = door.type === 'boss' ? '#660000' :
+                   (door.type === 'treasure' ? '#ffd700' : COLORS.door);
+    ctx.fillRect(-TILE_SIZE / 2, -TILE_SIZE / 2, TILE_SIZE, TILE_SIZE / 2);
+
+    // Door opening
+    if (door.open) {
+        ctx.fillStyle = '#111';
+    } else {
+        ctx.fillStyle = door.locked ? '#444' : COLORS.doorOpen;
+    }
+    ctx.fillRect(-TILE_SIZE / 3, -TILE_SIZE / 2 + 5, TILE_SIZE * 2 / 3, TILE_SIZE / 2 - 10);
+
+    // Lock icon
+    if (door.locked) {
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.arc(0, -TILE_SIZE / 4, 8, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    ctx.restore();
+}
+
+function drawHeart(ctx, x, y, size) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.beginPath();
+    ctx.moveTo(0, size / 2);
+    ctx.bezierCurveTo(-size, 0, -size, -size, 0, -size / 2);
+    ctx.bezierCurveTo(size, -size, size, 0, 0, size / 2);
+    ctx.fill();
+    ctx.restore();
+}
+
+function drawUI() {
+    if (!player) return;
+
+    // Health
+    let heartX = 50;
+    const heartY = 50;
+    const heartSize = 12;
+    const heartSpacing = 28;
+
+    // Red hearts
+    const maxHearts = Math.ceil(player.maxHealth / 2);
+    for (let i = 0; i < maxHearts; i++) {
+        const health = player.health - i * 2;
+        if (health >= 2) {
+            ctx.fillStyle = COLORS.heart;
+            drawHeart(ctx, heartX, heartY, heartSize);
+        } else if (health === 1) {
+            ctx.fillStyle = COLORS.heartEmpty;
+            drawHeart(ctx, heartX, heartY, heartSize);
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(heartX - heartSize, heartY - heartSize, heartSize, heartSize * 2);
+            ctx.clip();
+            ctx.fillStyle = COLORS.heart;
+            drawHeart(ctx, heartX, heartY, heartSize);
+            ctx.restore();
+        } else {
+            ctx.fillStyle = COLORS.heartEmpty;
+            drawHeart(ctx, heartX, heartY, heartSize);
+        }
+        heartX += heartSpacing;
+    }
+
+    // Soul hearts
+    const soulHearts = Math.ceil(player.soulHearts / 2);
+    for (let i = 0; i < soulHearts; i++) {
+        ctx.fillStyle = COLORS.soulHeart;
+        drawHeart(ctx, heartX, heartY, heartSize);
+        heartX += heartSpacing;
+    }
+
+    // Pickups (left side)
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px monospace';
+    ctx.textAlign = 'left';
+
+    // Keys
+    ctx.fillStyle = COLORS.key;
+    ctx.fillText('K', 30, 100);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(`: ${player.keys}`, 45, 100);
+
+    // Bombs
+    ctx.fillStyle = '#666';
+    ctx.fillText('B', 30, 125);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(`: ${player.bombs}`, 45, 125);
+
+    // Coins
+    ctx.fillStyle = COLORS.coin;
+    ctx.fillText('$', 30, 150);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(`: ${player.coins}`, 45, 150);
+
+    // Stats
+    ctx.fillStyle = '#888';
+    ctx.font = '12px monospace';
+    ctx.fillText(`DMG: ${(player.damage * player.damageMult).toFixed(1)}`, 30, 180);
+    ctx.fillText(`SPD: ${player.speed.toFixed(1)}`, 30, 195);
+
+    // Floor info
+    ctx.fillStyle = '#fff';
+    ctx.font = '14px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`Floor ${floorNum}`, CANVAS_WIDTH / 2, 30);
+}
+
+function drawMinimap() {
+    const mapX = CANVAS_WIDTH - 120;
+    const mapY = 30;
+    const cellSize = 12;
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(mapX - 10, mapY - 10, 110, 110);
+
+    for (let y = 0; y < 8; y++) {
+        for (let x = 0; x < 9; x++) {
+            const room = floorMap[y]?.[x];
+            if (!room) continue;
+
+            const roomKey = `${x},${y}`;
+            const visited = visitedRooms.has(roomKey);
+            const isCurrent = currentRoom.x === x && currentRoom.y === y;
+
+            if (!visited && !isCurrent) {
+                // Check if adjacent to visited
+                let adjacent = false;
+                if (visitedRooms.has(`${x - 1},${y}`) || visitedRooms.has(`${x + 1},${y}`) ||
+                    visitedRooms.has(`${x},${y - 1}`) || visitedRooms.has(`${x},${y + 1}`)) {
+                    adjacent = true;
+                }
+                if (!adjacent) continue;
+                ctx.fillStyle = '#444';
+            } else if (isCurrent) {
+                ctx.fillStyle = '#fff';
+            } else {
+                switch (room.type) {
+                    case 'boss': ctx.fillStyle = '#ff3333'; break;
+                    case 'treasure': ctx.fillStyle = '#ffd700'; break;
+                    case 'shop': ctx.fillStyle = '#00ffff'; break;
+                    case 'start': ctx.fillStyle = '#00ff00'; break;
+                    default: ctx.fillStyle = '#8b7355';
+                }
+            }
+
+            const rx = mapX + (x - 2) * cellSize;
+            const ry = mapY + (y - 1) * cellSize;
+            ctx.fillRect(rx, ry, cellSize - 2, cellSize - 2);
+        }
+    }
+}
+
+function drawTitle() {
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 48px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('BASEMENT TEARS', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 50);
+
+    ctx.font = '20px monospace';
+    ctx.fillText('Press SPACE to start', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 50);
+
+    ctx.font = '14px monospace';
+    ctx.fillStyle = '#888';
+    ctx.fillText('WASD - Move | Arrows - Shoot | E - Bomb', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 100);
+}
+
+function drawGameOver() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    ctx.fillStyle = '#ff3333';
+    ctx.font = 'bold 48px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 50);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '20px monospace';
+    ctx.fillText(`Floor ${floorNum} | Kills: ${totalKills}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+    ctx.fillText('Press SPACE to restart', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 50);
+}
+
+function drawWin() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 48px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('VICTORY!', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 50);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '20px monospace';
+    ctx.fillText(`Kills: ${totalKills}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+    ctx.fillText('Press SPACE to play again', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 50);
+}
+
+function drawPaused() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 48px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('PAUSED', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 80);
+
+    // Show stats
+    if (player) {
+        ctx.font = '16px monospace';
+        ctx.fillText(`Floor: ${floorNum} | Kills: ${totalKills}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
+        ctx.fillText(`DMG: ${(player.damage * player.damageMult).toFixed(1)} | SPD: ${player.speed.toFixed(1)}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 10);
+        ctx.fillText(`Items: ${player.collectedItems.length}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 40);
+    }
+
+    ctx.fillStyle = '#888';
+    ctx.font = '14px monospace';
+    ctx.fillText('Press P or ESC to resume', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 100);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INPUT
+// ═══════════════════════════════════════════════════════════════════════════
+
+function handleKeyDown(e) {
+    const key = e.key.toLowerCase();
+    keys[key] = true;
+
+    if (key === ' ' || key === 'space') {
+        if (gameState === 'title' || gameState === 'gameover' || gameState === 'win') {
+            startGame();
+        }
+    }
+
+    if (key === 'e' && gameState === 'playing' && player && player.bombs > 0) {
+        player.bombs--;
+        bombs.push({
+            x: player.x,
+            y: player.y,
+            timer: 2
+        });
+    }
+
+    // Pause
+    if ((key === 'p' || key === 'escape') && (gameState === 'playing' || gameState === 'paused')) {
+        gameState = gameState === 'playing' ? 'paused' : 'playing';
+    }
+
+    // Prevent scrolling
+    if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) {
+        e.preventDefault();
+    }
+}
+
+function handleKeyUp(e) {
+    const key = e.key.toLowerCase();
+    keys[key] = false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GAME LOOP
+// ═══════════════════════════════════════════════════════════════════════════
+
+function startGame() {
+    gameState = 'playing';
+    floorNum = 1;
+    bossDefeated = false;
+    totalKills = 0;
+    roomStates = {};
+    visitedRooms.clear();
+
+    // Generate floor
+    floorMap = generateFloor(floorNum);
+    currentRoom = { x: 4, y: 3 };
+
+    // Create player
+    player = new Player(ROOM_OFFSET_X + ROOM_WIDTH / 2, ROOM_OFFSET_Y + ROOM_HEIGHT / 2);
+
+    // Load starting room
+    loadRoom(4, 3, null);
+}
+
+function gameLoop(timestamp) {
+    deltaTime = Math.min((timestamp - lastTime) / 1000, 0.1);
+    lastTime = timestamp;
+
+    update(deltaTime);
+    draw();
+
     requestAnimationFrame(gameLoop);
 }
 
-// Input
-document.addEventListener('keydown', e => {
-    keys[e.key.toLowerCase()] = true;
-    if (gameState === 'title' && e.key === ' ') initGame();
-    else if (gameState === 'gameover' && e.key === ' ') initGame();
-    if (e.key === '`') debugMode = !debugMode;
-    // Pause toggle
-    if (e.key === 'Escape' && gameState === 'playing') {
-        isPaused = !isPaused;
+// ═══════════════════════════════════════════════════════════════════════════
+// DEBUG COMMANDS
+// ═══════════════════════════════════════════════════════════════════════════
+
+window.debugCommands = {
+    godMode: function(enabled) {
+        if (player) {
+            player.invulnTimer = enabled ? 999999 : 0;
+        }
+    },
+    setHealth: function(amount) {
+        if (player) player.health = Math.min(player.maxHealth, amount);
+    },
+    setMaxHealth: function(amount) {
+        if (player) {
+            player.maxHealth = amount;
+            player.health = Math.min(player.health, amount);
+        }
+    },
+    giveCoins: function(amount) {
+        if (player) player.coins += amount;
+    },
+    giveBombs: function(amount) {
+        if (player) player.bombs += amount;
+    },
+    giveKeys: function(amount) {
+        if (player) player.keys += amount;
+    },
+    giveAllItems: function() {
+        if (player) {
+            Object.keys(ITEM_DATA).forEach(id => player.addItem(id));
+        }
+    },
+    giveItem: function(itemId) {
+        if (player && ITEM_DATA[itemId]) {
+            player.addItem(itemId);
+        }
+    },
+    skipToLevel: function(level) {
+        floorNum = level;
+        bossDefeated = false;
+        roomStates = {};
+        visitedRooms.clear();
+        floorMap = generateFloor(floorNum);
+        loadRoom(4, 3, null);
+    },
+    clearRoom: function() {
+        enemies = [];
+        for (const door of doors) door.open = true;
+    },
+    spawnEnemy: function(type, x, y) {
+        if (ENEMY_DATA[type]) {
+            const ex = x || player?.x || ROOM_OFFSET_X + ROOM_WIDTH / 2;
+            const ey = y || player?.y || ROOM_OFFSET_Y + ROOM_HEIGHT / 2;
+            enemies.push(new Enemy(type, ex + 50, ey));
+        }
+    },
+    spawnBoss: function() {
+        enemies.push(new Enemy('boss_monstro', ROOM_OFFSET_X + ROOM_WIDTH / 2, ROOM_OFFSET_Y + ROOM_HEIGHT / 2));
+    },
+    showHitboxes: function(enabled) {
+        window.showHitboxes = enabled;
+    },
+    slowMotion: function(factor) {
+        window.timeScale = factor || 1;
     }
-});
+};
 
-document.addEventListener('keyup', e => {
-    keys[e.key.toLowerCase()] = false;
-});
+// ═══════════════════════════════════════════════════════════════════════════
+// EXPOSED GETTERS FOR TEST HARNESS
+// ═══════════════════════════════════════════════════════════════════════════
 
-// Expose for testing
-window.gameState = () => ({
-    state: gameState,
-    playerHealth: player ? player.health : 0,
-    enemies: enemies.length,
-    room: currentRoom,
-    visited: visitedRooms.size,
-    kills: totalKills
-});
-window.startGame = initGame;
-
-// Expose game internals for test harness
 window.getPlayer = () => player;
 window.getEnemies = () => enemies;
 window.getPickups = () => pickups;
@@ -2853,19 +2587,36 @@ window.getObstacles = () => obstacles;
 window.getDoors = () => doors;
 window.getItems = () => items;
 window.getTears = () => tears;
-window.getKeys = () => keys;
 window.getCurrentRoom = () => currentRoom;
 window.getFloorMap = () => floorMap;
 window.getFloorNum = () => floorNum;
-window.getRoomStates = () => roomStates;
-window.getVisitedRooms = () => visitedRooms;
-window.setGameState = (state) => { gameState = state; };
+window.getKeys = () => keys;
+window.gameState = () => ({
+    state: gameState,
+    bossDefeated: bossDefeated,
+    kills: totalKills
+});
+window.startGame = startGame;
 
-// Expose classes for test harness
-window.Enemy = Enemy;
-window.EnemyTear = EnemyTear;
-window.Tear = Tear;
-window.Player = Player;
+// Expose constants
+window.ROOM_OFFSET_X = ROOM_OFFSET_X;
+window.ROOM_OFFSET_Y = ROOM_OFFSET_Y;
+window.ROOM_WIDTH = ROOM_TILES_X;
+window.ROOM_HEIGHT = ROOM_TILES_Y;
+window.TILE_SIZE = TILE_SIZE;
 window.ENEMY_DATA = ENEMY_DATA;
 
-requestAnimationFrame(gameLoop);
+// ═══════════════════════════════════════════════════════════════════════════
+// INITIALIZATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+window.addEventListener('load', function() {
+    canvas = document.getElementById('game');
+    ctx = canvas.getContext('2d');
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    lastTime = performance.now();
+    requestAnimationFrame(gameLoop);
+});
