@@ -1208,27 +1208,11 @@
     }
 
     function restorePlayingGame() {
+      // Redirect old ?playing= URLs to new game.html page
       const urlParams = new URLSearchParams(window.location.search);
       const playingId = urlParams.get('playing');
       if (playingId) {
-        const game = allGames.find(g => g.id === playingId);
-        if (game) {
-          // Save current scroll position
-          savedScrollPosition = window.scrollY;
-          // Open the game without pushing new history state
-          currentPlayerGame = { id: game.id, path: game.path, game: game };
-          document.getElementById('playerTitle').textContent = game.name;
-          document.getElementById('playerIframe').src = game.path;
-          document.getElementById('playerNotesText').value = gameNotes[game.id] || '';
-          document.getElementById('playerModal').classList.add('active');
-          document.body.style.overflow = 'hidden';
-          setTimeout(() => {
-            scaleIframeToFit();
-            updatePlayerRatingStars();
-          }, 100);
-          // Replace current history state instead of pushing
-          history.replaceState({ playing: true, gameId: game.id }, '', '?playing=' + game.id);
-        }
+        window.location.href = 'game.html?id=' + encodeURIComponent(playingId);
       }
     }
 
@@ -1456,32 +1440,12 @@
     }
 
     function playGame(gameId, path) {
+      // Mark as played before navigating
       playedStatus[gameId] = Date.now();
       localStorage.setItem('playedGames', JSON.stringify(playedStatus));
-      const game = allGames.find(g => g.id === gameId);
-      if (game) game.played = true;
 
-      // Save scroll position before opening modal
-      savedScrollPosition = window.scrollY;
-
-      // Open in player modal with notes panel
-      currentPlayerGame = { id: gameId, path: path, game: game };
-      document.getElementById('playerTitle').textContent = game ? game.name : 'Game';
-      document.getElementById('playerIframe').src = path;
-      document.getElementById('playerNotesText').value = gameNotes[gameId] || '';
-      document.getElementById('playerModal').classList.add('active');
-      document.body.style.overflow = 'hidden'; // Prevent background scroll
-
-      // Scale iframe and update rating display
-      setTimeout(() => {
-        scaleIframeToFit();
-        updatePlayerRatingStars();
-      }, 100);
-
-      // Push history state so back button closes modal
-      history.pushState({ playing: true, gameId: gameId }, '', '?playing=' + gameId);
-
-      renderGames();
+      // Navigate to dedicated game page
+      window.location.href = 'game.html?id=' + encodeURIComponent(gameId);
     }
 
     // Scale iframe to fit wrapper (assumes common game resolution)

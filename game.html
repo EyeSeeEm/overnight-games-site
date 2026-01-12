@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loading... - Game Library</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Motiva Sans", Arial, Helvetica, sans-serif;
+      background: #1b2838;
+      color: #c7d5e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .game-header {
+      background: linear-gradient(to bottom, #1e3a4c 0%, #171d25 100%);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 2px solid #66c0f4;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.6);
+    }
+    .back-btn {
+      background: linear-gradient(to bottom, #2a475e, #1e3a4c);
+      border: 1px solid #3d6c8a;
+      color: #c6d4df;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+    .back-btn:hover {
+      background: linear-gradient(to bottom, #3d6c8a, #2a475e);
+      border-color: #66c0f4;
+      color: #fff;
+    }
+    .game-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      flex: 1;
+    }
+    .game-meta {
+      display: flex;
+      gap: 8px;
+    }
+    .tag {
+      padding: 4px 10px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .tag.night-1 { background: rgba(76, 175, 80, 0.3); color: #81c784; }
+    .tag.night-2 { background: rgba(33, 150, 243, 0.3); color: #64b5f6; }
+    .tag.night-3 { background: rgba(156, 39, 176, 0.3); color: #ba68c8; }
+    .tag.night-4 { background: rgba(255, 152, 0, 0.3); color: #ffb74d; }
+    .tag.night-5 { background: rgba(0, 188, 212, 0.3); color: #4dd0e1; }
+    .tag.night-6 { background: rgba(156, 39, 176, 0.3); color: #ce93d8; }
+    .tag.framework { background: rgba(96, 125, 139, 0.3); color: #90a4ae; }
+
+    /* Controls bar */
+    .controls-bar {
+      background: linear-gradient(to bottom, #1a2634, #151d27);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      border-bottom: 1px solid #2a3f5f;
+    }
+    .rating-section {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .rating-label {
+      font-size: 12px;
+      color: #8f98a0;
+      text-transform: uppercase;
+    }
+    .star-rating {
+      display: flex;
+      gap: 2px;
+    }
+    .star-rating .star {
+      font-size: 24px;
+      cursor: pointer;
+      color: #3d5a6c;
+      transition: all 0.15s;
+    }
+    .star-rating .star:hover,
+    .star-rating .star.filled {
+      color: #ffd700;
+      text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+    }
+    .star-rating .star:hover ~ .star {
+      color: #3d5a6c;
+      text-shadow: none;
+    }
+    .broken-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid #3d5a6c;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .broken-toggle:hover {
+      border-color: #ff6b6b;
+    }
+    .broken-toggle.active {
+      background: rgba(255, 107, 107, 0.2);
+      border-color: #ff6b6b;
+      color: #ff6b6b;
+    }
+    .broken-toggle input {
+      accent-color: #ff6b6b;
+    }
+    .notes-toggle {
+      margin-left: auto;
+      background: linear-gradient(to bottom, #2a475e, #1e3a4c);
+      border: 1px solid #3d6c8a;
+      color: #c6d4df;
+      padding: 8px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .notes-toggle:hover {
+      background: linear-gradient(to bottom, #3d6c8a, #2a475e);
+      border-color: #66c0f4;
+    }
+    .notes-toggle.has-notes {
+      background: linear-gradient(to bottom, #4a6b35, #3d5a2d);
+      border-color: #6b8e4e;
+    }
+
+    /* Game container */
+    .game-container {
+      flex: 1;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+    .game-frame {
+      flex: 1;
+      border: none;
+      background: #000;
+    }
+    .game-frame-wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+      overflow: hidden;
+    }
+
+    /* Notes panel */
+    .notes-panel {
+      width: 0;
+      background: #151d27;
+      border-left: 1px solid #2a3f5f;
+      overflow: hidden;
+      transition: width 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .notes-panel.open {
+      width: 350px;
+    }
+    .notes-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #2a3f5f;
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .notes-close {
+      background: none;
+      border: none;
+      color: #8f98a0;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .notes-close:hover {
+      color: #fff;
+    }
+    .notes-content {
+      flex: 1;
+      padding: 16px;
+    }
+    .notes-textarea {
+      width: 100%;
+      height: 100%;
+      min-height: 200px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #3d5a6c;
+      border-radius: 4px;
+      color: #c6d4df;
+      padding: 12px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: none;
+    }
+    .notes-textarea:focus {
+      outline: none;
+      border-color: #66c0f4;
+    }
+    .notes-saved {
+      padding: 8px 16px;
+      font-size: 11px;
+      color: #6b8e4e;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .notes-saved.show {
+      opacity: 1;
+    }
+
+    /* Loading state */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-size: 18px;
+      color: #8f98a0;
+    }
+
+    /* Error state */
+    .error {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      gap: 16px;
+    }
+    .error-message {
+      font-size: 18px;
+      color: #ff6b6b;
+    }
+  </style>
+</head>
+<body>
+  <div class="loading" id="loading">Loading game...</div>
+
+  <div id="gameContent" style="display: none; flex-direction: column; height: 100vh;">
+    <div class="game-header">
+      <a href="index.html" class="back-btn" id="backBtn">← Library</a>
+      <div class="game-title" id="gameTitle">Game Title</div>
+      <div class="game-meta" id="gameMeta"></div>
+    </div>
+
+    <div class="controls-bar">
+      <div class="rating-section">
+        <span class="rating-label">Rating</span>
+        <div class="star-rating" id="starRating">
+          <span class="star" data-rating="1">★</span>
+          <span class="star" data-rating="2">★</span>
+          <span class="star" data-rating="3">★</span>
+          <span class="star" data-rating="4">★</span>
+          <span class="star" data-rating="5">★</span>
+        </div>
+      </div>
+      <label class="broken-toggle" id="brokenToggle">
+        <input type="checkbox" id="brokenCheckbox">
+        <span>Mark as Broken</span>
+      </label>
+      <button class="notes-toggle" id="notesToggle">📝 Notes</button>
+    </div>
+
+    <div class="game-container">
+      <div class="game-frame-wrapper">
+        <iframe class="game-frame" id="gameFrame" allowfullscreen></iframe>
+      </div>
+      <div class="notes-panel" id="notesPanel">
+        <div class="notes-header">
+          <span>Notes</span>
+          <button class="notes-close" onclick="toggleNotes()">×</button>
+        </div>
+        <div class="notes-content">
+          <textarea class="notes-textarea" id="notesTextarea" placeholder="Add your notes about this game..."></textarea>
+        </div>
+        <div class="notes-saved" id="notesSaved">✓ Saved</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Shared localStorage keys (same as main library)
+    let gameNotes = {};
+    let brokenGames = {};
+    let finalRatings = {};
+    let playedGames = {};
+    let currentGame = null;
+    let allGames = [];
+
+    // Load data from localStorage
+    function loadData() {
+      try {
+        gameNotes = JSON.parse(localStorage.getItem('gameNotes') || '{}');
+        brokenGames = JSON.parse(localStorage.getItem('brokenGames') || '{}');
+        finalRatings = JSON.parse(localStorage.getItem('finalRatings') || '{}');
+        playedGames = JSON.parse(localStorage.getItem('playedGames') || '{}');
+      } catch(e) {
+        console.error('Error loading data:', e);
+      }
+    }
+
+    // Save data to localStorage
+    function saveData() {
+      localStorage.setItem('gameNotes', JSON.stringify(gameNotes));
+      localStorage.setItem('brokenGames', JSON.stringify(brokenGames));
+      localStorage.setItem('finalRatings', JSON.stringify(finalRatings));
+      localStorage.setItem('playedGames', JSON.stringify(playedGames));
+    }
+
+    // Load game info and display
+    async function loadGame() {
+      const params = new URLSearchParams(window.location.search);
+      const gameId = params.get('id');
+
+      if (!gameId) {
+        showError('No game specified');
+        return;
+      }
+
+      loadData();
+
+      try {
+        const resp = await fetch('games-index.json?t=' + Date.now());
+        allGames = await resp.json();
+        currentGame = allGames.find(g => g.id === gameId);
+
+        if (!currentGame) {
+          showError('Game not found: ' + gameId);
+          return;
+        }
+
+        displayGame();
+      } catch(e) {
+        showError('Error loading game data');
+        console.error(e);
+      }
+    }
+
+    function showError(message) {
+      document.getElementById('loading').innerHTML = `
+        <div class="error">
+          <div class="error-message">${message}</div>
+          <a href="index.html" class="back-btn">← Back to Library</a>
+        </div>
+      `;
+    }
+
+    function displayGame() {
+      const g = currentGame;
+
+      // Update page title
+      document.title = g.name + ' - Game Library';
+
+      // Show game content
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('gameContent').style.display = 'flex';
+
+      // Set game info
+      document.getElementById('gameTitle').textContent = g.name;
+      document.getElementById('gameMeta').innerHTML = `
+        <span class="tag ${g.night}">${g.night.replace('night-', 'Night ')}</span>
+        <span class="tag framework">${g.framework}</span>
+      `;
+
+      // Load game in iframe
+      document.getElementById('gameFrame').src = g.path + 'index.html';
+
+      // Set rating
+      updateRatingDisplay();
+
+      // Set broken state
+      const isBroken = brokenGames[g.id];
+      document.getElementById('brokenCheckbox').checked = isBroken;
+      document.getElementById('brokenToggle').classList.toggle('active', isBroken);
+
+      // Set notes
+      document.getElementById('notesTextarea').value = gameNotes[g.id] || '';
+      document.getElementById('notesToggle').classList.toggle('has-notes', !!gameNotes[g.id]);
+
+      // Mark as played
+      if (!playedGames[g.id]) {
+        playedGames[g.id] = Date.now();
+        saveData();
+      }
+
+      // Setup event listeners
+      setupEventListeners();
+    }
+
+    function updateRatingDisplay() {
+      const rating = finalRatings[currentGame.id] || 0;
+      const stars = document.querySelectorAll('#starRating .star');
+      stars.forEach((star, i) => {
+        star.classList.toggle('filled', i < rating);
+      });
+    }
+
+    function setupEventListeners() {
+      // Star rating
+      document.querySelectorAll('#starRating .star').forEach(star => {
+        star.addEventListener('click', () => {
+          const rating = parseInt(star.dataset.rating);
+          const currentRating = finalRatings[currentGame.id] || 0;
+
+          // Click same rating to clear
+          if (rating === currentRating) {
+            delete finalRatings[currentGame.id];
+          } else {
+            finalRatings[currentGame.id] = rating;
+          }
+
+          saveData();
+          updateRatingDisplay();
+        });
+
+        // Hover effect
+        star.addEventListener('mouseenter', () => {
+          const rating = parseInt(star.dataset.rating);
+          document.querySelectorAll('#starRating .star').forEach((s, i) => {
+            s.classList.toggle('filled', i < rating);
+          });
+        });
+
+        star.addEventListener('mouseleave', updateRatingDisplay);
+      });
+
+      // Broken toggle
+      document.getElementById('brokenToggle').addEventListener('click', () => {
+        const checkbox = document.getElementById('brokenCheckbox');
+        checkbox.checked = !checkbox.checked;
+
+        if (checkbox.checked) {
+          brokenGames[currentGame.id] = true;
+          delete finalRatings[currentGame.id];
+          updateRatingDisplay();
+        } else {
+          delete brokenGames[currentGame.id];
+        }
+
+        document.getElementById('brokenToggle').classList.toggle('active', checkbox.checked);
+        saveData();
+      });
+
+      // Notes toggle
+      document.getElementById('notesToggle').addEventListener('click', toggleNotes);
+
+      // Notes auto-save
+      let saveTimeout;
+      document.getElementById('notesTextarea').addEventListener('input', () => {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+          const notes = document.getElementById('notesTextarea').value.trim();
+          if (notes) {
+            gameNotes[currentGame.id] = notes;
+          } else {
+            delete gameNotes[currentGame.id];
+          }
+          saveData();
+          document.getElementById('notesToggle').classList.toggle('has-notes', !!notes);
+
+          // Show saved indicator
+          const savedEl = document.getElementById('notesSaved');
+          savedEl.classList.add('show');
+          setTimeout(() => savedEl.classList.remove('show'), 1500);
+        }, 500);
+      });
+    }
+
+    function toggleNotes() {
+      document.getElementById('notesPanel').classList.toggle('open');
+    }
+
+    // Initialize
+    loadGame();
+  </script>
+</body>
+</html>
