@@ -1122,6 +1122,8 @@
     let brokenGames = {};
     let finalRatings = {};
     let variantOverrides = {}; // User overrides for Base/Expanded/Polished/V2
+    let plannerNotes = {}; // Priority notes for planner agent
+    let bugReports = {}; // Screenshots + comments from game.html
     let updatedGames = JSON.parse(localStorage.getItem('updatedGames') || '{}');
     let currentNoteGameId = null;
     let currentPlayerGame = null;
@@ -1149,6 +1151,9 @@
         finalRatings = JSON.parse(localStorage.getItem('finalRatings') || '{}');
         variantOverrides = JSON.parse(localStorage.getItem('variantOverrides') || '{}');
       }
+      // Load planner notes and bug reports (created in game.html)
+      plannerNotes = JSON.parse(localStorage.getItem('plannerNotes') || '{}');
+      bugReports = JSON.parse(localStorage.getItem('bugReports') || '{}');
       notesLoaded = true; // CRITICAL: Mark notes as loaded
       console.log('[Notes] Loaded', Object.keys(gameNotes).length, 'notes from storage');
     }
@@ -1794,15 +1799,18 @@
     }
 
     function exportNotes() {
-      const exportData = { games: [], broken: [], rated: [], summary: {} };
+      const exportData = { games: [], broken: [], rated: [], bugReports: {}, summary: {} };
 
-      // All games with notes, broken status, final rating, or variant override
+      // All games with any data (planner, notes, broken, rating, variant, or issues)
       allGames.forEach(g => {
+        const hasPlannerNotes = plannerNotes[g.id];
         const hasNotes = gameNotes[g.id];
+        const hasIssues = bugReports[g.id]?.length > 0;
         const isBroken = brokenGames[g.id];
         const rating = finalRatings[g.id];
         const variant = variantOverrides[g.id];
-        if (hasNotes || isBroken || rating || variant) {
+
+        if (hasPlannerNotes || hasNotes || hasIssues || isBroken || rating || variant) {
           exportData.games.push({
             id: g.id,
             name: g.name,
@@ -1811,7 +1819,10 @@
             broken: isBroken || false,
             finalRating: rating || null,
             variantOverride: variant || null,
-            notes: hasNotes || ''
+            // Order: planner first, then notes, issues are in separate object
+            plannerNotes: hasPlannerNotes || '',
+            notes: hasNotes || '',
+            issueCount: bugReports[g.id]?.length || 0
           });
         }
         if (isBroken) exportData.broken.push(g.id);
@@ -1821,14 +1832,32 @@
       // Add variant overrides summary
       exportData.variantOverrides = { ...variantOverrides };
 
+      // Add bug reports (screenshots excluded to reduce file size, only comments)
+      Object.keys(bugReports).forEach(gameId => {
+        const issues = bugReports[gameId];
+        if (issues && issues.length > 0) {
+          exportData.bugReports[gameId] = issues.map(issue => ({
+            id: issue.id,
+            timestamp: issue.timestamp,
+            comment: issue.comment,
+            hasScreenshot: !!issue.screenshot
+            // Note: screenshot base64 excluded to keep export small
+          }));
+        }
+      });
+
       // Sort rated by rating descending
       exportData.rated.sort((a, b) => b.rating - a.rating);
 
+      const totalIssues = Object.values(bugReports).reduce((sum, arr) => sum + (arr?.length || 0), 0);
       exportData.summary = {
         total: allGames.length,
         broken: Object.keys(brokenGames).length,
         working: allGames.length - Object.keys(brokenGames).length,
+        withPlannerNotes: Object.keys(plannerNotes).length,
         withNotes: Object.keys(gameNotes).length,
+        withIssues: Object.keys(bugReports).filter(k => bugReports[k]?.length > 0).length,
+        totalIssues: totalIssues,
         withRating: Object.keys(finalRatings).length,
         avgRating: Object.keys(finalRatings).length > 0
           ? (Object.values(finalRatings).reduce((a,b) => a+b, 0) / Object.keys(finalRatings).length).toFixed(1)

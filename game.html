@@ -68,6 +68,69 @@
     .tag.night-6 { background: rgba(156, 39, 176, 0.3); color: #ce93d8; }
     .tag.framework { background: rgba(96, 125, 139, 0.3); color: #90a4ae; }
 
+    /* Storage indicator */
+    .storage-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #8f98a0;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+    .storage-indicator:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .storage-bar {
+      width: 60px;
+      height: 6px;
+      background: #1b2838;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .storage-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s, background 0.3s;
+    }
+    .storage-fill.green { background: #4caf50; }
+    .storage-fill.yellow { background: #ff9800; }
+    .storage-fill.red { background: #f44336; }
+
+    /* Storage breakdown popup */
+    .storage-popup {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: #1b2838;
+      border: 1px solid #3d6c8a;
+      border-radius: 6px;
+      padding: 12px;
+      min-width: 200px;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .storage-popup.show { display: block; }
+    .storage-popup h4 {
+      font-size: 12px;
+      color: #66c0f4;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .storage-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      padding: 4px 0;
+      border-bottom: 1px solid #2a3f5f;
+    }
+    .storage-item:last-child { border-bottom: none; }
+    .storage-item .label { color: #8f98a0; }
+    .storage-item .size { color: #c6d4df; }
+
     /* Controls bar */
     .controls-bar {
       background: linear-gradient(to bottom, #1a2634, #151d27);
@@ -76,6 +139,7 @@
       align-items: center;
       gap: 20px;
       border-bottom: 1px solid #2a3f5f;
+      position: relative;
     }
     .rating-section {
       display: flex;
@@ -128,8 +192,7 @@
     .broken-toggle input {
       accent-color: #ff6b6b;
     }
-    .notes-toggle {
-      margin-left: auto;
+    .panel-toggle {
       background: linear-gradient(to bottom, #2a475e, #1e3a4c);
       border: 1px solid #3d6c8a;
       color: #c6d4df;
@@ -139,14 +202,15 @@
       cursor: pointer;
       transition: all 0.15s;
     }
-    .notes-toggle:hover {
+    .panel-toggle:hover {
       background: linear-gradient(to bottom, #3d6c8a, #2a475e);
       border-color: #66c0f4;
     }
-    .notes-toggle.has-notes {
+    .panel-toggle.has-content {
       background: linear-gradient(to bottom, #4a6b35, #3d5a2d);
       border-color: #6b8e4e;
     }
+    .spacer { flex: 1; }
 
     /* Game container */
     .game-container {
@@ -154,7 +218,7 @@
       display: flex;
       position: relative;
       overflow: hidden;
-      min-height: 0; /* Important for flex children */
+      min-height: 0;
     }
     .game-frame-wrapper {
       flex: 1;
@@ -173,9 +237,9 @@
       background: #000;
     }
 
-    /* Notes panel - open by default */
-    .notes-panel {
-      width: 300px;
+    /* Side panel */
+    .side-panel {
+      width: 350px;
       background: #151d27;
       border-left: 1px solid #2a3f5f;
       overflow: hidden;
@@ -184,10 +248,50 @@
       flex-direction: column;
       flex-shrink: 0;
     }
-    .notes-panel.closed {
+    .side-panel.closed {
       width: 0;
     }
-    .notes-header {
+
+    /* Tab navigation */
+    .panel-tabs {
+      display: flex;
+      border-bottom: 1px solid #2a3f5f;
+      background: #1a2634;
+    }
+    .panel-tab {
+      flex: 1;
+      padding: 10px 8px;
+      font-size: 11px;
+      text-align: center;
+      color: #8f98a0;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      transition: all 0.15s;
+      border-bottom: 2px solid transparent;
+    }
+    .panel-tab:hover {
+      color: #c6d4df;
+      background: rgba(255,255,255,0.05);
+    }
+    .panel-tab.active {
+      color: #66c0f4;
+      border-bottom-color: #66c0f4;
+      background: rgba(102, 192, 244, 0.1);
+    }
+    .panel-tab .badge {
+      display: inline-block;
+      background: #66c0f4;
+      color: #1b2838;
+      font-size: 9px;
+      font-weight: bold;
+      padding: 1px 5px;
+      border-radius: 8px;
+      margin-left: 4px;
+    }
+
+    /* Panel header */
+    .panel-header {
       padding: 12px 16px;
       border-bottom: 1px solid #2a3f5f;
       font-size: 14px;
@@ -197,23 +301,38 @@
       justify-content: space-between;
       align-items: center;
     }
-    .notes-close {
+    .panel-close {
       background: none;
       border: none;
       color: #8f98a0;
       font-size: 18px;
       cursor: pointer;
     }
-    .notes-close:hover {
+    .panel-close:hover {
       color: #fff;
     }
-    .notes-content {
+
+    /* Panel content areas */
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      display: none;
+    }
+    .panel-content.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Notes & Planner view */
+    .textarea-container {
       flex: 1;
       padding: 16px;
+      display: flex;
+      flex-direction: column;
     }
-    .notes-textarea {
+    .panel-textarea {
+      flex: 1;
       width: 100%;
-      height: 100%;
       min-height: 200px;
       background: rgba(0,0,0,0.3);
       border: 1px solid #3d5a6c;
@@ -224,19 +343,223 @@
       font-size: 13px;
       resize: none;
     }
-    .notes-textarea:focus {
+    .panel-textarea:focus {
       outline: none;
       border-color: #66c0f4;
     }
-    .notes-saved {
-      padding: 8px 16px;
+    .panel-textarea.planner {
+      border-color: #9c27b0;
+    }
+    .panel-textarea.planner:focus {
+      border-color: #ba68c8;
+    }
+    .save-indicator {
+      padding: 8px 0;
       font-size: 11px;
       color: #6b8e4e;
       opacity: 0;
       transition: opacity 0.2s;
+      text-align: center;
     }
-    .notes-saved.show {
+    .save-indicator.show {
       opacity: 1;
+    }
+
+    /* New Issue view */
+    .new-issue-container {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .screenshot-preview {
+      background: #000;
+      border: 1px solid #3d5a6c;
+      border-radius: 4px;
+      min-height: 150px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+    .screenshot-preview img {
+      max-width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+    }
+    .screenshot-placeholder {
+      color: #8f98a0;
+      font-size: 12px;
+      text-align: center;
+    }
+    .capture-btn {
+      background: linear-gradient(to bottom, #4a7c59, #3d6b4a);
+      border: 1px solid #5a9c6a;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .capture-btn:hover {
+      background: linear-gradient(to bottom, #5a9c6a, #4a7c59);
+    }
+    .issue-comment {
+      width: 100%;
+      min-height: 80px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #3d5a6c;
+      border-radius: 4px;
+      color: #c6d4df;
+      padding: 12px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+    }
+    .issue-comment:focus {
+      outline: none;
+      border-color: #66c0f4;
+    }
+    .save-issue-btn {
+      background: linear-gradient(to bottom, #2a475e, #1e3a4c);
+      border: 1px solid #3d6c8a;
+      color: #c6d4df;
+      padding: 10px 16px;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .save-issue-btn:hover {
+      background: linear-gradient(to bottom, #3d6c8a, #2a475e);
+      border-color: #66c0f4;
+    }
+    .save-issue-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Issue Tracker view */
+    .issue-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+    .issue-empty {
+      padding: 32px 16px;
+      text-align: center;
+      color: #8f98a0;
+      font-size: 13px;
+    }
+    .issue-card {
+      padding: 12px 16px;
+      border-bottom: 1px solid #2a3f5f;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .issue-card:hover {
+      background: rgba(255,255,255,0.05);
+    }
+    .issue-card-header {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .issue-thumb {
+      width: 60px;
+      height: 45px;
+      object-fit: cover;
+      border-radius: 3px;
+      background: #000;
+      flex-shrink: 0;
+    }
+    .issue-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .issue-comment-preview {
+      font-size: 12px;
+      color: #c6d4df;
+      margin-bottom: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .issue-time {
+      font-size: 10px;
+      color: #8f98a0;
+    }
+    .issue-delete {
+      background: none;
+      border: none;
+      color: #8f98a0;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 4px;
+      opacity: 0;
+      transition: all 0.15s;
+    }
+    .issue-card:hover .issue-delete {
+      opacity: 1;
+    }
+    .issue-delete:hover {
+      color: #ff6b6b;
+    }
+
+    /* Issue expanded view */
+    .issue-expanded {
+      display: none;
+      padding: 16px;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .issue-expanded.active {
+      display: flex;
+    }
+    .issue-expanded-img {
+      width: 100%;
+      border-radius: 4px;
+      background: #000;
+    }
+    .issue-expanded-comment {
+      font-size: 13px;
+      color: #c6d4df;
+      line-height: 1.5;
+    }
+    .issue-expanded-meta {
+      font-size: 11px;
+      color: #8f98a0;
+    }
+    .issue-back-btn {
+      background: linear-gradient(to bottom, #2a475e, #1e3a4c);
+      border: 1px solid #3d6c8a;
+      color: #c6d4df;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      align-self: flex-start;
+    }
+    .issue-back-btn:hover {
+      background: linear-gradient(to bottom, #3d6c8a, #2a475e);
+    }
+
+    /* Keyboard hint */
+    .keyboard-hint {
+      font-size: 10px;
+      color: #8f98a0;
+      text-align: center;
+      padding: 8px;
+      border-top: 1px solid #2a3f5f;
+    }
+    .keyboard-hint kbd {
+      background: #2a3f5f;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
     }
 
     /* Loading state */
@@ -272,6 +595,16 @@
       <a href="index.html" class="back-btn" id="backBtn">← Library</a>
       <div class="game-title" id="gameTitle">Game Title</div>
       <div class="game-meta" id="gameMeta"></div>
+      <div class="storage-indicator" id="storageIndicator" onclick="toggleStoragePopup()">
+        <span id="storageText">0 KB</span>
+        <div class="storage-bar">
+          <div class="storage-fill green" id="storageFill" style="width: 0%"></div>
+        </div>
+        <div class="storage-popup" id="storagePopup">
+          <h4>Storage Breakdown</h4>
+          <div id="storageBreakdown"></div>
+        </div>
+      </div>
     </div>
 
     <div class="controls-bar">
@@ -289,34 +622,107 @@
         <input type="checkbox" id="brokenCheckbox">
         <span>Mark as Broken</span>
       </label>
-      <button class="notes-toggle" id="notesToggle">📝 Notes</button>
+      <div class="spacer"></div>
+      <button class="panel-toggle" id="panelToggle" onclick="togglePanel()">Panel</button>
     </div>
 
     <div class="game-container">
       <div class="game-frame-wrapper">
         <iframe class="game-frame" id="gameFrame" allowfullscreen></iframe>
       </div>
-      <div class="notes-panel" id="notesPanel">
-        <div class="notes-header">
-          <span>Notes</span>
-          <button class="notes-close" onclick="toggleNotes()">×</button>
+
+      <div class="side-panel" id="sidePanel">
+        <div class="panel-tabs">
+          <button class="panel-tab active" data-tab="notes" onclick="switchTab('notes')">
+            Notes
+          </button>
+          <button class="panel-tab" data-tab="new-issue" onclick="switchTab('new-issue')">
+            + Issue
+          </button>
+          <button class="panel-tab" data-tab="issues" onclick="switchTab('issues')">
+            Issues <span class="badge" id="issueCount" style="display:none">0</span>
+          </button>
+          <button class="panel-tab" data-tab="planner" onclick="switchTab('planner')">
+            Planner
+          </button>
         </div>
-        <div class="notes-content">
-          <textarea class="notes-textarea" id="notesTextarea" placeholder="Add your notes about this game..."></textarea>
+
+        <!-- Notes Tab -->
+        <div class="panel-content active" id="tab-notes">
+          <div class="panel-header">
+            <span>Game Notes</span>
+            <button class="panel-close" onclick="togglePanel()">×</button>
+          </div>
+          <div class="textarea-container">
+            <textarea class="panel-textarea" id="notesTextarea" placeholder="Add your notes and feedback about this game..."></textarea>
+            <div class="save-indicator" id="notesSaved">✓ Saved</div>
+          </div>
         </div>
-        <div class="notes-saved" id="notesSaved">✓ Saved</div>
+
+        <!-- New Issue Tab -->
+        <div class="panel-content" id="tab-new-issue">
+          <div class="panel-header">
+            <span>Report Issue</span>
+            <button class="panel-close" onclick="togglePanel()">×</button>
+          </div>
+          <div class="new-issue-container">
+            <div class="screenshot-preview" id="screenshotPreview">
+              <div class="screenshot-placeholder" id="screenshotPlaceholder">
+                Click "Capture" or press <kbd>B</kbd> to take screenshot
+              </div>
+              <img id="screenshotImg" style="display:none">
+            </div>
+            <button class="capture-btn" onclick="captureScreenshot()">📸 Capture Screenshot</button>
+            <textarea class="issue-comment" id="issueComment" placeholder="What went wrong? Describe the issue..."></textarea>
+            <button class="save-issue-btn" id="saveIssueBtn" onclick="saveIssue()" disabled>Save Issue</button>
+            <div class="keyboard-hint">Press <kbd>B</kbd> anytime to capture screenshot</div>
+          </div>
+        </div>
+
+        <!-- Issue Tracker Tab -->
+        <div class="panel-content" id="tab-issues">
+          <div class="panel-header">
+            <span>Issue Tracker</span>
+            <button class="panel-close" onclick="togglePanel()">×</button>
+          </div>
+          <div class="issue-list" id="issueList">
+            <div class="issue-empty">No issues reported yet</div>
+          </div>
+          <div class="issue-expanded" id="issueExpanded">
+            <button class="issue-back-btn" onclick="closeExpandedIssue()">← Back to list</button>
+            <img class="issue-expanded-img" id="expandedImg">
+            <div class="issue-expanded-comment" id="expandedComment"></div>
+            <div class="issue-expanded-meta" id="expandedMeta"></div>
+          </div>
+        </div>
+
+        <!-- Planner Tab -->
+        <div class="panel-content" id="tab-planner">
+          <div class="panel-header">
+            <span>Planner Notes</span>
+            <button class="panel-close" onclick="togglePanel()">×</button>
+          </div>
+          <div class="textarea-container">
+            <textarea class="panel-textarea planner" id="plannerTextarea" placeholder="Notes for the Planner agent...&#10;&#10;These are read FIRST before other notes.&#10;Use for high-priority instructions."></textarea>
+            <div class="save-indicator" id="plannerSaved">✓ Saved</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    // Shared localStorage keys (same as main library)
+    // localStorage keys
     let gameNotes = {};
     let brokenGames = {};
     let finalRatings = {};
     let playedGames = {};
+    let plannerNotes = {};
+    let bugReports = {};
+
     let currentGame = null;
     let allGames = [];
+    let pendingScreenshot = null;
 
     // Load data from localStorage
     function loadData() {
@@ -325,6 +731,8 @@
         brokenGames = JSON.parse(localStorage.getItem('brokenGames') || '{}');
         finalRatings = JSON.parse(localStorage.getItem('finalRatings') || '{}');
         playedGames = JSON.parse(localStorage.getItem('playedGames') || '{}');
+        plannerNotes = JSON.parse(localStorage.getItem('plannerNotes') || '{}');
+        bugReports = JSON.parse(localStorage.getItem('bugReports') || '{}');
       } catch(e) {
         console.error('Error loading data:', e);
       }
@@ -336,7 +744,256 @@
       localStorage.setItem('brokenGames', JSON.stringify(brokenGames));
       localStorage.setItem('finalRatings', JSON.stringify(finalRatings));
       localStorage.setItem('playedGames', JSON.stringify(playedGames));
+      localStorage.setItem('plannerNotes', JSON.stringify(plannerNotes));
+      localStorage.setItem('bugReports', JSON.stringify(bugReports));
+      updateStorageIndicator();
     }
+
+    // Storage indicator
+    function updateStorageIndicator() {
+      const keys = ['gameNotes', 'brokenGames', 'finalRatings', 'playedGames', 'plannerNotes', 'bugReports'];
+      let total = 0;
+      const breakdown = {};
+
+      keys.forEach(key => {
+        const data = localStorage.getItem(key) || '';
+        const size = new Blob([data]).size;
+        breakdown[key] = size;
+        total += size;
+      });
+
+      const maxStorage = 5 * 1024 * 1024; // 5MB estimate
+      const percent = (total / maxStorage) * 100;
+
+      document.getElementById('storageText').textContent = formatBytes(total);
+      const fill = document.getElementById('storageFill');
+      fill.style.width = Math.min(percent, 100) + '%';
+      fill.className = 'storage-fill ' + (percent < 50 ? 'green' : percent < 80 ? 'yellow' : 'red');
+
+      // Update breakdown
+      let html = '';
+      keys.forEach(key => {
+        const label = key.replace(/([A-Z])/g, ' $1').trim();
+        html += `<div class="storage-item"><span class="label">${label}</span><span class="size">${formatBytes(breakdown[key])}</span></div>`;
+      });
+      html += `<div class="storage-item"><span class="label"><strong>Total</strong></span><span class="size"><strong>${formatBytes(total)}</strong></span></div>`;
+      document.getElementById('storageBreakdown').innerHTML = html;
+    }
+
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+
+    function toggleStoragePopup() {
+      document.getElementById('storagePopup').classList.toggle('show');
+    }
+
+    // Close popup when clicking elsewhere
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.storage-indicator')) {
+        document.getElementById('storagePopup').classList.remove('show');
+      }
+    });
+
+    // Tab switching
+    function switchTab(tabId) {
+      // Update tab buttons
+      document.querySelectorAll('.panel-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.tab === tabId);
+      });
+      // Update content
+      document.querySelectorAll('.panel-content').forEach(content => {
+        content.classList.toggle('active', content.id === 'tab-' + tabId);
+      });
+      // If switching to issues, close expanded view
+      if (tabId === 'issues') {
+        closeExpandedIssue();
+      }
+    }
+
+    // Panel toggle
+    function togglePanel() {
+      document.getElementById('sidePanel').classList.toggle('closed');
+    }
+
+    // Screenshot capture
+    function captureScreenshot() {
+      const iframe = document.getElementById('gameFrame');
+      try {
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        const canvas = iframeDoc.querySelector('canvas');
+
+        if (!canvas) {
+          alert('No canvas found in game. Make sure the game is loaded.');
+          return;
+        }
+
+        pendingScreenshot = canvas.toDataURL('image/png');
+
+        // Show preview
+        document.getElementById('screenshotPlaceholder').style.display = 'none';
+        const img = document.getElementById('screenshotImg');
+        img.src = pendingScreenshot;
+        img.style.display = 'block';
+
+        // Enable save button
+        document.getElementById('saveIssueBtn').disabled = false;
+
+        // Switch to new issue tab
+        switchTab('new-issue');
+
+      } catch(e) {
+        console.error('Error capturing screenshot:', e);
+        alert('Could not capture screenshot. The game might have security restrictions.');
+      }
+    }
+
+    // Save issue
+    function saveIssue() {
+      if (!pendingScreenshot) return;
+
+      const comment = document.getElementById('issueComment').value.trim();
+      if (!comment) {
+        alert('Please add a description of the issue.');
+        return;
+      }
+
+      const gameId = currentGame.id;
+      if (!bugReports[gameId]) {
+        bugReports[gameId] = [];
+      }
+
+      const issue = {
+        id: 'issue-' + Date.now(),
+        timestamp: Date.now(),
+        screenshot: pendingScreenshot,
+        comment: comment
+      };
+
+      bugReports[gameId].push(issue);
+      saveData();
+
+      // Reset form
+      pendingScreenshot = null;
+      document.getElementById('screenshotPlaceholder').style.display = 'block';
+      document.getElementById('screenshotImg').style.display = 'none';
+      document.getElementById('issueComment').value = '';
+      document.getElementById('saveIssueBtn').disabled = true;
+
+      // Update issue count and list
+      updateIssueCount();
+      renderIssueList();
+
+      // Switch to issue tracker
+      switchTab('issues');
+    }
+
+    // Update issue count badge
+    function updateIssueCount() {
+      const issues = bugReports[currentGame?.id] || [];
+      const badge = document.getElementById('issueCount');
+      if (issues.length > 0) {
+        badge.textContent = issues.length;
+        badge.style.display = 'inline';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    // Render issue list
+    function renderIssueList() {
+      const issues = bugReports[currentGame?.id] || [];
+      const container = document.getElementById('issueList');
+
+      if (issues.length === 0) {
+        container.innerHTML = '<div class="issue-empty">No issues reported yet</div>';
+        return;
+      }
+
+      let html = '';
+      issues.slice().reverse().forEach(issue => {
+        const timeAgo = getTimeAgo(issue.timestamp);
+        html += `
+          <div class="issue-card" onclick="expandIssue('${issue.id}')">
+            <div class="issue-card-header">
+              <img class="issue-thumb" src="${issue.screenshot}" alt="Screenshot">
+              <div class="issue-info">
+                <div class="issue-comment-preview">${escapeHtml(issue.comment)}</div>
+                <div class="issue-time">${timeAgo}</div>
+              </div>
+              <button class="issue-delete" onclick="deleteIssue('${issue.id}', event)" title="Delete">×</button>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    // Expand issue
+    function expandIssue(issueId) {
+      const issues = bugReports[currentGame?.id] || [];
+      const issue = issues.find(i => i.id === issueId);
+      if (!issue) return;
+
+      document.getElementById('issueList').style.display = 'none';
+      const expanded = document.getElementById('issueExpanded');
+      expanded.classList.add('active');
+
+      document.getElementById('expandedImg').src = issue.screenshot;
+      document.getElementById('expandedComment').textContent = issue.comment;
+      document.getElementById('expandedMeta').textContent = new Date(issue.timestamp).toLocaleString();
+    }
+
+    // Close expanded issue
+    function closeExpandedIssue() {
+      document.getElementById('issueList').style.display = 'block';
+      document.getElementById('issueExpanded').classList.remove('active');
+    }
+
+    // Delete issue
+    function deleteIssue(issueId, event) {
+      event.stopPropagation();
+      if (!confirm('Delete this issue?')) return;
+
+      const gameId = currentGame.id;
+      bugReports[gameId] = (bugReports[gameId] || []).filter(i => i.id !== issueId);
+      if (bugReports[gameId].length === 0) {
+        delete bugReports[gameId];
+      }
+      saveData();
+      updateIssueCount();
+      renderIssueList();
+    }
+
+    // Utility functions
+    function getTimeAgo(timestamp) {
+      const seconds = Math.floor((Date.now() - timestamp) / 1000);
+      if (seconds < 60) return 'just now';
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return minutes + ' min ago';
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return hours + ' hour' + (hours > 1 ? 's' : '') + ' ago';
+      const days = Math.floor(hours / 24);
+      return days + ' day' + (days > 1 ? 's' : '') + ' ago';
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // B key to capture screenshot (when not typing)
+      if ((e.key === 'b' || e.key === 'B') &&
+          !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+        e.preventDefault();
+        captureScreenshot();
+      }
+    });
 
     // Load game info and display
     async function loadGame() {
@@ -406,7 +1063,16 @@
 
       // Set notes
       document.getElementById('notesTextarea').value = gameNotes[g.id] || '';
-      document.getElementById('notesToggle').classList.toggle('has-notes', !!gameNotes[g.id]);
+
+      // Set planner notes
+      document.getElementById('plannerTextarea').value = plannerNotes[g.id] || '';
+
+      // Update issue count
+      updateIssueCount();
+      renderIssueList();
+
+      // Update storage indicator
+      updateStorageIndicator();
 
       // Mark as played
       if (!playedGames[g.id]) {
@@ -433,7 +1099,6 @@
           const rating = parseInt(star.dataset.rating);
           const currentRating = finalRatings[currentGame.id] || 0;
 
-          // Click same rating to clear
           if (rating === currentRating) {
             delete finalRatings[currentGame.id];
           } else {
@@ -444,7 +1109,6 @@
           updateRatingDisplay();
         });
 
-        // Hover effect
         star.addEventListener('mouseenter', () => {
           const rating = parseInt(star.dataset.rating);
           document.querySelectorAll('#starRating .star').forEach((s, i) => {
@@ -472,14 +1136,11 @@
         saveData();
       });
 
-      // Notes toggle
-      document.getElementById('notesToggle').addEventListener('click', toggleNotes);
-
       // Notes auto-save
-      let saveTimeout;
+      let notesTimeout;
       document.getElementById('notesTextarea').addEventListener('input', () => {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => {
+        clearTimeout(notesTimeout);
+        notesTimeout = setTimeout(() => {
           const notes = document.getElementById('notesTextarea').value.trim();
           if (notes) {
             gameNotes[currentGame.id] = notes;
@@ -487,22 +1148,61 @@
             delete gameNotes[currentGame.id];
           }
           saveData();
-          document.getElementById('notesToggle').classList.toggle('has-notes', !!notes);
+          showSaveIndicator('notesSaved');
+        }, 500);
+      });
 
-          // Show saved indicator
-          const savedEl = document.getElementById('notesSaved');
-          savedEl.classList.add('show');
-          setTimeout(() => savedEl.classList.remove('show'), 1500);
+      // Planner auto-save
+      let plannerTimeout;
+      document.getElementById('plannerTextarea').addEventListener('input', () => {
+        clearTimeout(plannerTimeout);
+        plannerTimeout = setTimeout(() => {
+          const notes = document.getElementById('plannerTextarea').value.trim();
+          if (notes) {
+            plannerNotes[currentGame.id] = notes;
+          } else {
+            delete plannerNotes[currentGame.id];
+          }
+          saveData();
+          showSaveIndicator('plannerSaved');
         }, 500);
       });
     }
 
-    function toggleNotes() {
-      document.getElementById('notesPanel').classList.toggle('closed');
+    function showSaveIndicator(elementId) {
+      const el = document.getElementById(elementId);
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 1500);
     }
 
     // Initialize
     loadGame();
+
+    // Console helpers for testing
+    window.getBugReports = () => bugReports;
+    window.clearBugReports = (gameId) => {
+      if (gameId) {
+        delete bugReports[gameId];
+      } else {
+        bugReports = {};
+      }
+      saveData();
+      updateIssueCount();
+      renderIssueList();
+      console.log('Bug reports cleared');
+    };
+    window.getStorageUsage = () => {
+      const keys = ['gameNotes', 'brokenGames', 'finalRatings', 'playedGames', 'plannerNotes', 'bugReports'];
+      const result = { breakdown: {}, total: 0 };
+      keys.forEach(key => {
+        const size = new Blob([localStorage.getItem(key) || '']).size;
+        result.breakdown[key] = size;
+        result.total += size;
+        console.log(`${key}: ${formatBytes(size)}`);
+      });
+      console.log(`Total: ${formatBytes(result.total)}`);
+      return result;
+    };
   </script>
 </body>
 </html>
