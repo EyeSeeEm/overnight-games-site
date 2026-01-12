@@ -1199,3 +1199,61 @@ Medium - Flashlight cone rendering was the main technical challenge. Adding visu
 - Added save system and achievements
 - Enhanced visuals, audio, and polish
 - Balanced weapons, enemies, and resources
+
+---
+
+## Feedback Fixes Session (2026-01-11)
+
+### Fix: Vision Cone Visual Inversion (CRITICAL)
+
+**Feedback:**
+- "NOTE: The vision cone CALCULATION logic is AWESOME - keep it! Proper occlusion of view area is great!"
+- "PROBLEM: Vision cone VISUALS are inverted - dark where it should be visible"
+- "FIX: The viewcone area should be BRIGHT/VISIBLE"
+- "FIX: Everything OUTSIDE should be DARKENED"
+- "Keep the existing occlusion calculation logic, just flip the visual rendering"
+
+**Root Cause:**
+The `renderLighting()` function used `globalCompositeOperation = 'destination-out'` directly on the main canvas. This operation removes pixels from the ENTIRE canvas buffer (including the game content), not just the darkness overlay. The result was that the cone area became transparent/black, showing the canvas background instead of the game content.
+
+**Solution - Offscreen Canvas Approach:**
+Used an offscreen canvas to build the lighting overlay properly:
+1. Created separate `lightingCanvas` and `lightingCtx` (created once, reused)
+2. Fill offscreen canvas with darkness
+3. Use `destination-out` on the offscreen canvas to cut out:
+   - The raycasted vision cone (walls properly block light - PRESERVED!)
+   - The ambient circle around player
+4. Draw the completed lighting overlay onto the main canvas
+
+**Key Point:** The raycasting occlusion logic (`castRay()` function) is fully preserved. Walls still properly block the flashlight cone. Only the rendering approach changed.
+
+**Code Changes:**
+```javascript
+// Offscreen canvas for lighting (created once, reused)
+let lightingCanvas = null;
+let lightingCtx = null;
+
+function renderLighting() {
+    // Create offscreen canvas, draw darkness, cut out visible areas,
+    // then composite onto main canvas
+    // Raycasting preserved: castRay(player.x, player.y, rayAngle, coneLength)
+}
+```
+
+**Files Modified:**
+- `game.js`: Rewrote `renderLighting()` function (~90 lines)
+
+**Verified Behavior:**
+- Vision cone is now BRIGHT/VISIBLE (can see floor tiles, enemies, items)
+- Areas OUTSIDE the cone are properly DARKENED
+- Walls still block the flashlight (raycasting occlusion preserved)
+- Flashlight toggle works correctly:
+  - ON: Large cone with wall occlusion
+  - OFF: Small ambient circle only
+- Game content is no longer erased by the vision cone
+
+**Test Screenshots:**
+- test-system-shock-4.png: Flashlight on, facing right - cone visible with proper occlusion
+- test-system-shock-5.png: Flashlight off - ambient light only
+
+**Total Iterations:** 201

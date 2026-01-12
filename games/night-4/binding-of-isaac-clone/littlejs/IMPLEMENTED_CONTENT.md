@@ -1,0 +1,290 @@
+# Implemented Content: Binding of Isaac Clone (LittleJS)
+
+## Enemy Types (11 total)
+- [x] Fly
+  - HP: 4
+  - Damage: 0.5 hearts
+  - Speed: 40 px/s
+  - Behavior: Wander
+  - Size: 8px
+- [x] Gaper
+  - HP: 12
+  - Damage: 1 heart
+  - Speed: 30 px/s
+  - Behavior: Chase
+  - Size: 12px
+- [x] Charger
+  - HP: 15
+  - Damage: 1 heart
+  - Speed: 35 px/s (105 when charging)
+  - Behavior: Charge when in line
+  - Size: 14px
+- [x] Pooter
+  - HP: 8
+  - Damage: 0.5 hearts
+  - Speed: 20 px/s
+  - Behavior: Drift + Shoot
+  - Size: 10px
+- [x] Spider
+  - HP: 6
+  - Damage: 0.5 hearts
+  - Speed: 60 px/s
+  - Behavior: Erratic
+  - Size: 8px
+- [x] Clotty
+  - HP: 10
+  - Damage: 0.5 hearts
+  - Speed: 25 px/s
+  - Behavior: Wander + Shoot
+  - Size: 10px
+- [x] Hopper
+  - HP: 10
+  - Damage: 1 heart
+  - Speed: 0 (hops)
+  - Behavior: Hop toward player
+  - Size: 12px
+- [x] Attack Fly
+  - HP: 5
+  - Damage: 0.5 hearts
+  - Speed: 50 px/s
+  - Behavior: Chase (aggressive)
+  - Size: 8px
+- [x] Trite
+  - HP: 8
+  - Damage: 1 heart
+  - Speed: 30 px/s
+  - Behavior: Leap at player
+  - Size: 10px
+- [x] Horf
+  - HP: 12
+  - Damage: 0.5 hearts
+  - Speed: 0 (stationary)
+  - Behavior: Shoot at player
+  - Size: 12px
+- [x] Globin
+  - HP: 15
+  - Damage: 1 heart
+  - Speed: 25 px/s
+  - Behavior: Chase + respawns once
+  - Size: 14px
+- [ ] Bony
+
+## Champion Variants (5 total)
+- [x] Red Champion
+  - 2x HP
+  - Normal speed/damage
+- [x] Yellow Champion
+  - 1.5x speed
+  - Normal HP/damage
+- [x] Blue Champion
+  - Extra projectiles (for shooters)
+  - Normal stats
+- [x] Green Champion
+  - Spawns fly on death
+  - Normal stats
+- [x] Black Champion
+  - 2x damage
+  - Normal HP/speed
+
+## Bosses (1 total)
+- [x] Monstro
+  - HP: 150
+  - Damage: 1 heart
+  - Attack 1: Hop toward player
+  - Attack 2: Arc of 7 blood projectiles
+  - Attack 3: Radial burst of 12 projectiles
+  - Has health bar
+  - Spawns trapdoor on defeat
+- [ ] Duke of Flies
+- [ ] Larry Jr.
+- [ ] Gemini
+- [ ] The Haunt
+- [ ] Dingle
+
+## Player Stats
+- [x] Red Hearts (3 starting, 12 max)
+- [x] Soul Hearts (0 starting, 12 max)
+- [x] Black Hearts (damage enemies on loss)
+- [x] Damage (3.5 base)
+- [x] Tear Delay (10 base, lower = faster)
+- [x] Range (23.75 base)
+- [x] Shot Speed (1.0 base)
+- [x] Movement Speed (1.0 base)
+- [x] Luck (0 base)
+- [x] Homing (tear modifier)
+- [x] Piercing (tear modifier)
+- [x] Bouncing (tear modifier)
+- [x] Temp damage bonus (from active items)
+
+## Pickup Types (6 total)
+- [x] Red Heart
+  - Heals 1 full heart
+  - Drop rate: 20%
+- [x] Half Red Heart
+  - Heals 0.5 heart
+  - Drop rate: 15%
+- [x] Soul Heart
+  - Adds 1 soul heart
+  - Drop rate: 5%
+- [x] Penny
+  - Adds 1 coin
+  - Drop rate: 25%
+- [x] Key
+  - Adds 1 key
+  - Drop rate: 10%
+- [x] Bomb
+  - Adds 1 bomb
+  - Drop rate: 10%
+- [ ] Nickel (+5 coins)
+- [ ] Dime (+10 coins)
+- [ ] Golden Key
+- [ ] Golden Bomb
+- [ ] Pills
+- [ ] Cards
+
+## Passive Items (20+ total)
+- [x] Sad Onion - Tears -0.7 (faster fire rate)
+- [x] Speed Up - Speed +0.15
+- [x] Damage Up - Damage +1
+- [x] Range Up - Range +2.5
+- [x] Lucky Penny - Luck +1
+- [x] Heart Container - Max hearts +1, heal +1
+- [x] Spoon Bender - Homing tears
+- [x] Cupid's Arrow - Piercing tears
+- [x] Rubber Cement - Bouncing tears
+- [x] Pentagram - Damage +1, soul heart +1
+- [x] The Mark - Damage +1, speed +0.2
+- [x] Magic Mushroom - All stats up, giant tears
+- [x] Polyphemus - Damage x2, tears slower
+- [x] Cricket's Head - Damage x1.5
+- [x] Steven - Damage +1
+- [x] Growth Hormones - Speed +0.4, damage +1
+- [x] Stigmata - Health +1, damage +0.3
+- [x] Odd Mushroom (Thin) - Tears +1.7, speed +0.3
+- [x] Odd Mushroom (Thick) - HP +1, damage +0.3, speed -0.1
+- [x] Wire Coat Hanger - Tears +0.7
+- [ ] Technology (laser)
+- [ ] Brimstone
+- [ ] Mom's Knife
+- [ ] 20+ more items
+
+## Active Items (5 total)
+- [x] Yum Heart
+  - Charges: 4
+  - Effect: Heal 1 red heart
+- [x] Book of Belial
+  - Charges: 3
+  - Effect: +2 damage for current room
+- [x] Lemon Mishap
+  - Charges: 2
+  - Effect: Create damaging creep
+- [x] The Poop
+  - Charges: 1
+  - Effect: Spawn poop obstacle
+- [x] Shoop Da Whoop
+  - Charges: 4
+  - Effect: Fire large beam
+- [ ] D6 (reroll items)
+- [ ] Guppy's Paw
+- [ ] More active items
+
+## Room Types (5 total)
+- [x] Start Room
+  - No enemies
+  - Starting point
+- [x] Normal Room
+  - Random enemies
+  - Random obstacles
+- [x] Treasure Room
+  - Item pedestal
+  - Locked (after floor 1)
+- [x] Shop Room
+  - Items for sale
+  - 3 shop items
+- [x] Boss Room
+  - Floor boss
+  - Item reward
+  - Trapdoor after clear
+- [ ] Secret Room
+- [ ] Super Secret Room
+- [ ] Curse Room
+- [ ] Challenge Room
+- [ ] Arcade
+- [ ] Library
+- [ ] Sacrifice Room
+
+## Obstacle Types (2 total)
+- [x] Rock
+  - Indestructible
+  - Blocks movement
+- [x] Poop
+  - HP: 3
+  - Destroyable by tears
+  - Visual damage states (3)
+  - Shrinks as damaged
+- [ ] Tinted Rock
+- [ ] Fire
+- [ ] Spike
+- [ ] Pit
+- [ ] Cobweb
+
+## Floors (Infinite)
+- [x] Basement I
+  - 7-8 rooms
+  - Basic enemies
+  - Monstro boss
+- [x] Floor 2+
+  - Scaled difficulty
+  - More enemies
+  - Champion spawns increase
+  - Generated procedurally
+- [ ] Different floor themes (Caves, Depths, etc.)
+
+## Characters (1 total)
+- [x] Isaac
+  - 3 red hearts
+  - Standard stats
+  - No starting item
+- [ ] Magdalene
+- [ ] Cain
+- [ ] Judas
+- [ ] Eve
+- [ ] Samson
+- [ ] Azazel
+- [ ] Lazarus
+- [ ] The Lost
+
+## UI Screens
+- [x] Main Menu
+  - Title
+  - Controls display
+  - Start prompt
+- [x] Game HUD
+  - Hearts display (red, soul, black)
+  - Stats display
+  - Resources (keys/bombs/coins)
+  - Floor indicator
+  - Room type
+  - Minimap
+  - Active item + charges
+- [x] Pause Screen
+  - Dark overlay
+  - PAUSED text
+  - Resume instructions
+- [x] Game Over Screen
+  - Death message
+  - Floor reached
+  - Items collected
+  - Continue prompt
+- [ ] Victory Screen
+- [ ] Character Select
+- [ ] Stats Screen
+- [ ] Options Menu
+
+## Controls
+- [x] WASD - Movement
+- [x] Arrow Keys - Shooting
+- [x] E - Place Bomb
+- [x] Q - Use Active Item
+- [x] ESC - Pause
+- [x] Space - Start/Continue

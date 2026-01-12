@@ -321,3 +321,69 @@ Medium - Porting from Canvas required adaptation but core logic remained similar
 198. Enhanced turn order animation smoothness
 199. Added accessibility options (screen shake toggle)
 200. Final balance pass on AP costs and damage values
+
+---
+
+## Feedback Fixes (2026-01-11 - Session 2)
+
+### Fix 1: Fast enemy turn when no enemies visible
+- Problem: Enemy turn took too long even when player couldn't see any enemies
+- Solution: Added visibility check in processEnemyTurns()
+  - If no visible enemies, process all turns instantly and show "enemy turn" for 500ms
+  - Only add delays for visible enemy actions (250ms each)
+  - Reduced final delay from 200ms to 100ms
+- Files: game.js (processEnemyTurns)
+- Tested: Yes - enemy turns complete quickly when no enemies in view
+
+### Fix 2: Immediate control response after enemy turn
+- Problem: Player had to wait before WASD would respond after enemy turn ended
+- Solution: Phase is now set to 'player' immediately in startNewTurn()
+  - Reduced turn indicator display time from 1500ms to 800ms
+  - Controls check phase === 'player' which is set at the start
+- Files: game.js (startNewTurn)
+- Tested: Yes - can move immediately when turn starts
+
+### Fix 3: Threatening enemy sprite (was "shirt-looking")
+- Problem: Basic human enemy looked like a shirt
+- Solution: Completely redesigned enemy_human texture
+  - Added bulky military vest body
+  - Added shoulder pads and armor details
+  - Added menacing helmet with dark visor and red glow
+  - Added weapon and ammo belt details
+- Files: game.js (createTextures - enemy_human)
+- Tested: Yes - enemy now looks like armored hostile soldier
+
+### Fix 4: More screenshake and red flash on player hit
+- Problem: Getting hit didn't feel impactful enough
+- Solution: Enhanced showDamageFlash() and enemyAttack()
+  - Increased flash alpha from 0.3 to 0.5 with double pulse
+  - Added blood splatter particles on screen edges
+  - Shake intensity now scales with damage (min 0.02, max 0.04)
+  - Shake duration increased from 150ms to 200ms
+  - Added player knockback/recoil animation on hit
+- Files: game.js (showDamageFlash, enemyAttack)
+- Tested: Yes - hits feel much more impactful
+
+### Fix 5: Enhanced shooting VFX - muzzle flash, bullet trails
+- Problem: Shooting effects were too subtle
+- Solution: Completely overhauled showBulletTrail()
+  - Added 3-layer muzzle flash (white core, orange middle, red outer)
+  - Increased spark count from 4 to 8 with wider spread
+  - Added smoke puff particle
+  - Added bright bullet trail line (dual-layer with glow)
+  - Reduced bullet travel time from 100ms to 80ms for snappier feel
+- Files: game.js (showBulletTrail)
+- Tested: Yes - shooting looks much more dramatic
+
+### Fix 6: Blood splatter and hit effects on enemies
+- Problem: Hitting enemies had minimal visual feedback
+- Solution: Created new showBloodSplatter() function
+  - Blood particles spray from impact (8 normal, 16 on crit)
+  - Multiple blood colors for variety (dark reds)
+  - Hit spark at impact point
+  - Blood pools that fade over 2 seconds
+  - Gore spray on critical hits (flying chunks)
+  - Enhanced hit reaction animation (squash/stretch)
+  - Increased screenshake on hits
+- Files: game.js (showBloodSplatter, attackEnemy)
+- Tested: Yes - satisfying blood effects on hit

@@ -9,12 +9,19 @@
 
 const TILE_SIZE = 16;
 const ROOM_WIDTH = 13;
-const ROOM_HEIGHT = 9;
+const ROOM_HEIGHT = 7;  // Per GDD: 13 columns x 7 rows
 const ROOM_PIXEL_WIDTH = ROOM_WIDTH * TILE_SIZE;
 const ROOM_PIXEL_HEIGHT = ROOM_HEIGHT * TILE_SIZE;
 
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
+
+// Room should fill game window (minus HUD space)
+const HUD_HEIGHT = 80;
+const ROOM_SCALE = Math.min(
+    (GAME_WIDTH - 40) / ROOM_PIXEL_WIDTH,
+    (GAME_HEIGHT - HUD_HEIGHT - 40) / ROOM_PIXEL_HEIGHT
+);
 
 // Game states
 const STATE_MENU = 0;
@@ -117,6 +124,10 @@ let bossDefeated = false;
 let activeItem = null;
 let activeItemCharges = 0;
 let maxActiveItemCharges = 0;
+
+// Minimap state: 0=small, 1=medium, 2=full
+let minimapSize = 0;
+let tabHeld = false;
 
 // ===========================================
 // LITTLEJS ENGINE SETUP
@@ -805,6 +816,15 @@ function gameUpdate() {
         gameState = gameState === STATE_PAUSED ? STATE_PLAYING : STATE_PAUSED;
     }
 
+    // Tab key - hold for full map, tap to cycle minimap size
+    if (keyIsDown('Tab')) {
+        tabHeld = true;
+    } else if (tabHeld) {
+        // Tab was released - cycle minimap size
+        minimapSize = (minimapSize + 1) % 3;
+        tabHeld = false;
+    }
+
     if (gameState === STATE_PAUSED) return;
 
     // Get delta time
@@ -920,16 +940,8 @@ function checkTrapdoorCollision() {
 function updatePlayer(dt) {
     if (!player || roomEntryTimer > 0) return;
 
-    // Movement (WASD)
+    // Movement (WASD ONLY - Arrow keys are for shooting)
     let moveX = 0, moveY = 0;
-
-    if (keyIsDown('KeyW') || keyIsDown('ArrowUp')) moveY = -1;
-    if (keyIsDown('KeyS') || keyIsDown('ArrowDown')) moveY = 1;
-    if (keyIsDown('KeyA') || keyIsDown('ArrowLeft')) moveX = -1;
-    if (keyIsDown('KeyD') || keyIsDown('ArrowRight')) moveX = 1;
-
-    // NOTE: Movement uses WASD only since arrow keys are for shooting
-    moveX = 0; moveY = 0;
     if (keyIsDown('KeyW')) moveY = -1;
     if (keyIsDown('KeyS')) moveY = 1;
     if (keyIsDown('KeyA')) moveX = -1;
@@ -990,6 +1002,11 @@ function updatePlayer(dt) {
     if (keyWasPressed('KeyE') && playerStats.bombs > 0) {
         placeBomb(player.x, player.y);
         playerStats.bombs--;
+    }
+
+    // Use active item (Space key)
+    if (keyWasPressed('Space') && activeItem && activeItemCharges >= maxActiveItemCharges) {
+        useActiveItem();
     }
 }
 
@@ -1867,16 +1884,19 @@ function gameRenderPost() {
     ctx.translate(offsetX, offsetY);
     ctx.scale(scale, scale);
 
-    // Center the room
-    const roomOffsetX = (GAME_WIDTH - ROOM_PIXEL_WIDTH) / 2;
-    const roomOffsetY = 60;
+    // Center the room (scaled to fill window)
+    const scaledRoomWidth = ROOM_PIXEL_WIDTH * ROOM_SCALE;
+    const scaledRoomHeight = ROOM_PIXEL_HEIGHT * ROOM_SCALE;
+    const roomOffsetX = (GAME_WIDTH - scaledRoomWidth) / 2;
+    const roomOffsetY = HUD_HEIGHT + (GAME_HEIGHT - HUD_HEIGHT - scaledRoomHeight) / 2;
 
     if (gameState === STATE_MENU) {
         renderMenu(ctx);
     } else if (gameState === STATE_PLAYING || gameState === STATE_PAUSED) {
         ctx.save();
-        // Apply screen shake
-        ctx.translate(roomOffsetX + screenShakeX, roomOffsetY + screenShakeY);
+        // Apply screen shake and room scaling
+        ctx.translate(roomOffsetX + screenShakeX * ROOM_SCALE, roomOffsetY + screenShakeY * ROOM_SCALE);
+        ctx.scale(ROOM_SCALE, ROOM_SCALE);
         renderRoom(ctx);
         ctx.restore();
 
@@ -1913,10 +1933,12 @@ function renderMenu(ctx) {
     // Instructions
     ctx.fillStyle = '#aaaaaa';
     ctx.font = '16px Arial';
-    ctx.fillText('WASD - Move', GAME_WIDTH/2, 380);
-    ctx.fillText('Arrow Keys - Shoot', GAME_WIDTH/2, 410);
-    ctx.fillText('E - Place Bomb', GAME_WIDTH/2, 440);
-    ctx.fillText('ESC - Pause', GAME_WIDTH/2, 470);
+    ctx.fillText('WASD - Move', GAME_WIDTH/2, 360);
+    ctx.fillText('Arrow Keys - Shoot', GAME_WIDTH/2, 390);
+    ctx.fillText('E - Place Bomb', GAME_WIDTH/2, 420);
+    ctx.fillText('SPACE - Use Active Item', GAME_WIDTH/2, 450);
+    ctx.fillText('TAB - Toggle Map', GAME_WIDTH/2, 480);
+    ctx.fillText('ESC - Pause', GAME_WIDTH/2, 510);
 
     // Start prompt
     ctx.fillStyle = '#ffffff';
@@ -2285,73 +2307,110 @@ function drawHeart(ctx, x, y, color, size) {
 }
 
 function renderHUD(ctx) {
-    // Stats panel (top left)
+    // Per GDD: Active item top-left, hearts to right, bombs/keys below, minimap top-right
+
+    // Active item slot (top-left)
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(10, 10, 150, 120);
+    ctx.fillRect(10, 10, 50, 50);
+    ctx.strokeStyle = '#666666';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(10, 10, 50, 50);
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '14px Arial';
-    ctx.textAlign = 'left';
+    if (activeItem) {
+        ctx.fillStyle = '#ffcc00';
+        ctx.font = 'bold 10px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(activeItem.name.substring(0, 6), 35, 38);
+        // Charge indicator
+        ctx.fillStyle = '#444444';
+        ctx.fillRect(12, 52, 46, 6);
+        ctx.fillStyle = activeItemCharges >= maxActiveItemCharges ? '#00ff00' : '#ffff00';
+        ctx.fillRect(12, 52, 46 * (activeItemCharges / Math.max(1, maxActiveItemCharges)), 6);
+    } else {
+        ctx.fillStyle = '#333333';
+        ctx.font = '10px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('SPACE', 35, 40);
+    }
 
-    // Hearts
-    let heartX = 20;
+    // Hearts (to the right of active item)
+    let heartX = 75;
     for (let i = 0; i < playerStats.maxRedHearts; i++) {
         if (i < Math.floor(playerStats.redHearts)) {
-            drawHeart(ctx, heartX, 28, '#ff0000', 8);
+            drawHeart(ctx, heartX, 22, '#ff0000', 8);
         } else if (i < playerStats.redHearts) {
-            drawHeart(ctx, heartX, 28, '#ff6666', 8);
+            drawHeart(ctx, heartX, 22, '#ff6666', 8);
         } else {
-            drawHeart(ctx, heartX, 28, '#440000', 8);
+            drawHeart(ctx, heartX, 22, '#440000', 8);
         }
         heartX += 18;
     }
 
-    // Soul hearts
-    heartX = 20;
+    // Soul hearts (below red hearts)
+    heartX = 75;
     for (let i = 0; i < playerStats.soulHearts; i++) {
-        drawHeart(ctx, heartX, 48, '#6666ff', 8);
+        drawHeart(ctx, heartX, 42, '#6666ff', 8);
         heartX += 18;
     }
 
-    // Stats
-    ctx.fillStyle = '#aaaaaa';
-    ctx.font = '12px Arial';
-    ctx.fillText(`DMG: ${playerStats.damage.toFixed(1)}`, 20, 70);
-    ctx.fillText(`SPD: ${playerStats.speed.toFixed(1)}`, 80, 70);
-    ctx.fillText(`RANGE: ${playerStats.range.toFixed(1)}`, 20, 85);
+    // Bombs and Keys (below active item)
+    ctx.textAlign = 'left';
+    ctx.font = 'bold 14px Arial';
 
-    // Resources
+    // Key icon and count
     ctx.fillStyle = '#ffcc00';
-    ctx.fillText(`Keys: ${playerStats.keys}`, 20, 105);
-    ctx.fillStyle = '#888888';
-    ctx.fillText(`Bombs: ${playerStats.bombs}`, 80, 105);
-    ctx.fillStyle = '#ffff00';
-    ctx.fillText(`Coins: ${playerStats.coins}`, 20, 120);
+    ctx.fillText('K', 12, 78);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(`: ${playerStats.keys}`, 22, 78);
 
-    // Floor indicator
+    // Bomb icon and count
+    ctx.fillStyle = '#888888';
+    ctx.fillText('B', 55, 78);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(`: ${playerStats.bombs}`, 65, 78);
+
+    // Coins
+    ctx.fillStyle = '#ffff00';
+    ctx.fillText('$', 100, 78);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(`: ${playerStats.coins}`, 110, 78);
+
+    // Floor indicator (center top)
     ctx.fillStyle = '#ffffff';
     ctx.font = '16px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(`Floor ${floorNumber}`, GAME_WIDTH / 2, 30);
+    ctx.fillText(`Floor ${floorNumber}`, GAME_WIDTH / 2, 25);
 
     // Room type indicator
     if (currentRoom) {
         ctx.fillStyle = '#888888';
         ctx.font = '12px Arial';
         let roomName = currentRoom.type.charAt(0).toUpperCase() + currentRoom.type.slice(1);
-        ctx.fillText(roomName, GAME_WIDTH / 2, 48);
+        ctx.fillText(roomName, GAME_WIDTH / 2, 42);
     }
 }
 
 function renderMinimap(ctx) {
-    const mapX = GAME_WIDTH - 110;
+    // Tab held shows full map, otherwise use minimapSize
+    const showFullMap = tabHeld;
+    const sizes = [
+        { cellSize: 8, spacing: 1 },   // Small
+        { cellSize: 10, spacing: 2 },  // Medium
+        { cellSize: 12, spacing: 2 }   // Large
+    ];
+
+    const sizeConfig = showFullMap ? sizes[2] : sizes[minimapSize];
+    const cellSize = sizeConfig.cellSize;
+    const spacing = sizeConfig.spacing;
+
+    const mapWidth = 9 * (cellSize + spacing);
+    const mapHeight = 8 * (cellSize + spacing);
+    const mapX = GAME_WIDTH - mapWidth - 10;
     const mapY = 10;
-    const cellSize = 10;
-    const spacing = 2;
 
     // Background
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(mapX - 5, mapY - 5, 105, 90);
+    ctx.fillRect(mapX - 5, mapY - 5, mapWidth + 10, mapHeight + 10);
 
     // Draw rooms
     for (let y = 0; y < 8; y++) {
@@ -2362,9 +2421,12 @@ function renderMinimap(ctx) {
             const rx = mapX + x * (cellSize + spacing);
             const ry = mapY + y * (cellSize + spacing);
 
-            // Only show discovered rooms
-            if (room.discovered) {
-                // Room color based on type
+            // When Tab held, show all rooms
+            const showRoom = showFullMap || room.discovered || room.adjacentSeen;
+            if (!showRoom) continue;
+
+            // Room color based on type and discovered status
+            if (room.discovered || showFullMap) {
                 switch (room.type) {
                     case ROOM_START:
                         ctx.fillStyle = '#88ff88';
@@ -2378,14 +2440,15 @@ function renderMinimap(ctx) {
                     case ROOM_SHOP:
                         ctx.fillStyle = '#44ffff';
                         break;
+                    case ROOM_SECRET:
+                        ctx.fillStyle = '#ff88ff';
+                        break;
                     default:
-                        ctx.fillStyle = '#888888';
+                        ctx.fillStyle = room.discovered ? '#888888' : '#444444';
                 }
-            } else if (room.adjacentSeen) {
-                // Show as unknown adjacent room
-                ctx.fillStyle = '#444444';
             } else {
-                continue; // Don't show undiscovered rooms
+                // Adjacent but undiscovered
+                ctx.fillStyle = '#444444';
             }
 
             ctx.fillRect(rx, ry, cellSize, cellSize);
@@ -2397,6 +2460,14 @@ function renderMinimap(ctx) {
                 ctx.strokeRect(rx - 1, ry - 1, cellSize + 2, cellSize + 2);
             }
         }
+    }
+
+    // Map size hint
+    if (!showFullMap) {
+        ctx.fillStyle = '#666666';
+        ctx.font = '8px Arial';
+        ctx.textAlign = 'right';
+        ctx.fillText('TAB: map', GAME_WIDTH - 15, mapY + mapHeight + 18);
     }
 }
 

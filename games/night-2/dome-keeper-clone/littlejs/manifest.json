@@ -1,0 +1,18 @@
+{
+  "name": "Dome Defender - Mining Survival",
+  "framework": "littlejs",
+  "polished": true,
+  "playable": true,
+  "rating": 4,
+  "gdd": "dome-keeper-clone.md",
+  "features": [
+    "Mining phase with destructible terrain",
+    "Defense phase with rotatable laser",
+    "5 upgrade categories",
+    "7 tile types with resources",
+    "Wave-based enemy attacks",
+    "Relic collection win condition",
+    "Resource management",
+    "Web Audio sound effects"
+  ]
+}

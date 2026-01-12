@@ -390,3 +390,67 @@ Added a complete second phase that triggers after reaching the escape pod:
 - Reward for defeating tough enemy
 
 **Total Iterations:** 145
+
+---
+
+## Feedback Fixes Session 3 (2026-01-11)
+
+### Fix: CRITICAL Vision Cone Inversion Bug
+
+**Feedback:**
+- "CRITICAL: Vision cone is INVERTED - currently darkening the area ahead of player"
+- "The vision cone should make things VISIBLE, not dark"
+- "Everything OUTSIDE the vision cone should be darkened"
+- "Everything INSIDE the vision cone should be bright/visible"
+
+**Root Cause Analysis:**
+The original `renderLighting()` function used `globalCompositeOperation = 'destination-out'` directly on the main canvas. This operation removes pixels from the ENTIRE canvas buffer (including the game content drawn underneath), not just the darkness overlay layer. The result was that the cone area became black/transparent, showing the canvas background instead of revealing the game content.
+
+**Solution - Offscreen Canvas Approach:**
+1. Created a separate offscreen canvas (`lightingCanvas`) for the lighting overlay
+2. Draw full darkness (rgba 0,0,0,0.75) on the offscreen canvas
+3. Use `destination-out` on the offscreen canvas to cut out:
+   - The vision cone (wedge shape in player's facing direction)
+   - The ambient circle (small radius around player for base visibility)
+4. Use radial gradients for smooth falloff at edges
+5. Draw the completed lighting overlay onto the main canvas using `drawImage()`
+
+This approach ensures the darkness overlay is properly created with transparent holes for visible areas, without affecting the game content on the main canvas.
+
+**Code Changes:**
+```javascript
+// Created offscreen canvas variables
+let lightingCanvas = null;
+let lightingCtx = null;
+
+function renderLighting() {
+    // Create offscreen canvas if needed
+    if (!lightingCanvas) {
+        lightingCanvas = document.createElement('canvas');
+        lightingCanvas.width = GAME_WIDTH;
+        lightingCanvas.height = GAME_HEIGHT;
+        lightingCtx = lightingCanvas.getContext('2d');
+    }
+
+    // Draw darkness, cut out cone/ambient, composite onto main canvas
+    // ... (full implementation in game.js lines 1557-1621)
+}
+```
+
+**Files Modified:**
+- `game.js`: Rewrote `renderLighting()` function with offscreen canvas approach
+
+**Verified Behavior:**
+- Vision cone area is now BRIGHT/VISIBLE (can see floor tiles, items, enemies, exit marker)
+- Areas OUTSIDE the cone are properly DARKENED
+- Flashlight toggle works correctly:
+  - ON: Larger cone (600px), larger ambient circle (180px)
+  - OFF: Smaller cone (180px), smaller ambient circle (120px)
+- Smooth gradient falloff at cone edges
+- No more inverted darkness in the cone area
+
+**Test Screenshots:**
+- test-derelict-ship-3.png: Vision cone facing right - cone area bright, outside dark
+- test-derelict-ship-5.png: Flashlight off - smaller but correct vision area
+
+**Total Iterations:** 146

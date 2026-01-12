@@ -598,3 +598,62 @@ function drawQuestArrow() {
 - 4 weather types
 
 **Total Iterations Logged:** 148 (48 previous + 100 expansion)
+
+---
+
+## Session 2026-01-11 - Feedback Fixes
+
+### Fix 1: Controls Display Enhancement
+- **Problem**: Controls for spells/items were unclear - Q, 1-3 keys not documented
+- **Solution**: 
+  - Updated controls hint to show "WASD: Move | Space: Attack | E: Interact/Use | Q: Cast Spell | 1-3: Select Spell"
+  - Added "[Q] Spell: {spellname}" indicator in UI panel
+- **Files**: game.js (drawUI function)
+- **Tested**: Yes - controls visible, spell indicator updates when pressing 1-3
+
+### Fix 2: Town Arrows Only Outside Villages
+- **Problem**: Arrow pointers to villages appeared even when player was INSIDE a village
+- **Solution**: 
+  - Added `isPlayerInsideTown()` helper function to check if player is within town radius
+  - Modified `drawTownMarkers()` to skip drawing arrows when player is inside a town
+- **Files**: game.js (new function + drawTownMarkers modification)
+- **Tested**: Yes - no arrows inside town, arrows appear after leaving town
+
+### Fix 3: Visual Contrast for Collision Objects
+- **Problem**: Trees and rocks (with collision) had same visual weight as flowers (no collision)
+- **Solution**:
+  - Trees: Updated TREE_LIGHT to #5a9a4a (brighter), TREE_DARK to #1a4a1a (darker)
+  - Rocks/Stone: Updated STONE to #8a8a8a (brighter), STONE_DARK to #2a2a2a (deeper shadow)
+  - Higher contrast = more visible = collision
+- **Files**: game.js (COLORS object)
+- **Tested**: Yes - trees and rocks are more visually prominent
+
+### Fix 4: Low Contrast for Decorative Elements
+- **Problem**: Flowers (no collision) were as bright as collision objects
+- **Solution**: Changed flower colors to muted tones (#8a6666, #8a8a66, #666688)
+- **Files**: game.js (TERRAIN.FLOWER case in drawTile)
+- **Tested**: Yes - flowers blend into background better
+
+### Fix 5: Enemy Visibility
+- **Problem**: Enemies were hard to see in the environment
+- **Solution**:
+  - Increased brightness of wolf, draugr, and bandit colors
+  - Added colored outlines: red for wolves/bandits, blue for draugr
+- **Files**: game.js (enemy drawing code)
+- **Tested**: Yes - enemies clearly visible with distinctive outlines
+
+### Fix 6: NPC Visibility
+- **Problem**: NPCs could blend into environment
+- **Solution**:
+  - Increased brightness of NPC body and skin colors
+  - Added green outlines to all NPCs
+- **Files**: game.js (NPC drawing code)
+- **Tested**: Yes - NPCs clearly visible with green outlines
+
+### All Feedback Items Verified
+- [x] Controls for spells/items shown on-screen
+- [x] Spells/items work when activated (Q casts, 1-3 selects, E uses potions)
+- [x] Arrow pointers only appear OUTSIDE villages
+- [x] Trees/rocks (collision) have HIGH contrast
+- [x] Flowers/grass (no collision) have LOW contrast (mid-tones)
+- [x] Enemies and NPCs are clearly visible

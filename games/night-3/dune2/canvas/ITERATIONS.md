@@ -277,3 +277,58 @@ Game achieves classic Dune 2 RTS aesthetic:
 
 ### Difficulty Rating
 Hard - RTS games have many interconnected systems (economy, production, combat, AI). Each system is simple but they must work together seamlessly. Balancing resource costs and unit stats takes iteration.
+
+---
+
+## Session 2026-01-11 - Feedback Fixes
+
+### Fix 1: Construction Menu Click Handler
+- **Problem**: Clicking objects on right side menu did nothing - only keyboard shortcuts worked
+- **Solution**: Added `handleUIClick()` function to detect clicks on UI panel buttons and trigger construction
+- **Files**: game.js (added UI click handling)
+- **Tested**: Yes - verified button clicks now start construction
+
+### Fix 2: Building Construction Progress System
+- **Problem**: Buildings were placed instantly with no construction time
+- **Solution**:
+  - Added `buildingQueue`, `buildingProgress`, and `buildingReady` state variables
+  - Added `updateBuildingConstruction()` function with progress tracking
+  - Added `buildTime` property to all BUILDINGS definitions
+  - Building construction shows progress bar in UI
+  - Once complete, building enters "ready to place" mode
+- **Files**: game.js (building definitions, new construction functions)
+- **Tested**: Yes - construction now takes time with visual progress
+
+### Fix 3: Visual Construction Progress Display
+- **Problem**: No visual feedback during construction
+- **Solution**:
+  - Added "BUILDING:" section in UI with progress bar (yellow fill)
+  - Shows building name and percentage during construction
+  - Shows green "PLACE!" indicator when ready
+  - Build buttons show yellow border during construction
+  - Build buttons show pulsing green border when ready to place
+- **Files**: game.js (drawUI, drawBuildButtons functions)
+- **Tested**: Yes - progress bar fills up during construction
+
+### Fix 4: Building Placement After Construction
+- **Problem**: Player couldn't place building after construction
+- **Solution**:
+  - When construction completes, `buildingMode` is set automatically
+  - Player can click on valid rock terrain to place
+  - Cost already deducted at construction start, not at placement
+  - `buildingReady` is cleared after placement
+  - Right-click or Escape cancels placement
+- **Files**: game.js (mousedown handler, keyboard handler)
+- **Tested**: Yes - all building types construct and place correctly
+
+### Fix 5: Power Ratio Bug
+- **Problem**: Construction progress was 0 when power.produced was 0
+- **Solution**: Changed power ratio calculation to allow minimum 0.3 (30% speed) even without power
+- **Files**: game.js (updateBuildingConstruction, updateProduction)
+- **Tested**: Yes - buildings now construct even before Wind Trap is built
+
+### All Feedback Items Verified
+- [x] Construction menu clicking works
+- [x] Construction progress shown visually
+- [x] Buildings can be placed after construction
+- [x] All building types tested and working

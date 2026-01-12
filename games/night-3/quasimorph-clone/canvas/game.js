@@ -95,6 +95,7 @@ let killStreak = 0;
 let killStreakTimer = 0;
 let totalDamageDealt = 0;
 let totalDamageTaken = 0;
+let autoEndTurnEnabled = false; // UI toggle for auto-ending turns even with enemies visible
 
 // Textures cache
 const textures = {};
@@ -679,12 +680,26 @@ function generateMap() {
 
     // Spawn loot
     lootContainers = [];
+    let guaranteedLootCount = 0;
+    const needsGuaranteedLoot = floor === 1; // On first floor, guarantee weapon and armor
+
     for (const room of rooms) {
         if (Math.random() < 0.6) {
             const lx = room.x + 1 + Math.floor(Math.random() * (room.w - 2));
             const ly = room.y + 1 + Math.floor(Math.random() * (room.h - 2));
             if (map[ly][lx] === TileType.FLOOR) {
-                lootContainers.push({ x: lx, y: ly, looted: false });
+                const container = { x: lx, y: ly, looted: false, guaranteedType: null };
+
+                // On first floor, first container guarantees weapon, second guarantees armor
+                if (needsGuaranteedLoot && guaranteedLootCount === 0) {
+                    container.guaranteedType = 'weapon';
+                    guaranteedLootCount++;
+                } else if (needsGuaranteedLoot && guaranteedLootCount === 1) {
+                    container.guaranteedType = 'armor';
+                    guaranteedLootCount++;
+                }
+
+                lootContainers.push(container);
             }
         }
     }
@@ -784,7 +799,11 @@ function calculateHitChance(attacker, target, weapon, distance) {
 function playerShoot(targetX, targetY) {
     const weapon = player.getWeapon();
     if (player.ap < weapon.apCost) { showMessage('Not enough AP!'); addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 20, 'NO AP!', '#ff4444'); return; }
-    if (weapon.ammo <= 0) { showMessage('Out of ammo! Press R to reload.'); return; }
+    if (weapon.ammo <= 0) {
+        showMessage('Out of ammo! Press R to reload.');
+        addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 20, 'NO AMMO!', '#ff6644');
+        return;
+    }
 
     const dist = Math.sqrt(Math.pow(targetX - player.x, 2) + Math.pow(targetY - player.y, 2));
     if (dist > weapon.range + 3) { showMessage('Target out of range!'); return; }
@@ -797,32 +816,104 @@ function playerShoot(targetX, targetY) {
     weapon.ammo--;
     corruption += 2;
 
-    // Enhanced muzzle flash
+    // Weapon-specific muzzle flash effects
     const flashX = player.x * TILE + TILE/2;
     const flashY = player.y * TILE + TILE/2;
     const angleToTarget = Math.atan2(targetY * TILE - flashY, targetX * TILE - flashX);
 
-    // Main flash
+    // Define weapon-specific visual effects
+    const weaponEffects = {
+        'Pistol': {
+            flashColor: '#ffff88',
+            flashSize: 12,
+            sparkCount: 4,
+            sparkColors: ['#ffff44', '#ffaa22'],
+            sparkSpeed: 3
+        },
+        'SMG': {
+            flashColor: '#ffee66',
+            flashSize: 10,
+            sparkCount: 8,
+            sparkColors: ['#ffee44', '#ff8800', '#ffaa22'],
+            sparkSpeed: 4
+        },
+        'Combat Rifle': {
+            flashColor: '#ffffff',
+            flashSize: 18,
+            sparkCount: 6,
+            sparkColors: ['#ffffff', '#ffff88', '#ffcc44'],
+            sparkSpeed: 5
+        },
+        'Shotgun': {
+            flashColor: '#ffaa44',
+            flashSize: 24,
+            sparkCount: 15,
+            sparkColors: ['#ff8844', '#ff6622', '#ffaa00'],
+            sparkSpeed: 6
+        },
+        'Sniper Rifle': {
+            flashColor: '#88ffff',
+            flashSize: 20,
+            sparkCount: 3,
+            sparkColors: ['#88ffff', '#aaffff', '#ffffff'],
+            sparkSpeed: 8
+        }
+    };
+
+    const effect = weaponEffects[weapon.name] || weaponEffects['Pistol'];
+
+    // Main flash (weapon-specific)
     particles.push({
         x: flashX + Math.cos(angleToTarget) * 8,
         y: flashY + Math.sin(angleToTarget) * 8,
         vx: Math.cos(angleToTarget) * 2, vy: Math.sin(angleToTarget) * 2,
-        life: 8,
-        color: '#ffff88',
-        size: 16
+        life: weapon.name === 'Sniper Rifle' ? 12 : 8,
+        color: effect.flashColor,
+        size: effect.flashSize
     });
-    // Side sparks
-    for (let i = 0; i < 5; i++) {
-        const spreadAngle = angleToTarget + (Math.random() - 0.5) * 1.2;
+
+    // Side sparks (weapon-specific)
+    for (let i = 0; i < effect.sparkCount; i++) {
+        const spreadAngle = angleToTarget + (Math.random() - 0.5) * (weapon.name === 'Shotgun' ? 2.0 : 1.2);
         particles.push({
             x: flashX + Math.cos(angleToTarget) * 6,
             y: flashY + Math.sin(angleToTarget) * 6,
-            vx: Math.cos(spreadAngle) * (3 + Math.random() * 4),
-            vy: Math.sin(spreadAngle) * (3 + Math.random() * 4),
+            vx: Math.cos(spreadAngle) * (effect.sparkSpeed + Math.random() * 3),
+            vy: Math.sin(spreadAngle) * (effect.sparkSpeed + Math.random() * 3),
             life: 10 + Math.random() * 10,
-            color: ['#ffff44', '#ffaa22', '#ff8800'][Math.floor(Math.random() * 3)],
-            size: 2 + Math.random() * 3
+            color: effect.sparkColors[Math.floor(Math.random() * effect.sparkColors.length)],
+            size: weapon.name === 'Shotgun' ? 3 + Math.random() * 4 : 2 + Math.random() * 3
         });
+    }
+
+    // Additional weapon-specific effects
+    if (weapon.name === 'Shotgun') {
+        // Smoke puff for shotgun
+        for (let i = 0; i < 5; i++) {
+            particles.push({
+                x: flashX + Math.cos(angleToTarget) * 10,
+                y: flashY + Math.sin(angleToTarget) * 10,
+                vx: Math.cos(angleToTarget) * 1 + (Math.random() - 0.5) * 2,
+                vy: Math.sin(angleToTarget) * 1 + (Math.random() - 0.5) * 2 - 1,
+                life: 30,
+                color: '#666666',
+                size: 6 + Math.random() * 4
+            });
+        }
+    } else if (weapon.name === 'Sniper Rifle') {
+        // Bright tracer line for sniper
+        particles.push({
+            x: flashX + Math.cos(angleToTarget) * 15,
+            y: flashY + Math.sin(angleToTarget) * 15,
+            vx: Math.cos(angleToTarget) * 20,
+            vy: Math.sin(angleToTarget) * 20,
+            life: 5,
+            color: '#88ffff',
+            size: 4
+        });
+    } else if (weapon.name === 'SMG') {
+        // Quick additional flash for SMG burst feel
+        screenShake = 3;
     }
 
     const hitChance = calculateHitChance(player, enemy, weapon, dist);
@@ -1140,111 +1231,137 @@ function hackTerminal() {
 }
 
 // Enemy AI
-function enemyTurn() {
+// Helper for async delays
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Process single enemy action and return delay time used
+async function processEnemyAction(enemy) {
+    if (enemy.stunned > 0) {
+        enemy.stunned--;
+        return 0;
+    }
+
+    const dist = Math.sqrt(Math.pow(enemy.x - player.x, 2) + Math.pow(enemy.y - player.y, 2));
+    const canSee = dist <= VISION_RANGE && hasLineOfSight(enemy.x, enemy.y, player.x, player.y);
+
+    if (canSee) {
+        enemy.alerted = true;
+        enemy.lastKnownPlayerPos = { x: player.x, y: player.y };
+    }
+
+    if (enemy.alerted) {
+        if (canSee && dist <= enemy.range) {
+            // ATTACK - takes 1 second with full animation
+            enemy.attackAnim = 60; // Longer animation (60 frames = 1 sec)
+
+            const hitChance = enemy.accuracy - getCoverBonus(player.x, player.y, enemy.x, enemy.y) * 15;
+            if (Math.random() * 100 < hitChance) {
+                const damage = enemy.damage[0] + Math.floor(Math.random() * (enemy.damage[1] - enemy.damage[0]));
+                const bodyParts = ['head', 'torso', 'leftArm', 'rightArm', 'leftLeg', 'rightLeg'];
+                player.takeDamage(damage, bodyParts[Math.floor(Math.random() * bodyParts.length)]);
+
+                bullets.push({
+                    x: enemy.x * TILE + TILE/2,
+                    y: enemy.y * TILE + TILE/2,
+                    targetX: player.x * TILE + TILE/2,
+                    targetY: player.y * TILE + TILE/2,
+                    progress: 0,
+                    color: COLORS.bulletEnemy
+                });
+
+                showMessage(`${enemy.type} hit you for ${damage}!`);
+                corruption += 3;
+            } else {
+                showMessage(`${enemy.type} missed!`);
+            }
+
+            return 1000; // 1 second for attack
+        } else if (enemy.lastKnownPlayerPos) {
+            // MOVE - takes 250ms
+            const allMoves = [[0,-1],[1,0],[0,1],[-1,0],[1,-1],[1,1],[-1,1],[-1,-1]];
+            const validMoves = allMoves.filter(([mx, my]) => {
+                const nx = enemy.x + mx, ny = enemy.y + my;
+                return canMove(nx, ny) && !enemies.some(e => e !== enemy && e.x === nx && e.y === ny);
+            });
+
+            if (validMoves.length > 0) {
+                let bestMove = null;
+                let bestScore = -Infinity;
+
+                for (const [mx, my] of validMoves) {
+                    const nx = enemy.x + mx, ny = enemy.y + my;
+                    let score = 0;
+
+                    const newDist = Math.abs(nx - player.x) + Math.abs(ny - player.y);
+                    const optimalDist = enemy.range > 1 ? enemy.range - 1 : 1;
+                    score -= Math.abs(newDist - optimalDist) * 2;
+
+                    const coverBonus = getCoverBonus(nx, ny, player.x, player.y);
+                    score += coverBonus * 5;
+
+                    const angle = Math.atan2(ny - player.y, nx - player.x);
+                    enemies.forEach(other => {
+                        if (other !== enemy && other.alerted) {
+                            const otherAngle = Math.atan2(other.y - player.y, other.x - player.x);
+                            const angleDiff = Math.abs(angle - otherAngle);
+                            score += angleDiff * 0.5;
+                        }
+                    });
+
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMove = [mx, my];
+                    }
+                }
+
+                if (bestMove) {
+                    enemy.x += bestMove[0];
+                    enemy.y += bestMove[1];
+                    return 250; // 250ms for move
+                }
+            }
+        }
+    } else {
+        // Patrol - takes 250ms if moving
+        if (Math.random() < 0.4) {
+            const dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+            if (Math.random() < 0.2) enemy.patrolDir = Math.floor(Math.random() * 4);
+            const [dx, dy] = dirs[enemy.patrolDir];
+            const nx = enemy.x + dx, ny = enemy.y + dy;
+            if (canMove(nx, ny) && !enemies.some(e => e !== enemy && e.x === nx && e.y === ny)) {
+                enemy.x = nx;
+                enemy.y = ny;
+                return 250; // 250ms for patrol move
+            }
+        }
+    }
+
+    return 0; // No action taken
+}
+
+async function enemyTurn() {
     animating = true;
     enemyTurnIndicator = 60; // Show "ENEMY TURN" for 60 frames (1 second)
 
-    enemies.forEach(enemy => {
-        if (enemy.stunned > 0) { enemy.stunned--; return; }
+    // Process each enemy sequentially with proper timing
+    for (const enemy of enemies) {
+        if (gameState !== 'playing') break; // Stop if game ended
 
-        const dist = Math.sqrt(Math.pow(enemy.x - player.x, 2) + Math.pow(enemy.y - player.y, 2));
-        const canSee = dist <= VISION_RANGE && hasLineOfSight(enemy.x, enemy.y, player.x, player.y);
-
-        if (canSee) {
-            enemy.alerted = true;
-            enemy.lastKnownPlayerPos = { x: player.x, y: player.y };
+        const delayTime = await processEnemyAction(enemy);
+        if (delayTime > 0) {
+            await delay(delayTime);
         }
 
-        if (enemy.alerted) {
-            if (canSee && dist <= enemy.range) {
-                // Attack with animation
-                enemy.attackAnim = 30; // Animation frames
-
-                const hitChance = enemy.accuracy - getCoverBonus(player.x, player.y, enemy.x, enemy.y) * 15;
-                if (Math.random() * 100 < hitChance) {
-                    const damage = enemy.damage[0] + Math.floor(Math.random() * (enemy.damage[1] - enemy.damage[0]));
-                    const bodyParts = ['head', 'torso', 'leftArm', 'rightArm', 'leftLeg', 'rightLeg'];
-                    player.takeDamage(damage, bodyParts[Math.floor(Math.random() * bodyParts.length)]);
-
-                    bullets.push({
-                        x: enemy.x * TILE + TILE/2,
-                        y: enemy.y * TILE + TILE/2,
-                        targetX: player.x * TILE + TILE/2,
-                        targetY: player.y * TILE + TILE/2,
-                        progress: 0,
-                        color: COLORS.bulletEnemy
-                    });
-
-                    showMessage(`${enemy.type} hit you for ${damage}!`);
-                    corruption += 3;
-                }
-            } else if (enemy.lastKnownPlayerPos) {
-                // Improved AI: Evaluate all possible moves
-                const allMoves = [[0,-1],[1,0],[0,1],[-1,0],[1,-1],[1,1],[-1,1],[-1,-1]];
-                const validMoves = allMoves.filter(([mx, my]) => {
-                    const nx = enemy.x + mx, ny = enemy.y + my;
-                    return canMove(nx, ny) && !enemies.some(e => e !== enemy && e.x === nx && e.y === ny);
-                });
-
-                if (validMoves.length > 0) {
-                    // Score each move
-                    let bestMove = null;
-                    let bestScore = -Infinity;
-
-                    for (const [mx, my] of validMoves) {
-                        const nx = enemy.x + mx, ny = enemy.y + my;
-                        let score = 0;
-
-                        // Get closer to player (but not too close for ranged)
-                        const newDist = Math.abs(nx - player.x) + Math.abs(ny - player.y);
-                        const optimalDist = enemy.range > 1 ? enemy.range - 1 : 1;
-                        score -= Math.abs(newDist - optimalDist) * 2;
-
-                        // Prefer positions with cover from player
-                        const coverBonus = getCoverBonus(nx, ny, player.x, player.y);
-                        score += coverBonus * 5;
-
-                        // Prefer flanking (coming from different angle than other enemies)
-                        const angle = Math.atan2(ny - player.y, nx - player.x);
-                        enemies.forEach(other => {
-                            if (other !== enemy && other.alerted) {
-                                const otherAngle = Math.atan2(other.y - player.y, other.x - player.x);
-                                const angleDiff = Math.abs(angle - otherAngle);
-                                score += angleDiff * 0.5; // Reward different angles
-                            }
-                        });
-
-                        if (score > bestScore) {
-                            bestScore = score;
-                            bestMove = [mx, my];
-                        }
-                    }
-
-                    if (bestMove) {
-                        enemy.x += bestMove[0];
-                        enemy.y += bestMove[1];
-                    }
-                }
-            }
-        } else {
-            // Patrol
-            if (Math.random() < 0.4) {
-                const dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]];
-                if (Math.random() < 0.2) enemy.patrolDir = Math.floor(Math.random() * 4);
-                const [dx, dy] = dirs[enemy.patrolDir];
-                const nx = enemy.x + dx, ny = enemy.y + dy;
-                if (canMove(nx, ny) && !enemies.some(e => e !== enemy && e.x === nx && e.y === ny)) {
-                    enemy.x = nx;
-                    enemy.y = ny;
-                }
-            }
-        }
-    });
+        // Update fog of war after each enemy action so player can see what's happening
+        updateFogOfWar();
+    }
 
     // Corruption transformations
     if (corruption >= 400) {
         const transformChance = (corruption - 300) / 2000;
-        enemies.forEach(e => {
+        for (const e of enemies) {
             if (!e.corrupted && e.alerted && Math.random() < transformChance) {
                 e.corrupted = true;
                 e.type = corruption >= 700 ? 'corruptedElite' : 'corrupted';
@@ -1267,11 +1384,12 @@ function enemyTurn() {
                     });
                 }
                 showMessage('An enemy has been corrupted!');
+                await delay(500); // Brief pause to show corruption
             }
-        });
+        }
     }
 
-    setTimeout(() => { animating = false; }, 300);
+    animating = false;
 }
 
 function canMove(x, y) {
@@ -1362,6 +1480,62 @@ function playerMove(dx, dy) {
     }
 }
 
+// Armor equipment types
+const ARMOR_EQUIPMENT = [
+    { name: 'Tactical Vest', armor: 5, description: 'Light protection' },
+    { name: 'Combat Armor', armor: 10, description: 'Medium protection' },
+    { name: 'Heavy Plating', armor: 15, description: 'Heavy protection' },
+    { name: 'Nano Weave', armor: 8, description: 'Flexible protection' }
+];
+
+function giveWeaponLoot() {
+    const weaponKeys = Object.keys(WEAPONS);
+    const newWeapon = { ...WEAPONS[weaponKeys[Math.floor(Math.random() * weaponKeys.length)]] };
+    newWeapon.ammo = newWeapon.magSize;
+    if (player.weapons.length < 3) {
+        player.weapons.push(newWeapon);
+    } else {
+        player.weapons[player.currentWeapon] = newWeapon;
+    }
+    showMessage(`Found ${newWeapon.name}!`);
+    addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 30, `NEW WEAPON: ${newWeapon.name}`, '#ffaa00');
+
+    // Weapon pickup celebration particles
+    for (let i = 0; i < 20; i++) {
+        const angle = (i / 20) * Math.PI * 2;
+        particles.push({
+            x: player.x * TILE + TILE/2,
+            y: player.y * TILE + TILE/2,
+            vx: Math.cos(angle) * 4,
+            vy: Math.sin(angle) * 4,
+            life: 30,
+            color: '#ffaa00',
+            size: 3
+        });
+    }
+}
+
+function giveArmorLoot() {
+    const armorPiece = ARMOR_EQUIPMENT[Math.floor(Math.random() * ARMOR_EQUIPMENT.length)];
+    player.armor += armorPiece.armor;
+    showMessage(`Found ${armorPiece.name}! +${armorPiece.armor} Armor`);
+    addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 30, `+${armorPiece.armor} ARMOR`, '#66aaff');
+
+    // Armor pickup celebration particles (blue/silver)
+    for (let i = 0; i < 20; i++) {
+        const angle = (i / 20) * Math.PI * 2;
+        particles.push({
+            x: player.x * TILE + TILE/2,
+            y: player.y * TILE + TILE/2,
+            vx: Math.cos(angle) * 4,
+            vy: Math.sin(angle) * 4,
+            life: 30,
+            color: ['#66aaff', '#aaccff', '#88bbee'][Math.floor(Math.random() * 3)],
+            size: 3
+        });
+    }
+}
+
 function lootContainer() {
     const loot = lootContainers.find(l => l.x === player.x && l.y === player.y && !l.looted);
     if (!loot) return;
@@ -1382,54 +1556,75 @@ function lootContainer() {
         });
     }
 
+    // Handle guaranteed loot first
+    if (loot.guaranteedType === 'weapon') {
+        giveWeaponLoot();
+        addFloatingText(player.x * TILE + TILE/2, player.y * TILE, 'LOOT!', COLORS.xp);
+        return;
+    } else if (loot.guaranteedType === 'armor') {
+        giveArmorLoot();
+        addFloatingText(player.x * TILE + TILE/2, player.y * TILE, 'LOOT!', COLORS.xp);
+        return;
+    }
+
+    // Random loot
     const roll = Math.random();
-    if (roll < 0.25) {
+    if (roll < 0.20) {
         player.inventory.bandages++;
         showMessage('Found bandage!');
-    } else if (roll < 0.45) {
+    } else if (roll < 0.40) {
         const ammo = Object.keys(player.inventory.ammo)[Math.floor(Math.random() * 4)];
         player.inventory.ammo[ammo] += 15;
         showMessage(`Found ${ammo} ammo!`);
-    } else if (roll < 0.6) {
+    } else if (roll < 0.52) {
         player.inventory.medkits++;
         showMessage('Found medkit!');
-    } else if (roll < 0.75) {
+    } else if (roll < 0.64) {
         player.inventory.grenades++;
         showMessage('Found grenade!');
-    } else if (roll < 0.85) {
+    } else if (roll < 0.74) {
         player.inventory.stimpacks++;
         showMessage('Found stimpack!');
+    } else if (roll < 0.87) {
+        // Armor equipment (new!)
+        giveArmorLoot();
     } else {
         // New weapon
-        const weaponKeys = Object.keys(WEAPONS);
-        const newWeapon = { ...WEAPONS[weaponKeys[Math.floor(Math.random() * weaponKeys.length)]] };
-        newWeapon.ammo = newWeapon.magSize;
-        if (player.weapons.length < 3) {
-            player.weapons.push(newWeapon);
-        } else {
-            player.weapons[player.currentWeapon] = newWeapon;
-        }
-        showMessage(`Found ${newWeapon.name}!`);
+        giveWeaponLoot();
     }
 
     addFloatingText(player.x * TILE + TILE/2, player.y * TILE, 'LOOT!', COLORS.xp);
 }
 
-// Auto-end turn when out of AP and no visible enemies
+// Auto-end turn when out of AP and no visible enemies (or when autoEndTurnEnabled is on)
 function checkAutoEndTurn() {
     if (player.ap <= 0 && gameState === 'playing' && !animating) {
         // Check if any enemies are visible (not in fog of war)
         const visibleEnemies = enemies.filter(e => !fogOfWar[e.y]?.[e.x]);
-        if (visibleEnemies.length === 0) {
-            // No visible enemies and out of AP - auto-end turn
+
+        // Auto-end if: no visible enemies OR autoEndTurnEnabled is on
+        if (visibleEnemies.length === 0 || autoEndTurnEnabled) {
             setTimeout(() => {
                 if (player.ap <= 0 && gameState === 'playing') {
-                    showMessage('No enemies - turn auto-ended');
+                    const msg = autoEndTurnEnabled && visibleEnemies.length > 0
+                        ? 'Auto-end turn (toggle on)'
+                        : 'No enemies - turn auto-ended';
+                    showMessage(msg);
                     endTurn();
                 }
             }, 300); // Small delay so player sees what happened
         }
     }
+}
+
+// Trigger auto-end when player tries an action at 0 AP and autoEndTurnEnabled is on
+function tryAutoEndOnNoAP() {
+    if (autoEndTurnEnabled && player.ap <= 0 && gameState === 'playing' && !animating) {
+        showMessage('No AP - auto-ending turn');
+        endTurn();
+        return true;
+    }
+    return false;
 }
 
 function endTurn() {
@@ -1475,6 +1670,21 @@ canvas.addEventListener('mousemove', e => {
 });
 
 canvas.addEventListener('mousedown', e => {
+    const rect = canvas.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+
+    // Check for auto-end turn button click
+    if (gameState === 'playing' && window.autoEndTurnButton) {
+        const btn = window.autoEndTurnButton;
+        if (clickX >= btn.x && clickX <= btn.x + btn.w &&
+            clickY >= btn.y && clickY <= btn.y + btn.h) {
+            autoEndTurnEnabled = !autoEndTurnEnabled;
+            showMessage(autoEndTurnEnabled ? 'Auto-end turn: ON' : 'Auto-end turn: OFF');
+            return;
+        }
+    }
+
     if (gameState === 'menu') {
         gameState = 'playing';
         generateMap();
@@ -2003,6 +2213,29 @@ function renderHUD() {
     // Stance
     ctx.fillStyle = COLORS.ui;
     ctx.fillText(`STANCE: ${player.stance.toUpperCase()}`, 340, hudY + 25);
+
+    // Auto-end turn toggle button
+    const autoEndBtnX = 480;
+    const autoEndBtnY = hudY + 8;
+    const autoEndBtnW = 100;
+    const autoEndBtnH = 22;
+
+    // Store button bounds for click detection
+    window.autoEndTurnButton = { x: autoEndBtnX, y: autoEndBtnY, w: autoEndBtnW, h: autoEndBtnH };
+
+    // Draw button background
+    ctx.fillStyle = autoEndTurnEnabled ? '#446644' : '#444444';
+    ctx.fillRect(autoEndBtnX, autoEndBtnY, autoEndBtnW, autoEndBtnH);
+    ctx.strokeStyle = autoEndTurnEnabled ? '#88aa88' : '#666666';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(autoEndBtnX, autoEndBtnY, autoEndBtnW, autoEndBtnH);
+
+    // Draw button text
+    ctx.fillStyle = autoEndTurnEnabled ? '#aaffaa' : '#aaaaaa';
+    ctx.font = '11px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText(autoEndTurnEnabled ? 'AUTO-END:ON' : 'AUTO-END:OFF', autoEndBtnX + autoEndBtnW/2, autoEndBtnY + 15);
+    ctx.textAlign = 'left';
 
     // Weapon
     const weapon = player.getWeapon();

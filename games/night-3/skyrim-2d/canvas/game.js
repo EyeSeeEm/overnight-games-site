@@ -18,32 +18,41 @@ const TOWN_NAMES = [
 ];
 
 // Colors - Dark fantasy palette (Stoneshard inspired)
+// Visual contrast: HIGH for collision objects, LOW for decoration
 const COLORS = {
-    // Terrain
+    // Terrain - mid tones for background
     GRASS_LIGHT: '#5a7a3a',
     GRASS: '#4a6a2a',
     GRASS_DARK: '#3a5a1a',
     GRASS_DARKER: '#2a4a0a',
     DIRT: '#6a5a4a',
     DIRT_DARK: '#5a4a3a',
-    STONE: '#5a5a5a',
-    STONE_LIGHT: '#7a7a7a',
-    STONE_DARK: '#3a3a3a',
+    // Rocks/Stone - HIGH contrast (collision)
+    STONE: '#8a8a8a',           // Brighter base
+    STONE_LIGHT: '#a5a5a5',     // Highlight
+    STONE_DARK: '#2a2a2a',      // Deep shadow
     SNOW: '#dde8e8',
     SNOW_DARK: '#bbd0d0',
     WATER: '#3a5a7a',
     WATER_DARK: '#2a4a6a',
     WOOD: '#8a6a4a',
     WOOD_DARK: '#5a4030',
-    // Trees
-    TREE_LIGHT: '#4a7a3a',
-    TREE_MID: '#3a6a2a',
-    TREE_DARK: '#2a5a1a',
-    TREE_TRUNK: '#4a3a2a',
-    // Characters
+    // Trees - HIGH contrast (collision) - more saturated and distinct
+    TREE_LIGHT: '#5a9a4a',      // Brighter green highlight
+    TREE_MID: '#2a6a2a',        // Darker mid
+    TREE_DARK: '#1a4a1a',       // Very dark shadow
+    TREE_TRUNK: '#5a4030',      // Darker trunk
+    // Flowers/decoration - LOW contrast (no collision) - mid-tones only
+    FLOWER_STEM: '#4a5a3a',     // Muted green
+    FLOWER_RED: '#8a5555',      // Muted red
+    FLOWER_YELLOW: '#8a8a55',   // Muted yellow
+    FLOWER_BLUE: '#5555758',    // Muted blue
+    // Characters - HIGHER value for visibility
     PLAYER: '#5588bb',
-    ENEMY: '#aa4444',
-    NPC: '#66aa55',
+    ENEMY: '#cc5555',           // Brighter red - more visible
+    ENEMY_DARK: '#882222',      // Shadow for enemies
+    NPC: '#77cc66',             // Brighter green - more visible
+    NPC_DARK: '#447733',        // Shadow for NPCs
     SKIN: '#e8c8a8',
     // UI
     UI_BG: '#12141a',
@@ -1830,13 +1839,13 @@ function drawTile(tile, screenX, screenY, tileX, tileY) {
             // Draw grass beneath
             ctx.fillStyle = COLORS.GRASS;
             ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-            // Flower
-            const flowerColors = ['#dd6666', '#dddd66', '#6666dd'];
-            ctx.fillStyle = COLORS.TREE_DARK;
+            // Flower - LOW contrast (no collision) - muted colors
+            const flowerColors = ['#8a6666', '#8a8a66', '#666688']; // Muted tones
+            ctx.fillStyle = COLORS.FLOWER_STEM || '#4a5a3a';
             ctx.fillRect(screenX + 7, screenY + 8, 2, 6);
             ctx.fillStyle = flowerColors[v];
             ctx.fillRect(screenX + 5, screenY + 5, 6, 4);
-            ctx.fillStyle = '#ffff88';
+            ctx.fillStyle = '#9a9a66'; // Muted center
             ctx.fillRect(screenX + 7, screenY + 6, 2, 2);
             break;
 
@@ -2080,7 +2089,7 @@ function drawProjectiles() {
 }
 
 function drawEntities() {
-    // NPCs
+    // NPCs - BRIGHTER for visibility
     for (const npc of npcs) {
         const screenX = npc.x - game.camera.x;
         const screenY = npc.y - game.camera.y;
@@ -2091,22 +2100,26 @@ function drawEntities() {
         ctx.ellipse(screenX + 8, screenY + 14, 5, 2, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Body
-        const bodyColor = npc.type === 'merchant' ? '#6a5a4a' : npc.type === 'questgiver' ? '#4a5a6a' : COLORS.NPC;
+        // Body - brighter colors for visibility
+        const bodyColor = npc.type === 'merchant' ? '#8a7a6a' : npc.type === 'questgiver' ? '#6a7a8a' : COLORS.NPC;
         ctx.fillStyle = bodyColor;
         ctx.fillRect(screenX + 4, screenY + 4, 8, 10);
 
         // Clothes detail
-        ctx.fillStyle = '#333';
+        ctx.fillStyle = '#444';
         ctx.fillRect(screenX + 6, screenY + 8, 4, 1);
 
-        // Head
-        ctx.fillStyle = COLORS.SKIN;
+        // Head - brighter skin
+        ctx.fillStyle = '#f0d8b8';
         ctx.fillRect(screenX + 5, screenY - 1, 6, 6);
 
         // Hair
-        ctx.fillStyle = '#3a3020';
+        ctx.fillStyle = '#5a4a3a';
         ctx.fillRect(screenX + 5, screenY - 2, 6, 3);
+
+        // Green outline to indicate friendly NPC
+        ctx.strokeStyle = '#55aa55';
+        ctx.strokeRect(screenX + 3, screenY - 3, 10, 17);
 
         // Quest marker
         if (npc.quest && !game.quests.some(q => q.id === npc.quest.id)) {
@@ -2138,51 +2151,60 @@ function drawEntities() {
         ctx.fill();
 
         if (enemy.type === 'wolf') {
-            // Wolf body
-            ctx.fillStyle = '#6a6a6a';
+            // Wolf body - BRIGHTER for visibility
+            ctx.fillStyle = '#8a8a8a';  // Brighter gray
             ctx.fillRect(screenX + 2, screenY + 6, 12, 6);
-            ctx.fillStyle = '#5a5a5a';
+            ctx.fillStyle = '#7a7a7a';
             ctx.fillRect(screenX + 3, screenY + 8, 10, 4);
             // Wolf head
-            ctx.fillStyle = '#7a7a7a';
+            ctx.fillStyle = '#9a9a9a';  // Brighter
             ctx.fillRect(screenX + 10, screenY + 4, 5, 5);
             // Ears
-            ctx.fillStyle = '#6a6a6a';
+            ctx.fillStyle = '#8a8a8a';
             ctx.fillRect(screenX + 10, screenY + 2, 2, 3);
             ctx.fillRect(screenX + 13, screenY + 2, 2, 3);
-            // Eye
-            ctx.fillStyle = '#ff4444';
+            // Eye - glowing red
+            ctx.fillStyle = '#ff5555';
             ctx.fillRect(screenX + 13, screenY + 5, 1, 1);
+            // Red outline to indicate enemy
+            ctx.strokeStyle = '#aa4444';
+            ctx.strokeRect(screenX + 1, screenY + 1, 14, 12);
         } else if (enemy.type === 'draugr') {
-            // Draugr - undead warrior
-            ctx.fillStyle = '#4a5a5a';
+            // Draugr - undead warrior - BRIGHTER
+            ctx.fillStyle = '#6a7a7a';  // Lighter
             ctx.fillRect(screenX + 4, screenY + 4, 8, 10);
             // Tattered armor
-            ctx.fillStyle = '#3a4a4a';
+            ctx.fillStyle = '#5a6a6a';
             ctx.fillRect(screenX + 5, screenY + 6, 6, 4);
-            // Skull face
-            ctx.fillStyle = '#6a7a7a';
+            // Skull face - lighter
+            ctx.fillStyle = '#8a9a9a';
             ctx.fillRect(screenX + 5, screenY - 1, 6, 6);
             ctx.fillStyle = '#1a1a1a';
             ctx.fillRect(screenX + 6, screenY + 1, 2, 2);
             ctx.fillRect(screenX + 9, screenY + 1, 2, 2);
-            // Glowing eyes
-            ctx.fillStyle = '#4488ff';
+            // Glowing eyes - brighter
+            ctx.fillStyle = '#66aaff';
             ctx.fillRect(screenX + 6, screenY + 1, 1, 1);
             ctx.fillRect(screenX + 9, screenY + 1, 1, 1);
+            // Blue outline
+            ctx.strokeStyle = '#4488aa';
+            ctx.strokeRect(screenX + 3, screenY - 2, 10, 16);
         } else {
-            // Bandit
-            ctx.fillStyle = '#7a5a4a';
+            // Bandit - BRIGHTER
+            ctx.fillStyle = '#9a7a6a';  // Lighter
             ctx.fillRect(screenX + 4, screenY + 4, 8, 10);
             // Leather armor
-            ctx.fillStyle = '#5a4030';
+            ctx.fillStyle = '#7a5040';
             ctx.fillRect(screenX + 5, screenY + 6, 6, 6);
             // Head
-            ctx.fillStyle = '#d8b8a0';
+            ctx.fillStyle = '#e8c8a8';
             ctx.fillRect(screenX + 5, screenY - 1, 6, 6);
             // Hood
-            ctx.fillStyle = '#4a3a2a';
+            ctx.fillStyle = '#6a5a4a';
             ctx.fillRect(screenX + 4, screenY - 2, 8, 4);
+            // Red outline to indicate enemy
+            ctx.strokeStyle = '#aa4444';
+            ctx.strokeRect(screenX + 3, screenY - 3, 10, 17);
         }
 
         // Hit flash overlay (white flash when hit)
@@ -2484,10 +2506,18 @@ function drawUI() {
         messageTimer -= 0.016;
     }
 
-    // Controls hint (subtle)
-    ctx.fillStyle = '#444';
+    // Controls hint (detailed)
+    ctx.fillStyle = '#666';
     ctx.font = '9px Arial';
-    ctx.fillText('WASD: Move | Space: Attack | E: Interact', 145, panelY + 62);
+    ctx.fillText('WASD: Move | Space: Attack | E: Interact/Use | Q: Cast Spell | 1-3: Select Spell', 145, panelY + 62);
+
+    // Show current spell indicator
+    if (player.spells.length > 0) {
+        const spell = player.spells[player.selectedSpell] || player.spells[0];
+        ctx.fillStyle = '#5588cc';
+        ctx.font = 'bold 9px Arial';
+        ctx.fillText(`[Q] Spell: ${spell}`, 145, panelY + 12);
+    }
 }
 
 // Quest arrow indicator pointing toward nearest quest target
@@ -2570,6 +2600,18 @@ function drawQuestArrow() {
     ctx.textAlign = 'left';
 }
 
+// Check if player is inside any town
+function isPlayerInsideTown() {
+    for (const town of towns) {
+        const radius = town.size === 3 ? 8 : town.size === 2 ? 6 : 4;
+        const dist = Math.hypot(player.x / TILE_SIZE - town.x, player.y / TILE_SIZE - town.y);
+        if (dist < radius + 2) {
+            return town;
+        }
+    }
+    return null;
+}
+
 // Town markers on minimap and screen edges
 function drawTownMarkers() {
     const mmScale = 60 / (MAP_WIDTH * TILE_SIZE);
@@ -2589,6 +2631,13 @@ function drawTownMarkers() {
         ctx.strokeStyle = '#333';
         ctx.lineWidth = 1;
         ctx.stroke();
+    }
+
+    // Don't show direction arrows when player is inside a town
+    const currentTown = isPlayerInsideTown();
+    if (currentTown) {
+        // Player is in a town - don't show navigation arrows
+        return;
     }
 
     // Draw direction arrows to nearby towns (not on screen)

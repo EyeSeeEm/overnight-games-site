@@ -1333,3 +1333,131 @@ All core mechanics functional. Complex tactical systems working together.
 - Added accessibility features
 - Optimized performance
 - Balanced weapons, enemies, and corruption
+
+---
+
+## Feedback Fixes Session (2026-01-11)
+
+### Fix 1: Add "No Ammo!" Floating Text
+**Feedback:** When firing out of ammo, show floating text animation above player saying 'No Ammo!' or similar
+
+**Solution:** Added floating text call when weapon is empty in playerShoot function:
+```javascript
+if (weapon.ammo <= 0) {
+    showMessage('Out of ammo! Press R to reload.');
+    addFloatingText(player.x * TILE + TILE/2, player.y * TILE - 20, 'NO AMMO!', '#ff6644');
+    return;
+}
+```
+
+**Files Modified:** game.js (lines 802-806)
+**Tested:** Yes
+
+---
+
+### Fix 2: Add Clickable UI Option for Auto-Ending Turns
+**Feedback:** Add clickable UI option for auto-ending turns - when active and player tries action at 0 AP, auto-end turn even with enemies around
+
+**Solution:**
+1. Added `autoEndTurnEnabled` global variable
+2. Modified `checkAutoEndTurn()` to auto-end even with visible enemies when toggle is on
+3. Added clickable "AUTO-END:OFF/ON" button in bottom HUD
+4. Added click handler to toggle the setting
+
+**Implementation:**
+- Button renders at (480, hudY+8) with green/gray colors based on state
+- Click detection in mousedown handler checks button bounds
+- Shows message when toggled
+
+**Files Modified:** game.js (added ~40 lines)
+**Tested:** Yes - button visible in HUD and clickable
+
+---
+
+### Fix 3: Enemy Turn Timing (250ms move, 1sec attack)
+**Feedback:** Enemy turn timing: each enemy move should take 250ms, each enemy attack should take 1sec with full animation
+
+**Solution:** Rewrote enemyTurn() as async function that processes enemies sequentially:
+1. Created `delay(ms)` helper function
+2. Created `processEnemyAction(enemy)` that returns delay time used
+3. Made `enemyTurn()` async with sequential processing using for...of loop
+4. Attack returns 1000ms delay, Move returns 250ms delay
+
+**Implementation:**
+- Each enemy action is visible before the next begins
+- Fog of war updates after each enemy action
+- Player can see each enemy's movement/attack clearly
+
+**Files Modified:** game.js (complete rewrite of enemyTurn ~130 lines)
+**Tested:** Yes - enemy turns now have proper timing
+
+---
+
+### Fix 4: Guaranteed Weapon/Equipment First Run
+**Feedback:** Player should find new weapon or equipment during first run
+
+**Solution:**
+1. Modified loot container spawning to track `guaranteedType` property
+2. First container on floor 1 guarantees weapon
+3. Second container on floor 1 guarantees armor
+4. Modified lootContainer() to check guaranteedType before random roll
+
+**Implementation:**
+- `lootContainers.push({ x, y, looted: false, guaranteedType: 'weapon'/'armor'/null })`
+- lootContainer() checks guaranteedType first
+
+**Files Modified:** game.js (loot spawning and lootContainer function)
+**Tested:** Yes
+
+---
+
+### Fix 5: Weapon-Specific Firing Visuals
+**Feedback:** New weapon should look different when firing and have different stats
+
+**Solution:** Added weapon-specific muzzle flash effects:
+- **Pistol:** Small yellow flash, 4 sparks
+- **SMG:** Rapid small flash, 8 sparks, slight screen shake
+- **Combat Rifle:** Large white flash, 6 sparks
+- **Shotgun:** Large orange flash, 15 wide-spread sparks, smoke puffs
+- **Sniper Rifle:** Cyan flash, 3 fast sparks, bright tracer line
+
+**Implementation:**
+```javascript
+const weaponEffects = {
+    'Pistol': { flashColor, flashSize, sparkCount, sparkColors, sparkSpeed },
+    'SMG': { ... },
+    // etc.
+};
+```
+
+**Files Modified:** game.js (playerShoot function, ~90 lines added)
+**Tested:** Yes - each weapon has distinct visual
+
+---
+
+### Fix 6: Equipment Gives Armor
+**Feedback:** New equipment can give player armor
+
+**Solution:**
+1. Added ARMOR_EQUIPMENT array with 4 armor types:
+   - Tactical Vest (+5 armor)
+   - Combat Armor (+10 armor)
+   - Heavy Plating (+15 armor)
+   - Nano Weave (+8 armor)
+2. Added `giveArmorLoot()` function with celebration particles
+3. Added armor to random loot table (13% chance)
+4. Guaranteed armor in second container on first floor
+
+**Files Modified:** game.js (added ARMOR_EQUIPMENT const, giveArmorLoot function, updated lootContainer)
+**Tested:** Yes
+
+---
+
+## Summary
+All 6 feedback items implemented:
+- ✅ No Ammo floating text
+- ✅ Auto-end turn UI toggle
+- ✅ Enemy turn timing (250ms/1s)
+- ✅ Guaranteed weapon/armor first run
+- ✅ Weapon-specific firing visuals
+- ✅ Armor equipment drops

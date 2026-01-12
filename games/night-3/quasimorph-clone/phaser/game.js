@@ -272,20 +272,42 @@ class BootScene extends Phaser.Scene {
         g.fillRect(24, 14, 2, 2);
         g.generateTexture('player', TILE_SIZE, TILE_SIZE);
 
-        // Human enemy
+        // Human enemy - Threatening armored hostile
         g.clear();
-        g.fillStyle(COLORS.ENEMY_HUMAN_ARMOR);
-        g.fillRect(8, 8, 16, 18);
-        g.fillRect(4, 10, 6, 8);
-        g.fillRect(22, 10, 6, 8);
-        g.fillStyle(COLORS.ENEMY_HUMAN);
-        g.fillRect(10, 4, 12, 10);
-        g.fillStyle(0x2a2018);
-        g.fillRect(10, 4, 12, 5);
-        g.fillStyle(0x1a1810);
-        g.fillRect(12, 8, 8, 4);
-        g.fillStyle(0x3a3028);
-        g.fillRect(22, 12, 8, 3);
+        // Body armor - bulky military vest
+        g.fillStyle(0x2a2828);
+        g.fillRect(7, 10, 18, 16);
+        // Shoulder pads
+        g.fillStyle(0x3a3838);
+        g.fillRect(4, 10, 6, 6);
+        g.fillRect(22, 10, 6, 6);
+        // Arms
+        g.fillStyle(0x4a4838);
+        g.fillRect(2, 14, 6, 10);
+        g.fillRect(24, 14, 6, 10);
+        // Head - helmet with visor
+        g.fillStyle(0x3a3a3a);
+        g.fillRect(9, 2, 14, 12);
+        // Helmet ridge
+        g.fillStyle(0x4a4a4a);
+        g.fillRect(9, 2, 14, 3);
+        // Dark visor - menacing
+        g.fillStyle(0x1a0808);
+        g.fillRect(11, 6, 10, 5);
+        // Red visor glow
+        g.fillStyle(0x881111);
+        g.fillRect(12, 7, 8, 3);
+        // Weapon
+        g.fillStyle(0x2a2a2a);
+        g.fillRect(26, 14, 6, 3);
+        g.fillRect(28, 12, 4, 6);
+        // Ammo belt
+        g.fillStyle(0x5a4a28);
+        g.fillRect(8, 18, 16, 3);
+        for (let i = 0; i < 5; i++) {
+            g.fillStyle(0x8a7a48);
+            g.fillRect(9 + i * 3, 18, 2, 3);
+        }
         g.generateTexture('enemy_human', TILE_SIZE, TILE_SIZE);
 
         // Corrupted enemy
@@ -1104,14 +1126,17 @@ class GameScene extends Phaser.Scene {
             this.gameState.totalDamageDealt += damage;
             this.gameState.shotsHit++;
 
+            // Blood splatter and hit VFX
+            this.showBloodSplatter(enemy.x, enemy.y, isCrit);
+
             // Show damage (red for normal, yellow for crit)
             if (isCrit) {
                 this.showDamageNumber(enemy.x, enemy.y, damage, 0xffcc00);
                 this.showFloatingText(enemy.x, enemy.y - 0.5, 'CRITICAL!', 0xffaa00);
-                this.cameras.main.shake(150, 0.02);
+                this.cameras.main.shake(180, 0.025);
             } else {
                 this.showDamageNumber(enemy.x, enemy.y, damage, 0xff4444);
-                this.cameras.main.shake(100, 0.01);
+                this.cameras.main.shake(120, 0.015);
             }
 
             this.alertEnemies(p.x, p.y, 8);
@@ -1121,12 +1146,16 @@ class GameScene extends Phaser.Scene {
             } else {
                 const sprite = this.getEnemySprite(enemy);
                 if (sprite) {
+                    // More violent hit reaction
                     this.tweens.add({
                         targets: sprite,
                         alpha: 0.2,
+                        scaleX: 1.2,
+                        scaleY: 0.8,
                         yoyo: true,
-                        duration: 50,
-                        repeat: 2
+                        duration: 60,
+                        repeat: 2,
+                        onComplete: () => sprite.setScale(1)
                     });
                 }
             }
@@ -1321,40 +1350,79 @@ class GameScene extends Phaser.Scene {
     showBulletTrail(x1, y1, x2, y2) {
         const startX = x1 * TILE_SIZE + TILE_SIZE / 2;
         const startY = y1 * TILE_SIZE + TILE_SIZE / 2;
+        const endX = x2 * TILE_SIZE + TILE_SIZE / 2;
+        const endY = y2 * TILE_SIZE + TILE_SIZE / 2;
         const angle = Math.atan2(y2 - y1, x2 - x1);
 
-        // Enhanced muzzle flash
+        // LARGE muzzle flash with core
+        const muzzleCore = this.add.circle(
+            startX + Math.cos(angle) * 15,
+            startY + Math.sin(angle) * 15,
+            6, 0xffffff
+        );
+        muzzleCore.setAlpha(1);
         const muzzleFlash = this.add.circle(
             startX + Math.cos(angle) * 15,
             startY + Math.sin(angle) * 15,
-            10, 0xffcc44
+            14, 0xffaa22
         );
         muzzleFlash.setAlpha(0.9);
+        const muzzleOuter = this.add.circle(
+            startX + Math.cos(angle) * 15,
+            startY + Math.sin(angle) * 15,
+            22, 0xff6600
+        );
+        muzzleOuter.setAlpha(0.5);
+
+        // Flash animation
         this.tweens.add({
-            targets: muzzleFlash,
+            targets: [muzzleCore, muzzleFlash, muzzleOuter],
             alpha: 0,
-            scale: 2,
-            duration: 100,
-            onComplete: () => muzzleFlash.destroy()
+            scale: 2.5,
+            duration: 120,
+            onComplete: () => {
+                muzzleCore.destroy();
+                muzzleFlash.destroy();
+                muzzleOuter.destroy();
+            }
         });
 
-        // Directional sparks
-        for (let i = 0; i < 4; i++) {
-            const sparkAngle = angle + (Math.random() - 0.5) * 0.8;
+        // Directional sparks - more and brighter
+        for (let i = 0; i < 8; i++) {
+            const sparkAngle = angle + (Math.random() - 0.5) * 1.2;
+            const sparkDist = 10 + Math.random() * 8;
             const spark = this.add.circle(
-                startX + Math.cos(angle) * 12,
-                startY + Math.sin(angle) * 12,
-                2, 0xffaa22
+                startX + Math.cos(angle) * sparkDist,
+                startY + Math.sin(angle) * sparkDist,
+                1 + Math.random() * 2, 0xffdd44
             );
             this.tweens.add({
                 targets: spark,
-                x: spark.x + Math.cos(sparkAngle) * 20,
-                y: spark.y + Math.sin(sparkAngle) * 20,
+                x: spark.x + Math.cos(sparkAngle) * (25 + Math.random() * 15),
+                y: spark.y + Math.sin(sparkAngle) * (25 + Math.random() * 15),
                 alpha: 0,
-                duration: 150,
+                scale: 0.3,
+                duration: 100 + Math.random() * 100,
                 onComplete: () => spark.destroy()
             });
         }
+
+        // Smoke puff
+        const smoke = this.add.circle(
+            startX + Math.cos(angle) * 10,
+            startY + Math.sin(angle) * 10,
+            8, 0x666666
+        );
+        smoke.setAlpha(0.4);
+        this.tweens.add({
+            targets: smoke,
+            x: smoke.x + Math.cos(angle) * 20,
+            y: smoke.y - 10,
+            alpha: 0,
+            scale: 3,
+            duration: 400,
+            onComplete: () => smoke.destroy()
+        });
 
         // Bullet projectile
         const bullet = this.add.image(startX, startY, 'bullet');
@@ -1362,11 +1430,33 @@ class GameScene extends Phaser.Scene {
 
         this.tweens.add({
             targets: bullet,
-            x: x2 * TILE_SIZE + TILE_SIZE / 2,
-            y: y2 * TILE_SIZE + TILE_SIZE / 2,
-            duration: 100,
+            x: endX,
+            y: endY,
+            duration: 80,
             ease: 'Linear',
             onComplete: () => bullet.destroy()
+        });
+
+        // Bright bullet trail line
+        const trailLine = this.add.graphics();
+        trailLine.lineStyle(3, 0xffee88, 0.8);
+        trailLine.lineBetween(startX, startY, endX, endY);
+        this.tweens.add({
+            targets: trailLine,
+            alpha: 0,
+            duration: 150,
+            onComplete: () => trailLine.destroy()
+        });
+
+        // Secondary dimmer trail
+        const trailLine2 = this.add.graphics();
+        trailLine2.lineStyle(6, 0xff8844, 0.3);
+        trailLine2.lineBetween(startX, startY, endX, endY);
+        this.tweens.add({
+            targets: trailLine2,
+            alpha: 0,
+            duration: 200,
+            onComplete: () => trailLine2.destroy()
         });
 
         this.effectContainer.add(bullet);
@@ -1390,6 +1480,89 @@ class GameScene extends Phaser.Scene {
         });
 
         this.effectContainer.add(text);
+    }
+
+    showBloodSplatter(x, y, isCrit = false) {
+        const centerX = x * TILE_SIZE + TILE_SIZE / 2;
+        const centerY = y * TILE_SIZE + TILE_SIZE / 2;
+
+        // Blood colors
+        const bloodColors = [0x8a1010, 0xaa2020, 0x660808, 0x551010];
+
+        // Main blood splatter particles
+        const particleCount = isCrit ? 16 : 8;
+        for (let i = 0; i < particleCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 20 + Math.random() * (isCrit ? 50 : 30);
+            const size = 2 + Math.random() * (isCrit ? 6 : 4);
+            const color = bloodColors[Math.floor(Math.random() * bloodColors.length)];
+
+            const blood = this.add.circle(centerX, centerY, size, color);
+            blood.setAlpha(0.9);
+
+            this.tweens.add({
+                targets: blood,
+                x: centerX + Math.cos(angle) * speed,
+                y: centerY + Math.sin(angle) * speed,
+                alpha: 0,
+                scale: 0.3,
+                duration: 300 + Math.random() * 200,
+                onComplete: () => blood.destroy()
+            });
+        }
+
+        // Hit spark at impact point
+        const spark = this.add.circle(centerX, centerY, isCrit ? 8 : 5, 0xffcc00);
+        spark.setAlpha(1);
+        this.tweens.add({
+            targets: spark,
+            alpha: 0,
+            scale: 2,
+            duration: 80,
+            onComplete: () => spark.destroy()
+        });
+
+        // Blood pool that stays briefly
+        if (Math.random() < 0.6) {
+            const poolSize = 4 + Math.random() * 6;
+            const pool = this.add.circle(
+                centerX + (Math.random() - 0.5) * 16,
+                centerY + (Math.random() - 0.5) * 16,
+                poolSize, 0x440808
+            );
+            pool.setAlpha(0.6);
+            this.tweens.add({
+                targets: pool,
+                alpha: 0,
+                scale: 1.3,
+                duration: 2000,
+                onComplete: () => pool.destroy()
+            });
+        }
+
+        // Critical hit gore spray
+        if (isCrit) {
+            for (let i = 0; i < 6; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const gore = this.add.rectangle(
+                    centerX,
+                    centerY,
+                    3 + Math.random() * 4,
+                    1 + Math.random() * 2,
+                    0x880808
+                );
+                gore.setRotation(angle);
+                this.tweens.add({
+                    targets: gore,
+                    x: centerX + Math.cos(angle) * (40 + Math.random() * 30),
+                    y: centerY + Math.sin(angle) * (40 + Math.random() * 30),
+                    alpha: 0,
+                    rotation: angle + Math.PI,
+                    duration: 400,
+                    onComplete: () => gore.destroy()
+                });
+            }
+        }
     }
 
     showMissText(x, y) {
@@ -1626,16 +1799,35 @@ class GameScene extends Phaser.Scene {
 
     processEnemyTurns() {
         const enemies = this.gameState.enemies.filter(e => e.hp > 0);
-        let delay = 0;
 
+        // Check if any enemies are visible to the player
+        const visibleEnemies = enemies.filter(enemy =>
+            this.visibleTiles.has(`${enemy.x},${enemy.y}`)
+        );
+
+        // If no enemies are visible, process turns instantly
+        if (visibleEnemies.length === 0) {
+            // Show brief indicator then process all turns instantly
+            enemies.forEach(enemy => this.processEnemyTurn(enemy));
+            // Quick transition - 500ms max
+            this.time.delayedCall(500, () => {
+                this.startNewTurn();
+            });
+            return;
+        }
+
+        // Only add delays for visible enemy actions
+        let delay = 0;
         enemies.forEach((enemy) => {
+            const isVisible = this.visibleTiles.has(`${enemy.x},${enemy.y}`);
             this.time.delayedCall(delay, () => {
                 this.processEnemyTurn(enemy);
             });
-            delay += 300;
+            // Only add delay for visible enemies
+            delay += isVisible ? 250 : 0;
         });
 
-        this.time.delayedCall(delay + 200, () => {
+        this.time.delayedCall(delay + 100, () => {
             this.startNewTurn();
         });
     }
@@ -1691,17 +1883,25 @@ class GameScene extends Phaser.Scene {
             this.gameState.totalDamageTaken += damage;
             this.showDamageNumber(p.x, p.y, damage, 0xff8888);
 
-            this.cameras.main.shake(150, 0.015);
+            // More intense screenshake based on damage
+            const shakeIntensity = Math.min(0.04, 0.02 + damage * 0.002);
+            this.cameras.main.shake(200, shakeIntensity);
 
             // Damage flash effect (red tint overlay)
             this.showDamageFlash();
 
+            // Player knockback/recoil effect
             this.tweens.add({
                 targets: this.playerSprite,
                 tint: 0xff0000,
-                duration: 100,
+                scaleX: 0.9,
+                scaleY: 1.1,
+                duration: 80,
                 yoyo: true,
-                onComplete: () => this.playerSprite.clearTint()
+                onComplete: () => {
+                    this.playerSprite.clearTint();
+                    this.playerSprite.setScale(1);
+                }
             });
 
             this.gameState.corruption += 3;
@@ -1728,17 +1928,42 @@ class GameScene extends Phaser.Scene {
                 0xff0000, 0
             );
             this.damageFlashOverlay.setDepth(900);
+            this.damageFlashOverlay.setScrollFactor(0);
         }
 
+        // More intense flash with multiple pulses
         this.tweens.add({
             targets: this.damageFlashOverlay,
-            alpha: 0.3,
-            duration: 50,
+            alpha: 0.5,
+            duration: 60,
             yoyo: true,
+            repeat: 1,
             onComplete: () => {
                 this.damageFlashOverlay.setAlpha(0);
             }
         });
+
+        // Add blood splatter particles on screen edges
+        for (let i = 0; i < 6; i++) {
+            const edge = Math.floor(Math.random() * 4);
+            let x, y;
+            switch(edge) {
+                case 0: x = Math.random() * GAME_WIDTH; y = 20; break;
+                case 1: x = Math.random() * GAME_WIDTH; y = GAME_HEIGHT - 20; break;
+                case 2: x = 20; y = Math.random() * GAME_HEIGHT; break;
+                case 3: x = GAME_WIDTH - 20; y = Math.random() * GAME_HEIGHT; break;
+            }
+            const splat = this.add.circle(x, y, 8 + Math.random() * 10, 0x880000, 0.7);
+            splat.setScrollFactor(0);
+            splat.setDepth(901);
+            this.tweens.add({
+                targets: splat,
+                alpha: 0,
+                scale: 1.5,
+                duration: 500,
+                onComplete: () => splat.destroy()
+            });
+        }
     }
 
     updateLowHealthVignette() {
@@ -1874,10 +2099,11 @@ class GameScene extends Phaser.Scene {
         this.gameState.phase = 'player';
         this.gameState.player.ap = this.gameState.player.maxAp;
 
-        // Hide enemy turn indicator and show player turn
+        // Hide enemy turn indicator IMMEDIATELY and show player turn
+        // Controls are now responsive - phase is already 'player'
         this.hideTurnIndicator();
         this.showTurnIndicator('YOUR TURN', 0x44cc44);
-        this.time.delayedCall(1500, () => this.hideTurnIndicator());
+        this.time.delayedCall(800, () => this.hideTurnIndicator());
 
         this.gameState.corruption += 2;
 

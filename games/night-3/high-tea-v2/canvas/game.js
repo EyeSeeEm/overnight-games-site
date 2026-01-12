@@ -67,7 +67,7 @@ const tutorial = {
         },
         {
             message: "Tutorial complete! Keep trading: Buy Opium → Sell at Ports → Buy Tea → Ship to Britain!",
-            highlight: null,
+            highlight: 'tutorialEnd',
             waitFor: 'click'
         }
     ],
@@ -93,7 +93,7 @@ const game = {
     ships: 1,
     maxShips: 6,
     mood: 100,
-    quota: 60,
+    quota: 50,  // Rebalanced starting quota
     teaShipped: 0,
     totalTeaShipped: 0,
     totalOpiumSold: 0,
@@ -183,8 +183,41 @@ const buttons = {
     buyOpium30: { x: 140, y: 300, w: 45, h: 30, text: '30', action: () => buyOpium(30) },
     buyTea5: { x: 30, y: 420, w: 45, h: 30, text: '5', action: () => buyTea(5) },
     buyTea15: { x: 85, y: 420, w: 45, h: 30, text: '15', action: () => buyTea(15) },
-    buyTea30: { x: 140, y: 420, w: 45, h: 30, text: '30', action: () => buyTea(30) }
+    buyTea30: { x: 140, y: 420, w: 45, h: 30, text: '30', action: () => buyTea(30) },
+    shipEarly: { x: 560, y: 530, w: 100, h: 35, text: 'SHIP NOW', action: () => shipTeaEarly() }
 };
+
+// Ship tea early for bonus
+function shipTeaEarly() {
+    if (game.tea < game.quota) {
+        showMessage('Need more tea to meet quota!');
+        screenFlash(COLORS.danger, 0.3);
+        return;
+    }
+
+    // Calculate bonus based on time remaining
+    const timeBonus = Math.floor(game.quotaTimer / 10); // Up to +12 mood bonus for shipping early
+    const excessBonus = game.tea > game.quota * 1.2 ? 10 : (game.tea > game.quota ? 5 : 0);
+
+    game.tea -= game.quota;
+    game.teaShipped = game.quota;
+    game.totalTeaShipped += game.quota;
+
+    // Mood bonus for early shipment
+    const moodGain = 15 + timeBonus + excessBonus;
+    game.mood = Math.min(100, game.mood + moodGain);
+
+    // Bonus ship for early delivery
+    game.ships = Math.min(game.maxShips, game.ships + 1);
+
+    showMessage(`Quota met early! +${moodGain} mood, +1 ship!`);
+    screenFlash(COLORS.tea, 0.4);
+    spawnParticles(450, 540, COLORS.tea, 25);
+    spawnParticles(450, 540, COLORS.highlight, 15);
+
+    // Advance to next year
+    advanceYear();
+}
 
 // Initialize
 function init() {
@@ -320,14 +353,29 @@ function acceptOffer(offer) {
 
 // Ship encounter (when arriving at port)
 function handleShipArrival(ship, index) {
-    const riskChance = ship.risk * 0.1;
+    // Year 1 (1830) - NO fines or confiscations at all (learning year)
+    if (game.year === 1830) {
+        ship.returning = true;
+        ship.port.risk = Math.min(5, ship.port.risk + 0.2);
+        return false;
+    }
+
+    // Calculate risk based on port risk and year progression
+    // Risk increases VERY slightly each year after year 1
+    const yearPenalty = (game.year - 1830) * 0.01; // +1% per year
+    const riskChance = ship.risk * 0.08 + yearPenalty; // Base 8% per risk level
 
     if (Math.random() < riskChance) {
         // Caught! Determine outcome
         const roll = Math.random();
 
-        if (roll < 0.05) {
-            // Ship captured (5% of failures)
+        // Capture chance increases slightly each year
+        const captureChance = 0.03 + (game.year - 1830) * 0.005; // 3% base, +0.5% per year
+        const confiscateChance = captureChance + 0.10 + (game.year - 1830) * 0.01; // 10% base
+        const fineChance = confiscateChance + 0.15 + (game.year - 1830) * 0.01; // 15% base
+
+        if (roll < captureChance) {
+            // Ship captured
             if (game.bribeCards > 0) {
                 // Offer to use bribe card
                 game.currentEvent = {
@@ -350,22 +398,23 @@ function handleShipArrival(ship, index) {
             }
             captureShip(ship, index);
             return true;
-        } else if (roll < 0.20) {
-            // Confiscated (15% of failures) - lose cargo, keep ship
+        } else if (roll < confiscateChance) {
+            // Confiscated - lose cargo, keep ship
             showMessage(`Cargo confiscated at ${ship.port.name}!`);
             ship.value = 0;
             screenFlash(COLORS.warning, 0.5);
             ship.returning = true;
-        } else if (roll < 0.40) {
-            // Fined (20% of failures)
-            const fine = Math.floor(ship.value * (0.10 + Math.random() * 0.20));
+        } else if (roll < fineChance) {
+            // Fined - scales slightly with year
+            const finePercent = 0.08 + (game.year - 1830) * 0.01; // 8% base, +1% per year
+            const fine = Math.floor(ship.value * finePercent);
             ship.value -= fine;
             game.finesPaid += fine;
             showMessage(`Fined ${fine} silver at ${ship.port.name}`);
             screenFlash(COLORS.warning, 0.3);
             ship.returning = true;
         } else {
-            // Escaped (60% of failures) - no sale, no penalty
+            // Escaped - no sale, no penalty
             showMessage(`Ship escaped authorities at ${ship.port.name}. No sale.`);
             ship.value = 0;
             ship.returning = true;
@@ -713,14 +762,25 @@ function advanceYear() {
         return;
     }
 
-    // Update quota and timer
-    const quotas = [60, 90, 120, 180, 250, 320, 400, 500, 580, 660];
-    game.quota = quotas[game.year - 1830] || 660;
+    // RESET player resources each year (fresh start to maintain difficulty)
+    // Keep ships as a reward, but reset trading goods
+    const yearIndex = game.year - 1830;
+    const startingSilver = [500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400];
+    const startingOpium = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
+
+    game.silver = startingSilver[yearIndex] || 1400;
+    game.opium = startingOpium[yearIndex] || 60;
+    game.tea = 0;  // Always start year with no tea
+
+    // Update quota and timer - rebalanced for difficulty
+    // Quotas scale progressively but reasonably
+    const quotas = [50, 70, 90, 110, 140, 170, 200, 240, 280, 320];
+    game.quota = quotas[yearIndex] || 320;
     game.quotaTimer = 120;
 
     updatePrices();
     if (!game.currentEvent) {
-        showMessage(`Year ${game.year} begins. Quota: ${game.quota} tea`);
+        showMessage(`Year ${game.year} begins. Silver: ${game.silver}, Quota: ${game.quota} tea`);
     }
 }
 
@@ -874,6 +934,9 @@ function drawTutorial() {
         ctx.strokeStyle = COLORS.highlight;
         ctx.lineWidth = 4;
         ctx.strokeRect(435, 568, 305, 60);
+    } else if (step.highlight === 'tutorialEnd') {
+        // Final step - show overlay with clear continue button
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
     } else {
         // Full overlay for steps with no highlight
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -916,11 +979,37 @@ function drawTutorial() {
     }
     ctx.fillText(line.trim(), boxX + boxWidth / 2, y);
 
-    // "Click to continue" for click steps
+    // "Click to continue" for click steps - draw a proper button
     if (step.waitFor === 'click') {
-        ctx.font = '14px Georgia';
-        ctx.fillStyle = COLORS.textLight;
-        ctx.fillText('(Click to continue)', boxX + boxWidth / 2, boxY + boxHeight - 15);
+        // Draw a clear, visible button
+        const btnWidth = 180;
+        const btnHeight = 40;
+        const btnX = boxX + boxWidth / 2 - btnWidth / 2;
+        const btnY = boxY + boxHeight + 20;
+
+        // Button shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.fillRect(btnX + 3, btnY + 3, btnWidth, btnHeight);
+
+        // Button background
+        ctx.fillStyle = COLORS.highlight;
+        ctx.fillRect(btnX, btnY, btnWidth, btnHeight);
+
+        // Button border
+        ctx.strokeStyle = '#b8860b';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(btnX, btnY, btnWidth, btnHeight);
+
+        // Button text
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 16px Georgia';
+        ctx.fillText('CONTINUE', boxX + boxWidth / 2, btnY + btnHeight / 2 + 6);
+
+        // Make the button glow/pulse for visibility
+        const pulse = Math.sin(Date.now() * 0.005) * 0.3 + 0.7;
+        ctx.strokeStyle = `rgba(255, 255, 0, ${pulse})`;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(btnX - 2, btnY - 2, btnWidth + 4, btnHeight + 4);
     }
 }
 
@@ -1391,38 +1480,38 @@ function drawTopBar() {
 }
 
 function drawQuotaPanel() {
-    // Background with shadow
+    // Wider background with shadow to fit SHIP NOW button
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.fillRect(255, canvas.height - 77, 300, 70);
+    ctx.fillRect(225, canvas.height - 77, 450, 70);
 
     ctx.fillStyle = COLORS.panelBg;
-    ctx.fillRect(250, canvas.height - 80, 300, 70);
+    ctx.fillRect(220, canvas.height - 80, 450, 70);
     ctx.strokeStyle = COLORS.panelBorder;
     ctx.lineWidth = 2;
-    ctx.strokeRect(250, canvas.height - 80, 300, 70);
+    ctx.strokeRect(220, canvas.height - 80, 450, 70);
 
     // Tea clipper icon
     ctx.font = '26px Georgia';
-    ctx.fillText('⛵', 265, canvas.height - 38);
+    ctx.fillText('⛵', 235, canvas.height - 38);
 
     // Quota text
     ctx.fillStyle = COLORS.text;
     ctx.font = 'bold 14px Georgia';
     ctx.textAlign = 'left';
-    ctx.fillText(`TEA ORDER: ${game.quota} chests`, 300, canvas.height - 55);
+    ctx.fillText(`TEA ORDER: ${game.quota} chests`, 270, canvas.height - 55);
 
     // Progress bar
     const progress = Math.min(1, game.tea / game.quota);
     ctx.fillStyle = '#dddddd';
-    ctx.fillRect(300, canvas.height - 48, 150, 12);
+    ctx.fillRect(270, canvas.height - 48, 150, 12);
     ctx.fillStyle = progress >= 1 ? COLORS.tea : COLORS.warning;
-    ctx.fillRect(300, canvas.height - 48, 150 * progress, 12);
+    ctx.fillRect(270, canvas.height - 48, 150 * progress, 12);
     ctx.strokeStyle = COLORS.panelBorder;
-    ctx.strokeRect(300, canvas.height - 48, 150, 12);
+    ctx.strokeRect(270, canvas.height - 48, 150, 12);
 
     ctx.font = '11px Georgia';
     ctx.fillStyle = COLORS.text;
-    ctx.fillText(`${game.tea} / ${game.quota}`, 460, canvas.height - 39);
+    ctx.fillText(`${game.tea} / ${game.quota}`, 430, canvas.height - 39);
 
     // Timer
     const minutes = Math.floor(game.quotaTimer / 60);
@@ -1430,12 +1519,49 @@ function drawQuotaPanel() {
     const timerUrgent = game.quotaTimer < 30;
     ctx.fillStyle = timerUrgent ? COLORS.danger : COLORS.text;
     ctx.font = `bold ${timerUrgent ? '20' : '18'}px Georgia`;
-    ctx.fillText(`${minutes}:${seconds.toString().padStart(2, '0')}`, 480, canvas.height - 20);
+    ctx.textAlign = 'left';
+    ctx.fillText(`${minutes}:${seconds.toString().padStart(2, '0')}`, 270, canvas.height - 20);
+
+    // SHIP NOW button - only show if have enough tea
+    const canShip = game.tea >= game.quota;
+    const btn = buttons.shipEarly;
+    const isHovered = mouse.x >= btn.x && mouse.x <= btn.x + btn.w &&
+                      mouse.y >= btn.y && mouse.y <= btn.y + btn.h;
+
+    // Button shadow
+    if (isHovered && canShip) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.fillRect(btn.x + 2, btn.y + 2, btn.w, btn.h);
+    }
+
+    // Button background - green if can ship, gray if not
+    ctx.fillStyle = canShip ? (isHovered ? '#55cc55' : COLORS.tea) : '#888888';
+    ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
+
+    ctx.strokeStyle = canShip ? '#228822' : '#555555';
+    ctx.lineWidth = isHovered && canShip ? 3 : 2;
+    ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
+
+    // Button text
+    ctx.fillStyle = canShip ? '#ffffff' : '#aaaaaa';
+    ctx.font = 'bold 13px Georgia';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(btn.text, btn.x + btn.w / 2, btn.y + btn.h / 2);
+    ctx.textBaseline = 'alphabetic';
+
+    // Bonus indicator
+    if (canShip) {
+        const timeBonus = Math.floor(game.quotaTimer / 10);
+        ctx.fillStyle = COLORS.highlight;
+        ctx.font = '10px Georgia';
+        ctx.fillText(`+${15 + timeBonus} mood`, btn.x + btn.w / 2, btn.y - 5);
+    }
 
     if (timerUrgent && Math.sin(Date.now() * 0.01) > 0) {
         ctx.fillStyle = COLORS.danger;
         ctx.globalAlpha = 0.3;
-        ctx.fillRect(250, canvas.height - 80, 300, 70);
+        ctx.fillRect(220, canvas.height - 80, 450, 70);
         ctx.globalAlpha = 1;
     }
 }

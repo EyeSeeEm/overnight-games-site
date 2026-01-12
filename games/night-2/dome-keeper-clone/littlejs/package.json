@@ -1,0 +1,13 @@
+{
+  "name": "dome-defender",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite --port 5216",
+    "build": "vite build",
+    "test": "node test-game.cjs"
+  },
+  "devDependencies": {
+    "puppeteer": "^24.34.0",
+    "vite": "^7.3.1"
+  }
+}

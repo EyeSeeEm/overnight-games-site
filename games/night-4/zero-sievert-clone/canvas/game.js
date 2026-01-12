@@ -1753,7 +1753,7 @@ function renderHUD() {
     ctx.fillText(`Weight: ${weight.toFixed(1)}/${player.maxWeight}kg`, 10, HEIGHT - 10);
 
     // Status effects (right side)
-    let statusY = HEIGHT - 70;
+    statusY = HEIGHT - 70;
     ctx.textAlign = 'right';
     if (player.heavyBleeding) {
         ctx.fillStyle = '#cc0000';

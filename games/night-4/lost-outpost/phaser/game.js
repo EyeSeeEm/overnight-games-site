@@ -463,6 +463,9 @@ class GameScene extends Phaser.Scene {
         const levelWidth = 40;
         const levelHeight = 30;
 
+        // Track wall positions (allows removal for corridors)
+        this.wallMap = {};
+
         // Create floor tiles
         for (let x = 0; x < levelWidth; x++) {
             for (let y = 0; y < levelHeight; y++) {
@@ -470,34 +473,63 @@ class GameScene extends Phaser.Scene {
             }
         }
 
-        // Create walls (border)
+        // Create border walls in map
         for (let x = 0; x < levelWidth; x++) {
-            this.walls.create(x * TILE_SIZE + 16, 16, 'wall');
-            this.walls.create(x * TILE_SIZE + 16, (levelHeight - 1) * TILE_SIZE + 16, 'wall');
+            this.wallMap[`${x},0`] = true;
+            this.wallMap[`${x},${levelHeight - 1}`] = true;
         }
         for (let y = 0; y < levelHeight; y++) {
-            this.walls.create(16, y * TILE_SIZE + 16, 'wall');
-            this.walls.create((levelWidth - 1) * TILE_SIZE + 16, y * TILE_SIZE + 16, 'wall');
+            this.wallMap[`0,${y}`] = true;
+            this.wallMap[`${levelWidth - 1},${y}`] = true;
         }
 
-        // Create rooms with corridors
-        this.createRoom(5, 5, 8, 6);
-        this.createRoom(20, 3, 10, 8);
-        this.createRoom(5, 18, 10, 8);
-        this.createRoom(22, 16, 12, 10);
+        // Create rooms with openings for corridors
+        // Room 1: Start room - opening on right side at y=8
+        this.createRoom(5, 5, 8, 6, [{ side: 'right', y: 7 }, { side: 'right', y: 8 }, { side: 'right', y: 9 }]);
 
-        // Add corridors
-        this.createCorridor(13, 8, 7, 'horizontal');
-        this.createCorridor(14, 8, 10, 'vertical');
-        this.createCorridor(15, 20, 7, 'horizontal');
+        // Room 2: Top right - opening on left at y=8
+        this.createRoom(20, 3, 10, 8, [{ side: 'left', y: 7 }, { side: 'left', y: 8 }, { side: 'left', y: 9 }]);
+
+        // Room 3: Bottom left - openings on top and right
+        this.createRoom(5, 18, 10, 8, [
+            { side: 'top', x: 9 }, { side: 'top', x: 10 }, { side: 'top', x: 11 },
+            { side: 'right', y: 21 }, { side: 'right', y: 22 }, { side: 'right', y: 23 }
+        ]);
+
+        // Room 4: Bottom right - openings on left and top
+        this.createRoom(22, 16, 12, 10, [
+            { side: 'left', y: 21 }, { side: 'left', y: 22 }, { side: 'left', y: 23 },
+            { side: 'top', x: 27 }, { side: 'top', x: 28 }, { side: 'top', x: 29 }
+        ]);
+
+        // Create corridors connecting rooms
+        // Horizontal corridor from Room 1 to Room 2 (at y=7,8,9)
+        this.createCorridor(13, 7, 8, 'horizontal', 3);
+
+        // Vertical corridor from top area down to Room 3 (at x=9,10,11)
+        this.createCorridor(9, 11, 8, 'vertical', 3);
+
+        // Horizontal corridor from Room 3 to Room 4 (at y=21,22,23)
+        this.createCorridor(15, 21, 8, 'horizontal', 3);
+
+        // Vertical corridor from Room 2 area down to Room 4 (at x=27,28,29)
+        this.createCorridor(27, 11, 6, 'vertical', 3);
+
+        // Now create actual wall sprites from the map
+        for (const key in this.wallMap) {
+            if (this.wallMap[key]) {
+                const [x, y] = key.split(',').map(Number);
+                this.walls.create(x * TILE_SIZE + 16, y * TILE_SIZE + 16, 'wall');
+            }
+        }
 
         // Add terminals
         this.terminals.create(8 * TILE_SIZE, 7 * TILE_SIZE, 'terminal');
         this.terminals.create(25 * TILE_SIZE, 5 * TILE_SIZE, 'terminal');
 
-        // Add doors
-        this.createDoor(19, 8, false); // Unlocked door
-        this.createDoor(14, 17, true);  // Locked door (needs keycard)
+        // Add doors in corridors
+        this.createDoor(16, 8, false); // Unlocked door in horizontal corridor
+        this.createDoor(10, 15, true);  // Locked door in vertical corridor (needs keycard)
 
         // Level exit zone (bottom right room)
         this.add.rectangle(30 * TILE_SIZE, 22 * TILE_SIZE, 64, 64, 0x00FF00, 0.3);
@@ -508,6 +540,75 @@ class GameScene extends Phaser.Scene {
         this.add.text(30 * TILE_SIZE, 22 * TILE_SIZE, 'EXIT', {
             fontSize: '12px', fontFamily: 'Arial', color: '#00FF00'
         }).setOrigin(0.5);
+
+        // Verify connectivity
+        this.verifyConnectivity();
+    }
+
+    verifyConnectivity() {
+        // Flood fill from player start to verify exit is reachable
+        const levelWidth = 40;
+        const levelHeight = 30;
+        const startX = 9;
+        const startY = 8;
+        const exitX = 30;
+        const exitY = 22;
+
+        const visited = new Set();
+        const queue = [[startX, startY]];
+        visited.add(`${startX},${startY}`);
+
+        while (queue.length > 0) {
+            const [cx, cy] = queue.shift();
+
+            const neighbors = [[cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]];
+            for (const [nx, ny] of neighbors) {
+                const key = `${nx},${ny}`;
+                if (nx >= 0 && nx < levelWidth && ny >= 0 && ny < levelHeight &&
+                    !visited.has(key) && !this.wallMap[key]) {
+                    visited.add(key);
+                    queue.push([nx, ny]);
+                }
+            }
+        }
+
+        if (!visited.has(`${exitX},${exitY}`)) {
+            console.warn('Level connectivity issue detected! Creating emergency path...');
+            this.createEmergencyPath(startX, startY, exitX, exitY);
+        } else {
+            console.log('Level connectivity verified: All areas reachable');
+        }
+    }
+
+    createEmergencyPath(x1, y1, x2, y2) {
+        // Create direct path if level generation fails
+        // Clear horizontal path first
+        for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                const key = `${x},${y1 + dy}`;
+                delete this.wallMap[key];
+                // Remove wall sprites
+                this.walls.getChildren().forEach(wall => {
+                    if (Math.abs(wall.x - x * TILE_SIZE - 16) < 2 &&
+                        Math.abs(wall.y - (y1 + dy) * TILE_SIZE - 16) < 2) {
+                        wall.destroy();
+                    }
+                });
+            }
+        }
+        // Then vertical
+        for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
+            for (let dx = -1; dx <= 1; dx++) {
+                const key = `${x2 + dx},${y}`;
+                delete this.wallMap[key];
+                this.walls.getChildren().forEach(wall => {
+                    if (Math.abs(wall.x - (x2 + dx) * TILE_SIZE - 16) < 2 &&
+                        Math.abs(wall.y - y * TILE_SIZE - 16) < 2) {
+                        wall.destroy();
+                    }
+                });
+            }
+        }
     }
 
     createDoor(x, y, locked) {
@@ -520,30 +621,60 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    createRoom(x, y, width, height) {
+    createRoom(x, y, width, height, openings = []) {
+        // Build set of opening positions
+        const openingSet = new Set();
+        openings.forEach(o => {
+            if (o.side === 'top') openingSet.add(`top,${o.x}`);
+            else if (o.side === 'bottom') openingSet.add(`bottom,${o.x}`);
+            else if (o.side === 'left') openingSet.add(`left,${o.y}`);
+            else if (o.side === 'right') openingSet.add(`right,${o.y}`);
+        });
+
         // Top and bottom walls
         for (let i = 0; i <= width; i++) {
-            this.walls.create((x + i) * TILE_SIZE + 16, y * TILE_SIZE + 16, 'wall');
-            this.walls.create((x + i) * TILE_SIZE + 16, (y + height) * TILE_SIZE + 16, 'wall');
+            const wx = x + i;
+            if (!openingSet.has(`top,${wx}`)) {
+                this.wallMap[`${wx},${y}`] = true;
+            }
+            if (!openingSet.has(`bottom,${wx}`)) {
+                this.wallMap[`${wx},${y + height}`] = true;
+            }
         }
         // Left and right walls
-        for (let j = 1; j < height; j++) {
-            this.walls.create(x * TILE_SIZE + 16, (y + j) * TILE_SIZE + 16, 'wall');
-            this.walls.create((x + width) * TILE_SIZE + 16, (y + j) * TILE_SIZE + 16, 'wall');
+        for (let j = 0; j <= height; j++) {
+            const wy = y + j;
+            if (!openingSet.has(`left,${wy}`)) {
+                this.wallMap[`${x},${wy}`] = true;
+            }
+            if (!openingSet.has(`right,${wy}`)) {
+                this.wallMap[`${x + width},${wy}`] = true;
+            }
         }
     }
 
-    createCorridor(x, y, length, direction) {
+    createCorridor(x, y, length, direction, width = 3) {
+        const halfWidth = Math.floor(width / 2);
+
         if (direction === 'horizontal') {
-            // Create floor in corridor (walls on sides)
             for (let i = 0; i < length; i++) {
-                this.walls.create((x + i) * TILE_SIZE + 16, (y - 1) * TILE_SIZE + 16, 'wall');
-                this.walls.create((x + i) * TILE_SIZE + 16, (y + 1) * TILE_SIZE + 16, 'wall');
+                // Clear corridor floor
+                for (let w = 0; w < width; w++) {
+                    delete this.wallMap[`${x + i},${y + w}`];
+                }
+                // Add corridor walls
+                this.wallMap[`${x + i},${y - 1}`] = true;
+                this.wallMap[`${x + i},${y + width}`] = true;
             }
-        } else {
+        } else { // vertical
             for (let i = 0; i < length; i++) {
-                this.walls.create((x - 1) * TILE_SIZE + 16, (y + i) * TILE_SIZE + 16, 'wall');
-                this.walls.create((x + 1) * TILE_SIZE + 16, (y + i) * TILE_SIZE + 16, 'wall');
+                // Clear corridor floor
+                for (let w = 0; w < width; w++) {
+                    delete this.wallMap[`${x + w},${y + i}`];
+                }
+                // Add corridor walls
+                this.wallMap[`${x - 1},${y + i}`] = true;
+                this.wallMap[`${x + width},${y + i}`] = true;
             }
         }
     }

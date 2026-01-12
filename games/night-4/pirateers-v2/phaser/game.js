@@ -810,8 +810,13 @@ class SailingScene extends Phaser.Scene {
             left: Phaser.Input.Keyboard.KeyCodes.A,
             right: Phaser.Input.Keyboard.KeyCodes.D,
             fire: Phaser.Input.Keyboard.KeyCodes.SPACE,
-            esc: Phaser.Input.Keyboard.KeyCodes.ESC
+            esc: Phaser.Input.Keyboard.KeyCodes.ESC,
+            dock: Phaser.Input.Keyboard.KeyCodes.E
         });
+
+        // Port interaction state
+        this.nearPort = null;
+        this.portMenuOpen = false;
 
         // Collisions
         this.physics.add.overlap(this.playerBullets, this.enemies, this.bulletHitEnemy, null, this);
@@ -854,7 +859,9 @@ class SailingScene extends Phaser.Scene {
             this.add.circle(island.x, island.y, island.radius * 0.7, COLORS.GRASS);
 
             // Port dock
-            this.add.rectangle(island.x + island.radius - 10, island.y, 30, 15, 0x8b4513);
+            const dockX = island.x + island.radius - 10;
+            const dockY = island.y;
+            this.add.rectangle(dockX, dockY, 30, 15, 0x8b4513);
 
             // Island label
             this.add.text(island.x, island.y - island.radius - 15, island.name, {
@@ -864,13 +871,32 @@ class SailingScene extends Phaser.Scene {
                 strokeThickness: 2
             }).setOrigin(0.5);
 
-            // Port marker
-            const marker = this.add.circle(island.x + island.radius - 10, island.y, 8, 0xffd700);
+            // Port marker (gold dot)
+            const marker = this.add.circle(dockX, dockY, 8, 0xffd700);
             marker.island = island;
+
+            // Glowing ring around port (pulsing effect)
+            const glowRing = this.add.circle(dockX, dockY, 40, 0x44ff44, 0);
+            glowRing.setStrokeStyle(3, 0x44ff44, 0);
+            glowRing.visible = false;
+
+            // Dock prompt text
+            const dockPrompt = this.add.text(dockX, dockY - 50, 'Press E to DOCK', {
+                fontSize: '14px',
+                fontFamily: 'Arial',
+                color: '#44ff44',
+                stroke: '#000000',
+                strokeThickness: 3
+            }).setOrigin(0.5);
+            dockPrompt.visible = false;
 
             this.islands.push({
                 sprite: islandSprite,
                 marker: marker,
+                glowRing: glowRing,
+                dockPrompt: dockPrompt,
+                dockX: dockX,
+                dockY: dockY,
                 data: island
             });
         });
@@ -1246,8 +1272,13 @@ class SailingScene extends Phaser.Scene {
         this.uiContainer.add(this.goldText);
 
         // Cargo display
-        this.cargoText = this.add.text(450, 10, `Cargo: ${gameData.cargo.length}/${gameData.cargoMax}`, { fontSize: '14px', color: '#aaaaaa' });
+        this.cargoText = this.add.text(450, 5, `Cargo: ${gameData.cargo.length}/${gameData.cargoMax}`, { fontSize: '14px', color: '#aaaaaa' });
         this.uiContainer.add(this.cargoText);
+
+        // Cargo preview icons container
+        this.cargoIconsContainer = this.add.container(450, 22).setScrollFactor(0);
+        this.uiContainer.add(this.cargoIconsContainer);
+        this.updateCargoIcons();
 
         // Neptune's Eye pieces
         this.piecesText = this.add.text(600, 10, `Eye Pieces: ${gameData.neptunesPieces.length}/5`, { fontSize: '14px', color: '#aa88ff' });
@@ -1735,18 +1766,72 @@ class SailingScene extends Phaser.Scene {
         gold.value = goldAmount;
         this.showFloatingText(enemy.x, enemy.y, '+' + goldAmount + ' Gold', '#ffd700');
 
-        // Drop loot
-        const lootTypes = Object.keys(CARGO_ITEMS);
-        for (let i = 0; i < enemy.lootSlots; i++) {
-            if (Math.random() < 0.5) {
-                const loot = this.loot.create(
-                    enemy.x + Phaser.Math.Between(-30, 30),
-                    enemy.y + Phaser.Math.Between(-30, 30),
-                    'loot'
-                );
-                loot.itemType = lootTypes[Math.floor(Math.random() * lootTypes.length)];
-            }
+        // DROP CARGO based on enemy type
+        const lootSlots = ENEMY_TYPES[enemy.enemyType].lootSlots || 2;
+        const lootCount = Phaser.Math.Between(1, lootSlots);
+
+        // Determine cargo types based on enemy
+        let possibleCargo = [];
+        if (enemy.enemyType === 'merchant') {
+            possibleCargo = ['rum', 'spices', 'silk', 'rum', 'spices']; // Merchants carry trade goods
+        } else if (enemy.enemyType === 'navy_sloop' || enemy.enemyType === 'navy_frigate') {
+            possibleCargo = ['rum', 'spices', 'gold_bars']; // Navy has supplies + some valuables
+        } else if (enemy.enemyType === 'pirate_raider') {
+            possibleCargo = ['rum', 'silk', 'gold_bars', 'spices']; // Pirates have stolen goods
+        } else if (enemy.enemyType === 'pirate_captain') {
+            possibleCargo = ['gold_bars', 'gems', 'silk', 'artifact']; // Captains have rare loot
+        } else if (enemy.enemyType === 'ghost_ship') {
+            possibleCargo = ['artifact', 'gems', 'gold_bars']; // Ghost ships have ancient treasures
+        } else {
+            possibleCargo = ['rum', 'spices'];
         }
+
+        // Create loot drops
+        for (let i = 0; i < lootCount; i++) {
+            const cargoType = possibleCargo[Phaser.Math.Between(0, possibleCargo.length - 1)];
+            const offsetX = Phaser.Math.Between(-30, 30);
+            const offsetY = Phaser.Math.Between(-30, 30);
+
+            const lootDrop = this.loot.create(enemy.x + offsetX, enemy.y + offsetY, 'loot');
+            lootDrop.cargoType = cargoType;
+            lootDrop.setTint(this.getCargoColor(cargoType));
+
+            // Float and sparkle effect
+            this.tweens.add({
+                targets: lootDrop,
+                y: lootDrop.y - 5,
+                yoyo: true,
+                repeat: -1,
+                duration: 500 + Math.random() * 200
+            });
+
+            // Sparkle
+            this.time.addEvent({
+                delay: 300,
+                callback: () => {
+                    if (lootDrop.active) {
+                        const sparkle = this.add.circle(lootDrop.x + Phaser.Math.Between(-5, 5), lootDrop.y + Phaser.Math.Between(-5, 5), 2, 0xffffff);
+                        this.tweens.add({
+                            targets: sparkle,
+                            alpha: 0,
+                            scale: 2,
+                            duration: 300,
+                            onComplete: () => sparkle.destroy()
+                        });
+                    }
+                },
+                callbackScope: this,
+                repeat: 20
+            });
+
+            // Auto-destroy after 15 seconds
+            this.time.delayedCall(15000, () => {
+                if (lootDrop.active) lootDrop.destroy();
+            });
+        }
+
+        // Show cargo drop message
+        this.showFloatingText(enemy.x, enemy.y + 20, `+${lootCount} Cargo Dropped!`, '#88ff88');
 
         // Explosion particles
         for (let i = 0; i < 10; i++) {
@@ -1821,8 +1906,11 @@ class SailingScene extends Phaser.Scene {
     }
 
     collectLoot(player, loot) {
+        // Handle both old itemType and new cargoType properties
+        const itemType = loot.cargoType || loot.itemType;
+
         if (gameData.cargo.length < gameData.cargoMax) {
-            const itemInfo = CARGO_ITEMS[loot.itemType];
+            const itemInfo = CARGO_ITEMS[itemType];
 
             // Check if it's a treasure map
             if (itemInfo && itemInfo.special === 'treasure') {
@@ -1831,8 +1919,11 @@ class SailingScene extends Phaser.Scene {
                 return;
             }
 
-            gameData.cargo.push(loot.itemType);
+            gameData.cargo.push(itemType);
+            this.showFloatingText(player.x, player.y - 20, '+' + (itemInfo ? itemInfo.name : 'Cargo'), '#88ff88');
             loot.destroy();
+        } else {
+            this.showFloatingText(player.x, player.y - 20, 'Cargo full!', '#ff4444');
         }
     }
 
@@ -1842,15 +1933,322 @@ class SailingScene extends Phaser.Scene {
         gold.destroy();
     }
 
+    getCargoColor(cargoType) {
+        const colors = {
+            rum: 0x8b4513,      // Brown barrel
+            spices: 0xff6600,   // Orange
+            silk: 0xff88ff,     // Pink/purple
+            gold_bars: 0xffd700, // Gold
+            gems: 0x00ffff,     // Cyan
+            artifact: 0xaa00aa, // Purple
+            treasure_map: 0xffff00 // Bright yellow
+        };
+        return colors[cargoType] || 0xaa8844;
+    }
+
+    updateCargoIcons() {
+        if (!this.cargoIconsContainer) return;
+
+        // Clear existing icons
+        this.cargoIconsContainer.removeAll(true);
+
+        // Group cargo by type
+        const cargoCount = {};
+        gameData.cargo.forEach(item => {
+            cargoCount[item] = (cargoCount[item] || 0) + 1;
+        });
+
+        // Create icons for each cargo type (max 8 shown)
+        let x = 0;
+        const types = Object.keys(cargoCount).slice(0, 8);
+        types.forEach(cargoType => {
+            const color = this.getCargoColor(cargoType);
+            const count = cargoCount[cargoType];
+
+            // Icon
+            const icon = this.add.rectangle(x + 8, 0, 14, 14, color);
+            icon.setStrokeStyle(1, 0xffffff, 0.5);
+            this.cargoIconsContainer.add(icon);
+
+            // Count badge if more than 1
+            if (count > 1) {
+                const badge = this.add.text(x + 14, -6, 'x' + count, {
+                    fontSize: '8px',
+                    color: '#ffffff'
+                });
+                this.cargoIconsContainer.add(badge);
+            }
+
+            x += 22;
+        });
+
+        // Show "..." if more cargo types not shown
+        if (Object.keys(cargoCount).length > 8) {
+            const more = this.add.text(x, -3, '...', {
+                fontSize: '10px',
+                color: '#888888'
+            });
+            this.cargoIconsContainer.add(more);
+        }
+    }
+
     checkIslandProximity() {
+        this.nearPort = null;
+
         this.islands.forEach(island => {
-            const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, island.data.x, island.data.y);
-            if (dist < island.data.radius + 50) {
-                // Near island - could implement docking/trading here
+            // Distance to port dock specifically
+            const distToPort = Phaser.Math.Distance.Between(this.player.x, this.player.y, island.dockX, island.dockY);
+            const distToIsland = Phaser.Math.Distance.Between(this.player.x, this.player.y, island.data.x, island.data.y);
+
+            if (distToPort < 100) {
+                // Near port - show dock prompt
                 island.marker.setFillStyle(0x44ff44);
+                island.glowRing.visible = true;
+                island.dockPrompt.visible = true;
+
+                // Pulse the glow ring
+                const pulse = 0.3 + Math.sin(this.time.now / 200) * 0.3;
+                island.glowRing.setStrokeStyle(3, 0x44ff44, pulse);
+                island.glowRing.setFillStyle(0x44ff44, pulse * 0.2);
+
+                this.nearPort = island;
+
+                // Check for dock key press
+                if (Phaser.Input.Keyboard.JustDown(this.cursors.dock) && !this.portMenuOpen) {
+                    this.openPortMenu(island);
+                }
             } else {
                 island.marker.setFillStyle(0xffd700);
+                island.glowRing.visible = false;
+                island.dockPrompt.visible = false;
             }
+        });
+    }
+
+    openPortMenu(island) {
+        this.portMenuOpen = true;
+        this.physics.pause();
+
+        // Create port menu container
+        this.portMenuContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(1000);
+
+        // Background overlay
+        const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.7);
+        this.portMenuContainer.add(overlay);
+
+        // Menu panel
+        const panel = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 400, 350, 0x1a1a2e);
+        panel.setStrokeStyle(3, 0xffd700);
+        this.portMenuContainer.add(panel);
+
+        // Port name
+        this.portMenuContainer.add(this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 140, island.data.name, {
+            fontSize: '28px',
+            fontFamily: 'Georgia',
+            color: '#ffd700'
+        }).setOrigin(0.5));
+
+        // Port type
+        const typeNames = { home: 'Home Port', trading: 'Trading Post', black_market: 'Black Market', military: 'Navy Outpost', treasure: 'Treasure Isle', cursed: 'Cursed Waters' };
+        this.portMenuContainer.add(this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 110, typeNames[island.data.type] || 'Port', {
+            fontSize: '14px',
+            color: '#aaaaaa'
+        }).setOrigin(0.5));
+
+        // Menu buttons
+        const buttonY = GAME_HEIGHT / 2 - 50;
+        const buttons = [
+            { label: 'TRADE', y: buttonY, action: () => this.openTradeMenu(island) },
+            { label: 'REPAIR', y: buttonY + 50, action: () => this.repairShip(island) },
+            { label: 'UPGRADE', y: buttonY + 100, action: () => this.openUpgradeMenu(island) },
+            { label: 'LEAVE', y: buttonY + 150, action: () => this.closePortMenu() }
+        ];
+
+        buttons.forEach(btn => {
+            const bg = this.add.rectangle(GAME_WIDTH / 2, btn.y, 200, 40, 0x4a4a6a)
+                .setInteractive({ useHandCursor: true })
+                .on('pointerover', () => bg.setFillStyle(0x6a6a8a))
+                .on('pointerout', () => bg.setFillStyle(0x4a4a6a))
+                .on('pointerdown', btn.action);
+            this.portMenuContainer.add(bg);
+
+            this.portMenuContainer.add(this.add.text(GAME_WIDTH / 2, btn.y, btn.label, {
+                fontSize: '18px',
+                color: '#ffffff'
+            }).setOrigin(0.5));
+        });
+
+        // Gold display
+        this.portMenuContainer.add(this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 140, 'Gold: ' + gameData.gold, {
+            fontSize: '16px',
+            color: '#ffd700'
+        }).setOrigin(0.5));
+
+        // Ship status
+        const repairCost = Math.max(0, Math.floor((gameData.ship.maxArmor - gameData.ship.armor) * 0.5));
+        this.portMenuContainer.add(this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 160, `Ship: ${gameData.ship.armor}/${gameData.ship.maxArmor} HP (Repair: ${repairCost}g)`, {
+            fontSize: '12px',
+            color: '#aaaaaa'
+        }).setOrigin(0.5));
+    }
+
+    closePortMenu() {
+        if (this.portMenuContainer) {
+            this.portMenuContainer.destroy();
+            this.portMenuContainer = null;
+        }
+        this.portMenuOpen = false;
+        this.physics.resume();
+    }
+
+    repairShip(island) {
+        const damage = gameData.ship.maxArmor - gameData.ship.armor;
+        if (damage <= 0) {
+            this.showPortMessage('Ship is already at full health!');
+            return;
+        }
+
+        const cost = Math.floor(damage * 0.5);
+        if (gameData.gold >= cost) {
+            gameData.gold -= cost;
+            gameData.ship.armor = gameData.ship.maxArmor;
+            this.player.hp = gameData.ship.maxArmor;
+            this.showPortMessage(`Ship repaired for ${cost} gold!`);
+            this.closePortMenu();
+        } else {
+            this.showPortMessage('Not enough gold!');
+        }
+    }
+
+    openTradeMenu(island) {
+        // Clear current menu
+        this.portMenuContainer.removeAll(true);
+
+        // Background
+        const overlay = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.7);
+        this.portMenuContainer.add(overlay);
+
+        const panel = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 500, 400, 0x1a1a2e);
+        panel.setStrokeStyle(3, 0xffd700);
+        this.portMenuContainer.add(panel);
+
+        this.portMenuContainer.add(this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 170, 'TRADE - ' + island.data.name, {
+            fontSize: '24px',
+            color: '#ffd700'
+        }).setOrigin(0.5));
+
+        // Sell cargo
+        this.portMenuContainer.add(this.add.text(GAME_WIDTH / 2 - 200, GAME_HEIGHT / 2 - 130, 'Your Cargo:', {
+            fontSize: '16px',
+            color: '#ffffff'
+        }));
+
+        if (gameData.cargo.length === 0) {
+            this.portMenuContainer.add(this.add.text(GAME_WIDTH / 2 - 200, GAME_HEIGHT / 2 - 100, 'Empty', {
+                fontSize: '14px',
+                color: '#666666'
+            }));
+        } else {
+            // Group cargo by type
+            const cargoCount = {};
+            gameData.cargo.forEach(item => {
+                cargoCount[item] = (cargoCount[item] || 0) + 1;
+            });
+
+            let y = GAME_HEIGHT / 2 - 100;
+            Object.keys(cargoCount).forEach(itemType => {
+                const item = CARGO_ITEMS[itemType];
+                if (!item) return;
+                const sellPrice = Math.floor(item.value * island.data.prices.sell);
+                const count = cargoCount[itemType];
+
+                const text = this.add.text(GAME_WIDTH / 2 - 200, y, `${item.name} x${count} - ${sellPrice}g each`, {
+                    fontSize: '12px',
+                    color: '#aaffaa'
+                }).setInteractive({ useHandCursor: true })
+                    .on('pointerdown', () => this.sellCargo(itemType, island));
+                this.portMenuContainer.add(text);
+                y += 20;
+            });
+        }
+
+        // Sell All button
+        if (gameData.cargo.length > 0) {
+            const sellAllBtn = this.add.rectangle(GAME_WIDTH / 2 - 120, GAME_HEIGHT / 2 + 100, 120, 35, 0x44aa44)
+                .setInteractive({ useHandCursor: true })
+                .on('pointerdown', () => this.sellAllCargo(island));
+            this.portMenuContainer.add(sellAllBtn);
+            this.portMenuContainer.add(this.add.text(GAME_WIDTH / 2 - 120, GAME_HEIGHT / 2 + 100, 'SELL ALL', {
+                fontSize: '14px',
+                color: '#ffffff'
+            }).setOrigin(0.5));
+        }
+
+        // Gold display
+        this.tradeGoldText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 150, 'Gold: ' + gameData.gold, {
+            fontSize: '18px',
+            color: '#ffd700'
+        }).setOrigin(0.5);
+        this.portMenuContainer.add(this.tradeGoldText);
+
+        // Back button
+        const backBtn = this.add.rectangle(GAME_WIDTH / 2 + 120, GAME_HEIGHT / 2 + 100, 120, 35, 0x6a4a4a)
+            .setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => {
+                this.closePortMenu();
+                this.openPortMenu(island);
+            });
+        this.portMenuContainer.add(backBtn);
+        this.portMenuContainer.add(this.add.text(GAME_WIDTH / 2 + 120, GAME_HEIGHT / 2 + 100, 'BACK', {
+            fontSize: '14px',
+            color: '#ffffff'
+        }).setOrigin(0.5));
+    }
+
+    sellCargo(itemType, island) {
+        const idx = gameData.cargo.indexOf(itemType);
+        if (idx !== -1) {
+            gameData.cargo.splice(idx, 1);
+            const item = CARGO_ITEMS[itemType];
+            const price = Math.floor(item.value * island.data.prices.sell);
+            gameData.gold += price;
+            gameData.statistics.goldEarned += price;
+            this.showPortMessage(`Sold ${item.name} for ${price} gold!`);
+            if (this.tradeGoldText) this.tradeGoldText.setText('Gold: ' + gameData.gold);
+        }
+    }
+
+    sellAllCargo(island) {
+        let totalValue = 0;
+        gameData.cargo.forEach(itemType => {
+            const item = CARGO_ITEMS[itemType];
+            if (item) {
+                totalValue += Math.floor(item.value * island.data.prices.sell);
+            }
+        });
+        gameData.gold += totalValue;
+        gameData.statistics.goldEarned += totalValue;
+        gameData.cargo = [];
+        this.showPortMessage(`Sold all cargo for ${totalValue} gold!`);
+        if (this.tradeGoldText) this.tradeGoldText.setText('Gold: ' + gameData.gold);
+    }
+
+    openUpgradeMenu(island) {
+        // Redirect to base for upgrades
+        this.showPortMessage('Return to Port Haven for upgrades!');
+    }
+
+    showPortMessage(msg) {
+        if (this.portMessageText) this.portMessageText.destroy();
+        this.portMessageText = this.add.text(GAME_WIDTH / 2, 50, msg, {
+            fontSize: '16px',
+            color: '#ffff44',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(1001);
+
+        this.time.delayedCall(2000, () => {
+            if (this.portMessageText) this.portMessageText.destroy();
         });
     }
 
@@ -1865,6 +2263,9 @@ class SailingScene extends Phaser.Scene {
 
         // Update cargo
         this.cargoText.setText(`Cargo: ${gameData.cargo.length}/${gameData.cargoMax}`);
+
+        // Update cargo icons
+        this.updateCargoIcons();
 
         // Update pieces
         this.piecesText.setText(`Eye Pieces: ${gameData.neptunesPieces.length}/5`);

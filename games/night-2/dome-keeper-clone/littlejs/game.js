@@ -1,13 +1,21 @@
 // Dome Defender - Mining Survival (Dome Keeper Clone)
 // Mine resources, defend your dome, find the relic
+// WASD to dig in all 4 directions!
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const WIDTH = 800;
 const HEIGHT = 600;
 const TILE_SIZE = 16;
-const GRID_WIDTH = 50;
-const GRID_HEIGHT = 35;
+
+// Larger map per feedback - 80x100 tiles
+const GRID_WIDTH = 80;
+const GRID_HEIGHT = 100;
+
+// Camera configuration - zoomed in view
+const CAMERA_VISIBLE_TILES_X = 25;
+const CAMERA_VISIBLE_TILES_Y = 18;
+const CAMERA_FOLLOW_SPEED = 0.08;
 
 // Colors
 const COLORS = {
@@ -15,14 +23,21 @@ const COLORS = {
   dome: '#4488cc',
   domeGlow: '#66aaff',
   player: '#ffcc00',
-  dirt: '#553311',
-  dirtLight: '#664422',
-  rock: '#444444',
-  rockLight: '#555555',
-  iron: '#886644',
-  water: '#4488ff',
-  cobalt: '#8844ff',
+  playerGlow: '#ffee88',
+  dirt: '#8B4513',
+  softStite: '#A9A9A9',
+  hardStone: '#696969',
+  denseRock: '#4A4A4A',
+  crystalRock: '#4169E1',
+  obsidian: '#2F1B41',
+  iron: '#B87333',
+  ironGlow: '#D4945A',
+  water: '#4A90D9',
+  waterGlow: '#7AB8F5',
+  cobalt: '#8B5CF6',
+  cobaltGlow: '#A78BFA',
   relic: '#ffdd00',
+  relicGlow: '#fff888',
   empty: '#0a0810',
   laser: '#ff4444',
   laserGlow: '#ff8888',
@@ -32,30 +47,38 @@ const COLORS = {
   text: '#ffffff'
 };
 
-// Tile types
+// Tile types - expanded with more rock variety
 const TILE = {
   EMPTY: 0,
   DIRT: 1,
-  ROCK: 2,
-  HARD_ROCK: 3,
-  IRON: 4,
-  WATER: 5,
-  COBALT: 6,
-  RELIC: 7,
-  DOME: 8
+  SOFT_STONE: 2,
+  HARD_STONE: 3,
+  DENSE_ROCK: 4,
+  CRYSTAL_ROCK: 5,
+  OBSIDIAN: 6,
+  IRON: 7,
+  WATER: 8,
+  COBALT: 9,
+  RELIC: 10,
+  DOME: 11,
+  BEDROCK: 12
 };
 
-// Tile properties
+// Tile properties - more rock types with distinct properties
 const TILE_PROPS = {
-  [TILE.EMPTY]: { hp: 0, color: COLORS.empty },
-  [TILE.DIRT]: { hp: 4, color: COLORS.dirt },
-  [TILE.ROCK]: { hp: 12, color: COLORS.rock },
-  [TILE.HARD_ROCK]: { hp: 24, color: '#333333' },
-  [TILE.IRON]: { hp: 8, color: COLORS.iron, resource: 'iron', amount: [1, 3] },
-  [TILE.WATER]: { hp: 6, color: COLORS.water, resource: 'water', amount: [1, 2] },
-  [TILE.COBALT]: { hp: 10, color: COLORS.cobalt, resource: 'cobalt', amount: [1, 2] },
-  [TILE.RELIC]: { hp: 20, color: COLORS.relic, resource: 'relic', amount: [1, 1] },
-  [TILE.DOME]: { hp: 999, color: COLORS.dome }
+  [TILE.EMPTY]: { hp: 0, color: COLORS.empty, name: 'Air' },
+  [TILE.DIRT]: { hp: 2, color: COLORS.dirt, name: 'Dirt' },
+  [TILE.SOFT_STONE]: { hp: 4, color: COLORS.softStite, name: 'Soft Stone' },
+  [TILE.HARD_STONE]: { hp: 8, color: COLORS.hardStone, name: 'Hard Stone' },
+  [TILE.DENSE_ROCK]: { hp: 12, color: COLORS.denseRock, name: 'Dense Rock' },
+  [TILE.CRYSTAL_ROCK]: { hp: 16, color: COLORS.crystalRock, name: 'Crystal Rock' },
+  [TILE.OBSIDIAN]: { hp: 24, color: COLORS.obsidian, name: 'Obsidian' },
+  [TILE.IRON]: { hp: 6, color: COLORS.iron, resource: 'iron', amount: [1, 4], name: 'Iron Ore' },
+  [TILE.WATER]: { hp: 5, color: COLORS.water, resource: 'water', amount: [1, 3], name: 'Water Crystal' },
+  [TILE.COBALT]: { hp: 10, color: COLORS.cobalt, resource: 'cobalt', amount: [1, 3], name: 'Cobalt Ore' },
+  [TILE.RELIC]: { hp: 20, color: COLORS.relic, resource: 'relic', amount: [1, 1], name: 'Relic Chamber' },
+  [TILE.DOME]: { hp: 999, color: COLORS.dome, name: 'Dome' },
+  [TILE.BEDROCK]: { hp: 9999, color: '#111111', name: 'Bedrock' }
 };
 
 // Game state
@@ -65,7 +88,7 @@ const state = {
   wave: 0,
   maxWaves: 10,
   waveTimer: 0,
-  miningDuration: 45000, // 45 seconds to mine
+  miningDuration: 60000, // 60 seconds to mine
   defenseDuration: 30000,
 
   // Resources
@@ -90,21 +113,32 @@ const state = {
   laserLevel: 0,
   shieldLevel: 0,
 
-  paused: false
+  paused: false,
+  showUpgradeMenu: false
 };
 
 // Player (miner)
 const player = {
-  x: WIDTH / 2,
-  y: 80,
+  x: GRID_WIDTH / 2 * TILE_SIZE,
+  y: 8 * TILE_SIZE,
   radius: 8,
-  speed: 60,
+  speed: 80,
   drillPower: 2,
   carrying: [],
   maxCarry: 3,
   drilling: false,
   drillProgress: 0,
+  drillDirection: null, // 'up', 'down', 'left', 'right'
   targetTile: null
+};
+
+// Camera - zoomed in, follows player
+const camera = {
+  x: 0,
+  y: 0,
+  targetX: 0,
+  targetY: 0,
+  zoom: 1.0
 };
 
 // World grid
@@ -119,8 +153,9 @@ let particles = [];
 const keys = {};
 const mouse = { x: WIDTH / 2, y: HEIGHT / 2, down: false };
 
-// Camera offset for mining view
-let cameraY = 0;
+// Dome position in world coordinates
+const DOME_X = GRID_WIDTH / 2;
+const DOME_Y = 4;
 
 // Audio
 let audioCtx = null;
@@ -187,6 +222,15 @@ function playSound(type, volume = 0.2) {
       osc.start();
       osc.stop(audioCtx.currentTime + 0.3);
       break;
+    case 'upgrade':
+      osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+      osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.1);
+      osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.2);
+      gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.25);
+      break;
   }
 }
 
@@ -196,17 +240,25 @@ document.addEventListener('keydown', e => {
   initAudio();
 
   if (e.key === 'Escape') {
-    if (state.screen === 'playing') state.paused = !state.paused;
-  }
-  if (e.key.toLowerCase() === 'e' && state.screen === 'playing' && state.phase === 'mining') {
-    // Open upgrade menu when near dome
-    if (player.y < 100) {
-      state.screen = 'upgrades';
+    if (state.screen === 'playing') {
+      if (state.showUpgradeMenu) {
+        state.showUpgradeMenu = false;
+      } else {
+        state.paused = !state.paused;
+      }
     }
   }
-  if (e.key === ' ' && state.screen === 'playing' && state.phase === 'mining') {
+  if (e.key.toLowerCase() === 'e' && state.screen === 'playing' && state.phase === 'mining') {
+    // Toggle upgrade menu when near dome
+    const playerTileY = Math.floor(player.y / TILE_SIZE);
+    if (playerTileY < 10) {
+      state.showUpgradeMenu = !state.showUpgradeMenu;
+    }
+  }
+  if (e.key === ' ' && state.screen === 'playing' && state.phase === 'mining' && !state.showUpgradeMenu) {
     // Drop resources at dome
-    if (player.y < 100 && player.carrying.length > 0) {
+    const playerTileY = Math.floor(player.y / TILE_SIZE);
+    if (playerTileY < 10 && player.carrying.length > 0) {
       for (const res of player.carrying) {
         state[res]++;
       }
@@ -240,7 +292,7 @@ function handleClick() {
     if (mouse.y > 300 && mouse.y < 360) {
       startNewGame();
     }
-  } else if (state.screen === 'upgrades') {
+  } else if (state.screen === 'playing' && state.showUpgradeMenu) {
     handleUpgradeClick();
   } else if (state.screen === 'gameover' || state.screen === 'victory') {
     state.screen = 'menu';
@@ -267,17 +319,25 @@ function startNewGame() {
   state.carryLevel = 0;
   state.laserLevel = 0;
   state.shieldLevel = 0;
+  state.showUpgradeMenu = false;
 
-  player.x = WIDTH / 2;
-  player.y = 80;
+  player.x = DOME_X * TILE_SIZE;
+  player.y = 8 * TILE_SIZE;
   player.drillPower = 2;
-  player.speed = 60;
+  player.speed = 80;
   player.maxCarry = 3;
   player.carrying = [];
+  player.drilling = false;
+  player.drillDirection = null;
 
   enemies = [];
   particles = [];
-  cameraY = 0;
+
+  // Initialize camera centered on player
+  camera.x = player.x - WIDTH / 2;
+  camera.y = player.y - HEIGHT / 2;
+  camera.targetX = camera.x;
+  camera.targetY = camera.y;
 
   generateWorld();
 }
@@ -291,9 +351,17 @@ function generateWorld() {
     tileHealth[y] = [];
 
     for (let x = 0; x < GRID_WIDTH; x++) {
-      // Top area is dome and empty
-      if (y < 5) {
-        if (y < 3 && x >= 23 && x <= 27) {
+      // Bedrock boundaries
+      if (x === 0 || x === GRID_WIDTH - 1 || y === GRID_HEIGHT - 1) {
+        grid[y][x] = TILE.BEDROCK;
+        tileHealth[y][x] = TILE_PROPS[TILE.BEDROCK].hp;
+        continue;
+      }
+
+      // Top area is dome and empty (surface)
+      if (y < 6) {
+        // Dome area
+        if (y < 5 && x >= DOME_X - 2 && x <= DOME_X + 2) {
           grid[y][x] = TILE.DOME;
         } else {
           grid[y][x] = TILE.EMPTY;
@@ -302,38 +370,26 @@ function generateWorld() {
         continue;
       }
 
-      // Underground
-      const depth = y - 5;
-      let tile = TILE.DIRT;
-
-      // Harder tiles deeper
-      if (depth > 10 && Math.random() < 0.3) tile = TILE.ROCK;
-      if (depth > 20 && Math.random() < 0.4) tile = TILE.HARD_ROCK;
-
-      // Resources
-      if (Math.random() < 0.08) tile = TILE.IRON;
-      if (depth > 8 && Math.random() < 0.05) tile = TILE.WATER;
-      if (depth > 15 && Math.random() < 0.04) tile = TILE.COBALT;
-
-      // Relics at deep locations
-      if (depth > 20 && Math.random() < 0.01) tile = TILE.RELIC;
+      // Underground - depth-based tile generation
+      const depth = y - 6;
+      let tile = generateTileForDepth(depth, x, y);
 
       grid[y][x] = tile;
       tileHealth[y][x] = TILE_PROPS[tile].hp;
     }
   }
 
-  // Ensure some relics exist
+  // Ensure some relics exist in deep areas
   let relicCount = 0;
   for (let y = 0; y < GRID_HEIGHT; y++) {
     for (let x = 0; x < GRID_WIDTH; x++) {
       if (grid[y][x] === TILE.RELIC) relicCount++;
     }
   }
-  while (relicCount < 3) {
+  while (relicCount < 5) {
     const x = 5 + Math.floor(Math.random() * (GRID_WIDTH - 10));
-    const y = 25 + Math.floor(Math.random() * (GRID_HEIGHT - 27));
-    if (grid[y][x] !== TILE.RELIC) {
+    const y = 60 + Math.floor(Math.random() * 30);
+    if (y < GRID_HEIGHT - 1 && grid[y][x] !== TILE.RELIC && grid[y][x] !== TILE.BEDROCK) {
       grid[y][x] = TILE.RELIC;
       tileHealth[y][x] = TILE_PROPS[TILE.RELIC].hp;
       relicCount++;
@@ -341,23 +397,70 @@ function generateWorld() {
   }
 }
 
+function generateTileForDepth(depth, x, y) {
+  // Depth zones per GDD feedback
+  // 0-20: Surface layer (dirt, soft stone, iron)
+  // 20-50: Middle layer (harder rocks, water, some cobalt)
+  // 50-80: Deep layer (hard rocks, cobalt, relics)
+  // 80-100: Danger layer (very hard, rare resources)
+
+  const rand = Math.random();
+
+  // Resource generation based on depth
+  if (depth < 20) {
+    // Surface layer
+    if (rand < 0.12) return TILE.IRON;
+    if (rand < 0.35) return TILE.SOFT_STONE;
+    return TILE.DIRT;
+  } else if (depth < 50) {
+    // Middle layer
+    if (rand < 0.08) return TILE.IRON;
+    if (rand < 0.12) return TILE.WATER;
+    if (rand < 0.14) return TILE.COBALT;
+    if (rand < 0.35) return TILE.HARD_STONE;
+    if (rand < 0.55) return TILE.SOFT_STONE;
+    return TILE.DIRT;
+  } else if (depth < 80) {
+    // Deep layer
+    if (rand < 0.06) return TILE.IRON;
+    if (rand < 0.12) return TILE.WATER;
+    if (rand < 0.18) return TILE.COBALT;
+    if (rand < 0.01 + depth * 0.001) return TILE.RELIC;
+    if (rand < 0.35) return TILE.DENSE_ROCK;
+    if (rand < 0.60) return TILE.HARD_STONE;
+    return TILE.CRYSTAL_ROCK;
+  } else {
+    // Danger layer
+    if (rand < 0.05) return TILE.WATER;
+    if (rand < 0.15) return TILE.COBALT;
+    if (rand < 0.02) return TILE.RELIC;
+    if (rand < 0.40) return TILE.OBSIDIAN;
+    if (rand < 0.70) return TILE.DENSE_ROCK;
+    return TILE.CRYSTAL_ROCK;
+  }
+}
+
 function startWave() {
   state.phase = 'defense';
   state.wave++;
   state.waveTimer = 0;
+  state.showUpgradeMenu = false;
 
   // Bring player back to dome
-  player.x = WIDTH / 2;
-  player.y = 60;
+  player.x = DOME_X * TILE_SIZE;
+  player.y = 6 * TILE_SIZE;
+
+  // Reset camera to dome area
+  camera.targetX = player.x - WIDTH / 2;
+  camera.targetY = 0;
 
   // Spawn enemies
   const numEnemies = 3 + state.wave * 2;
   for (let i = 0; i < numEnemies; i++) {
-    // Spawn from sides
     const side = Math.random() < 0.5 ? -1 : 1;
     enemies.push({
-      x: WIDTH / 2 + side * (WIDTH / 2 + 50),
-      y: 30 + Math.random() * 40,
+      x: DOME_X * TILE_SIZE + side * (WIDTH / 2 + 50),
+      y: 3 * TILE_SIZE + Math.random() * 3 * TILE_SIZE,
       hp: 15 + state.wave * 5,
       maxHp: 15 + state.wave * 5,
       speed: 20 + state.wave * 2,
@@ -391,31 +494,37 @@ function endWave() {
 }
 
 function handleUpgradeClick() {
-  const upgrades = [
-    { name: 'Drill', stat: 'drillLevel', cost: { iron: 4 + state.drillLevel * 4 }, max: 5 },
-    { name: 'Jetpack', stat: 'jetpackLevel', cost: { iron: 3 + state.jetpackLevel * 3 }, max: 5 },
-    { name: 'Carry', stat: 'carryLevel', cost: { iron: 4 + state.carryLevel * 4 }, max: 4 },
-    { name: 'Laser', stat: 'laserLevel', cost: { iron: 5 + state.laserLevel * 5, cobalt: state.laserLevel }, max: 5 },
-    { name: 'Shield', stat: 'shieldLevel', cost: { iron: 6 + state.shieldLevel * 4, water: 2 + state.shieldLevel * 2 }, max: 5 }
-  ];
+  const upgrades = getUpgradesList();
+  const startY = 180;
+  const itemHeight = 55;
 
   for (let i = 0; i < upgrades.length; i++) {
-    const y = 200 + i * 60;
-    if (mouse.y > y && mouse.y < y + 50 && mouse.x > 200 && mouse.x < 600) {
+    const y = startY + i * itemHeight;
+    if (mouse.y > y && mouse.y < y + itemHeight - 5 && mouse.x > 150 && mouse.x < 650) {
       const u = upgrades[i];
       if (state[u.stat] < u.max && canAfford(u.cost)) {
         payCost(u.cost);
         state[u.stat]++;
         applyUpgrade(u.stat);
-        playSound('collect');
+        playSound('upgrade');
       }
     }
   }
 
   // Back button
-  if (mouse.y > 520 && mouse.y < 570) {
-    state.screen = 'playing';
+  if (mouse.y > 530 && mouse.y < 580) {
+    state.showUpgradeMenu = false;
   }
+}
+
+function getUpgradesList() {
+  return [
+    { name: 'Drill Power', stat: 'drillLevel', cost: { iron: 5 + state.drillLevel * 5 }, max: 5, desc: '+3 drill strength' },
+    { name: 'Jetpack Speed', stat: 'jetpackLevel', cost: { iron: 4 + state.jetpackLevel * 4 }, max: 5, desc: '+20 movement speed' },
+    { name: 'Carry Capacity', stat: 'carryLevel', cost: { iron: 6 + state.carryLevel * 4 }, max: 4, desc: '+2 max resources' },
+    { name: 'Laser Damage', stat: 'laserLevel', cost: { iron: 8 + state.laserLevel * 6, cobalt: Math.max(1, state.laserLevel) }, max: 5, desc: '+8 laser damage' },
+    { name: 'Dome Shield', stat: 'shieldLevel', cost: { iron: 10 + state.shieldLevel * 5, water: 3 + state.shieldLevel * 2 }, max: 5, desc: '+25 shield HP' }
+  ];
 }
 
 function canAfford(cost) {
@@ -437,23 +546,23 @@ function applyUpgrade(stat) {
       player.drillPower = 2 + state.drillLevel * 3;
       break;
     case 'jetpackLevel':
-      player.speed = 60 + state.jetpackLevel * 15;
+      player.speed = 80 + state.jetpackLevel * 20;
       break;
     case 'carryLevel':
       player.maxCarry = 3 + state.carryLevel * 2;
       break;
     case 'laserLevel':
-      state.laserDamage = 10 + state.laserLevel * 5;
+      state.laserDamage = 10 + state.laserLevel * 8;
       break;
     case 'shieldLevel':
-      state.domeMaxHp = 100 + state.shieldLevel * 20;
-      state.domeShield = state.shieldLevel * 10;
+      state.domeMaxHp = 100 + state.shieldLevel * 25;
+      state.domeShield = state.shieldLevel * 15;
       break;
   }
 }
 
 function update(dt) {
-  if (state.screen !== 'playing' || state.paused) return;
+  if (state.screen !== 'playing' || state.paused || state.showUpgradeMenu) return;
 
   state.waveTimer += dt;
 
@@ -473,6 +582,9 @@ function update(dt) {
     }
   }
 
+  // Update camera - smooth follow
+  updateCamera(dt);
+
   // Update particles
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
@@ -486,103 +598,154 @@ function update(dt) {
   }
 }
 
+function updateCamera(dt) {
+  // Camera follows player
+  camera.targetX = player.x - WIDTH / 2;
+  camera.targetY = player.y - HEIGHT / 2;
+
+  // Clamp to map bounds
+  const maxCameraX = GRID_WIDTH * TILE_SIZE - WIDTH;
+  const maxCameraY = GRID_HEIGHT * TILE_SIZE - HEIGHT;
+  camera.targetX = Math.max(0, Math.min(maxCameraX, camera.targetX));
+  camera.targetY = Math.max(0, Math.min(maxCameraY, camera.targetY));
+
+  // Smooth follow
+  camera.x += (camera.targetX - camera.x) * CAMERA_FOLLOW_SPEED;
+  camera.y += (camera.targetY - camera.y) * CAMERA_FOLLOW_SPEED;
+}
+
 function updateMining(dt) {
   // Player movement
   let dx = 0, dy = 0;
-  if (keys['w'] || keys['arrowup']) dy -= 1;
-  if (keys['s'] || keys['arrowdown']) dy += 1;
-  if (keys['a'] || keys['arrowleft']) dx -= 1;
-  if (keys['d'] || keys['arrowright']) dx += 1;
+  const moveUp = keys['w'] || keys['arrowup'];
+  const moveDown = keys['s'] || keys['arrowdown'];
+  const moveLeft = keys['a'] || keys['arrowleft'];
+  const moveRight = keys['d'] || keys['arrowright'];
 
-  if (dx !== 0 || dy !== 0) {
-    const len = Math.hypot(dx, dy);
-    dx /= len;
-    dy /= len;
+  if (moveUp) dy -= 1;
+  if (moveDown) dy += 1;
+  if (moveLeft) dx -= 1;
+  if (moveRight) dx += 1;
 
-    const speed = player.speed * dt / 1000;
-    const newX = player.x + dx * speed;
-    const newY = player.y + dy * speed;
+  // Determine drill direction based on movement keys
+  let drillDir = null;
+  if (moveDown && !moveUp && !moveLeft && !moveRight) drillDir = 'down';
+  else if (moveUp && !moveDown && !moveLeft && !moveRight) drillDir = 'up';
+  else if (moveLeft && !moveRight && !moveUp && !moveDown) drillDir = 'left';
+  else if (moveRight && !moveLeft && !moveUp && !moveDown) drillDir = 'right';
 
-    // Check collision with tiles
-    const tileX = Math.floor(newX / TILE_SIZE);
-    const tileY = Math.floor((newY + cameraY) / TILE_SIZE);
+  // Get target tile for drilling in any direction
+  const playerTileX = Math.floor(player.x / TILE_SIZE);
+  const playerTileY = Math.floor(player.y / TILE_SIZE);
 
-    if (tileX >= 0 && tileX < GRID_WIDTH && tileY >= 0 && tileY < GRID_HEIGHT) {
-      if (grid[tileY][tileX] === TILE.EMPTY || grid[tileY][tileX] === TILE.DOME) {
-        player.x = Math.max(player.radius, Math.min(WIDTH - player.radius, newX));
-        player.y = Math.max(0, Math.min(HEIGHT - player.radius, newY));
-      }
+  let targetTileX = playerTileX;
+  let targetTileY = playerTileY;
+
+  if (drillDir === 'down') targetTileY = playerTileY + 1;
+  else if (drillDir === 'up') targetTileY = playerTileY - 1;
+  else if (drillDir === 'left') targetTileX = playerTileX - 1;
+  else if (drillDir === 'right') targetTileX = playerTileX + 1;
+
+  // Check if we can drill in the target direction
+  let canDrill = false;
+  if (drillDir && targetTileX >= 0 && targetTileX < GRID_WIDTH && targetTileY >= 0 && targetTileY < GRID_HEIGHT) {
+    const tile = grid[targetTileY][targetTileX];
+    if (tile !== TILE.EMPTY && tile !== TILE.DOME && tile !== TILE.BEDROCK) {
+      canDrill = true;
     }
   }
 
-  // Drilling
-  const tileX = Math.floor(player.x / TILE_SIZE);
-  const tileY = Math.floor((player.y + cameraY + player.radius + 2) / TILE_SIZE);
+  if (canDrill && drillDir) {
+    // Drilling in a direction
+    player.drilling = true;
+    player.drillDirection = drillDir;
+    player.drillProgress += player.drillPower * dt / 1000;
 
-  if (keys['s'] || keys['arrowdown']) {
-    if (tileY >= 0 && tileY < GRID_HEIGHT && tileX >= 0 && tileX < GRID_WIDTH) {
-      const tile = grid[tileY][tileX];
-      if (tile !== TILE.EMPTY && tile !== TILE.DOME) {
-        player.drilling = true;
-        player.drillProgress += player.drillPower * dt / 1000;
+    if (player.drillProgress >= 0.25) {
+      player.drillProgress = 0;
+      const tile = grid[targetTileY][targetTileX];
+      tileHealth[targetTileY][targetTileX] -= player.drillPower;
+      playSound('drill');
 
-        if (player.drillProgress >= 0.3) {
-          player.drillProgress = 0;
-          tileHealth[tileY][tileX] -= player.drillPower;
-          playSound('drill');
+      // Mining particles
+      for (let i = 0; i < 4; i++) {
+        particles.push({
+          x: targetTileX * TILE_SIZE + TILE_SIZE / 2,
+          y: targetTileY * TILE_SIZE + TILE_SIZE / 2,
+          vx: (Math.random() - 0.5) * 60,
+          vy: (Math.random() - 0.5) * 60,
+          life: 400,
+          color: TILE_PROPS[tile].color,
+          size: 3
+        });
+      }
 
-          // Mining particles
-          for (let i = 0; i < 3; i++) {
-            particles.push({
-              x: tileX * TILE_SIZE + TILE_SIZE / 2,
-              y: tileY * TILE_SIZE - cameraY,
-              vx: (Math.random() - 0.5) * 50,
-              vy: -Math.random() * 30,
-              life: 500,
-              color: TILE_PROPS[tile].color,
-              size: 3
-            });
+      if (tileHealth[targetTileY][targetTileX] <= 0) {
+        // Tile destroyed - collect resources
+        const props = TILE_PROPS[tile];
+        if (props.resource && player.carrying.length < player.maxCarry) {
+          const amount = props.amount[0] + Math.floor(Math.random() * (props.amount[1] - props.amount[0] + 1));
+          for (let i = 0; i < amount && player.carrying.length < player.maxCarry; i++) {
+            player.carrying.push(props.resource);
           }
+          playSound('collect');
 
-          if (tileHealth[tileY][tileX] <= 0) {
-            // Tile destroyed
-            const props = TILE_PROPS[tile];
-            if (props.resource && player.carrying.length < player.maxCarry) {
-              const amount = props.amount[0] + Math.floor(Math.random() * (props.amount[1] - props.amount[0] + 1));
-              for (let i = 0; i < amount && player.carrying.length < player.maxCarry; i++) {
-                player.carrying.push(props.resource);
-              }
-              playSound('collect');
-
-              if (props.resource === 'relic') {
-                state.relicsFound++;
-              }
-            }
-            grid[tileY][tileX] = TILE.EMPTY;
+          if (props.resource === 'relic') {
+            state.relicsFound++;
           }
         }
-      } else {
-        player.drilling = false;
+        grid[targetTileY][targetTileX] = TILE.EMPTY;
+
+        // Move player into the cleared space
+        if (drillDir === 'down') player.y += TILE_SIZE;
+        else if (drillDir === 'up') player.y -= TILE_SIZE;
+        else if (drillDir === 'left') player.x -= TILE_SIZE;
+        else if (drillDir === 'right') player.x += TILE_SIZE;
       }
     }
   } else {
+    // Not drilling - try to move
     player.drilling = false;
+    player.drillDirection = null;
     player.drillProgress = 0;
-  }
 
-  // Camera follows player when underground
-  if (player.y > HEIGHT * 0.6) {
-    cameraY = Math.min((GRID_HEIGHT * TILE_SIZE) - HEIGHT, Math.max(0, cameraY + (player.y - HEIGHT * 0.6) * 0.1));
-  } else if (player.y < HEIGHT * 0.3 && cameraY > 0) {
-    cameraY = Math.max(0, cameraY - 2);
+    if (dx !== 0 || dy !== 0) {
+      const len = Math.hypot(dx, dy);
+      dx /= len;
+      dy /= len;
+
+      const speed = player.speed * dt / 1000;
+      const newX = player.x + dx * speed;
+      const newY = player.y + dy * speed;
+
+      // Check collision with tiles
+      const newTileX = Math.floor(newX / TILE_SIZE);
+      const newTileY = Math.floor(newY / TILE_SIZE);
+
+      // Check if destination is walkable
+      if (newTileX >= 0 && newTileX < GRID_WIDTH && newTileY >= 0 && newTileY < GRID_HEIGHT) {
+        const destTile = grid[newTileY][newTileX];
+        if (destTile === TILE.EMPTY || destTile === TILE.DOME) {
+          player.x = Math.max(TILE_SIZE, Math.min((GRID_WIDTH - 1) * TILE_SIZE, newX));
+          player.y = Math.max(TILE_SIZE, Math.min((GRID_HEIGHT - 1) * TILE_SIZE, newY));
+        }
+      }
+    }
   }
 }
 
 function updateDefense(dt) {
-  // Aim laser at mouse
-  const domeX = WIDTH / 2;
-  const domeY = 50;
-  state.laserAngle = Math.atan2(mouse.y - domeY, mouse.x - domeX);
+  // Camera stays at dome during defense
+  camera.targetX = DOME_X * TILE_SIZE - WIDTH / 2;
+  camera.targetY = 0;
+
+  // Aim laser at mouse (convert screen to world coords)
+  const domeWorldX = DOME_X * TILE_SIZE;
+  const domeWorldY = 4 * TILE_SIZE;
+  const domeScreenX = domeWorldX - camera.x;
+  const domeScreenY = domeWorldY - camera.y;
+
+  state.laserAngle = Math.atan2(mouse.y - domeScreenY, mouse.x - domeScreenX);
 
   // Fire laser
   if (state.laserCooldown > 0) state.laserCooldown -= dt;
@@ -592,14 +755,14 @@ function updateDefense(dt) {
     playSound('laser');
 
     // Check laser hit
-    const laserLen = 400;
-    const laserEndX = domeX + Math.cos(state.laserAngle) * laserLen;
-    const laserEndY = domeY + Math.sin(state.laserAngle) * laserLen;
+    const laserLen = 500;
+    const laserEndX = domeWorldX + Math.cos(state.laserAngle) * laserLen;
+    const laserEndY = domeWorldY + Math.sin(state.laserAngle) * laserLen;
 
     for (let i = enemies.length - 1; i >= 0; i--) {
       const e = enemies[i];
       // Line-circle collision
-      const dist = pointToLineDistance(e.x, e.y, domeX, domeY, laserEndX, laserEndY);
+      const dist = pointToLineDistance(e.x, e.y, domeWorldX, domeWorldY, laserEndX, laserEndY);
       if (dist < e.radius + 5) {
         e.hp -= state.laserDamage;
 
@@ -635,26 +798,24 @@ function updateDefense(dt) {
   }
 
   // Update enemies
-  const domeLeft = WIDTH / 2 - 40;
-  const domeRight = WIDTH / 2 + 40;
-  const domeTop = 20;
-  const domeBottom = 70;
+  const domeWorldCenterX = DOME_X * TILE_SIZE;
+  const domeWorldCenterY = 4 * TILE_SIZE;
 
   for (const e of enemies) {
     // Move toward dome
-    const targetX = WIDTH / 2 + (Math.random() - 0.5) * 60;
-    const targetY = 50;
+    const targetX = domeWorldCenterX + (Math.random() - 0.5) * 60;
+    const targetY = domeWorldCenterY;
     const dx = targetX - e.x;
     const dy = targetY - e.y;
     const dist = Math.hypot(dx, dy);
 
-    if (dist > 60) {
+    if (dist > 50) {
       e.x += (dx / dist) * e.speed * dt / 1000;
       e.y += (dy / dist) * e.speed * dt / 1000;
     }
 
-    // Attack dome
-    if (e.x > domeLeft - 30 && e.x < domeRight + 30 && e.y > domeTop - 20 && e.y < domeBottom + 20) {
+    // Attack dome when close
+    if (dist < 80) {
       e.attackCooldown -= dt;
       if (e.attackCooldown <= 0) {
         e.attackCooldown = 1000;
@@ -709,7 +870,6 @@ function render() {
   switch (state.screen) {
     case 'menu': renderMenu(); break;
     case 'playing': renderGame(); break;
-    case 'upgrades': renderUpgrades(); break;
     case 'gameover': renderGameOver(); break;
     case 'victory': renderVictory(); break;
   }
@@ -717,65 +877,91 @@ function render() {
 
 function renderMenu() {
   ctx.fillStyle = COLORS.dome;
-  ctx.font = 'bold 36px "Press Start 2P"';
+  ctx.font = 'bold 36px monospace';
   ctx.textAlign = 'center';
   ctx.fillText('DOME', WIDTH/2, 150);
   ctx.fillText('DEFENDER', WIDTH/2, 200);
 
   ctx.fillStyle = COLORS.text;
-  ctx.font = '12px "Press Start 2P"';
+  ctx.font = '14px monospace';
   ctx.fillText('Mining Survival', WIDTH/2, 250);
 
   // Start button
   ctx.fillStyle = '#44aa44';
   ctx.fillRect(250, 300, 300, 60);
   ctx.fillStyle = '#fff';
-  ctx.font = '16px "Press Start 2P"';
+  ctx.font = 'bold 18px monospace';
   ctx.fillText('START', WIDTH/2, 340);
 
   // Instructions
-  ctx.fillStyle = '#888';
-  ctx.font = '10px "Press Start 2P"';
-  ctx.fillText('WASD - Move, S to drill down', WIDTH/2, 420);
-  ctx.fillText('SPACE - Drop resources at dome', WIDTH/2, 445);
-  ctx.fillText('E - Upgrades, MOUSE - Aim laser', WIDTH/2, 470);
-  ctx.fillText('Find 3 relics to win!', WIDTH/2, 510);
+  ctx.fillStyle = '#aaa';
+  ctx.font = '12px monospace';
+  ctx.fillText('WASD - Move & Dig in ALL 4 directions!', WIDTH/2, 400);
+  ctx.fillText('SPACE - Drop resources at dome', WIDTH/2, 425);
+  ctx.fillText('E - Open upgrades (near dome)', WIDTH/2, 450);
+  ctx.fillText('MOUSE - Aim laser during defense', WIDTH/2, 475);
+  ctx.fillStyle = COLORS.relic;
+  ctx.fillText('Find 3 relics deep underground to win!', WIDTH/2, 510);
 }
 
 function renderGame() {
-  // Draw tiles
-  const startY = Math.floor(cameraY / TILE_SIZE);
-  const endY = Math.min(GRID_HEIGHT, startY + Math.ceil(HEIGHT / TILE_SIZE) + 1);
+  // Calculate visible tile range based on camera
+  const startTileX = Math.floor(camera.x / TILE_SIZE) - 1;
+  const startTileY = Math.floor(camera.y / TILE_SIZE) - 1;
+  const endTileX = Math.ceil((camera.x + WIDTH) / TILE_SIZE) + 1;
+  const endTileY = Math.ceil((camera.y + HEIGHT) / TILE_SIZE) + 1;
 
-  for (let y = startY; y < endY; y++) {
-    for (let x = 0; x < GRID_WIDTH; x++) {
+  // Draw tiles
+  for (let y = Math.max(0, startTileY); y < Math.min(GRID_HEIGHT, endTileY); y++) {
+    for (let x = Math.max(0, startTileX); x < Math.min(GRID_WIDTH, endTileX); x++) {
       const tile = grid[y][x];
       if (tile === TILE.EMPTY) continue;
 
-      const screenX = x * TILE_SIZE;
-      const screenY = y * TILE_SIZE - cameraY;
+      const screenX = x * TILE_SIZE - camera.x;
+      const screenY = y * TILE_SIZE - camera.y;
 
       const props = TILE_PROPS[tile];
-      ctx.fillStyle = props.color;
 
       if (tile === TILE.DOME) {
         // Draw dome
-        ctx.fillStyle = COLORS.dome;
-        ctx.beginPath();
-        ctx.arc(WIDTH / 2, 50, 45, 0, Math.PI * 2);
-        ctx.fill();
+        const domeScreenX = DOME_X * TILE_SIZE - camera.x;
+        const domeScreenY = 4 * TILE_SIZE - camera.y;
 
         // Dome glow
+        const gradient = ctx.createRadialGradient(domeScreenX, domeScreenY, 20, domeScreenX, domeScreenY, 50);
+        gradient.addColorStop(0, COLORS.domeGlow);
+        gradient.addColorStop(1, 'transparent');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(domeScreenX - 60, domeScreenY - 60, 120, 120);
+
+        ctx.fillStyle = COLORS.dome;
+        ctx.beginPath();
+        ctx.arc(domeScreenX, domeScreenY, 40, 0, Math.PI * 2);
+        ctx.fill();
+
         ctx.strokeStyle = COLORS.domeGlow;
         ctx.lineWidth = 3;
         ctx.stroke();
       } else {
+        // Regular tile
+        ctx.fillStyle = props.color;
         ctx.fillRect(screenX, screenY, TILE_SIZE - 1, TILE_SIZE - 1);
 
-        // Show damage
-        if (tileHealth[y][x] < props.hp) {
-          ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        // Show damage cracks
+        if (tileHealth[y] && tileHealth[y][x] < props.hp) {
+          const damageRatio = 1 - tileHealth[y][x] / props.hp;
+          ctx.fillStyle = `rgba(0,0,0,${damageRatio * 0.5})`;
           ctx.fillRect(screenX, screenY, TILE_SIZE - 1, TILE_SIZE - 1);
+        }
+
+        // Resource glow
+        if (props.resource) {
+          ctx.strokeStyle = props.resource === 'iron' ? COLORS.ironGlow :
+                           props.resource === 'water' ? COLORS.waterGlow :
+                           props.resource === 'cobalt' ? COLORS.cobaltGlow :
+                           COLORS.relicGlow;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(screenX + 1, screenY + 1, TILE_SIZE - 3, TILE_SIZE - 3);
         }
       }
     }
@@ -783,161 +969,249 @@ function renderGame() {
 
   // Particles
   for (const p of particles) {
+    const screenX = p.x - camera.x;
+    const screenY = p.y - camera.y;
     ctx.globalAlpha = p.life / 500;
     ctx.fillStyle = p.color;
-    ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+    ctx.fillRect(screenX - p.size/2, screenY - p.size/2, p.size, p.size);
   }
   ctx.globalAlpha = 1;
 
   if (state.phase === 'defense') {
     // Draw laser
     if (mouse.down) {
-      const domeX = WIDTH / 2;
-      const domeY = 50;
-      const laserLen = 400;
+      const domeScreenX = DOME_X * TILE_SIZE - camera.x;
+      const domeScreenY = 4 * TILE_SIZE - camera.y;
+      const laserLen = 500;
 
       ctx.strokeStyle = COLORS.laserGlow;
-      ctx.lineWidth = 8;
+      ctx.lineWidth = 10;
       ctx.globalAlpha = 0.3;
       ctx.beginPath();
-      ctx.moveTo(domeX, domeY);
-      ctx.lineTo(domeX + Math.cos(state.laserAngle) * laserLen, domeY + Math.sin(state.laserAngle) * laserLen);
+      ctx.moveTo(domeScreenX, domeScreenY);
+      ctx.lineTo(domeScreenX + Math.cos(state.laserAngle) * laserLen, domeScreenY + Math.sin(state.laserAngle) * laserLen);
       ctx.stroke();
 
       ctx.strokeStyle = COLORS.laser;
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 4;
       ctx.globalAlpha = 1;
       ctx.stroke();
     }
 
     // Draw enemies
     for (const e of enemies) {
+      const screenX = e.x - camera.x;
+      const screenY = e.y - camera.y;
+
+      // Enemy glow
+      ctx.fillStyle = COLORS.enemyGlow;
+      ctx.globalAlpha = 0.3;
+      ctx.beginPath();
+      ctx.arc(screenX, screenY, e.radius + 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
       ctx.fillStyle = COLORS.enemy;
       ctx.beginPath();
-      ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+      ctx.arc(screenX, screenY, e.radius, 0, Math.PI * 2);
       ctx.fill();
 
       // HP bar
       ctx.fillStyle = '#333';
-      ctx.fillRect(e.x - 15, e.y - e.radius - 8, 30, 4);
+      ctx.fillRect(screenX - 15, screenY - e.radius - 10, 30, 5);
       ctx.fillStyle = COLORS.hp;
-      ctx.fillRect(e.x - 15, e.y - e.radius - 8, 30 * (e.hp / e.maxHp), 4);
+      ctx.fillRect(screenX - 15, screenY - e.radius - 10, 30 * (e.hp / e.maxHp), 5);
     }
   } else {
     // Draw player during mining
+    const screenX = player.x - camera.x;
+    const screenY = player.y - camera.y;
+
+    // Player glow
+    ctx.fillStyle = COLORS.playerGlow;
+    ctx.globalAlpha = 0.3;
+    ctx.beginPath();
+    ctx.arc(screenX, screenY, player.radius + 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
     ctx.fillStyle = COLORS.player;
     ctx.beginPath();
-    ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+    ctx.arc(screenX, screenY, player.radius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Drill indicator
-    if (player.drilling) {
+    // Drill indicator - shows direction
+    if (player.drilling && player.drillDirection) {
       ctx.strokeStyle = COLORS.player;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(player.x, player.y + player.radius);
-      ctx.lineTo(player.x, player.y + player.radius + 10);
+      ctx.moveTo(screenX, screenY);
+
+      let drillOffsetX = 0, drillOffsetY = 0;
+      if (player.drillDirection === 'down') drillOffsetY = player.radius + 8;
+      else if (player.drillDirection === 'up') drillOffsetY = -(player.radius + 8);
+      else if (player.drillDirection === 'left') drillOffsetX = -(player.radius + 8);
+      else if (player.drillDirection === 'right') drillOffsetX = player.radius + 8;
+
+      ctx.lineTo(screenX + drillOffsetX, screenY + drillOffsetY);
       ctx.stroke();
+
+      // Drill sparks
+      ctx.fillStyle = '#ff8800';
+      ctx.fillRect(screenX + drillOffsetX - 2, screenY + drillOffsetY - 2, 4, 4);
     }
 
     // Carrying indicator
     if (player.carrying.length > 0) {
       ctx.fillStyle = '#fff';
-      ctx.font = '8px "Press Start 2P"';
+      ctx.font = 'bold 10px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(`${player.carrying.length}/${player.maxCarry}`, player.x, player.y - player.radius - 5);
+      ctx.fillText(`${player.carrying.length}/${player.maxCarry}`, screenX, screenY - player.radius - 8);
     }
   }
 
   // HUD
   renderHUD();
+
+  // Upgrade menu overlay
+  if (state.showUpgradeMenu) {
+    renderUpgradeMenu();
+  }
 }
 
 function renderHUD() {
-  // Top bar
-  ctx.fillStyle = 'rgba(0,0,0,0.8)';
-  ctx.fillRect(0, 0, WIDTH, 35);
+  // Top bar background
+  ctx.fillStyle = 'rgba(0,0,0,0.85)';
+  ctx.fillRect(0, 0, WIDTH, 40);
 
   // Phase and timer
   ctx.fillStyle = '#fff';
-  ctx.font = '10px "Press Start 2P"';
+  ctx.font = 'bold 12px monospace';
   ctx.textAlign = 'center';
   const timeLeft = Math.ceil(((state.phase === 'mining' ? state.miningDuration : state.defenseDuration) - state.waveTimer) / 1000);
-  ctx.fillText(`${state.phase === 'mining' ? 'MINING' : 'DEFENSE'} - ${timeLeft}s  |  Wave ${state.wave}/${state.maxWaves}`, WIDTH/2, 14);
+  const phaseText = state.phase === 'mining' ? 'MINING' : 'DEFENSE';
+  ctx.fillText(`${phaseText} - ${timeLeft}s  |  Wave ${state.wave}/${state.maxWaves}`, WIDTH/2, 16);
 
-  // Dome HP
+  // Dome HP bar
   ctx.fillStyle = '#333';
-  ctx.fillRect(10, 20, 100, 10);
+  ctx.fillRect(10, 24, 120, 10);
   ctx.fillStyle = COLORS.dome;
-  ctx.fillRect(10, 20, 100 * (state.domeHp / state.domeMaxHp), 10);
+  ctx.fillRect(10, 24, 120 * (state.domeHp / state.domeMaxHp), 10);
   if (state.domeShield > 0) {
-    ctx.fillStyle = '#6666ff';
-    ctx.fillRect(10, 20, 100 * (state.domeShield / (state.shieldLevel * 10)), 3);
+    ctx.fillStyle = '#6688ff';
+    ctx.fillRect(10, 24, 120 * (state.domeShield / Math.max(1, state.shieldLevel * 15)), 4);
   }
+  ctx.fillStyle = '#fff';
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(`HP:${state.domeHp}/${state.domeMaxHp}`, 12, 32);
 
   // Resources
   ctx.textAlign = 'right';
+  ctx.font = 'bold 11px monospace';
   ctx.fillStyle = COLORS.iron;
-  ctx.fillText(`Iron:${state.iron}`, WIDTH - 10, 14);
+  ctx.fillText(`Iron:${state.iron}`, WIDTH - 10, 16);
   ctx.fillStyle = COLORS.water;
-  ctx.fillText(`Water:${state.water}`, WIDTH - 100, 14);
+  ctx.fillText(`Water:${state.water}`, WIDTH - 90, 16);
   ctx.fillStyle = COLORS.cobalt;
-  ctx.fillText(`Cobalt:${state.cobalt}`, WIDTH - 200, 14);
+  ctx.fillText(`Cobalt:${state.cobalt}`, WIDTH - 170, 16);
 
   // Relics
   ctx.fillStyle = COLORS.relic;
   ctx.textAlign = 'left';
-  ctx.fillText(`Relics:${state.relicsFound}/${state.relicsNeeded}`, 120, 28);
+  ctx.fillText(`Relics:${state.relicsFound}/${state.relicsNeeded}`, 140, 32);
+
+  // Depth indicator
+  const depth = Math.max(0, Math.floor(player.y / TILE_SIZE) - 6);
+  ctx.fillStyle = '#888';
+  ctx.textAlign = 'right';
+  ctx.fillText(`Depth:${depth}`, WIDTH - 10, 32);
+
+  // Mining phase - show E to upgrade hint
+  if (state.phase === 'mining') {
+    const playerTileY = Math.floor(player.y / TILE_SIZE);
+    if (playerTileY < 10) {
+      ctx.fillStyle = '#88ff88';
+      ctx.textAlign = 'center';
+      ctx.fillText('Press E for Upgrades | SPACE to drop resources', WIDTH/2, 32);
+    }
+  }
 }
 
-function renderUpgrades() {
-  ctx.fillStyle = 'rgba(0,0,0,0.95)';
+function renderUpgradeMenu() {
+  // Darken background
+  ctx.fillStyle = 'rgba(0,0,0,0.9)';
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
+  // Title
   ctx.fillStyle = COLORS.dome;
-  ctx.font = '24px "Press Start 2P"';
+  ctx.font = 'bold 28px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('UPGRADES', WIDTH/2, 80);
+  ctx.fillText('DOME UPGRADES', WIDTH/2, 60);
 
+  // Resources display
   ctx.fillStyle = '#fff';
-  ctx.font = '12px "Press Start 2P"';
-  ctx.fillText(`Iron:${state.iron} Water:${state.water} Cobalt:${state.cobalt}`, WIDTH/2, 120);
+  ctx.font = 'bold 14px monospace';
+  ctx.fillText(`Iron: ${state.iron}  |  Water: ${state.water}  |  Cobalt: ${state.cobalt}`, WIDTH/2, 100);
 
-  const upgrades = [
-    { name: 'Drill', stat: 'drillLevel', cost: { iron: 4 + state.drillLevel * 4 }, max: 5, desc: '+3 power' },
-    { name: 'Jetpack', stat: 'jetpackLevel', cost: { iron: 3 + state.jetpackLevel * 3 }, max: 5, desc: '+15 speed' },
-    { name: 'Carry', stat: 'carryLevel', cost: { iron: 4 + state.carryLevel * 4 }, max: 4, desc: '+2 capacity' },
-    { name: 'Laser', stat: 'laserLevel', cost: { iron: 5 + state.laserLevel * 5, cobalt: state.laserLevel }, max: 5, desc: '+5 damage' },
-    { name: 'Shield', stat: 'shieldLevel', cost: { iron: 6 + state.shieldLevel * 4, water: 2 + state.shieldLevel * 2 }, max: 5, desc: '+20 HP' }
-  ];
+  // Upgrades list
+  const upgrades = getUpgradesList();
+  ctx.font = '12px monospace';
 
-  ctx.font = '10px "Press Start 2P"';
+  const startY = 180;
+  const itemHeight = 55;
+
   for (let i = 0; i < upgrades.length; i++) {
     const u = upgrades[i];
-    const y = 200 + i * 60;
+    const y = startY + i * itemHeight;
     const level = state[u.stat];
     const canBuy = level < u.max && canAfford(u.cost);
 
-    ctx.fillStyle = canBuy ? '#446644' : '#333333';
-    ctx.fillRect(200, y, 400, 50);
+    // Background
+    ctx.fillStyle = canBuy ? '#335533' : '#333333';
+    ctx.fillRect(150, y, 500, itemHeight - 5);
 
-    ctx.fillStyle = canBuy ? '#fff' : '#666';
+    // Highlight on hover
+    if (mouse.y > y && mouse.y < y + itemHeight - 5 && mouse.x > 150 && mouse.x < 650) {
+      ctx.fillStyle = canBuy ? '#446644' : '#444444';
+      ctx.fillRect(150, y, 500, itemHeight - 5);
+    }
+
+    // Name and level
+    ctx.fillStyle = canBuy ? '#fff' : '#888';
     ctx.textAlign = 'left';
-    ctx.fillText(`${u.name} Lv${level}`, 220, y + 25);
-    ctx.fillText(u.desc, 220, y + 40);
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText(`${u.name}`, 170, y + 20);
 
+    // Level indicators
+    ctx.font = '12px monospace';
+    for (let lv = 0; lv < u.max; lv++) {
+      ctx.fillStyle = lv < level ? '#88ff88' : '#444';
+      ctx.fillRect(170 + lv * 25, y + 28, 20, 8);
+    }
+
+    // Description
+    ctx.fillStyle = '#aaa';
+    ctx.fillText(u.desc, 170, y + 48);
+
+    // Cost
     ctx.textAlign = 'right';
     ctx.fillStyle = '#ffcc00';
-    const costStr = Object.entries(u.cost).map(([r, a]) => `${r}:${a}`).join(' ');
-    ctx.fillText(level >= u.max ? 'MAX' : costStr, 580, y + 30);
+    if (level >= u.max) {
+      ctx.fillText('MAX', 630, y + 30);
+    } else {
+      const costStr = Object.entries(u.cost).map(([r, a]) => `${r}:${a}`).join(' ');
+      ctx.fillText(costStr, 630, y + 30);
+    }
   }
 
   // Back button
   ctx.fillStyle = '#444488';
-  ctx.fillRect(300, 520, 200, 50);
+  ctx.fillRect(300, 530, 200, 45);
   ctx.fillStyle = '#fff';
   ctx.textAlign = 'center';
-  ctx.fillText('BACK', WIDTH/2, 550);
+  ctx.font = 'bold 16px monospace';
+  ctx.fillText('BACK (ESC)', WIDTH/2, 558);
 }
 
 function renderGameOver() {
@@ -945,17 +1219,17 @@ function renderGameOver() {
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
   ctx.fillStyle = '#ff4444';
-  ctx.font = '32px "Press Start 2P"';
+  ctx.font = 'bold 36px monospace';
   ctx.textAlign = 'center';
   ctx.fillText('DOME DESTROYED', WIDTH/2, 200);
 
   ctx.fillStyle = '#fff';
-  ctx.font = '14px "Press Start 2P"';
+  ctx.font = '16px monospace';
   ctx.fillText(`Waves Survived: ${state.wave}`, WIDTH/2, 300);
   ctx.fillText(`Relics Found: ${state.relicsFound}/${state.relicsNeeded}`, WIDTH/2, 340);
 
   ctx.fillStyle = '#888';
-  ctx.font = '12px "Press Start 2P"';
+  ctx.font = '14px monospace';
   ctx.fillText('Click to continue', WIDTH/2, 450);
 }
 
@@ -964,24 +1238,24 @@ function renderVictory() {
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
   ctx.fillStyle = COLORS.relic;
-  ctx.font = '32px "Press Start 2P"';
+  ctx.font = 'bold 40px monospace';
   ctx.textAlign = 'center';
   ctx.fillText('VICTORY!', WIDTH/2, 200);
 
   ctx.fillStyle = '#fff';
-  ctx.font = '14px "Press Start 2P"';
+  ctx.font = '16px monospace';
   ctx.fillText('All relics recovered!', WIDTH/2, 280);
   ctx.fillText(`Waves Survived: ${state.wave}`, WIDTH/2, 340);
 
   ctx.fillStyle = '#888';
-  ctx.font = '12px "Press Start 2P"';
+  ctx.font = '14px monospace';
   ctx.fillText('Click to continue', WIDTH/2, 450);
 }
 
 // Game loop
 let lastTime = 0;
 function gameLoop(time) {
-  const dt = time - lastTime;
+  const dt = Math.min(time - lastTime, 100); // Cap delta to prevent huge jumps
   lastTime = time;
 
   update(dt);

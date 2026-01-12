@@ -1554,49 +1554,70 @@ function renderMinimap() {
     ctx.fillText('MINIMAP', mapX, mapY - 10);
 }
 
+// Create offscreen canvas for lighting (created once, reused)
+let lightingCanvas = null;
+let lightingCtx = null;
+
 function renderLighting() {
-    // Much reduced darkness overlay for better visibility (was 0.5, now 0.25)
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-    ctx.fillRect(camera.x, camera.y, GAME_WIDTH, GAME_HEIGHT);
+    // CORRECT approach: Draw darkness OUTSIDE the vision cone
+    // Vision cone area should be VISIBLE (bright), outside should be DARK
+    // Using offscreen canvas to avoid destination-out issues
 
-    // Cut out vision cone
-    ctx.save();
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.translate(player.x, player.y);
-    ctx.rotate(player.angle);
+    const coneLength = player.flashlightOn ? 600 : 180;
+    const coneAngle = Math.PI / 2.5; // ~72 degrees half-angle
+    const ambientRadius = player.flashlightOn ? 180 : 120;
 
-    const coneLength = player.flashlightOn ? 600 : 180; // Increased range
-    const coneAngle = Math.PI / 2.5; // Even wider cone (72 degrees)
+    // Create offscreen canvas if needed
+    if (!lightingCanvas) {
+        lightingCanvas = document.createElement('canvas');
+        lightingCanvas.width = GAME_WIDTH;
+        lightingCanvas.height = GAME_HEIGHT;
+        lightingCtx = lightingCanvas.getContext('2d');
+    }
 
-    // Create cone gradient
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.arc(0, 0, coneLength, -coneAngle, coneAngle);
-    ctx.closePath();
+    // Clear the lighting canvas
+    lightingCtx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, coneLength);
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    gradient.addColorStop(0.85, 'rgba(255, 255, 255, 0.95)');
-    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    // Step 1: Fill with darkness on the offscreen canvas
+    lightingCtx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+    lightingCtx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    ctx.fillStyle = gradient;
-    ctx.fill();
+    // Step 2: Cut out the vision cone (makes it visible/bright)
+    lightingCtx.globalCompositeOperation = 'destination-out';
 
-    ctx.restore();
+    // Convert world coordinates to screen coordinates for the offscreen canvas
+    const screenX = player.x - camera.x;
+    const screenY = player.y - camera.y;
 
-    // Much larger ambient light around player
-    ctx.save();
-    ctx.globalCompositeOperation = 'destination-out';
-    const ambientRadius = player.flashlightOn ? 200 : 150; // Increased from 150/100
-    const ambientGradient = ctx.createRadialGradient(player.x, player.y, 0, player.x, player.y, ambientRadius);
-    ambientGradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)'); // Brighter center
-    ambientGradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.5)');
+    // Draw the visible cone area - this will REMOVE darkness from the cone
+    lightingCtx.beginPath();
+    lightingCtx.moveTo(screenX, screenY);
+    lightingCtx.arc(screenX, screenY, coneLength, player.angle - coneAngle, player.angle + coneAngle);
+    lightingCtx.closePath();
+
+    // Use gradient for smooth falloff
+    const coneGradient = lightingCtx.createRadialGradient(screenX, screenY, 0, screenX, screenY, coneLength);
+    coneGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    coneGradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.9)');
+    coneGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    lightingCtx.fillStyle = coneGradient;
+    lightingCtx.fill();
+
+    // Draw ambient circle around player (always visible)
+    lightingCtx.beginPath();
+    lightingCtx.arc(screenX, screenY, ambientRadius, 0, Math.PI * 2);
+    const ambientGradient = lightingCtx.createRadialGradient(screenX, screenY, 0, screenX, screenY, ambientRadius);
+    ambientGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    ambientGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.7)');
     ambientGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    ctx.fillStyle = ambientGradient;
-    ctx.beginPath();
-    ctx.arc(player.x, player.y, ambientRadius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    lightingCtx.fillStyle = ambientGradient;
+    lightingCtx.fill();
+
+    // Reset composite operation
+    lightingCtx.globalCompositeOperation = 'source-over';
+
+    // Step 3: Draw the lighting overlay onto the main canvas
+    ctx.drawImage(lightingCanvas, camera.x, camera.y);
 }
 
 function renderUI() {

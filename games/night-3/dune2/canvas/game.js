@@ -47,14 +47,14 @@ const TERRAIN = {
 
 // Building definitions
 const BUILDINGS = {
-    CONSTRUCTION_YARD: { name: 'Construction Yard', cost: 0, hp: 1000, power: -60, width: 2, height: 2, prereq: null, color: '#666' },
-    WIND_TRAP: { name: 'Wind Trap', cost: 300, hp: 400, power: 100, width: 2, height: 2, prereq: null, color: '#4488aa' },
-    REFINERY: { name: 'Refinery', cost: 400, hp: 600, power: -40, width: 3, height: 2, prereq: 'WIND_TRAP', color: '#aa6644', spawnsHarvester: true },
-    BARRACKS: { name: 'Barracks', cost: 300, hp: 500, power: -20, width: 2, height: 2, prereq: 'REFINERY', color: '#888866' },
-    LIGHT_FACTORY: { name: 'Light Factory', cost: 400, hp: 600, power: -30, width: 2, height: 2, prereq: 'BARRACKS', color: '#668866' },
-    HEAVY_FACTORY: { name: 'Heavy Factory', cost: 600, hp: 800, power: -50, width: 3, height: 2, prereq: 'LIGHT_FACTORY', color: '#886666' },
-    GUN_TURRET: { name: 'Gun Turret', cost: 125, hp: 300, power: -10, width: 1, height: 1, prereq: 'BARRACKS', color: '#555555', isDefense: true, range: 5, damage: 15 },
-    SILO: { name: 'Silo', cost: 150, hp: 300, power: -10, width: 1, height: 1, prereq: 'REFINERY', color: '#aa8844' }
+    CONSTRUCTION_YARD: { name: 'Construction Yard', cost: 0, hp: 1000, power: -60, width: 2, height: 2, prereq: null, color: '#666', buildTime: 0 },
+    WIND_TRAP: { name: 'Wind Trap', cost: 300, hp: 400, power: 100, width: 2, height: 2, prereq: null, color: '#4488aa', buildTime: 90 },
+    REFINERY: { name: 'Refinery', cost: 400, hp: 600, power: -40, width: 3, height: 2, prereq: 'WIND_TRAP', color: '#aa6644', spawnsHarvester: true, buildTime: 120 },
+    BARRACKS: { name: 'Barracks', cost: 300, hp: 500, power: -20, width: 2, height: 2, prereq: 'REFINERY', color: '#888866', buildTime: 90 },
+    LIGHT_FACTORY: { name: 'Light Factory', cost: 400, hp: 600, power: -30, width: 2, height: 2, prereq: 'BARRACKS', color: '#668866', buildTime: 120 },
+    HEAVY_FACTORY: { name: 'Heavy Factory', cost: 600, hp: 800, power: -50, width: 3, height: 2, prereq: 'LIGHT_FACTORY', color: '#886666', buildTime: 150 },
+    GUN_TURRET: { name: 'Gun Turret', cost: 125, hp: 300, power: -10, width: 1, height: 1, prereq: 'BARRACKS', color: '#555555', isDefense: true, range: 5, damage: 15, buildTime: 60 },
+    SILO: { name: 'Silo', cost: 150, hp: 300, power: -10, width: 1, height: 1, prereq: 'REFINERY', color: '#aa8844', buildTime: 45 }
 };
 
 // Unit definitions
@@ -85,7 +85,10 @@ const game = {
     buildPreviewPos: null,
     productionQueue: [],
     productionProgress: 0,
-    spiceFields: []
+    spiceFields: [],
+    buildingQueue: [],           // Queue for building construction
+    buildingProgress: 0,         // Progress for current building construction
+    buildingReady: null          // Building type ready to place
 };
 
 // Map data
@@ -591,7 +594,9 @@ function updateProduction() {
     const def = UNITS[item] || BUILDINGS[item];
     if (!def) return;
 
-    const powerRatio = game.power.consumed > 0 ? Math.min(1, game.power.produced / game.power.consumed) : 1;
+    // Power ratio affects build speed: full power = 1.0, no power = 0.3 (slow but not stopped)
+    const powerRatio = game.power.consumed > 0 ?
+        Math.max(0.3, Math.min(1, game.power.produced / game.power.consumed)) : 1;
     game.productionProgress += powerRatio;
 
     if (game.productionProgress >= def.buildTime) {
@@ -606,6 +611,51 @@ function updateProduction() {
         game.productionQueue.shift();
         game.productionProgress = 0;
     }
+}
+
+// Building construction
+function updateBuildingConstruction() {
+    // If a building is ready to place, don't progress construction
+    if (game.buildingReady) return;
+    if (game.buildingQueue.length === 0) return;
+
+    const item = game.buildingQueue[0];
+    const def = BUILDINGS[item];
+    if (!def) return;
+
+    // Power ratio affects build speed: full power = 1.0, no power = 0.3 (slow but not stopped)
+    const powerRatio = game.power.consumed > 0 ?
+        Math.max(0.3, Math.min(1, game.power.produced / game.power.consumed)) : 1;
+    game.buildingProgress += powerRatio;
+
+    if (game.buildingProgress >= def.buildTime) {
+        // Building construction complete - ready to place
+        game.buildingReady = item;
+        game.buildingMode = item;  // Enter placement mode automatically
+        game.buildingQueue.shift();
+        game.buildingProgress = 0;
+    }
+}
+
+// Start constructing a building (add to queue)
+function startBuildingConstruction(type) {
+    const def = BUILDINGS[type];
+    if (!def) return false;
+
+    // Check prerequisites
+    if (def.prereq && !game.buildings.some(b => b.type === def.prereq)) return false;
+
+    // Check cost
+    if (game.credits < def.cost) return false;
+
+    // Check if already building or have one ready
+    if (game.buildingQueue.length > 0 || game.buildingReady) return false;
+
+    // Deduct cost and add to queue
+    game.credits -= def.cost;
+    game.buildingQueue.push(type);
+    game.buildingProgress = 0;
+    return true;
 }
 
 function distance(x1, y1, x2, y2) {
@@ -1007,22 +1057,67 @@ function drawUI() {
     // Build buttons
     drawBuildButtons();
 
-    // Production progress
+    // Building construction progress
+    if (game.buildingQueue.length > 0) {
+        const item = game.buildingQueue[0];
+        const def = BUILDINGS[item];
+        const pct = game.buildingProgress / def.buildTime;
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '10px monospace';
+        ctx.fillText('BUILDING:', VIEWPORT_WIDTH + 20, 470);
+
+        ctx.fillStyle = '#333';
+        ctx.fillRect(VIEWPORT_WIDTH + 20, 475, 120, 20);
+        ctx.fillStyle = '#d4a000';  // Yellow for building progress
+        ctx.fillRect(VIEWPORT_WIDTH + 20, 475, 120 * pct, 20);
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(VIEWPORT_WIDTH + 20, 475, 120, 20);
+
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 10px monospace';
+        ctx.fillText(def.name, VIEWPORT_WIDTH + 25, 489);
+        ctx.fillText(`${Math.floor(pct * 100)}%`, VIEWPORT_WIDTH + 110, 489);
+    } else if (game.buildingReady) {
+        // Building ready to place
+        const def = BUILDINGS[game.buildingReady];
+        ctx.fillStyle = '#fff';
+        ctx.font = '10px monospace';
+        ctx.fillText('BUILDING:', VIEWPORT_WIDTH + 20, 470);
+
+        ctx.fillStyle = '#0a0';  // Green for ready
+        ctx.fillRect(VIEWPORT_WIDTH + 20, 475, 120, 20);
+        ctx.strokeStyle = '#0f0';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(VIEWPORT_WIDTH + 20, 475, 120, 20);
+
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 10px monospace';
+        ctx.fillText(def.name, VIEWPORT_WIDTH + 25, 489);
+        ctx.fillText('PLACE!', VIEWPORT_WIDTH + 95, 489);
+    }
+
+    // Production progress (units)
     if (game.productionQueue.length > 0) {
         const item = game.productionQueue[0];
         const def = UNITS[item] || BUILDINGS[item];
         const pct = game.productionProgress / def.buildTime;
 
+        ctx.fillStyle = '#fff';
+        ctx.font = '10px monospace';
+        ctx.fillText('UNIT:', VIEWPORT_WIDTH + 20, 510);
+
         ctx.fillStyle = '#333';
-        ctx.fillRect(VIEWPORT_WIDTH + 20, 500, 120, 16);
+        ctx.fillRect(VIEWPORT_WIDTH + 20, 515, 120, 16);
         ctx.fillStyle = '#0a0';
-        ctx.fillRect(VIEWPORT_WIDTH + 20, 500, 120 * pct, 16);
+        ctx.fillRect(VIEWPORT_WIDTH + 20, 515, 120 * pct, 16);
         ctx.strokeStyle = '#666';
-        ctx.strokeRect(VIEWPORT_WIDTH + 20, 500, 120, 16);
+        ctx.strokeRect(VIEWPORT_WIDTH + 20, 515, 120, 16);
 
         ctx.fillStyle = '#fff';
         ctx.font = '10px monospace';
-        ctx.fillText(def.name, VIEWPORT_WIDTH + 25, 512);
+        ctx.fillText(def.name, VIEWPORT_WIDTH + 25, 527);
     }
 
     // Selected unit info
@@ -1129,25 +1224,49 @@ function drawBuildButtons() {
         const x = VIEWPORT_WIDTH + 20 + (i % 3) * (buttonSize + buttonSpacing);
         const y = buttonY + Math.floor(i / 3) * (buttonSize + buttonSpacing);
 
-        const available = (!def.prereq || game.buildings.some(b => b.type === def.prereq)) &&
-                         game.credits >= def.cost;
+        const hasPrereq = !def.prereq || game.buildings.some(b => b.type === def.prereq);
+        const canAfford = game.credits >= def.cost;
+        const notBusy = game.buildingQueue.length === 0 && !game.buildingReady;
+        const isBuilding = game.buildingQueue.includes(opt.type);
+        const isReady = game.buildingReady === opt.type;
+        const available = hasPrereq && canAfford && notBusy;
 
         ctx.fillStyle = available ? '#444' : '#222';
         ctx.fillRect(x, y, buttonSize, buttonSize);
 
-        ctx.fillStyle = available ? def.color : '#333';
+        ctx.fillStyle = (hasPrereq && (canAfford || isBuilding || isReady)) ? def.color : '#333';
         ctx.fillRect(x + 4, y + 4, buttonSize - 8, buttonSize - 8);
 
+        // Show construction progress on button
+        if (isBuilding) {
+            const pct = game.buildingProgress / def.buildTime;
+            ctx.fillStyle = 'rgba(212, 160, 0, 0.7)';  // Yellow progress overlay
+            ctx.fillRect(x + 4, y + 4 + (buttonSize - 8) * (1 - pct), buttonSize - 8, (buttonSize - 8) * pct);
+        }
+
         // Cost
-        ctx.fillStyle = available ? '#fff' : '#666';
+        ctx.fillStyle = hasPrereq ? '#fff' : '#666';
         ctx.font = '8px monospace';
         ctx.fillText(`$${def.cost}`, x + 2, y + buttonSize - 3);
 
         // Key hint
         ctx.fillText(opt.key, x + buttonSize - 8, y + 10);
 
-        // Selection highlight
-        if (game.buildingMode === opt.type) {
+        // Highlight for building in progress (yellow border)
+        if (isBuilding) {
+            ctx.strokeStyle = '#d4a000';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, buttonSize, buttonSize);
+        }
+        // Ready to place highlight (green border, pulsing)
+        else if (isReady) {
+            const pulse = Math.sin(game.tick * 0.1) * 0.3 + 0.7;
+            ctx.strokeStyle = `rgba(0, 255, 0, ${pulse})`;
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x, y, buttonSize, buttonSize);
+        }
+        // Placement mode highlight
+        else if (game.buildingMode === opt.type) {
             ctx.strokeStyle = '#0f0';
             ctx.lineWidth = 2;
             ctx.strokeRect(x, y, buttonSize, buttonSize);
@@ -1217,6 +1336,64 @@ function shadeColor(color, percent) {
     return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
 }
 
+// UI Click handling
+function handleUIClick(x, y) {
+    const buttonY = 220;
+    const buttonSize = 36;
+    const buttonSpacing = 4;
+
+    const buildOptions = [
+        { type: 'WIND_TRAP', key: '1' },
+        { type: 'REFINERY', key: '2' },
+        { type: 'BARRACKS', key: '3' },
+        { type: 'LIGHT_FACTORY', key: '4' },
+        { type: 'HEAVY_FACTORY', key: '5' },
+        { type: 'GUN_TURRET', key: '6' },
+        { type: 'SILO', key: '7' }
+    ];
+
+    // Check building button clicks
+    for (let i = 0; i < buildOptions.length; i++) {
+        const opt = buildOptions[i];
+        const def = BUILDINGS[opt.type];
+        const btnX = VIEWPORT_WIDTH + 20 + (i % 3) * (buttonSize + buttonSpacing);
+        const btnY = buttonY + Math.floor(i / 3) * (buttonSize + buttonSpacing);
+
+        if (x >= btnX && x < btnX + buttonSize && y >= btnY && y < btnY + buttonSize) {
+            // Button clicked - start construction
+            startBuildingConstruction(opt.type);
+            return;
+        }
+    }
+
+    // Check unit button clicks
+    const unitY = buttonY + 110;
+    const unitOptions = [
+        { type: 'INFANTRY', key: 'Q' },
+        { type: 'TROOPER', key: 'W' },
+        { type: 'TRIKE', key: 'E' },
+        { type: 'QUAD', key: 'R' },
+        { type: 'TANK', key: 'T' },
+        { type: 'HARVESTER', key: 'Y' }
+    ];
+
+    for (let i = 0; i < unitOptions.length; i++) {
+        const opt = unitOptions[i];
+        const def = UNITS[opt.type];
+        const btnX = VIEWPORT_WIDTH + 20 + (i % 3) * (buttonSize + buttonSpacing);
+        const btnY = unitY + Math.floor(i / 3) * (buttonSize + buttonSpacing);
+
+        if (x >= btnX && x < btnX + buttonSize && y >= btnY && y < btnY + buttonSize) {
+            // Unit button clicked - queue unit
+            if (game.buildings.some(b => b.type === def.builtAt) && game.credits >= def.cost) {
+                game.credits -= def.cost;
+                game.productionQueue.push(opt.type);
+            }
+            return;
+        }
+    }
+}
+
 // Input handling
 let mouseX = 0, mouseY = 0;
 let isDragging = false;
@@ -1227,6 +1404,12 @@ canvas.addEventListener('mousedown', (e) => {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
+    // Handle UI panel clicks (right side)
+    if (x >= VIEWPORT_WIDTH) {
+        handleUIClick(x, y);
+        return;
+    }
+
     if (x < VIEWPORT_WIDTH) {
         if (game.buildingMode) {
             // Place building
@@ -1234,10 +1417,14 @@ canvas.addEventListener('mousedown', (e) => {
             const tileY = Math.floor((y + game.camera.y) / TILE_SIZE);
 
             if (canPlaceBuilding(game.buildingMode, tileX, tileY)) {
-                const def = BUILDINGS[game.buildingMode];
-                game.credits -= def.cost;
+                // Only deduct cost if NOT placing a ready building (cost already paid)
+                if (!game.buildingReady) {
+                    const def = BUILDINGS[game.buildingMode];
+                    game.credits -= def.cost;
+                }
                 addBuilding(game.buildingMode, tileX, tileY, 'player');
                 game.buildingMode = null;
+                game.buildingReady = null;  // Clear the ready building
             }
         } else {
             isDragging = true;
@@ -1334,6 +1521,7 @@ canvas.addEventListener('contextmenu', (e) => {
 
     if (game.buildingMode) {
         game.buildingMode = null;
+        game.buildingReady = null;
         return;
     }
 
@@ -1378,16 +1566,12 @@ document.addEventListener('keydown', (e) => {
         return;
     }
 
-    // Building hotkeys
+    // Building hotkeys - start construction
     const buildKeys = { '1': 'WIND_TRAP', '2': 'REFINERY', '3': 'BARRACKS', '4': 'LIGHT_FACTORY',
                         '5': 'HEAVY_FACTORY', '6': 'GUN_TURRET', '7': 'SILO' };
 
     if (buildKeys[key]) {
-        const type = buildKeys[key];
-        const def = BUILDINGS[type];
-        if ((!def.prereq || game.buildings.some(b => b.type === def.prereq)) && game.credits >= def.cost) {
-            game.buildingMode = type;
-        }
+        startBuildingConstruction(buildKeys[key]);
     }
 
     // Unit production hotkeys
@@ -1405,6 +1589,7 @@ document.addEventListener('keydown', (e) => {
     // Cancel building mode
     if (key === 'escape') {
         game.buildingMode = null;
+        game.buildingReady = null;
     }
 });
 
@@ -1429,6 +1614,9 @@ function gameLoop() {
 
         // Update production
         updateProduction();
+
+        // Update building construction
+        updateBuildingConstruction();
 
         // Check game end
         checkGameEnd();

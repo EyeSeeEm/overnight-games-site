@@ -1338,73 +1338,93 @@ function castRay(startX, startY, angle, maxDist) {
     return maxDist;
 }
 
+// Offscreen canvas for lighting (created once, reused)
+let lightingCanvas = null;
+let lightingCtx = null;
+
 function renderLighting() {
-    // Create darkness overlay
-    ctx.fillStyle = COLORS.DARKNESS;
-    ctx.fillRect(camera.x, camera.y, GAME_WIDTH, GAME_HEIGHT);
+    // FIXED: Use offscreen canvas to avoid destination-out erasing game content
+    // The raycasting occlusion logic is preserved - walls still block light!
 
-    // Cut out flashlight cone with raycasting (walls block light)
+    // Create offscreen canvas if needed
+    if (!lightingCanvas) {
+        lightingCanvas = document.createElement('canvas');
+        lightingCanvas.width = GAME_WIDTH;
+        lightingCanvas.height = GAME_HEIGHT;
+        lightingCtx = lightingCanvas.getContext('2d');
+    }
+
+    // Clear the lighting canvas
+    lightingCtx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    // Step 1: Fill with darkness on the offscreen canvas
+    lightingCtx.fillStyle = COLORS.DARKNESS;
+    lightingCtx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    // Step 2: Cut out visible areas using destination-out (on offscreen canvas - safe!)
+    lightingCtx.globalCompositeOperation = 'destination-out';
+
+    // Convert world coordinates to screen coordinates
+    const screenX = player.x - camera.x;
+    const screenY = player.y - camera.y;
+
     if (player.flashlightOn) {
-        ctx.save();
-        ctx.globalCompositeOperation = 'destination-out';
-
         const coneLength = 500;
         const coneWidth = Math.PI / 2.5; // 72 degrees
         const rayCount = 60; // Number of rays to cast
         const startAngle = player.angle - coneWidth / 2;
         const angleStep = coneWidth / rayCount;
 
-        // Build cone polygon with raycasting
-        ctx.beginPath();
-        ctx.moveTo(player.x, player.y);
+        // Build cone polygon with raycasting (PRESERVED - walls block light!)
+        lightingCtx.beginPath();
+        lightingCtx.moveTo(screenX, screenY);
 
         for (let i = 0; i <= rayCount; i++) {
             const rayAngle = startAngle + angleStep * i;
             const dist = castRay(player.x, player.y, rayAngle, coneLength);
-            const px = player.x + Math.cos(rayAngle) * dist;
-            const py = player.y + Math.sin(rayAngle) * dist;
-            ctx.lineTo(px, py);
+            // Convert ray endpoint to screen coordinates
+            const px = screenX + Math.cos(rayAngle) * dist;
+            const py = screenY + Math.sin(rayAngle) * dist;
+            lightingCtx.lineTo(px, py);
         }
 
-        ctx.closePath();
+        lightingCtx.closePath();
 
         // Gradient for soft edge
-        const gradient = ctx.createRadialGradient(player.x, player.y, 0, player.x, player.y, coneLength);
+        const gradient = lightingCtx.createRadialGradient(screenX, screenY, 0, screenX, screenY, coneLength);
         gradient.addColorStop(0, 'rgba(255,255,255,1)');
-        gradient.addColorStop(0.7, 'rgba(255,255,255,0.8)');
+        gradient.addColorStop(0.7, 'rgba(255,255,255,0.9)');
         gradient.addColorStop(1, 'rgba(255,255,255,0)');
 
-        ctx.fillStyle = gradient;
-        ctx.fill();
+        lightingCtx.fillStyle = gradient;
+        lightingCtx.fill();
 
-        ctx.restore();
-
-        // Larger ambient light around player
-        ctx.save();
-        ctx.globalCompositeOperation = 'destination-out';
-        const ambientGradient = ctx.createRadialGradient(player.x, player.y, 0, player.x, player.y, 150);
-        ambientGradient.addColorStop(0, 'rgba(255,255,255,0.7)');
+        // Larger ambient light around player (always visible area)
+        const ambientGradient = lightingCtx.createRadialGradient(screenX, screenY, 0, screenX, screenY, 150);
+        ambientGradient.addColorStop(0, 'rgba(255,255,255,0.8)');
+        ambientGradient.addColorStop(0.5, 'rgba(255,255,255,0.4)');
+        ambientGradient.addColorStop(1, 'rgba(255,255,255,0)');
+        lightingCtx.fillStyle = ambientGradient;
+        lightingCtx.beginPath();
+        lightingCtx.arc(screenX, screenY, 150, 0, Math.PI * 2);
+        lightingCtx.fill();
+    } else {
+        // Ambient light when flashlight off
+        const ambientGradient = lightingCtx.createRadialGradient(screenX, screenY, 0, screenX, screenY, 100);
+        ambientGradient.addColorStop(0, 'rgba(255,255,255,0.6)');
         ambientGradient.addColorStop(0.5, 'rgba(255,255,255,0.3)');
         ambientGradient.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = ambientGradient;
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, 150, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-    } else {
-        // Larger ambient light when flashlight off
-        ctx.save();
-        ctx.globalCompositeOperation = 'destination-out';
-        const ambientGradient = ctx.createRadialGradient(player.x, player.y, 0, player.x, player.y, 100);
-        ambientGradient.addColorStop(0, 'rgba(255,255,255,0.5)');
-        ambientGradient.addColorStop(0.5, 'rgba(255,255,255,0.2)');
-        ambientGradient.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = ambientGradient;
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, 100, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        lightingCtx.fillStyle = ambientGradient;
+        lightingCtx.beginPath();
+        lightingCtx.arc(screenX, screenY, 100, 0, Math.PI * 2);
+        lightingCtx.fill();
     }
+
+    // Reset composite operation
+    lightingCtx.globalCompositeOperation = 'source-over';
+
+    // Step 3: Draw the lighting overlay onto the main canvas
+    ctx.drawImage(lightingCanvas, camera.x, camera.y);
 }
 
 function renderUI() {

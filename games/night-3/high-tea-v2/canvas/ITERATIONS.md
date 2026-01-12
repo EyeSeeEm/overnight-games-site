@@ -347,3 +347,67 @@ Game captures High Tea's core aesthetic:
 
 ### Difficulty Rating
 Medium - Economic balancing was trickier than expected, but mechanics were straightforward
+
+---
+
+## Session 2026-01-11 - Feedback Fixes
+
+### Fix 1: Tutorial Continue Button
+- **Problem**: Tutorial end had yellow area that had to be clicked but no visible button
+- **Solution**: Added a clear, visible "CONTINUE" button with golden/yellow background, border, and pulsing glow effect for all tutorial steps that wait for clicks
+- **Files**: game.js (drawTutorial function)
+- **Tested**: Yes - button clearly visible and clickable
+
+### Fix 2: Early Tea Shipment Feature
+- **Problem**: No way to satisfy tea orders ahead of time for bonus
+- **Solution**: 
+  - Added "SHIP NOW" button in quota panel
+  - Button turns green when player has enough tea to meet quota
+  - Early shipment gives bonus mood based on time remaining (+1 mood per 10 seconds remaining)
+  - Also gives +1 ship as reward
+- **Files**: game.js (shipTeaEarly function, drawQuotaPanel)
+- **Tested**: Yes - button appears and shows bonus amount
+
+### Fix 3: Year Reset System
+- **Problem**: Resources accumulated year over year, making game trivially easy
+- **Solution**: Each year now resets silver, opium, and tea to scaled starting values
+  - Silver increases each year: 500 → 600 → 700 → ... → 1400
+  - Starting opium increases: 15 → 20 → 25 → ... → 60
+  - Tea always resets to 0
+  - Ships are kept as rewards
+- **Files**: game.js (advanceYear function)
+- **Tested**: Yes - resources reset on year change
+
+### Fix 4: Rebalanced Quotas
+- **Problem**: Quotas increased too drastically, making later years impossible
+- **Solution**: New quota progression: 50, 70, 90, 110, 140, 170, 200, 240, 280, 320
+  - More gradual increase
+  - Achievable with starting resources + trading
+- **Files**: game.js (advanceYear function, initial game state)
+- **Tested**: Yes - quotas are reasonable
+
+### Fix 5: First Year Protection
+- **Problem**: Year 1 (1830) could have harsh fines/confiscations
+- **Solution**: Year 1 (1830) has NO fines, confiscations, or ship captures
+  - This is the "learning year" where players learn mechanics
+  - All trades succeed in year 1
+- **Files**: game.js (handleShipArrival function)
+- **Tested**: Yes - no penalties in 1830
+
+### Fix 6: Gradual Penalty Scaling
+- **Problem**: Fines and confiscations needed to scale gradually after year 1
+- **Solution**: 
+  - Base risk chance: 8% per risk level (+1% per year after 1830)
+  - Capture chance: 3% base (+0.5% per year)
+  - Confiscate chance: 10% base (+1% per year)
+  - Fine amount: 8% base (+1% per year)
+- **Files**: game.js (handleShipArrival function)
+- **Tested**: Yes - penalties scale gradually
+
+### All Feedback Items Verified
+- [x] Tutorial end has clear, visible button
+- [x] Early tea shipment gives mood bonus
+- [x] Year completion resets resources
+- [x] Each year is balanced and progressively harder
+- [x] First year has NO fines/confiscations
+- [x] Fines/confiscations scale very slightly each year

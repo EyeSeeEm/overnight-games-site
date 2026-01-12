@@ -1278,12 +1278,12 @@ function gameUpdate() {
 
     if (gameState !== 'play' || !player) return;
 
-    // Player input
+    // Player input - LittleJS uses Y+ = up, so W increases Y, S decreases Y
     let moveX = 0, moveY = 0;
-    if (keyIsDown('KeyW') || keyIsDown('ArrowUp')) moveY -= 1;
-    if (keyIsDown('KeyS') || keyIsDown('ArrowDown')) moveY += 1;
-    if (keyIsDown('KeyA') || keyIsDown('ArrowLeft')) moveX -= 1;
-    if (keyIsDown('KeyD') || keyIsDown('ArrowRight')) moveX += 1;
+    if (keyIsDown('KeyW') || keyIsDown('ArrowUp')) moveY += 1;    // W = up on screen = +Y in LittleJS
+    if (keyIsDown('KeyS') || keyIsDown('ArrowDown')) moveY -= 1;  // S = down on screen = -Y in LittleJS
+    if (keyIsDown('KeyA') || keyIsDown('ArrowLeft')) moveX -= 1;  // A = left = -X
+    if (keyIsDown('KeyD') || keyIsDown('ArrowRight')) moveX += 1; // D = right = +X
 
     // Sprint
     player.sprinting = keyIsDown('ShiftLeft') || keyIsDown('ShiftRight');
