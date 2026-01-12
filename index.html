@@ -2102,9 +2102,22 @@
 
       let html = '';
       let lastBase = '';
+      let lastNight = '';
 
       games.forEach((g, i) => {
         const base = getBase(g);
+
+        // Add night header when night changes (only in night sort mode)
+        if (sortBy === 'night' && g.night !== lastNight) {
+          const nightGames = games.filter(gg => gg.night === g.night);
+          const workingCount = nightGames.filter(gg => !brokenGames[gg.id]).length;
+          html += `<div class="game-group-header night-header">
+            <span class="group-name">${g.night.replace('night-', 'Night ')}</span>
+            <span class="group-stats">${nightGames.length} games (${workingCount} working)</span>
+          </div>`;
+          lastNight = g.night;
+        }
+
         // Add section header when game group changes (only in grouped mode)
         if (sortBy === 'grouped' && base !== lastBase) {
           const baseName = base.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
