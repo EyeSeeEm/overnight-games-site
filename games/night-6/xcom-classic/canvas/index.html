@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-COM Classic Clone</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a12;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+        }
+        #gameCanvas {
+            display: block;
+            background: #111;
+            border: 2px solid #333;
+        }
+        #hud {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: rgba(0, 20, 40, 0.95);
+            border-top: 2px solid #0af;
+            display: flex;
+            pointer-events: auto;
+        }
+        #soldier-info {
+            flex: 1;
+            padding: 10px;
+            border-right: 1px solid #0af;
+        }
+        #soldier-name {
+            color: #0af;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-row {
+            display: flex;
+            gap: 15px;
+            font-size: 11px;
+            color: #888;
+        }
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .stat-value {
+            color: #fff;
+            font-weight: bold;
+        }
+        #tu-bar {
+            width: 100%;
+            height: 8px;
+            background: #222;
+            margin-top: 5px;
+            border: 1px solid #444;
+        }
+        #tu-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0af, #08f);
+            transition: width 0.3s;
+        }
+        #actions {
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            gap: 5px;
+        }
+        .action-row {
+            display: flex;
+            gap: 5px;
+        }
+        .action-btn {
+            width: 60px;
+            height: 35px;
+            background: #1a3a4a;
+            border: 1px solid #0af;
+            color: #fff;
+            font-size: 9px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .action-btn:hover {
+            background: #2a5a6a;
+        }
+        .action-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .action-btn .icon {
+            font-size: 14px;
+        }
+        .action-btn .tu-cost {
+            font-size: 8px;
+            color: #0af;
+        }
+        #fire-modes {
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            gap: 3px;
+            border-left: 1px solid #0af;
+        }
+        .fire-mode {
+            padding: 5px 10px;
+            background: #1a2a3a;
+            border: 1px solid #555;
+            color: #aaa;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        .fire-mode:hover {
+            background: #2a4a5a;
+        }
+        .fire-mode.selected {
+            background: #0a4a6a;
+            border-color: #0af;
+            color: #fff;
+        }
+        #turn-info {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 20, 40, 0.9);
+            padding: 10px;
+            border: 1px solid #0af;
+            color: #fff;
+            font-size: 12px;
+        }
+        #enemy-count {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(40, 0, 0, 0.9);
+            padding: 10px;
+            border: 1px solid #f44;
+            color: #f44;
+            font-size: 12px;
+        }
+        #menu-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 10, 20, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+        #menu-overlay h1 {
+            font-size: 36px;
+            color: #0af;
+            text-shadow: 0 0 20px #0af;
+            margin-bottom: 10px;
+        }
+        #menu-overlay h2 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        #menu-overlay p {
+            color: #888;
+            margin-bottom: 20px;
+            max-width: 400px;
+            text-align: center;
+            line-height: 1.6;
+            font-size: 12px;
+        }
+        #start-btn {
+            padding: 15px 40px;
+            font-size: 16px;
+            background: #0a3a5a;
+            border: 2px solid #0af;
+            color: #fff;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        #start-btn:hover {
+            background: #1a5a7a;
+        }
+        .hidden { display: none !important; }
+        #gameover-overlay, #victory-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+        #gameover-overlay h1 { color: #f44; font-size: 32px; }
+        #victory-overlay h1 { color: #4f4; font-size: 32px; }
+        .result-stats {
+            color: #888;
+            margin: 20px 0;
+            text-align: center;
+            line-height: 1.8;
+        }
+        .restart-btn {
+            margin-top: 20px;
+            padding: 10px 30px;
+            background: #333;
+            border: 2px solid #666;
+            color: #fff;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        #messages {
+            position: absolute;
+            top: 50px;
+            left: 10px;
+            color: #ff0;
+            font-size: 11px;
+            pointer-events: none;
+            max-width: 300px;
+        }
+        .message {
+            margin-bottom: 3px;
+            background: rgba(0,0,0,0.7);
+            padding: 2px 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+        <div id="enemy-count">ALIENS: <span id="alien-count">0</span></div>
+        <div id="turn-info">
+            <div>TURN: <span id="turn-number">1</span></div>
+            <div id="phase-display">YOUR TURN</div>
+        </div>
+
+        <div id="messages"></div>
+
+        <div id="hud">
+            <div id="soldier-info">
+                <div id="soldier-name">No soldier selected</div>
+                <div class="stat-row">
+                    <div class="stat">TU: <span class="stat-value" id="stat-tu">0/0</span></div>
+                    <div class="stat">HP: <span class="stat-value" id="stat-hp">0/0</span></div>
+                    <div class="stat">ACC: <span class="stat-value" id="stat-acc">0</span></div>
+                </div>
+                <div id="tu-bar"><div id="tu-fill" style="width: 0%"></div></div>
+                <div class="stat-row" style="margin-top: 5px">
+                    <div class="stat">Weapon: <span class="stat-value" id="stat-weapon">None</span></div>
+                    <div class="stat">Ammo: <span class="stat-value" id="stat-ammo">0</span></div>
+                </div>
+            </div>
+
+            <div id="actions">
+                <div class="action-row">
+                    <button class="action-btn" id="btn-kneel" title="Kneel/Stand (K)">
+                        <span class="icon">&#9899;</span>
+                        <span>KNEEL</span>
+                        <span class="tu-cost">4 TU</span>
+                    </button>
+                    <button class="action-btn" id="btn-reload" title="Reload">
+                        <span class="icon">&#9679;</span>
+                        <span>RELOAD</span>
+                        <span class="tu-cost">15 TU</span>
+                    </button>
+                    <button class="action-btn" id="btn-next" title="Next Soldier (Tab)">
+                        <span class="icon">&#8594;</span>
+                        <span>NEXT</span>
+                        <span class="tu-cost">-</span>
+                    </button>
+                </div>
+                <div class="action-row">
+                    <button class="action-btn" id="btn-end" title="End Turn (Enter)">
+                        <span class="icon">&#10003;</span>
+                        <span>END</span>
+                        <span class="tu-cost">TURN</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="fire-modes">
+                <div class="fire-mode selected" id="mode-snap" data-mode="snap">
+                    SNAP (1) - 25% TU
+                </div>
+                <div class="fire-mode" id="mode-aimed" data-mode="aimed">
+                    AIMED (2) - 50% TU
+                </div>
+                <div class="fire-mode" id="mode-auto" data-mode="auto">
+                    AUTO (3) - 35% TU x3
+                </div>
+            </div>
+        </div>
+
+        <div id="menu-overlay">
+            <h1>X-COM</h1>
+            <h2>TACTICAL COMBAT</h2>
+            <p>Command your squad of soldiers against alien invaders. Use Time Units wisely - every action costs TU. Eliminate all hostile forces to complete the mission.</p>
+            <p style="color: #666; font-size: 10px;">Click tiles to move | Click aliens to shoot | Tab = Next soldier | Enter = End turn</p>
+            <button id="start-btn">BEGIN MISSION</button>
+        </div>
+
+        <div id="gameover-overlay" class="hidden">
+            <h1>MISSION FAILED</h1>
+            <div class="result-stats">
+                <div>All soldiers have been eliminated.</div>
+                <div id="fail-stats"></div>
+            </div>
+            <button class="restart-btn" id="restart-btn">TRY AGAIN</button>
+        </div>
+
+        <div id="victory-overlay" class="hidden">
+            <h1>MISSION COMPLETE</h1>
+            <div class="result-stats">
+                <div>All aliens eliminated!</div>
+                <div id="victory-stats"></div>
+            </div>
+            <button class="restart-btn" id="victory-restart-btn">NEXT MISSION</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

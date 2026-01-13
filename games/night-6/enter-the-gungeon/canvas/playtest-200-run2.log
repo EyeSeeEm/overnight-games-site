@@ -1,0 +1,5 @@
+Checkpoint 25: Kills=11, Deaths=16, Rooms=25, MaxFloor=1
+Checkpoint 50: Kills=12, Deaths=29, Rooms=50, MaxFloor=1
+Checkpoint 75: Kills=32, Deaths=46, Rooms=76, MaxFloor=1
+page.evaluate: Target page, context or browser has been closed
+    at /workspace/games/night-6/enter-the-gungeon/canvas/batch-test.js:112:28

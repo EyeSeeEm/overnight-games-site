@@ -1,0 +1,43 @@
+{
+  "game_info": {
+    "name": "Zero Sievert Clone",
+    "type": "extraction_shooter",
+    "description": "Top-down extraction shooter set in post-apocalyptic wasteland. Venture from bunker into procedurally generated zones, scavenge loot, fight enemies, and extract before death. Permadeath loses equipped gear."
+  },
+  "core_loop": {
+    "description": "Prepare loadout in bunker -> Travel to zone -> Explore and loot -> Fight enemies -> Reach extraction point -> Return to bunker with loot -> Sell/upgrade -> Repeat",
+    "estimated_duration_sec": 120,
+    "loops_for_meaningful_test": 3
+  },
+  "recommended_test_duration_sec": 360,
+  "input_scheme": {
+    "movement": { "type": "wasd", "keys": ["w", "a", "s", "d"] },
+    "aim": { "type": "mouse", "description": "360 degree aiming" },
+    "primary_action": { "type": "mouse_click", "description": "Fire weapon" },
+    "special_actions": [
+      { "name": "reload", "key": "r" },
+      { "name": "interact", "key": "e" },
+      { "name": "inventory", "key": "Tab" },
+      { "name": "sprint", "key": "Shift" },
+      { "name": "dodge_roll", "key": "Space" },
+      { "name": "flashlight", "key": "f" },
+      { "name": "use_heal", "key": "1" }
+    ]
+  },
+  "combat_profile": {
+    "style": "twin_stick_shooter",
+    "how_to_attack": "Mouse aims, left click fires weapon. WASD moves. Shift sprints, Space dodge rolls. E to loot containers. Reach extraction point (green zone) to complete raid."
+  },
+  "success_conditions": {
+    "minimum": { "enemies_killed": 5, "containers_looted": 3, "extractions": 1 },
+    "good_playthrough": { "enemies_killed": 15, "containers_looted": 10, "extractions": 3, "rubles_earned": 5000 }
+  },
+  "key_features": [
+    { "name": "Twin-Stick Shooting", "testable": true },
+    { "name": "Procedural Zones", "testable": true },
+    { "name": "Loot System", "testable": true },
+    { "name": "Multiple Enemy Types", "testable": true },
+    { "name": "Extraction Mechanic", "testable": true },
+    { "name": "Status Effects", "testable": true }
+  ]
+}

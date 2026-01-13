@@ -1,0 +1,2628 @@
+[2026-01-13T01:49:36.011Z] Starting Tower Wizard Clone Playtest
+[2026-01-13T01:49:36.012Z] Target: 200 iterations
+[2026-01-13T01:49:36.169Z] Loading game: file:///workspace/games/night-6/tower-wizard/canvas/index.html
+[2026-01-13T01:49:38.211Z] Harness detected
+[2026-01-13T01:49:38.211Z] 
+=== ITERATION 1 ===
+[2026-01-13T01:49:39.033Z] Summoned spirit! Total: 1
+[2026-01-13T01:49:39.137Z] Magic doubled: 6 -> 12
+[2026-01-13T01:49:39.346Z] Magic doubled: 12 -> 24
+[2026-01-13T01:49:39.449Z] Summoned spirit! Total: 2
+[2026-01-13T01:49:39.866Z] Summoned spirit! Total: 3
+[2026-01-13T01:49:40.181Z] Magic doubled: 24 -> 50
+[2026-01-13T01:49:40.284Z] Summoned spirit! Total: 4
+[2026-01-13T01:49:40.801Z] Summoned spirit! Total: 5
+[2026-01-13T01:49:41.319Z] Summoned spirit! Total: 6
+[2026-01-13T01:49:41.633Z] Magic doubled: 50 -> 101
+[2026-01-13T01:49:41.737Z] ASCENDED! Tower level: 2
+[2026-01-13T01:49:42.051Z] Summoned spirit! Total: 7
+[2026-01-13T01:49:42.671Z] Summoned spirit! Total: 8
+[2026-01-13T01:49:43.294Z] Summoned spirit! Total: 9
+[2026-01-13T01:49:43.917Z] Step 50: Magic=201, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:49:44.022Z] Summoned spirit! Total: 10
+[2026-01-13T01:49:44.240Z] Magic doubled: 101 -> 208
+[2026-01-13T01:49:44.865Z] Summoned spirit! Total: 11
+[2026-01-13T01:49:45.798Z] Summoned spirit! Total: 12
+[2026-01-13T01:49:46.834Z] Summoned spirit! Total: 13
+[2026-01-13T01:49:47.970Z] Summoned spirit! Total: 14
+[2026-01-13T01:49:48.282Z] Magic doubled: 208 -> 417
+[2026-01-13T01:49:49.113Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:49:49.217Z] Summoned spirit! Total: 15
+[2026-01-13T01:49:50.668Z] Summoned spirit! Total: 16
+[2026-01-13T01:49:52.323Z] Summoned spirit! Total: 17
+[2026-01-13T01:49:54.295Z] Step 150: Magic=790, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:49:54.708Z] Magic doubled: 417 -> 845
+[2026-01-13T01:49:54.915Z] Summoned spirit! Total: 18
+[2026-01-13T01:49:56.054Z] Summoned spirit! Total: 19
+[2026-01-13T01:49:56.366Z] ASCENDED! Tower level: 3
+[2026-01-13T01:49:57.296Z] Summoned spirit! Total: 20
+[2026-01-13T01:49:58.747Z] Summoned spirit! Total: 21
+[2026-01-13T01:49:59.470Z] Step 200: Magic=1378, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:50:00.299Z] Summoned spirit! Total: 22
+[2026-01-13T01:50:02.058Z] Magic doubled: 845 -> 1712
+[2026-01-13T01:50:02.885Z] Summoned spirit! Total: 23
+[2026-01-13T01:50:03.929Z] Summoned spirit! Total: 24
+[2026-01-13T01:50:03.812Z] Step 250: Magic=2331, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:50:04.227Z] Summoned spirit! Total: 25
+[2026-01-13T01:50:05.575Z] Summoned spirit! Total: 26
+[2026-01-13T01:50:07.121Z] Summoned spirit! Total: 27
+[2026-01-13T01:50:08.256Z] Magic doubled: 1712 -> 3445
+[2026-01-13T01:50:08.981Z] Step 300: Magic=3720, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:50:08.990Z] 
+=== ITERATION 2 ===
+[2026-01-13T01:50:09.805Z] Summoned spirit! Total: 1
+[2026-01-13T01:50:09.909Z] Magic doubled: 6 -> 12
+[2026-01-13T01:50:10.115Z] Magic doubled: 12 -> 24
+[2026-01-13T01:50:10.220Z] Summoned spirit! Total: 2
+[2026-01-13T01:50:10.632Z] Summoned spirit! Total: 3
+[2026-01-13T01:50:10.945Z] Magic doubled: 24 -> 49
+[2026-01-13T01:50:11.048Z] Summoned spirit! Total: 4
+[2026-01-13T01:50:11.568Z] Summoned spirit! Total: 5
+[2026-01-13T01:50:12.087Z] Summoned spirit! Total: 6
+[2026-01-13T01:50:12.396Z] Magic doubled: 49 -> 100
+[2026-01-13T01:50:12.500Z] ASCENDED! Tower level: 2
+[2026-01-13T01:50:12.811Z] Summoned spirit! Total: 7
+[2026-01-13T01:50:13.430Z] Summoned spirit! Total: 8
+[2026-01-13T01:50:14.049Z] Summoned spirit! Total: 9
+[2026-01-13T01:50:14.671Z] Step 50: Magic=200, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:50:14.781Z] Magic doubled: 100 -> 206
+[2026-01-13T01:50:14.886Z] Summoned spirit! Total: 10
+[2026-01-13T01:50:15.712Z] Summoned spirit! Total: 11
+[2026-01-13T01:50:16.540Z] Summoned spirit! Total: 12
+[2026-01-13T01:50:17.572Z] Summoned spirit! Total: 13
+[2026-01-13T01:50:18.707Z] Summoned spirit! Total: 14
+[2026-01-13T01:50:19.016Z] Magic doubled: 206 -> 416
+[2026-01-13T01:50:19.847Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:50:19.953Z] Summoned spirit! Total: 15
+[2026-01-13T01:50:21.398Z] Summoned spirit! Total: 16
+[2026-01-13T01:50:22.947Z] Summoned spirit! Total: 17
+[2026-01-13T01:50:25.009Z] Step 150: Magic=793, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:50:25.322Z] Magic doubled: 416 -> 836
+[2026-01-13T01:50:25.634Z] Summoned spirit! Total: 18
+[2026-01-13T01:50:26.670Z] Summoned spirit! Total: 19
+[2026-01-13T01:50:27.081Z] ASCENDED! Tower level: 3
+[2026-01-13T01:50:28.010Z] Summoned spirit! Total: 20
+[2026-01-13T01:50:29.356Z] Summoned spirit! Total: 21
+[2026-01-13T01:50:30.182Z] Step 200: Magic=1387, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:50:30.906Z] Summoned spirit! Total: 22
+[2026-01-13T01:50:32.458Z] Magic doubled: 836 -> 1677
+[2026-01-13T01:50:32.632Z] Summoned spirit! Total: 23
+[2026-01-13T01:50:33.667Z] Summoned spirit! Total: 24
+[2026-01-13T01:50:34.496Z] Step 250: Magic=2362, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:50:34.805Z] Summoned spirit! Total: 25
+[2026-01-13T01:50:36.152Z] Summoned spirit! Total: 26
+[2026-01-13T01:50:37.701Z] Summoned spirit! Total: 27
+[2026-01-13T01:50:38.530Z] Magic doubled: 1677 -> 3360
+[2026-01-13T01:50:39.665Z] Step 300: Magic=3782, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:50:39.669Z] 
+=== ITERATION 3 ===
+[2026-01-13T01:50:40.482Z] Summoned spirit! Total: 1
+[2026-01-13T01:50:40.585Z] Magic doubled: 6 -> 12
+[2026-01-13T01:50:40.793Z] Magic doubled: 12 -> 24
+[2026-01-13T01:50:40.897Z] Summoned spirit! Total: 2
+[2026-01-13T01:50:41.312Z] Summoned spirit! Total: 3
+[2026-01-13T01:50:41.621Z] Magic doubled: 24 -> 49
+[2026-01-13T01:50:41.725Z] Summoned spirit! Total: 4
+[2026-01-13T01:50:42.243Z] Summoned spirit! Total: 5
+[2026-01-13T01:50:42.757Z] Summoned spirit! Total: 6
+[2026-01-13T01:50:43.068Z] Magic doubled: 49 -> 100
+[2026-01-13T01:50:43.171Z] ASCENDED! Tower level: 2
+[2026-01-13T01:50:43.484Z] Summoned spirit! Total: 7
+[2026-01-13T01:50:44.109Z] Summoned spirit! Total: 8
+[2026-01-13T01:50:44.730Z] Summoned spirit! Total: 9
+[2026-01-13T01:50:45.351Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:50:45.455Z] Magic doubled: 100 -> 205
+[2026-01-13T01:50:45.562Z] Summoned spirit! Total: 10
+[2026-01-13T01:50:46.387Z] Summoned spirit! Total: 11
+[2026-01-13T01:50:47.318Z] Summoned spirit! Total: 12
+[2026-01-13T01:50:48.247Z] Summoned spirit! Total: 13
+[2026-01-13T01:50:49.382Z] Summoned spirit! Total: 14
+[2026-01-13T01:50:49.694Z] Magic doubled: 205 -> 416
+[2026-01-13T01:50:50.520Z] Step 100: Magic=470, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:50:50.730Z] Summoned spirit! Total: 15
+[2026-01-13T01:50:52.070Z] Summoned spirit! Total: 16
+[2026-01-13T01:50:53.731Z] Summoned spirit! Total: 17
+[2026-01-13T01:50:55.699Z] Step 150: Magic=789, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:50:56.116Z] Magic doubled: 416 -> 844
+[2026-01-13T01:50:56.322Z] Summoned spirit! Total: 18
+[2026-01-13T01:50:57.461Z] Summoned spirit! Total: 19
+[2026-01-13T01:50:57.769Z] ASCENDED! Tower level: 3
+[2026-01-13T01:50:58.698Z] Summoned spirit! Total: 20
+[2026-01-13T01:51:00.146Z] Summoned spirit! Total: 21
+[2026-01-13T01:51:00.869Z] Step 200: Magic=1377, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:51:01.699Z] Summoned spirit! Total: 22
+[2026-01-13T01:51:02.605Z] Magic doubled: 844 -> 1711
+[2026-01-13T01:51:03.433Z] Summoned spirit! Total: 23
+[2026-01-13T01:51:04.468Z] Summoned spirit! Total: 24
+[2026-01-13T01:51:05.189Z] Step 250: Magic=2339, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:51:05.603Z] Summoned spirit! Total: 25
+[2026-01-13T01:51:06.949Z] Summoned spirit! Total: 26
+[2026-01-13T01:51:08.497Z] Summoned spirit! Total: 27
+[2026-01-13T01:51:09.529Z] Magic doubled: 1711 -> 3429
+[2026-01-13T01:51:10.357Z] Step 300: Magic=3733, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:51:10.362Z] 
+=== ITERATION 4 ===
+[2026-01-13T01:51:11.175Z] Summoned spirit! Total: 1
+[2026-01-13T01:51:11.286Z] Magic doubled: 6 -> 12
+[2026-01-13T01:51:11.494Z] Magic doubled: 12 -> 24
+[2026-01-13T01:51:11.598Z] Summoned spirit! Total: 2
+[2026-01-13T01:51:12.010Z] Summoned spirit! Total: 3
+[2026-01-13T01:51:12.318Z] Magic doubled: 24 -> 49
+[2026-01-13T01:51:12.421Z] Summoned spirit! Total: 4
+[2026-01-13T01:51:12.937Z] Summoned spirit! Total: 5
+[2026-01-13T01:51:13.456Z] Summoned spirit! Total: 6
+[2026-01-13T01:51:13.767Z] Magic doubled: 49 -> 100
+[2026-01-13T01:51:13.870Z] ASCENDED! Tower level: 2
+[2026-01-13T01:51:14.181Z] Summoned spirit! Total: 7
+[2026-01-13T01:51:14.800Z] Summoned spirit! Total: 8
+[2026-01-13T01:51:15.418Z] Summoned spirit! Total: 9
+[2026-01-13T01:51:16.037Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:51:16.142Z] Magic doubled: 100 -> 205
+[2026-01-13T01:51:16.246Z] Summoned spirit! Total: 10
+[2026-01-13T01:51:17.075Z] Summoned spirit! Total: 11
+[2026-01-13T01:51:17.901Z] Summoned spirit! Total: 12
+[2026-01-13T01:51:18.933Z] Summoned spirit! Total: 13
+[2026-01-13T01:51:20.073Z] Summoned spirit! Total: 14
+[2026-01-13T01:51:20.282Z] Magic doubled: 205 -> 412
+[2026-01-13T01:51:21.211Z] Step 100: Magic=472, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:51:21.315Z] Summoned spirit! Total: 15
+[2026-01-13T01:51:22.764Z] Summoned spirit! Total: 16
+[2026-01-13T01:51:24.313Z] Summoned spirit! Total: 17
+[2026-01-13T01:51:26.372Z] Step 150: Magic=793, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:51:26.684Z] Magic doubled: 412 -> 834
+[2026-01-13T01:51:26.997Z] Summoned spirit! Total: 18
+[2026-01-13T01:51:28.030Z] Summoned spirit! Total: 19
+[2026-01-13T01:51:28.444Z] ASCENDED! Tower level: 3
+[2026-01-13T01:51:29.369Z] Summoned spirit! Total: 20
+[2026-01-13T01:51:30.813Z] Summoned spirit! Total: 21
+[2026-01-13T01:51:31.537Z] Step 200: Magic=1383, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:51:31.441Z] Summoned spirit! Total: 22
+[2026-01-13T01:51:32.987Z] Magic doubled: 834 -> 1673
+[2026-01-13T01:51:34.017Z] Summoned spirit! Total: 23
+[2026-01-13T01:51:35.047Z] Summoned spirit! Total: 24
+[2026-01-13T01:51:35.877Z] Step 250: Magic=2353, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:51:36.290Z] Summoned spirit! Total: 25
+[2026-01-13T01:51:37.643Z] Summoned spirit! Total: 26
+[2026-01-13T01:51:39.088Z] Summoned spirit! Total: 27
+[2026-01-13T01:51:40.014Z] Magic doubled: 1673 -> 3374
+[2026-01-13T01:51:41.049Z] Step 300: Magic=3737, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:51:41.055Z] 
+=== ITERATION 5 ===
+[2026-01-13T01:51:41.867Z] Summoned spirit! Total: 1
+[2026-01-13T01:51:41.972Z] Magic doubled: 6 -> 12
+[2026-01-13T01:51:42.178Z] Magic doubled: 12 -> 24
+[2026-01-13T01:51:42.281Z] Summoned spirit! Total: 2
+[2026-01-13T01:51:42.697Z] Summoned spirit! Total: 3
+[2026-01-13T01:51:43.008Z] Magic doubled: 24 -> 49
+[2026-01-13T01:51:43.111Z] Summoned spirit! Total: 4
+[2026-01-13T01:51:43.628Z] Summoned spirit! Total: 5
+[2026-01-13T01:51:44.144Z] Summoned spirit! Total: 6
+[2026-01-13T01:51:44.454Z] Magic doubled: 49 -> 100
+[2026-01-13T01:51:44.557Z] ASCENDED! Tower level: 2
+[2026-01-13T01:51:44.865Z] Summoned spirit! Total: 7
+[2026-01-13T01:51:45.483Z] Summoned spirit! Total: 8
+[2026-01-13T01:51:46.103Z] Summoned spirit! Total: 9
+[2026-01-13T01:51:46.722Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:51:46.827Z] Magic doubled: 100 -> 205
+[2026-01-13T01:51:46.931Z] Summoned spirit! Total: 10
+[2026-01-13T01:51:47.760Z] Summoned spirit! Total: 11
+[2026-01-13T01:51:48.689Z] Summoned spirit! Total: 12
+[2026-01-13T01:51:49.618Z] Summoned spirit! Total: 13
+[2026-01-13T01:51:50.757Z] Summoned spirit! Total: 14
+[2026-01-13T01:51:50.963Z] Magic doubled: 205 -> 411
+[2026-01-13T01:51:51.893Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:51:51.997Z] Summoned spirit! Total: 15
+[2026-01-13T01:51:53.440Z] Summoned spirit! Total: 16
+[2026-01-13T01:51:54.982Z] Summoned spirit! Total: 17
+[2026-01-13T01:51:57.045Z] Step 150: Magic=791, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:51:57.357Z] Magic doubled: 411 -> 833
+[2026-01-13T01:51:57.667Z] Summoned spirit! Total: 18
+[2026-01-13T01:51:58.805Z] Summoned spirit! Total: 19
+[2026-01-13T01:51:59.113Z] ASCENDED! Tower level: 3
+[2026-01-13T01:52:00.042Z] Summoned spirit! Total: 20
+[2026-01-13T01:52:00.645Z] Summoned spirit! Total: 21
+[2026-01-13T01:52:01.371Z] Step 200: Magic=1381, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:52:02.201Z] Summoned spirit! Total: 22
+[2026-01-13T01:52:03.643Z] Magic doubled: 833 -> 1669
+[2026-01-13T01:52:04.674Z] Summoned spirit! Total: 23
+[2026-01-13T01:52:05.708Z] Summoned spirit! Total: 24
+[2026-01-13T01:52:06.538Z] Step 250: Magic=2354, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:52:06.953Z] Summoned spirit! Total: 25
+[2026-01-13T01:52:08.291Z] Summoned spirit! Total: 26
+[2026-01-13T01:52:09.741Z] Summoned spirit! Total: 27
+[2026-01-13T01:52:10.567Z] Magic doubled: 1669 -> 3355
+[2026-01-13T01:52:11.703Z] Step 300: Magic=3777, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:52:11.705Z] 
+=== ITERATION 6 ===
+[2026-01-13T01:52:12.520Z] Summoned spirit! Total: 1
+[2026-01-13T01:52:12.623Z] Magic doubled: 6 -> 12
+[2026-01-13T01:52:12.828Z] Magic doubled: 12 -> 24
+[2026-01-13T01:52:12.934Z] Summoned spirit! Total: 2
+[2026-01-13T01:52:13.344Z] Summoned spirit! Total: 3
+[2026-01-13T01:52:13.655Z] Magic doubled: 24 -> 49
+[2026-01-13T01:52:13.758Z] Summoned spirit! Total: 4
+[2026-01-13T01:52:14.274Z] Summoned spirit! Total: 5
+[2026-01-13T01:52:14.789Z] Summoned spirit! Total: 6
+[2026-01-13T01:52:15.098Z] Magic doubled: 49 -> 100
+[2026-01-13T01:52:15.202Z] ASCENDED! Tower level: 2
+[2026-01-13T01:52:15.510Z] Summoned spirit! Total: 7
+[2026-01-13T01:52:16.133Z] Summoned spirit! Total: 8
+[2026-01-13T01:52:16.754Z] Summoned spirit! Total: 9
+[2026-01-13T01:52:17.372Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:52:17.476Z] Magic doubled: 100 -> 205
+[2026-01-13T01:52:17.580Z] Summoned spirit! Total: 10
+[2026-01-13T01:52:18.405Z] Summoned spirit! Total: 11
+[2026-01-13T01:52:19.228Z] Summoned spirit! Total: 12
+[2026-01-13T01:52:20.259Z] Summoned spirit! Total: 13
+[2026-01-13T01:52:21.390Z] Summoned spirit! Total: 14
+[2026-01-13T01:52:21.704Z] Magic doubled: 205 -> 416
+[2026-01-13T01:52:22.531Z] Step 100: Magic=470, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:52:22.739Z] Summoned spirit! Total: 15
+[2026-01-13T01:52:24.077Z] Summoned spirit! Total: 16
+[2026-01-13T01:52:25.727Z] Summoned spirit! Total: 17
+[2026-01-13T01:52:27.692Z] Step 150: Magic=789, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:52:28.106Z] Magic doubled: 416 -> 844
+[2026-01-13T01:52:28.315Z] Summoned spirit! Total: 18
+[2026-01-13T01:52:29.449Z] Summoned spirit! Total: 19
+[2026-01-13T01:52:29.757Z] ASCENDED! Tower level: 3
+[2026-01-13T01:52:29.853Z] Summoned spirit! Total: 20
+[2026-01-13T01:52:31.299Z] Summoned spirit! Total: 21
+[2026-01-13T01:52:32.020Z] Step 200: Magic=1382, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:52:32.846Z] Summoned spirit! Total: 22
+[2026-01-13T01:52:34.497Z] Magic doubled: 844 -> 1702
+[2026-01-13T01:52:35.322Z] Summoned spirit! Total: 23
+[2026-01-13T01:52:36.354Z] Summoned spirit! Total: 24
+[2026-01-13T01:52:37.179Z] Step 250: Magic=2354, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:52:37.591Z] Summoned spirit! Total: 25
+[2026-01-13T01:52:38.932Z] Summoned spirit! Total: 26
+[2026-01-13T01:52:40.377Z] Summoned spirit! Total: 27
+[2026-01-13T01:52:41.410Z] Magic doubled: 1702 -> 3405
+[2026-01-13T01:52:42.337Z] Step 300: Magic=3738, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:52:42.340Z] 
+=== ITERATION 7 ===
+[2026-01-13T01:52:43.156Z] Summoned spirit! Total: 1
+[2026-01-13T01:52:43.262Z] Magic doubled: 6 -> 12
+[2026-01-13T01:52:43.468Z] Magic doubled: 12 -> 24
+[2026-01-13T01:52:43.571Z] Summoned spirit! Total: 2
+[2026-01-13T01:52:43.984Z] Summoned spirit! Total: 3
+[2026-01-13T01:52:44.294Z] Magic doubled: 24 -> 50
+[2026-01-13T01:52:44.397Z] Summoned spirit! Total: 4
+[2026-01-13T01:52:44.912Z] Summoned spirit! Total: 5
+[2026-01-13T01:52:45.427Z] Summoned spirit! Total: 6
+[2026-01-13T01:52:45.735Z] Magic doubled: 50 -> 101
+[2026-01-13T01:52:45.838Z] ASCENDED! Tower level: 2
+[2026-01-13T01:52:46.149Z] Summoned spirit! Total: 7
+[2026-01-13T01:52:46.767Z] Summoned spirit! Total: 8
+[2026-01-13T01:52:47.387Z] Summoned spirit! Total: 9
+[2026-01-13T01:52:48.011Z] Step 50: Magic=201, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:52:48.115Z] Summoned spirit! Total: 10
+[2026-01-13T01:52:48.321Z] Magic doubled: 101 -> 208
+[2026-01-13T01:52:48.939Z] Summoned spirit! Total: 11
+[2026-01-13T01:52:49.867Z] Summoned spirit! Total: 12
+[2026-01-13T01:52:50.899Z] Summoned spirit! Total: 13
+[2026-01-13T01:52:52.038Z] Summoned spirit! Total: 14
+[2026-01-13T01:52:52.349Z] Magic doubled: 208 -> 417
+[2026-01-13T01:52:53.176Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:52:53.281Z] Summoned spirit! Total: 15
+[2026-01-13T01:52:54.731Z] Summoned spirit! Total: 16
+[2026-01-13T01:52:56.279Z] Summoned spirit! Total: 17
+[2026-01-13T01:52:58.338Z] Step 150: Magic=801, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:52:58.652Z] Magic doubled: 417 -> 842
+[2026-01-13T01:52:58.861Z] Summoned spirit! Total: 18
+[2026-01-13T01:52:59.160Z] Summoned spirit! Total: 19
+[2026-01-13T01:52:59.469Z] ASCENDED! Tower level: 3
+[2026-01-13T01:53:00.398Z] Summoned spirit! Total: 20
+[2026-01-13T01:53:01.842Z] Summoned spirit! Total: 21
+[2026-01-13T01:53:02.671Z] Step 200: Magic=1394, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:53:03.396Z] Summoned spirit! Total: 22
+[2026-01-13T01:53:05.048Z] Magic doubled: 842 -> 1702
+[2026-01-13T01:53:05.877Z] Summoned spirit! Total: 23
+[2026-01-13T01:53:06.911Z] Summoned spirit! Total: 24
+[2026-01-13T01:53:07.836Z] Step 250: Magic=2378, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:53:08.148Z] Summoned spirit! Total: 25
+[2026-01-13T01:53:09.484Z] Summoned spirit! Total: 26
+[2026-01-13T01:53:10.928Z] Summoned spirit! Total: 27
+[2026-01-13T01:53:12.065Z] Magic doubled: 1702 -> 3430
+[2026-01-13T01:53:12.996Z] Step 300: Magic=3792, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:53:12.998Z] 
+=== ITERATION 8 ===
+[2026-01-13T01:53:13.814Z] Summoned spirit! Total: 1
+[2026-01-13T01:53:13.918Z] Magic doubled: 6 -> 12
+[2026-01-13T01:53:14.127Z] Magic doubled: 12 -> 24
+[2026-01-13T01:53:14.230Z] Summoned spirit! Total: 2
+[2026-01-13T01:53:14.642Z] Summoned spirit! Total: 3
+[2026-01-13T01:53:14.950Z] Magic doubled: 24 -> 49
+[2026-01-13T01:53:15.053Z] Summoned spirit! Total: 4
+[2026-01-13T01:53:15.568Z] Summoned spirit! Total: 5
+[2026-01-13T01:53:16.084Z] Summoned spirit! Total: 6
+[2026-01-13T01:53:16.394Z] Magic doubled: 49 -> 100
+[2026-01-13T01:53:16.497Z] ASCENDED! Tower level: 2
+[2026-01-13T01:53:16.807Z] Summoned spirit! Total: 7
+[2026-01-13T01:53:17.425Z] Summoned spirit! Total: 8
+[2026-01-13T01:53:18.043Z] Summoned spirit! Total: 9
+[2026-01-13T01:53:18.663Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:53:18.769Z] Magic doubled: 100 -> 205
+[2026-01-13T01:53:18.874Z] Summoned spirit! Total: 10
+[2026-01-13T01:53:19.699Z] Summoned spirit! Total: 11
+[2026-01-13T01:53:20.525Z] Summoned spirit! Total: 12
+[2026-01-13T01:53:21.558Z] Summoned spirit! Total: 13
+[2026-01-13T01:53:22.692Z] Summoned spirit! Total: 14
+[2026-01-13T01:53:23.000Z] Magic doubled: 205 -> 417
+[2026-01-13T01:53:23.829Z] Step 100: Magic=470, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:53:23.934Z] Summoned spirit! Total: 15
+[2026-01-13T01:53:25.378Z] Summoned spirit! Total: 16
+[2026-01-13T01:53:27.027Z] Summoned spirit! Total: 17
+[2026-01-13T01:53:28.144Z] Step 150: Magic=790, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:53:28.559Z] Magic doubled: 417 -> 844
+[2026-01-13T01:53:28.768Z] Summoned spirit! Total: 18
+[2026-01-13T01:53:29.904Z] Summoned spirit! Total: 19
+[2026-01-13T01:53:30.212Z] ASCENDED! Tower level: 3
+[2026-01-13T01:53:31.142Z] Summoned spirit! Total: 20
+[2026-01-13T01:53:32.593Z] Summoned spirit! Total: 21
+[2026-01-13T01:53:33.318Z] Step 200: Magic=1377, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:53:34.141Z] Summoned spirit! Total: 22
+[2026-01-13T01:53:35.905Z] Magic doubled: 844 -> 1711
+[2026-01-13T01:53:36.728Z] Summoned spirit! Total: 23
+[2026-01-13T01:53:37.759Z] Summoned spirit! Total: 24
+[2026-01-13T01:53:38.483Z] Step 250: Magic=2335, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:53:38.901Z] Summoned spirit! Total: 25
+[2026-01-13T01:53:40.241Z] Summoned spirit! Total: 26
+[2026-01-13T01:53:41.790Z] Summoned spirit! Total: 27
+[2026-01-13T01:53:42.922Z] Magic doubled: 1711 -> 3450
+[2026-01-13T01:53:43.643Z] Step 300: Magic=3724, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:53:43.646Z] 
+=== ITERATION 9 ===
+[2026-01-13T01:53:44.460Z] Summoned spirit! Total: 1
+[2026-01-13T01:53:44.564Z] Magic doubled: 6 -> 12
+[2026-01-13T01:53:44.771Z] Magic doubled: 12 -> 24
+[2026-01-13T01:53:44.874Z] Summoned spirit! Total: 2
+[2026-01-13T01:53:45.288Z] Summoned spirit! Total: 3
+[2026-01-13T01:53:45.596Z] Magic doubled: 24 -> 49
+[2026-01-13T01:53:45.702Z] Summoned spirit! Total: 4
+[2026-01-13T01:53:46.217Z] Summoned spirit! Total: 5
+[2026-01-13T01:53:46.734Z] Summoned spirit! Total: 6
+[2026-01-13T01:53:47.044Z] Magic doubled: 49 -> 100
+[2026-01-13T01:53:47.151Z] ASCENDED! Tower level: 2
+[2026-01-13T01:53:47.459Z] Summoned spirit! Total: 7
+[2026-01-13T01:53:48.078Z] Summoned spirit! Total: 8
+[2026-01-13T01:53:48.699Z] Summoned spirit! Total: 9
+[2026-01-13T01:53:49.318Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:53:49.422Z] Magic doubled: 100 -> 205
+[2026-01-13T01:53:49.525Z] Summoned spirit! Total: 10
+[2026-01-13T01:53:50.353Z] Summoned spirit! Total: 11
+[2026-01-13T01:53:51.284Z] Summoned spirit! Total: 12
+[2026-01-13T01:53:52.209Z] Summoned spirit! Total: 13
+[2026-01-13T01:53:53.342Z] Summoned spirit! Total: 14
+[2026-01-13T01:53:53.653Z] Magic doubled: 205 -> 415
+[2026-01-13T01:53:54.476Z] Step 100: Magic=469, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:53:54.686Z] Summoned spirit! Total: 15
+[2026-01-13T01:53:56.031Z] Summoned spirit! Total: 16
+[2026-01-13T01:53:56.841Z] Summoned spirit! Total: 17
+[2026-01-13T01:53:58.799Z] Step 150: Magic=790, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:53:59.109Z] Magic doubled: 415 -> 831
+[2026-01-13T01:53:59.416Z] Summoned spirit! Total: 18
+[2026-01-13T01:54:00.549Z] Summoned spirit! Total: 19
+[2026-01-13T01:54:00.861Z] ASCENDED! Tower level: 3
+[2026-01-13T01:54:01.792Z] Summoned spirit! Total: 20
+[2026-01-13T01:54:03.235Z] Summoned spirit! Total: 21
+[2026-01-13T01:54:03.959Z] Step 200: Magic=1378, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:54:04.784Z] Summoned spirit! Total: 22
+[2026-01-13T01:54:06.228Z] Magic doubled: 831 -> 1668
+[2026-01-13T01:54:07.260Z] Summoned spirit! Total: 23
+[2026-01-13T01:54:08.287Z] Summoned spirit! Total: 24
+[2026-01-13T01:54:09.113Z] Step 250: Magic=2352, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:54:09.527Z] Summoned spirit! Total: 25
+[2026-01-13T01:54:10.865Z] Summoned spirit! Total: 26
+[2026-01-13T01:54:12.310Z] Summoned spirit! Total: 27
+[2026-01-13T01:54:13.136Z] Magic doubled: 1668 -> 3349
+[2026-01-13T01:54:14.269Z] Step 300: Magic=3776, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:54:14.276Z] 
+=== ITERATION 10 ===
+[2026-01-13T01:54:15.090Z] Summoned spirit! Total: 1
+[2026-01-13T01:54:15.194Z] Magic doubled: 6 -> 12
+[2026-01-13T01:54:15.399Z] Magic doubled: 12 -> 24
+[2026-01-13T01:54:15.503Z] Summoned spirit! Total: 2
+[2026-01-13T01:54:15.915Z] Summoned spirit! Total: 3
+[2026-01-13T01:54:16.225Z] Magic doubled: 24 -> 49
+[2026-01-13T01:54:16.328Z] Summoned spirit! Total: 4
+[2026-01-13T01:54:16.844Z] Summoned spirit! Total: 5
+[2026-01-13T01:54:17.358Z] Summoned spirit! Total: 6
+[2026-01-13T01:54:17.665Z] Magic doubled: 49 -> 100
+[2026-01-13T01:54:17.769Z] ASCENDED! Tower level: 2
+[2026-01-13T01:54:18.078Z] Summoned spirit! Total: 7
+[2026-01-13T01:54:18.695Z] Summoned spirit! Total: 8
+[2026-01-13T01:54:19.313Z] Summoned spirit! Total: 9
+[2026-01-13T01:54:19.931Z] Step 50: Magic=200, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:54:20.034Z] Magic doubled: 100 -> 206
+[2026-01-13T01:54:20.139Z] Summoned spirit! Total: 10
+[2026-01-13T01:54:20.966Z] Summoned spirit! Total: 11
+[2026-01-13T01:54:21.793Z] Summoned spirit! Total: 12
+[2026-01-13T01:54:22.823Z] Summoned spirit! Total: 13
+[2026-01-13T01:54:23.957Z] Summoned spirit! Total: 14
+[2026-01-13T01:54:24.265Z] Magic doubled: 206 -> 417
+[2026-01-13T01:54:25.090Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:54:25.196Z] Summoned spirit! Total: 15
+[2026-01-13T01:54:26.644Z] Summoned spirit! Total: 16
+[2026-01-13T01:54:27.344Z] Summoned spirit! Total: 17
+[2026-01-13T01:54:29.403Z] Step 150: Magic=792, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:54:29.816Z] Magic doubled: 417 -> 847
+[2026-01-13T01:54:30.022Z] Summoned spirit! Total: 18
+[2026-01-13T01:54:31.056Z] Summoned spirit! Total: 19
+[2026-01-13T01:54:31.469Z] ASCENDED! Tower level: 3
+[2026-01-13T01:54:32.397Z] Summoned spirit! Total: 20
+[2026-01-13T01:54:33.734Z] Summoned spirit! Total: 21
+[2026-01-13T01:54:34.556Z] Step 200: Magic=1384, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:54:35.281Z] Summoned spirit! Total: 22
+[2026-01-13T01:54:37.033Z] Magic doubled: 847 -> 1704
+[2026-01-13T01:54:37.862Z] Summoned spirit! Total: 23
+[2026-01-13T01:54:38.890Z] Summoned spirit! Total: 24
+[2026-01-13T01:54:39.716Z] Step 250: Magic=2352, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:54:40.131Z] Summoned spirit! Total: 25
+[2026-01-13T01:54:41.468Z] Summoned spirit! Total: 26
+[2026-01-13T01:54:42.912Z] Summoned spirit! Total: 27
+[2026-01-13T01:54:44.042Z] Magic doubled: 1704 -> 3433
+[2026-01-13T01:54:44.870Z] Step 300: Magic=3737, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:54:44.873Z] 
+=== ITERATION 11 ===
+[2026-01-13T01:54:45.686Z] Summoned spirit! Total: 1
+[2026-01-13T01:54:45.789Z] Magic doubled: 6 -> 12
+[2026-01-13T01:54:45.997Z] Magic doubled: 12 -> 24
+[2026-01-13T01:54:46.100Z] Summoned spirit! Total: 2
+[2026-01-13T01:54:46.512Z] Summoned spirit! Total: 3
+[2026-01-13T01:54:46.820Z] Magic doubled: 24 -> 49
+[2026-01-13T01:54:46.923Z] Summoned spirit! Total: 4
+[2026-01-13T01:54:47.443Z] Summoned spirit! Total: 5
+[2026-01-13T01:54:47.959Z] Summoned spirit! Total: 6
+[2026-01-13T01:54:48.268Z] Magic doubled: 49 -> 100
+[2026-01-13T01:54:48.371Z] ASCENDED! Tower level: 2
+[2026-01-13T01:54:48.681Z] Summoned spirit! Total: 7
+[2026-01-13T01:54:49.299Z] Summoned spirit! Total: 8
+[2026-01-13T01:54:49.917Z] Summoned spirit! Total: 9
+[2026-01-13T01:54:50.535Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:54:50.638Z] Magic doubled: 100 -> 205
+[2026-01-13T01:54:50.742Z] Summoned spirit! Total: 10
+[2026-01-13T01:54:51.567Z] Summoned spirit! Total: 11
+[2026-01-13T01:54:52.497Z] Summoned spirit! Total: 12
+[2026-01-13T01:54:53.430Z] Summoned spirit! Total: 13
+[2026-01-13T01:54:54.563Z] Summoned spirit! Total: 14
+[2026-01-13T01:54:54.870Z] Magic doubled: 205 -> 415
+[2026-01-13T01:54:55.696Z] Step 100: Magic=469, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:54:55.069Z] Summoned spirit! Total: 15
+[2026-01-13T01:54:56.409Z] Summoned spirit! Total: 16
+[2026-01-13T01:54:58.055Z] Summoned spirit! Total: 17
+[2026-01-13T01:55:00.019Z] Step 150: Magic=792, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:55:00.332Z] Magic doubled: 415 -> 833
+[2026-01-13T01:55:00.640Z] Summoned spirit! Total: 18
+[2026-01-13T01:55:01.778Z] Summoned spirit! Total: 19
+[2026-01-13T01:55:02.086Z] ASCENDED! Tower level: 3
+[2026-01-13T01:55:03.014Z] Summoned spirit! Total: 20
+[2026-01-13T01:55:04.464Z] Summoned spirit! Total: 21
+[2026-01-13T01:55:05.187Z] Step 200: Magic=1382, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:55:06.013Z] Summoned spirit! Total: 22
+[2026-01-13T01:55:07.455Z] Magic doubled: 833 -> 1669
+[2026-01-13T01:55:08.487Z] Summoned spirit! Total: 23
+[2026-01-13T01:55:09.518Z] Summoned spirit! Total: 24
+[2026-01-13T01:55:10.344Z] Step 250: Magic=2359, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:55:10.760Z] Summoned spirit! Total: 25
+[2026-01-13T01:55:12.102Z] Summoned spirit! Total: 26
+[2026-01-13T01:55:13.545Z] Summoned spirit! Total: 27
+[2026-01-13T01:55:14.368Z] Magic doubled: 1669 -> 3356
+[2026-01-13T01:55:15.503Z] Step 300: Magic=3777, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:55:15.505Z] 
+=== ITERATION 12 ===
+[2026-01-13T01:55:16.320Z] Summoned spirit! Total: 1
+[2026-01-13T01:55:16.426Z] Magic doubled: 6 -> 12
+[2026-01-13T01:55:16.632Z] Magic doubled: 12 -> 24
+[2026-01-13T01:55:16.734Z] Summoned spirit! Total: 2
+[2026-01-13T01:55:17.147Z] Summoned spirit! Total: 3
+[2026-01-13T01:55:17.459Z] Magic doubled: 24 -> 49
+[2026-01-13T01:55:17.563Z] Summoned spirit! Total: 4
+[2026-01-13T01:55:18.079Z] Summoned spirit! Total: 5
+[2026-01-13T01:55:18.596Z] Summoned spirit! Total: 6
+[2026-01-13T01:55:18.906Z] Magic doubled: 49 -> 100
+[2026-01-13T01:55:19.010Z] ASCENDED! Tower level: 2
+[2026-01-13T01:55:19.330Z] Summoned spirit! Total: 7
+[2026-01-13T01:55:19.952Z] Summoned spirit! Total: 8
+[2026-01-13T01:55:20.571Z] Summoned spirit! Total: 9
+[2026-01-13T01:55:21.192Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:55:21.297Z] Magic doubled: 100 -> 205
+[2026-01-13T01:55:21.400Z] Summoned spirit! Total: 10
+[2026-01-13T01:55:22.225Z] Summoned spirit! Total: 11
+[2026-01-13T01:55:23.049Z] Summoned spirit! Total: 12
+[2026-01-13T01:55:24.080Z] Summoned spirit! Total: 13
+[2026-01-13T01:55:24.366Z] Summoned spirit! Total: 14
+[2026-01-13T01:55:24.573Z] Magic doubled: 205 -> 411
+[2026-01-13T01:55:25.500Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:55:25.603Z] Summoned spirit! Total: 15
+[2026-01-13T01:55:27.048Z] Summoned spirit! Total: 16
+[2026-01-13T01:55:28.699Z] Summoned spirit! Total: 17
+[2026-01-13T01:55:30.662Z] Step 150: Magic=793, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:55:30.973Z] Magic doubled: 411 -> 834
+[2026-01-13T01:55:31.282Z] Summoned spirit! Total: 18
+[2026-01-13T01:55:32.314Z] Summoned spirit! Total: 19
+[2026-01-13T01:55:32.726Z] ASCENDED! Tower level: 3
+[2026-01-13T01:55:33.659Z] Summoned spirit! Total: 20
+[2026-01-13T01:55:34.999Z] Summoned spirit! Total: 21
+[2026-01-13T01:55:35.825Z] Step 200: Magic=1383, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:55:36.547Z] Summoned spirit! Total: 22
+[2026-01-13T01:55:38.098Z] Magic doubled: 834 -> 1670
+[2026-01-13T01:55:39.130Z] Summoned spirit! Total: 23
+[2026-01-13T01:55:40.161Z] Summoned spirit! Total: 24
+[2026-01-13T01:55:40.986Z] Step 250: Magic=2350, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:55:41.400Z] Summoned spirit! Total: 25
+[2026-01-13T01:55:42.748Z] Summoned spirit! Total: 26
+[2026-01-13T01:55:44.192Z] Summoned spirit! Total: 27
+[2026-01-13T01:55:45.015Z] Magic doubled: 1670 -> 3342
+[2026-01-13T01:55:46.157Z] Step 300: Magic=3734, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:55:46.160Z] 
+=== ITERATION 13 ===
+[2026-01-13T01:55:46.973Z] Summoned spirit! Total: 1
+[2026-01-13T01:55:47.076Z] Magic doubled: 6 -> 12
+[2026-01-13T01:55:47.282Z] Magic doubled: 12 -> 24
+[2026-01-13T01:55:47.385Z] Summoned spirit! Total: 2
+[2026-01-13T01:55:47.801Z] Summoned spirit! Total: 3
+[2026-01-13T01:55:48.112Z] Magic doubled: 24 -> 49
+[2026-01-13T01:55:48.215Z] Summoned spirit! Total: 4
+[2026-01-13T01:55:48.731Z] Summoned spirit! Total: 5
+[2026-01-13T01:55:49.248Z] Summoned spirit! Total: 6
+[2026-01-13T01:55:49.557Z] Magic doubled: 49 -> 100
+[2026-01-13T01:55:49.660Z] ASCENDED! Tower level: 2
+[2026-01-13T01:55:49.968Z] Summoned spirit! Total: 7
+[2026-01-13T01:55:50.586Z] Summoned spirit! Total: 8
+[2026-01-13T01:55:51.206Z] Summoned spirit! Total: 9
+[2026-01-13T01:55:51.825Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:55:51.931Z] Magic doubled: 100 -> 205
+[2026-01-13T01:55:52.035Z] Summoned spirit! Total: 10
+[2026-01-13T01:55:52.863Z] Summoned spirit! Total: 11
+[2026-01-13T01:55:53.793Z] Summoned spirit! Total: 12
+[2026-01-13T01:55:53.880Z] Summoned spirit! Total: 13
+[2026-01-13T01:55:55.014Z] Summoned spirit! Total: 14
+[2026-01-13T01:55:55.329Z] Magic doubled: 205 -> 416
+[2026-01-13T01:55:56.156Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:55:56.260Z] Summoned spirit! Total: 15
+[2026-01-13T01:55:57.704Z] Summoned spirit! Total: 16
+[2026-01-13T01:55:59.355Z] Summoned spirit! Total: 17
+[2026-01-13T01:56:01.320Z] Step 150: Magic=793, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:56:01.630Z] Magic doubled: 416 -> 834
+[2026-01-13T01:56:01.941Z] Summoned spirit! Total: 18
+[2026-01-13T01:56:02.975Z] Summoned spirit! Total: 19
+[2026-01-13T01:56:03.388Z] ASCENDED! Tower level: 3
+[2026-01-13T01:56:04.319Z] Summoned spirit! Total: 20
+[2026-01-13T01:56:05.759Z] Summoned spirit! Total: 21
+[2026-01-13T01:56:06.480Z] Step 200: Magic=1380, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:56:07.307Z] Summoned spirit! Total: 22
+[2026-01-13T01:56:08.752Z] Magic doubled: 834 -> 1670
+[2026-01-13T01:56:09.787Z] Summoned spirit! Total: 23
+[2026-01-13T01:56:10.818Z] Summoned spirit! Total: 24
+[2026-01-13T01:56:11.643Z] Step 250: Magic=2355, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:56:12.056Z] Summoned spirit! Total: 25
+[2026-01-13T01:56:13.394Z] Summoned spirit! Total: 26
+[2026-01-13T01:56:14.837Z] Summoned spirit! Total: 27
+[2026-01-13T01:56:15.661Z] Magic doubled: 1670 -> 3357
+[2026-01-13T01:56:16.801Z] Step 300: Magic=3793, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:56:16.804Z] 
+=== ITERATION 14 ===
+[2026-01-13T01:56:17.618Z] Summoned spirit! Total: 1
+[2026-01-13T01:56:17.722Z] Magic doubled: 6 -> 12
+[2026-01-13T01:56:17.927Z] Magic doubled: 12 -> 24
+[2026-01-13T01:56:18.032Z] Summoned spirit! Total: 2
+[2026-01-13T01:56:18.444Z] Summoned spirit! Total: 3
+[2026-01-13T01:56:18.755Z] Magic doubled: 24 -> 49
+[2026-01-13T01:56:18.857Z] Summoned spirit! Total: 4
+[2026-01-13T01:56:19.373Z] Summoned spirit! Total: 5
+[2026-01-13T01:56:19.889Z] Summoned spirit! Total: 6
+[2026-01-13T01:56:20.198Z] Magic doubled: 49 -> 100
+[2026-01-13T01:56:20.302Z] ASCENDED! Tower level: 2
+[2026-01-13T01:56:20.610Z] Summoned spirit! Total: 7
+[2026-01-13T01:56:21.227Z] Summoned spirit! Total: 8
+[2026-01-13T01:56:21.843Z] Summoned spirit! Total: 9
+[2026-01-13T01:56:22.461Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:56:22.567Z] Magic doubled: 100 -> 205
+[2026-01-13T01:56:22.670Z] Summoned spirit! Total: 10
+[2026-01-13T01:56:22.652Z] Summoned spirit! Total: 11
+[2026-01-13T01:56:23.580Z] Summoned spirit! Total: 12
+[2026-01-13T01:56:24.508Z] Summoned spirit! Total: 13
+[2026-01-13T01:56:25.646Z] Summoned spirit! Total: 14
+[2026-01-13T01:56:25.954Z] Magic doubled: 205 -> 416
+[2026-01-13T01:56:26.779Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:56:26.883Z] Summoned spirit! Total: 15
+[2026-01-13T01:56:28.324Z] Summoned spirit! Total: 16
+[2026-01-13T01:56:29.969Z] Summoned spirit! Total: 17
+[2026-01-13T01:56:31.930Z] Step 150: Magic=791, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:56:32.239Z] Magic doubled: 416 -> 833
+[2026-01-13T01:56:32.550Z] Summoned spirit! Total: 18
+[2026-01-13T01:56:33.584Z] Summoned spirit! Total: 19
+[2026-01-13T01:56:33.998Z] ASCENDED! Tower level: 3
+[2026-01-13T01:56:34.926Z] Summoned spirit! Total: 20
+[2026-01-13T01:56:36.265Z] Summoned spirit! Total: 21
+[2026-01-13T01:56:37.086Z] Step 200: Magic=1386, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:56:37.809Z] Summoned spirit! Total: 22
+[2026-01-13T01:56:39.351Z] Magic doubled: 833 -> 1674
+[2026-01-13T01:56:40.381Z] Summoned spirit! Total: 23
+[2026-01-13T01:56:41.412Z] Summoned spirit! Total: 24
+[2026-01-13T01:56:42.236Z] Step 250: Magic=2354, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:56:42.652Z] Summoned spirit! Total: 25
+[2026-01-13T01:56:43.996Z] Summoned spirit! Total: 26
+[2026-01-13T01:56:45.439Z] Summoned spirit! Total: 27
+[2026-01-13T01:56:46.262Z] Magic doubled: 1674 -> 3351
+[2026-01-13T01:56:47.396Z] Step 300: Magic=3772, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:56:47.398Z] 
+=== ITERATION 15 ===
+[2026-01-13T01:56:48.213Z] Summoned spirit! Total: 1
+[2026-01-13T01:56:48.316Z] Magic doubled: 6 -> 12
+[2026-01-13T01:56:48.524Z] Magic doubled: 12 -> 24
+[2026-01-13T01:56:48.628Z] Summoned spirit! Total: 2
+[2026-01-13T01:56:49.041Z] Summoned spirit! Total: 3
+[2026-01-13T01:56:49.349Z] Magic doubled: 24 -> 49
+[2026-01-13T01:56:49.452Z] Summoned spirit! Total: 4
+[2026-01-13T01:56:49.966Z] Summoned spirit! Total: 5
+[2026-01-13T01:56:50.482Z] Summoned spirit! Total: 6
+[2026-01-13T01:56:50.793Z] Magic doubled: 49 -> 100
+[2026-01-13T01:56:50.896Z] ASCENDED! Tower level: 2
+[2026-01-13T01:56:51.207Z] Summoned spirit! Total: 7
+[2026-01-13T01:56:51.829Z] Summoned spirit! Total: 8
+[2026-01-13T01:56:52.083Z] Summoned spirit! Total: 9
+[2026-01-13T01:56:52.227Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:56:52.333Z] Magic doubled: 100 -> 205
+[2026-01-13T01:56:52.437Z] Summoned spirit! Total: 10
+[2026-01-13T01:56:53.260Z] Summoned spirit! Total: 11
+[2026-01-13T01:56:54.190Z] Summoned spirit! Total: 12
+[2026-01-13T01:56:55.120Z] Summoned spirit! Total: 13
+[2026-01-13T01:56:56.254Z] Summoned spirit! Total: 14
+[2026-01-13T01:56:56.566Z] Magic doubled: 205 -> 416
+[2026-01-13T01:56:57.389Z] Step 100: Magic=470, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:56:57.598Z] Summoned spirit! Total: 15
+[2026-01-13T01:56:58.944Z] Summoned spirit! Total: 16
+[2026-01-13T01:57:00.489Z] Summoned spirit! Total: 17
+[2026-01-13T01:57:02.553Z] Step 150: Magic=791, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:57:02.864Z] Magic doubled: 416 -> 833
+[2026-01-13T01:57:03.173Z] Summoned spirit! Total: 18
+[2026-01-13T01:57:04.307Z] Summoned spirit! Total: 19
+[2026-01-13T01:57:04.617Z] ASCENDED! Tower level: 3
+[2026-01-13T01:57:05.542Z] Summoned spirit! Total: 20
+[2026-01-13T01:57:06.986Z] Summoned spirit! Total: 21
+[2026-01-13T01:57:07.707Z] Step 200: Magic=1381, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:57:08.535Z] Summoned spirit! Total: 22
+[2026-01-13T01:57:09.984Z] Magic doubled: 833 -> 1669
+[2026-01-13T01:57:11.018Z] Summoned spirit! Total: 23
+[2026-01-13T01:57:12.051Z] Summoned spirit! Total: 24
+[2026-01-13T01:57:12.874Z] Step 250: Magic=2354, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:57:13.289Z] Summoned spirit! Total: 25
+[2026-01-13T01:57:14.631Z] Summoned spirit! Total: 26
+[2026-01-13T01:57:16.072Z] Summoned spirit! Total: 27
+[2026-01-13T01:57:16.895Z] Magic doubled: 1669 -> 3346
+[2026-01-13T01:57:18.035Z] Step 300: Magic=3738, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:57:18.038Z] 
+=== ITERATION 16 ===
+[2026-01-13T01:57:18.748Z] Magic doubled: 6 -> 13
+[2026-01-13T01:57:18.853Z] Summoned spirit! Total: 1
+[2026-01-13T01:57:19.268Z] Summoned spirit! Total: 2
+[2026-01-13T01:57:19.474Z] Magic doubled: 13 -> 31
+[2026-01-13T01:57:19.682Z] Summoned spirit! Total: 3
+[2026-01-13T01:57:20.093Z] Summoned spirit! Total: 4
+[2026-01-13T01:57:20.507Z] Magic doubled: 31 -> 69
+[2026-01-13T01:57:20.609Z] Summoned spirit! Total: 5
+[2026-01-13T01:57:21.126Z] Summoned spirit! Total: 6
+[2026-01-13T01:57:21.540Z] ASCENDED! Tower level: 2
+[2026-01-13T01:57:20.985Z] Summoned spirit! Total: 7
+[2026-01-13T01:57:21.501Z] Magic doubled: 69 -> 140
+[2026-01-13T01:57:21.604Z] Summoned spirit! Total: 8
+[2026-01-13T01:57:22.224Z] Summoned spirit! Total: 9
+[2026-01-13T01:57:22.844Z] Step 50: Magic=201, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:57:22.951Z] Summoned spirit! Total: 10
+[2026-01-13T01:57:23.775Z] Summoned spirit! Total: 11
+[2026-01-13T01:57:24.495Z] Magic doubled: 140 -> 281
+[2026-01-13T01:57:24.704Z] Summoned spirit! Total: 12
+[2026-01-13T01:57:25.734Z] Summoned spirit! Total: 13
+[2026-01-13T01:57:26.866Z] Summoned spirit! Total: 14
+[2026-01-13T01:57:27.999Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:57:28.103Z] Summoned spirit! Total: 15
+[2026-01-13T01:57:29.551Z] Summoned spirit! Total: 16
+[2026-01-13T01:57:29.860Z] Magic doubled: 281 -> 569
+[2026-01-13T01:57:31.097Z] Summoned spirit! Total: 17
+[2026-01-13T01:57:33.157Z] Step 150: Magic=793, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:57:33.776Z] Summoned spirit! Total: 18
+[2026-01-13T01:57:34.808Z] Summoned spirit! Total: 19
+[2026-01-13T01:57:35.223Z] ASCENDED! Tower level: 3
+[2026-01-13T01:57:36.154Z] Summoned spirit! Total: 20
+[2026-01-13T01:57:36.359Z] Magic doubled: 569 -> 1138
+[2026-01-13T01:57:37.495Z] Summoned spirit! Total: 21
+[2026-01-13T01:57:38.323Z] Step 200: Magic=1383, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:57:39.050Z] Summoned spirit! Total: 22
+[2026-01-13T01:57:41.625Z] Summoned spirit! Total: 23
+[2026-01-13T01:57:42.658Z] Summoned spirit! Total: 24
+[2026-01-13T01:57:43.276Z] Magic doubled: 1138 -> 2293
+[2026-01-13T01:57:43.484Z] Step 250: Magic=2351, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:57:43.901Z] Summoned spirit! Total: 25
+[2026-01-13T01:57:45.242Z] Summoned spirit! Total: 26
+[2026-01-13T01:57:46.686Z] Summoned spirit! Total: 27
+[2026-01-13T01:57:48.641Z] Step 300: Magic=3740, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:57:48.650Z] 
+=== ITERATION 17 ===
+[2026-01-13T01:57:49.463Z] Summoned spirit! Total: 1
+[2026-01-13T01:57:49.567Z] Magic doubled: 6 -> 12
+[2026-01-13T01:57:49.772Z] Magic doubled: 12 -> 24
+[2026-01-13T01:57:49.875Z] Summoned spirit! Total: 2
+[2026-01-13T01:57:50.288Z] Summoned spirit! Total: 3
+[2026-01-13T01:57:50.599Z] Magic doubled: 24 -> 49
+[2026-01-13T01:57:50.702Z] Summoned spirit! Total: 4
+[2026-01-13T01:57:50.374Z] Summoned spirit! Total: 5
+[2026-01-13T01:57:50.888Z] Summoned spirit! Total: 6
+[2026-01-13T01:57:51.197Z] Magic doubled: 49 -> 100
+[2026-01-13T01:57:51.300Z] ASCENDED! Tower level: 2
+[2026-01-13T01:57:51.615Z] Summoned spirit! Total: 7
+[2026-01-13T01:57:52.235Z] Summoned spirit! Total: 8
+[2026-01-13T01:57:52.854Z] Summoned spirit! Total: 9
+[2026-01-13T01:57:53.474Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:57:53.578Z] Magic doubled: 100 -> 205
+[2026-01-13T01:57:53.681Z] Summoned spirit! Total: 10
+[2026-01-13T01:57:54.506Z] Summoned spirit! Total: 11
+[2026-01-13T01:57:55.439Z] Summoned spirit! Total: 12
+[2026-01-13T01:57:56.366Z] Summoned spirit! Total: 13
+[2026-01-13T01:57:57.499Z] Summoned spirit! Total: 14
+[2026-01-13T01:57:57.809Z] Magic doubled: 205 -> 415
+[2026-01-13T01:57:58.632Z] Step 100: Magic=469, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:57:58.841Z] Summoned spirit! Total: 15
+[2026-01-13T01:58:00.180Z] Summoned spirit! Total: 16
+[2026-01-13T01:58:01.837Z] Summoned spirit! Total: 17
+[2026-01-13T01:58:03.794Z] Step 150: Magic=790, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:58:04.105Z] Magic doubled: 415 -> 831
+[2026-01-13T01:58:04.413Z] Summoned spirit! Total: 18
+[2026-01-13T01:58:05.444Z] Summoned spirit! Total: 19
+[2026-01-13T01:58:05.857Z] ASCENDED! Tower level: 3
+[2026-01-13T01:58:06.782Z] Summoned spirit! Total: 20
+[2026-01-13T01:58:08.128Z] Summoned spirit! Total: 21
+[2026-01-13T01:58:08.955Z] Step 200: Magic=1383, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:58:09.677Z] Summoned spirit! Total: 22
+[2026-01-13T01:58:11.222Z] Magic doubled: 831 -> 1670
+[2026-01-13T01:58:12.253Z] Summoned spirit! Total: 23
+[2026-01-13T01:58:13.281Z] Summoned spirit! Total: 24
+[2026-01-13T01:58:14.111Z] Step 250: Magic=2355, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:58:14.424Z] Summoned spirit! Total: 25
+[2026-01-13T01:58:15.762Z] Summoned spirit! Total: 26
+[2026-01-13T01:58:17.308Z] Summoned spirit! Total: 27
+[2026-01-13T01:58:18.132Z] Magic doubled: 1670 -> 3352
+[2026-01-13T01:58:19.265Z] Step 300: Magic=3779, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:58:19.269Z] 
+=== ITERATION 18 ===
+[2026-01-13T01:58:19.239Z] Summoned spirit! Total: 1
+[2026-01-13T01:58:19.345Z] Magic doubled: 6 -> 12
+[2026-01-13T01:58:19.551Z] Magic doubled: 12 -> 24
+[2026-01-13T01:58:19.653Z] Summoned spirit! Total: 2
+[2026-01-13T01:58:20.066Z] Summoned spirit! Total: 3
+[2026-01-13T01:58:20.375Z] Magic doubled: 24 -> 50
+[2026-01-13T01:58:20.479Z] Summoned spirit! Total: 4
+[2026-01-13T01:58:20.994Z] Summoned spirit! Total: 5
+[2026-01-13T01:58:21.509Z] Summoned spirit! Total: 6
+[2026-01-13T01:58:21.821Z] Magic doubled: 50 -> 101
+[2026-01-13T01:58:21.926Z] ASCENDED! Tower level: 2
+[2026-01-13T01:58:22.238Z] Summoned spirit! Total: 7
+[2026-01-13T01:58:22.857Z] Summoned spirit! Total: 8
+[2026-01-13T01:58:23.477Z] Summoned spirit! Total: 9
+[2026-01-13T01:58:24.096Z] Step 50: Magic=200, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:58:24.200Z] Magic doubled: 101 -> 206
+[2026-01-13T01:58:24.303Z] Summoned spirit! Total: 10
+[2026-01-13T01:58:25.127Z] Summoned spirit! Total: 11
+[2026-01-13T01:58:25.950Z] Summoned spirit! Total: 12
+[2026-01-13T01:58:26.984Z] Summoned spirit! Total: 13
+[2026-01-13T01:58:28.120Z] Summoned spirit! Total: 14
+[2026-01-13T01:58:28.431Z] Magic doubled: 206 -> 416
+[2026-01-13T01:58:29.255Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:58:29.361Z] Summoned spirit! Total: 15
+[2026-01-13T01:58:30.801Z] Summoned spirit! Total: 16
+[2026-01-13T01:58:32.450Z] Summoned spirit! Total: 17
+[2026-01-13T01:58:34.406Z] Step 150: Magic=791, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:58:34.821Z] Magic doubled: 416 -> 845
+[2026-01-13T01:58:35.031Z] Summoned spirit! Total: 18
+[2026-01-13T01:58:36.064Z] Summoned spirit! Total: 19
+[2026-01-13T01:58:36.477Z] ASCENDED! Tower level: 3
+[2026-01-13T01:58:37.403Z] Summoned spirit! Total: 20
+[2026-01-13T01:58:38.744Z] Summoned spirit! Total: 21
+[2026-01-13T01:58:39.567Z] Step 200: Magic=1385, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:58:40.288Z] Summoned spirit! Total: 22
+[2026-01-13T01:58:42.040Z] Magic doubled: 845 -> 1706
+[2026-01-13T01:58:42.866Z] Summoned spirit! Total: 23
+[2026-01-13T01:58:43.897Z] Summoned spirit! Total: 24
+[2026-01-13T01:58:44.720Z] Step 250: Magic=2353, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:58:45.133Z] Summoned spirit! Total: 25
+[2026-01-13T01:58:46.479Z] Summoned spirit! Total: 26
+[2026-01-13T01:58:47.920Z] Summoned spirit! Total: 27
+[2026-01-13T01:58:49.052Z] Magic doubled: 1706 -> 3433
+[2026-01-13T01:58:49.024Z] Step 300: Magic=3737, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:58:49.028Z] 
+=== ITERATION 19 ===
+[2026-01-13T01:58:49.842Z] Summoned spirit! Total: 1
+[2026-01-13T01:58:49.945Z] Magic doubled: 6 -> 12
+[2026-01-13T01:58:50.151Z] Magic doubled: 12 -> 24
+[2026-01-13T01:58:50.255Z] Summoned spirit! Total: 2
+[2026-01-13T01:58:50.666Z] Summoned spirit! Total: 3
+[2026-01-13T01:58:50.977Z] Magic doubled: 24 -> 49
+[2026-01-13T01:58:51.080Z] Summoned spirit! Total: 4
+[2026-01-13T01:58:51.596Z] Summoned spirit! Total: 5
+[2026-01-13T01:58:52.111Z] Summoned spirit! Total: 6
+[2026-01-13T01:58:52.420Z] Magic doubled: 49 -> 100
+[2026-01-13T01:58:52.527Z] ASCENDED! Tower level: 2
+[2026-01-13T01:58:52.834Z] Summoned spirit! Total: 7
+[2026-01-13T01:58:53.451Z] Summoned spirit! Total: 8
+[2026-01-13T01:58:54.073Z] Summoned spirit! Total: 9
+[2026-01-13T01:58:54.696Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:58:54.800Z] Magic doubled: 100 -> 205
+[2026-01-13T01:58:54.903Z] Summoned spirit! Total: 10
+[2026-01-13T01:58:55.728Z] Summoned spirit! Total: 11
+[2026-01-13T01:58:56.655Z] Summoned spirit! Total: 12
+[2026-01-13T01:58:57.581Z] Summoned spirit! Total: 13
+[2026-01-13T01:58:58.715Z] Summoned spirit! Total: 14
+[2026-01-13T01:58:58.924Z] Magic doubled: 205 -> 411
+[2026-01-13T01:58:59.851Z] Step 100: Magic=472, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:58:59.959Z] Summoned spirit! Total: 15
+[2026-01-13T01:59:01.403Z] Summoned spirit! Total: 16
+[2026-01-13T01:59:02.948Z] Summoned spirit! Total: 17
+[2026-01-13T01:59:05.012Z] Step 150: Magic=801, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:59:05.218Z] Magic doubled: 411 -> 828
+[2026-01-13T01:59:05.529Z] Summoned spirit! Total: 18
+[2026-01-13T01:59:06.665Z] Summoned spirit! Total: 19
+[2026-01-13T01:59:06.977Z] ASCENDED! Tower level: 3
+[2026-01-13T01:59:08.008Z] Summoned spirit! Total: 20
+[2026-01-13T01:59:09.346Z] Summoned spirit! Total: 21
+[2026-01-13T01:59:10.169Z] Step 200: Magic=1391, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:59:10.894Z] Summoned spirit! Total: 22
+[2026-01-13T01:59:12.334Z] Magic doubled: 828 -> 1664
+[2026-01-13T01:59:13.475Z] Summoned spirit! Total: 23
+[2026-01-13T01:59:14.508Z] Summoned spirit! Total: 24
+[2026-01-13T01:59:15.333Z] Step 250: Magic=2358, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:59:15.746Z] Summoned spirit! Total: 25
+[2026-01-13T01:59:16.984Z] Summoned spirit! Total: 26
+[2026-01-13T01:59:17.693Z] Summoned spirit! Total: 27
+[2026-01-13T01:59:18.518Z] Magic doubled: 1664 -> 3356
+[2026-01-13T01:59:19.650Z] Step 300: Magic=3777, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:59:19.653Z] 
+=== ITERATION 20 ===
+[2026-01-13T01:59:20.469Z] Summoned spirit! Total: 1
+[2026-01-13T01:59:20.571Z] Magic doubled: 6 -> 12
+[2026-01-13T01:59:20.781Z] Magic doubled: 12 -> 24
+[2026-01-13T01:59:20.884Z] Summoned spirit! Total: 2
+[2026-01-13T01:59:21.298Z] Summoned spirit! Total: 3
+[2026-01-13T01:59:21.607Z] Magic doubled: 24 -> 49
+[2026-01-13T01:59:21.712Z] Summoned spirit! Total: 4
+[2026-01-13T01:59:22.227Z] Summoned spirit! Total: 5
+[2026-01-13T01:59:22.743Z] Summoned spirit! Total: 6
+[2026-01-13T01:59:23.054Z] Magic doubled: 49 -> 100
+[2026-01-13T01:59:23.161Z] ASCENDED! Tower level: 2
+[2026-01-13T01:59:23.470Z] Summoned spirit! Total: 7
+[2026-01-13T01:59:24.092Z] Summoned spirit! Total: 8
+[2026-01-13T01:59:24.712Z] Summoned spirit! Total: 9
+[2026-01-13T01:59:25.331Z] Step 50: Magic=200, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:59:25.435Z] Magic doubled: 100 -> 206
+[2026-01-13T01:59:25.538Z] Summoned spirit! Total: 10
+[2026-01-13T01:59:26.369Z] Summoned spirit! Total: 11
+[2026-01-13T01:59:27.197Z] Summoned spirit! Total: 12
+[2026-01-13T01:59:28.230Z] Summoned spirit! Total: 13
+[2026-01-13T01:59:29.364Z] Summoned spirit! Total: 14
+[2026-01-13T01:59:29.676Z] Magic doubled: 206 -> 417
+[2026-01-13T01:59:30.500Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T01:59:30.604Z] Summoned spirit! Total: 15
+[2026-01-13T01:59:32.054Z] Summoned spirit! Total: 16
+[2026-01-13T01:59:33.604Z] Summoned spirit! Total: 17
+[2026-01-13T01:59:35.675Z] Step 150: Magic=802, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T01:59:35.985Z] Magic doubled: 417 -> 843
+[2026-01-13T01:59:36.194Z] Summoned spirit! Total: 18
+[2026-01-13T01:59:37.332Z] Summoned spirit! Total: 19
+[2026-01-13T01:59:37.643Z] ASCENDED! Tower level: 3
+[2026-01-13T01:59:38.676Z] Summoned spirit! Total: 20
+[2026-01-13T01:59:40.016Z] Summoned spirit! Total: 21
+[2026-01-13T01:59:40.845Z] Step 200: Magic=1390, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T01:59:41.569Z] Summoned spirit! Total: 22
+[2026-01-13T01:59:43.327Z] Magic doubled: 843 -> 1712
+[2026-01-13T01:59:44.049Z] Summoned spirit! Total: 23
+[2026-01-13T01:59:45.187Z] Summoned spirit! Total: 24
+[2026-01-13T01:59:46.014Z] Step 250: Magic=2365, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T01:59:46.327Z] Summoned spirit! Total: 25
+[2026-01-13T01:59:46.825Z] Summoned spirit! Total: 26
+[2026-01-13T01:59:48.371Z] Summoned spirit! Total: 27
+[2026-01-13T01:59:49.513Z] Magic doubled: 1712 -> 3447
+[2026-01-13T01:59:50.337Z] Step 300: Magic=3780, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T01:59:50.341Z] 
+=== ITERATION 21 ===
+[2026-01-13T01:59:51.154Z] Summoned spirit! Total: 1
+[2026-01-13T01:59:51.261Z] Magic doubled: 6 -> 12
+[2026-01-13T01:59:51.467Z] Magic doubled: 12 -> 24
+[2026-01-13T01:59:51.570Z] Summoned spirit! Total: 2
+[2026-01-13T01:59:51.984Z] Summoned spirit! Total: 3
+[2026-01-13T01:59:52.294Z] Magic doubled: 24 -> 49
+[2026-01-13T01:59:52.397Z] Summoned spirit! Total: 4
+[2026-01-13T01:59:52.914Z] Summoned spirit! Total: 5
+[2026-01-13T01:59:53.432Z] Summoned spirit! Total: 6
+[2026-01-13T01:59:53.745Z] Magic doubled: 49 -> 101
+[2026-01-13T01:59:53.849Z] ASCENDED! Tower level: 2
+[2026-01-13T01:59:54.159Z] Summoned spirit! Total: 7
+[2026-01-13T01:59:54.778Z] Summoned spirit! Total: 8
+[2026-01-13T01:59:55.397Z] Summoned spirit! Total: 9
+[2026-01-13T01:59:56.015Z] Step 50: Magic=200, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T01:59:56.119Z] Magic doubled: 101 -> 206
+[2026-01-13T01:59:56.226Z] Summoned spirit! Total: 10
+[2026-01-13T01:59:57.058Z] Summoned spirit! Total: 11
+[2026-01-13T01:59:57.882Z] Summoned spirit! Total: 12
+[2026-01-13T01:59:58.918Z] Summoned spirit! Total: 13
+[2026-01-13T02:00:00.060Z] Summoned spirit! Total: 14
+[2026-01-13T02:00:00.368Z] Magic doubled: 206 -> 417
+[2026-01-13T02:00:01.194Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:00:01.298Z] Summoned spirit! Total: 15
+[2026-01-13T02:00:02.750Z] Summoned spirit! Total: 16
+[2026-01-13T02:00:04.298Z] Summoned spirit! Total: 17
+[2026-01-13T02:00:06.365Z] Step 150: Magic=791, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:00:06.679Z] Magic doubled: 417 -> 835
+[2026-01-13T02:00:06.990Z] Summoned spirit! Total: 18
+[2026-01-13T02:00:08.019Z] Summoned spirit! Total: 19
+[2026-01-13T02:00:08.432Z] ASCENDED! Tower level: 3
+[2026-01-13T02:00:09.365Z] Summoned spirit! Total: 20
+[2026-01-13T02:00:10.813Z] Summoned spirit! Total: 21
+[2026-01-13T02:00:11.534Z] Step 200: Magic=1381, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:00:12.262Z] Summoned spirit! Total: 22
+[2026-01-13T02:00:13.814Z] Magic doubled: 835 -> 1674
+[2026-01-13T02:00:14.846Z] Summoned spirit! Total: 23
+[2026-01-13T02:00:15.880Z] Summoned spirit! Total: 24
+[2026-01-13T02:00:15.868Z] Step 250: Magic=2354, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:00:16.282Z] Summoned spirit! Total: 25
+[2026-01-13T02:00:17.626Z] Summoned spirit! Total: 26
+[2026-01-13T02:00:19.076Z] Summoned spirit! Total: 27
+[2026-01-13T02:00:20.005Z] Magic doubled: 1674 -> 3376
+[2026-01-13T02:00:21.037Z] Step 300: Magic=3739, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:00:21.040Z] 
+=== ITERATION 22 ===
+[2026-01-13T02:00:21.855Z] Summoned spirit! Total: 1
+[2026-01-13T02:00:21.958Z] Magic doubled: 6 -> 12
+[2026-01-13T02:00:22.167Z] Magic doubled: 12 -> 24
+[2026-01-13T02:00:22.270Z] Summoned spirit! Total: 2
+[2026-01-13T02:00:22.683Z] Summoned spirit! Total: 3
+[2026-01-13T02:00:22.991Z] Magic doubled: 24 -> 49
+[2026-01-13T02:00:23.095Z] Summoned spirit! Total: 4
+[2026-01-13T02:00:23.616Z] Summoned spirit! Total: 5
+[2026-01-13T02:00:24.135Z] Summoned spirit! Total: 6
+[2026-01-13T02:00:24.446Z] Magic doubled: 49 -> 100
+[2026-01-13T02:00:24.550Z] ASCENDED! Tower level: 2
+[2026-01-13T02:00:24.858Z] Summoned spirit! Total: 7
+[2026-01-13T02:00:25.479Z] Summoned spirit! Total: 8
+[2026-01-13T02:00:26.099Z] Summoned spirit! Total: 9
+[2026-01-13T02:00:26.718Z] Step 50: Magic=200, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:00:26.822Z] Magic doubled: 100 -> 206
+[2026-01-13T02:00:26.925Z] Summoned spirit! Total: 10
+[2026-01-13T02:00:27.756Z] Summoned spirit! Total: 11
+[2026-01-13T02:00:28.584Z] Summoned spirit! Total: 12
+[2026-01-13T02:00:29.618Z] Summoned spirit! Total: 13
+[2026-01-13T02:00:30.752Z] Summoned spirit! Total: 14
+[2026-01-13T02:00:31.059Z] Magic doubled: 206 -> 419
+[2026-01-13T02:00:31.887Z] Step 100: Magic=472, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:00:31.993Z] Summoned spirit! Total: 15
+[2026-01-13T02:00:33.442Z] Summoned spirit! Total: 16
+[2026-01-13T02:00:34.990Z] Summoned spirit! Total: 17
+[2026-01-13T02:00:37.059Z] Step 150: Magic=792, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:00:37.474Z] Magic doubled: 419 -> 847
+[2026-01-13T02:00:37.682Z] Summoned spirit! Total: 18
+[2026-01-13T02:00:38.715Z] Summoned spirit! Total: 19
+[2026-01-13T02:00:39.131Z] ASCENDED! Tower level: 3
+[2026-01-13T02:00:40.058Z] Summoned spirit! Total: 20
+[2026-01-13T02:00:41.503Z] Summoned spirit! Total: 21
+[2026-01-13T02:00:42.224Z] Step 200: Magic=1380, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:00:43.053Z] Summoned spirit! Total: 22
+[2026-01-13T02:00:44.708Z] Magic doubled: 847 -> 1700
+[2026-01-13T02:00:45.534Z] Summoned spirit! Total: 23
+[2026-01-13T02:00:45.708Z] Summoned spirit! Total: 24
+[2026-01-13T02:00:46.530Z] Step 250: Magic=2352, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:00:46.946Z] Summoned spirit! Total: 25
+[2026-01-13T02:00:48.292Z] Summoned spirit! Total: 26
+[2026-01-13T02:00:49.734Z] Summoned spirit! Total: 27
+[2026-01-13T02:00:50.767Z] Magic doubled: 1700 -> 3408
+[2026-01-13T02:00:51.707Z] Step 300: Magic=3775, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:00:51.710Z] 
+=== ITERATION 23 ===
+[2026-01-13T02:00:52.524Z] Summoned spirit! Total: 1
+[2026-01-13T02:00:52.628Z] Magic doubled: 6 -> 12
+[2026-01-13T02:00:52.834Z] Magic doubled: 12 -> 24
+[2026-01-13T02:00:52.942Z] Summoned spirit! Total: 2
+[2026-01-13T02:00:53.356Z] Summoned spirit! Total: 3
+[2026-01-13T02:00:53.664Z] Magic doubled: 24 -> 49
+[2026-01-13T02:00:53.767Z] Summoned spirit! Total: 4
+[2026-01-13T02:00:54.283Z] Summoned spirit! Total: 5
+[2026-01-13T02:00:54.806Z] Summoned spirit! Total: 6
+[2026-01-13T02:00:55.115Z] Magic doubled: 49 -> 100
+[2026-01-13T02:00:55.218Z] ASCENDED! Tower level: 2
+[2026-01-13T02:00:55.529Z] Summoned spirit! Total: 7
+[2026-01-13T02:00:56.148Z] Summoned spirit! Total: 8
+[2026-01-13T02:00:56.765Z] Summoned spirit! Total: 9
+[2026-01-13T02:00:57.393Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:00:57.497Z] Magic doubled: 100 -> 205
+[2026-01-13T02:00:57.601Z] Summoned spirit! Total: 10
+[2026-01-13T02:00:58.428Z] Summoned spirit! Total: 11
+[2026-01-13T02:00:59.358Z] Summoned spirit! Total: 12
+[2026-01-13T02:01:00.289Z] Summoned spirit! Total: 13
+[2026-01-13T02:01:01.428Z] Summoned spirit! Total: 14
+[2026-01-13T02:01:01.633Z] Magic doubled: 205 -> 412
+[2026-01-13T02:01:02.566Z] Step 100: Magic=472, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:01:02.674Z] Summoned spirit! Total: 15
+[2026-01-13T02:01:04.123Z] Summoned spirit! Total: 16
+[2026-01-13T02:01:05.667Z] Summoned spirit! Total: 17
+[2026-01-13T02:01:07.730Z] Step 150: Magic=792, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:01:08.044Z] Magic doubled: 412 -> 833
+[2026-01-13T02:01:08.356Z] Summoned spirit! Total: 18
+[2026-01-13T02:01:09.388Z] Summoned spirit! Total: 19
+[2026-01-13T02:01:09.798Z] ASCENDED! Tower level: 3
+[2026-01-13T02:01:10.729Z] Summoned spirit! Total: 20
+[2026-01-13T02:01:12.182Z] Summoned spirit! Total: 21
+[2026-01-13T02:01:12.909Z] Step 200: Magic=1382, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:01:13.741Z] Summoned spirit! Total: 22
+[2026-01-13T02:01:14.816Z] Magic doubled: 833 -> 1669
+[2026-01-13T02:01:15.125Z] Summoned spirit! Total: 23
+[2026-01-13T02:01:16.157Z] Summoned spirit! Total: 24
+[2026-01-13T02:01:16.988Z] Step 250: Magic=2354, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:01:17.402Z] Summoned spirit! Total: 25
+[2026-01-13T02:01:18.740Z] Summoned spirit! Total: 26
+[2026-01-13T02:01:20.185Z] Summoned spirit! Total: 27
+[2026-01-13T02:01:21.007Z] Magic doubled: 1669 -> 3346
+[2026-01-13T02:01:22.150Z] Step 300: Magic=3772, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:01:22.153Z] 
+=== ITERATION 24 ===
+[2026-01-13T02:01:22.964Z] Summoned spirit! Total: 1
+[2026-01-13T02:01:23.067Z] Magic doubled: 6 -> 12
+[2026-01-13T02:01:23.272Z] Magic doubled: 12 -> 24
+[2026-01-13T02:01:23.374Z] Summoned spirit! Total: 2
+[2026-01-13T02:01:23.787Z] Summoned spirit! Total: 3
+[2026-01-13T02:01:24.097Z] Magic doubled: 24 -> 49
+[2026-01-13T02:01:24.201Z] Summoned spirit! Total: 4
+[2026-01-13T02:01:24.717Z] Summoned spirit! Total: 5
+[2026-01-13T02:01:25.236Z] Summoned spirit! Total: 6
+[2026-01-13T02:01:25.546Z] Magic doubled: 49 -> 101
+[2026-01-13T02:01:25.651Z] ASCENDED! Tower level: 2
+[2026-01-13T02:01:25.959Z] Summoned spirit! Total: 7
+[2026-01-13T02:01:26.582Z] Summoned spirit! Total: 8
+[2026-01-13T02:01:27.198Z] Summoned spirit! Total: 9
+[2026-01-13T02:01:27.816Z] Step 50: Magic=200, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:01:27.919Z] Magic doubled: 101 -> 206
+[2026-01-13T02:01:28.022Z] Summoned spirit! Total: 10
+[2026-01-13T02:01:28.848Z] Summoned spirit! Total: 11
+[2026-01-13T02:01:29.673Z] Summoned spirit! Total: 12
+[2026-01-13T02:01:30.705Z] Summoned spirit! Total: 13
+[2026-01-13T02:01:31.838Z] Summoned spirit! Total: 14
+[2026-01-13T02:01:32.148Z] Magic doubled: 206 -> 416
+[2026-01-13T02:01:32.970Z] Step 100: Magic=470, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:01:33.074Z] Summoned spirit! Total: 15
+[2026-01-13T02:01:34.517Z] Summoned spirit! Total: 16
+[2026-01-13T02:01:36.168Z] Summoned spirit! Total: 17
+[2026-01-13T02:01:38.126Z] Step 150: Magic=792, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:01:38.539Z] Magic doubled: 416 -> 846
+[2026-01-13T02:01:38.749Z] Summoned spirit! Total: 18
+[2026-01-13T02:01:39.780Z] Summoned spirit! Total: 19
+[2026-01-13T02:01:40.191Z] ASCENDED! Tower level: 3
+[2026-01-13T02:01:41.121Z] Summoned spirit! Total: 20
+[2026-01-13T02:01:42.565Z] Summoned spirit! Total: 21
+[2026-01-13T02:01:43.288Z] Step 200: Magic=1379, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:01:43.468Z] Summoned spirit! Total: 22
+[2026-01-13T02:01:45.122Z] Magic doubled: 846 -> 1699
+[2026-01-13T02:01:45.945Z] Summoned spirit! Total: 23
+[2026-01-13T02:01:46.978Z] Summoned spirit! Total: 24
+[2026-01-13T02:01:47.804Z] Step 250: Magic=2347, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:01:48.219Z] Summoned spirit! Total: 25
+[2026-01-13T02:01:49.558Z] Summoned spirit! Total: 26
+[2026-01-13T02:01:51.002Z] Summoned spirit! Total: 27
+[2026-01-13T02:01:52.031Z] Magic doubled: 1699 -> 3403
+[2026-01-13T02:01:52.959Z] Step 300: Magic=3736, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:01:52.962Z] 
+=== ITERATION 25 ===
+[2026-01-13T02:01:53.776Z] Summoned spirit! Total: 1
+[2026-01-13T02:01:53.879Z] Magic doubled: 6 -> 12
+[2026-01-13T02:01:54.088Z] Magic doubled: 12 -> 24
+[2026-01-13T02:01:54.191Z] Summoned spirit! Total: 2
+[2026-01-13T02:01:54.604Z] Summoned spirit! Total: 3
+[2026-01-13T02:01:54.912Z] Magic doubled: 24 -> 49
+[2026-01-13T02:01:55.015Z] Summoned spirit! Total: 4
+[2026-01-13T02:01:55.535Z] Summoned spirit! Total: 5
+[2026-01-13T02:01:56.048Z] Summoned spirit! Total: 6
+[2026-01-13T02:01:56.358Z] Magic doubled: 49 -> 100
+[2026-01-13T02:01:56.461Z] ASCENDED! Tower level: 2
+[2026-01-13T02:01:56.772Z] Summoned spirit! Total: 7
+[2026-01-13T02:01:57.391Z] Summoned spirit! Total: 8
+[2026-01-13T02:01:58.009Z] Summoned spirit! Total: 9
+[2026-01-13T02:01:58.627Z] Step 50: Magic=201, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:01:58.628Z] Magic doubled: 100 -> 201
+[2026-01-13T02:01:58.731Z] Summoned spirit! Total: 10
+[2026-01-13T02:01:59.557Z] Summoned spirit! Total: 11
+[2026-01-13T02:02:00.486Z] Summoned spirit! Total: 12
+[2026-01-13T02:02:01.514Z] Summoned spirit! Total: 13
+[2026-01-13T02:02:02.545Z] Magic doubled: 201 -> 403
+[2026-01-13T02:02:02.648Z] Summoned spirit! Total: 14
+[2026-01-13T02:02:03.781Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:02:03.887Z] Summoned spirit! Total: 15
+[2026-01-13T02:02:05.330Z] Summoned spirit! Total: 16
+[2026-01-13T02:02:06.989Z] Summoned spirit! Total: 17
+[2026-01-13T02:02:08.946Z] Step 150: Magic=791, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:02:09.155Z] Magic doubled: 403 -> 818
+[2026-01-13T02:02:09.568Z] Summoned spirit! Total: 18
+[2026-01-13T02:02:10.703Z] Summoned spirit! Total: 19
+[2026-01-13T02:02:11.011Z] ASCENDED! Tower level: 3
+[2026-01-13T02:02:11.943Z] Summoned spirit! Total: 20
+[2026-01-13T02:02:12.398Z] Summoned spirit! Total: 21
+[2026-01-13T02:02:13.220Z] Step 200: Magic=1383, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:02:13.940Z] Summoned spirit! Total: 22
+[2026-01-13T02:02:15.279Z] Magic doubled: 818 -> 1642
+[2026-01-13T02:02:16.520Z] Summoned spirit! Total: 23
+[2026-01-13T02:02:17.553Z] Summoned spirit! Total: 24
+[2026-01-13T02:02:18.379Z] Step 250: Magic=2350, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:02:18.791Z] Summoned spirit! Total: 25
+[2026-01-13T02:02:20.132Z] Summoned spirit! Total: 26
+[2026-01-13T02:02:21.575Z] Summoned spirit! Total: 27
+[2026-01-13T02:02:22.194Z] Magic doubled: 1642 -> 3288
+[2026-01-13T02:02:23.534Z] Step 300: Magic=3774, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:02:23.536Z] 
+=== ITERATION 26 ===
+[2026-01-13T02:02:24.351Z] Summoned spirit! Total: 1
+[2026-01-13T02:02:24.455Z] Magic doubled: 6 -> 12
+[2026-01-13T02:02:24.664Z] Magic doubled: 12 -> 24
+[2026-01-13T02:02:24.767Z] Summoned spirit! Total: 2
+[2026-01-13T02:02:25.181Z] Summoned spirit! Total: 3
+[2026-01-13T02:02:25.489Z] Magic doubled: 24 -> 49
+[2026-01-13T02:02:25.594Z] Summoned spirit! Total: 4
+[2026-01-13T02:02:26.107Z] Summoned spirit! Total: 5
+[2026-01-13T02:02:26.624Z] Summoned spirit! Total: 6
+[2026-01-13T02:02:26.935Z] Magic doubled: 49 -> 100
+[2026-01-13T02:02:27.038Z] ASCENDED! Tower level: 2
+[2026-01-13T02:02:27.349Z] Summoned spirit! Total: 7
+[2026-01-13T02:02:27.967Z] Summoned spirit! Total: 8
+[2026-01-13T02:02:28.586Z] Summoned spirit! Total: 9
+[2026-01-13T02:02:29.207Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:02:29.312Z] Magic doubled: 100 -> 205
+[2026-01-13T02:02:29.415Z] Summoned spirit! Total: 10
+[2026-01-13T02:02:30.237Z] Summoned spirit! Total: 11
+[2026-01-13T02:02:31.169Z] Summoned spirit! Total: 12
+[2026-01-13T02:02:32.100Z] Summoned spirit! Total: 13
+[2026-01-13T02:02:33.234Z] Summoned spirit! Total: 14
+[2026-01-13T02:02:33.545Z] Magic doubled: 205 -> 415
+[2026-01-13T02:02:34.371Z] Step 100: Magic=470, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:02:34.579Z] Summoned spirit! Total: 15
+[2026-01-13T02:02:35.920Z] Summoned spirit! Total: 16
+[2026-01-13T02:02:37.568Z] Summoned spirit! Total: 17
+[2026-01-13T02:02:39.522Z] Step 150: Magic=791, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:02:39.834Z] Magic doubled: 415 -> 833
+[2026-01-13T02:02:40.143Z] Summoned spirit! Total: 18
+[2026-01-13T02:02:41.274Z] Summoned spirit! Total: 19
+[2026-01-13T02:02:41.584Z] ASCENDED! Tower level: 3
+[2026-01-13T02:02:41.619Z] Summoned spirit! Total: 20
+[2026-01-13T02:02:43.060Z] Summoned spirit! Total: 21
+[2026-01-13T02:02:43.788Z] Step 200: Magic=1381, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:02:44.612Z] Summoned spirit! Total: 22
+[2026-01-13T02:02:46.057Z] Magic doubled: 833 -> 1669
+[2026-01-13T02:02:47.088Z] Summoned spirit! Total: 23
+[2026-01-13T02:02:48.119Z] Summoned spirit! Total: 24
+[2026-01-13T02:02:48.942Z] Step 250: Magic=2354, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:02:49.356Z] Summoned spirit! Total: 25
+[2026-01-13T02:02:50.694Z] Summoned spirit! Total: 26
+[2026-01-13T02:02:52.137Z] Summoned spirit! Total: 27
+[2026-01-13T02:02:52.968Z] Magic doubled: 1669 -> 3346
+[2026-01-13T02:02:54.103Z] Step 300: Magic=3738, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:02:54.106Z] 
+=== ITERATION 27 ===
+[2026-01-13T02:02:54.816Z] Magic doubled: 6 -> 13
+[2026-01-13T02:02:54.919Z] Summoned spirit! Total: 1
+[2026-01-13T02:02:55.331Z] Summoned spirit! Total: 2
+[2026-01-13T02:02:55.539Z] Magic doubled: 13 -> 31
+[2026-01-13T02:02:55.745Z] Summoned spirit! Total: 3
+[2026-01-13T02:02:56.157Z] Summoned spirit! Total: 4
+[2026-01-13T02:02:56.467Z] Magic doubled: 31 -> 63
+[2026-01-13T02:02:56.674Z] Summoned spirit! Total: 5
+[2026-01-13T02:02:57.191Z] Summoned spirit! Total: 6
+[2026-01-13T02:02:57.604Z] ASCENDED! Tower level: 2
+[2026-01-13T02:02:57.912Z] Summoned spirit! Total: 7
+[2026-01-13T02:02:58.222Z] Magic doubled: 63 -> 128
+[2026-01-13T02:02:58.532Z] Summoned spirit! Total: 8
+[2026-01-13T02:02:59.151Z] Summoned spirit! Total: 9
+[2026-01-13T02:02:59.772Z] Step 50: Magic=200, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:02:59.979Z] Summoned spirit! Total: 10
+[2026-01-13T02:03:00.804Z] Summoned spirit! Total: 11
+[2026-01-13T02:03:01.112Z] Magic doubled: 128 -> 260
+[2026-01-13T02:03:01.628Z] Summoned spirit! Total: 12
+[2026-01-13T02:03:02.660Z] Summoned spirit! Total: 13
+[2026-01-13T02:03:03.793Z] Summoned spirit! Total: 14
+[2026-01-13T02:03:04.925Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:03:05.029Z] Summoned spirit! Total: 15
+[2026-01-13T02:03:05.956Z] Magic doubled: 260 -> 526
+[2026-01-13T02:03:06.470Z] Summoned spirit! Total: 16
+[2026-01-13T02:03:08.016Z] Summoned spirit! Total: 17
+[2026-01-13T02:03:10.078Z] Step 150: Magic=791, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:03:10.699Z] Summoned spirit! Total: 18
+[2026-01-13T02:03:10.983Z] Summoned spirit! Total: 19
+[2026-01-13T02:03:11.291Z] ASCENDED! Tower level: 3
+[2026-01-13T02:03:11.704Z] Magic doubled: 526 -> 1063
+[2026-01-13T02:03:12.222Z] Summoned spirit! Total: 20
+[2026-01-13T02:03:13.564Z] Summoned spirit! Total: 21
+[2026-01-13T02:03:14.388Z] Step 200: Magic=1386, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:03:15.112Z] Summoned spirit! Total: 22
+[2026-01-13T02:03:17.685Z] Summoned spirit! Total: 23
+[2026-01-13T02:03:18.612Z] Magic doubled: 1063 -> 2143
+[2026-01-13T02:03:18.715Z] Summoned spirit! Total: 24
+[2026-01-13T02:03:19.538Z] Step 250: Magic=2359, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:03:19.952Z] Summoned spirit! Total: 25
+[2026-01-13T02:03:21.289Z] Summoned spirit! Total: 26
+[2026-01-13T02:03:22.733Z] Summoned spirit! Total: 27
+[2026-01-13T02:03:24.686Z] Step 300: Magic=3772, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:03:24.689Z] 
+=== ITERATION 28 ===
+[2026-01-13T02:03:25.502Z] Summoned spirit! Total: 1
+[2026-01-13T02:03:25.605Z] Magic doubled: 6 -> 12
+[2026-01-13T02:03:25.814Z] Magic doubled: 12 -> 24
+[2026-01-13T02:03:25.917Z] Summoned spirit! Total: 2
+[2026-01-13T02:03:26.329Z] Summoned spirit! Total: 3
+[2026-01-13T02:03:26.637Z] Magic doubled: 24 -> 49
+[2026-01-13T02:03:26.739Z] Summoned spirit! Total: 4
+[2026-01-13T02:03:27.254Z] Summoned spirit! Total: 5
+[2026-01-13T02:03:27.770Z] Summoned spirit! Total: 6
+[2026-01-13T02:03:28.080Z] Magic doubled: 49 -> 100
+[2026-01-13T02:03:28.183Z] ASCENDED! Tower level: 2
+[2026-01-13T02:03:28.491Z] Summoned spirit! Total: 7
+[2026-01-13T02:03:29.110Z] Summoned spirit! Total: 8
+[2026-01-13T02:03:29.729Z] Summoned spirit! Total: 9
+[2026-01-13T02:03:30.346Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:03:30.449Z] Magic doubled: 100 -> 205
+[2026-01-13T02:03:30.552Z] Summoned spirit! Total: 10
+[2026-01-13T02:03:31.375Z] Summoned spirit! Total: 11
+[2026-01-13T02:03:32.201Z] Summoned spirit! Total: 12
+[2026-01-13T02:03:33.230Z] Summoned spirit! Total: 13
+[2026-01-13T02:03:34.363Z] Summoned spirit! Total: 14
+[2026-01-13T02:03:34.671Z] Magic doubled: 205 -> 416
+[2026-01-13T02:03:35.495Z] Step 100: Magic=470, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:03:35.701Z] Summoned spirit! Total: 15
+[2026-01-13T02:03:37.039Z] Summoned spirit! Total: 16
+[2026-01-13T02:03:38.696Z] Summoned spirit! Total: 17
+[2026-01-13T02:03:39.823Z] Step 150: Magic=789, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:03:40.236Z] Magic doubled: 416 -> 844
+[2026-01-13T02:03:40.442Z] Summoned spirit! Total: 18
+[2026-01-13T02:03:41.574Z] Summoned spirit! Total: 19
+[2026-01-13T02:03:41.884Z] ASCENDED! Tower level: 3
+[2026-01-13T02:03:42.809Z] Summoned spirit! Total: 20
+[2026-01-13T02:03:44.252Z] Summoned spirit! Total: 21
+[2026-01-13T02:03:44.972Z] Step 200: Magic=1379, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:03:45.796Z] Summoned spirit! Total: 22
+[2026-01-13T02:03:47.543Z] Magic doubled: 844 -> 1713
+[2026-01-13T02:03:48.269Z] Summoned spirit! Total: 23
+[2026-01-13T02:03:49.401Z] Summoned spirit! Total: 24
+[2026-01-13T02:03:50.121Z] Step 250: Magic=2342, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:03:50.535Z] Summoned spirit! Total: 25
+[2026-01-13T02:03:51.874Z] Summoned spirit! Total: 26
+[2026-01-13T02:03:53.322Z] Summoned spirit! Total: 27
+[2026-01-13T02:03:54.458Z] Magic doubled: 1713 -> 3437
+[2026-01-13T02:03:55.283Z] Step 300: Magic=3770, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:03:55.286Z] 
+=== ITERATION 29 ===
+[2026-01-13T02:03:56.100Z] Summoned spirit! Total: 1
+[2026-01-13T02:03:56.203Z] Magic doubled: 6 -> 12
+[2026-01-13T02:03:56.410Z] Magic doubled: 12 -> 24
+[2026-01-13T02:03:56.515Z] Summoned spirit! Total: 2
+[2026-01-13T02:03:56.926Z] Summoned spirit! Total: 3
+[2026-01-13T02:03:57.236Z] Magic doubled: 24 -> 49
+[2026-01-13T02:03:57.339Z] Summoned spirit! Total: 4
+[2026-01-13T02:03:57.854Z] Summoned spirit! Total: 5
+[2026-01-13T02:03:58.370Z] Summoned spirit! Total: 6
+[2026-01-13T02:03:58.679Z] Magic doubled: 49 -> 100
+[2026-01-13T02:03:58.783Z] ASCENDED! Tower level: 2
+[2026-01-13T02:03:59.091Z] Summoned spirit! Total: 7
+[2026-01-13T02:03:59.708Z] Summoned spirit! Total: 8
+[2026-01-13T02:04:00.327Z] Summoned spirit! Total: 9
+[2026-01-13T02:04:00.947Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:04:01.051Z] Magic doubled: 100 -> 205
+[2026-01-13T02:04:01.154Z] Summoned spirit! Total: 10
+[2026-01-13T02:04:01.977Z] Summoned spirit! Total: 11
+[2026-01-13T02:04:02.905Z] Summoned spirit! Total: 12
+[2026-01-13T02:04:03.834Z] Summoned spirit! Total: 13
+[2026-01-13T02:04:04.975Z] Summoned spirit! Total: 14
+[2026-01-13T02:04:05.286Z] Magic doubled: 205 -> 416
+[2026-01-13T02:04:06.109Z] Step 100: Magic=470, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:04:06.318Z] Summoned spirit! Total: 15
+[2026-01-13T02:04:07.656Z] Summoned spirit! Total: 16
+[2026-01-13T02:04:09.305Z] Summoned spirit! Total: 17
+[2026-01-13T02:04:10.157Z] Step 150: Magic=790, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:04:10.571Z] Magic doubled: 416 -> 845
+[2026-01-13T02:04:10.778Z] Summoned spirit! Total: 18
+[2026-01-13T02:04:11.912Z] Summoned spirit! Total: 19
+[2026-01-13T02:04:12.222Z] ASCENDED! Tower level: 3
+[2026-01-13T02:04:13.154Z] Summoned spirit! Total: 20
+[2026-01-13T02:04:14.597Z] Summoned spirit! Total: 21
+[2026-01-13T02:04:15.318Z] Step 200: Magic=1383, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:04:16.039Z] Summoned spirit! Total: 22
+[2026-01-13T02:04:17.795Z] Magic doubled: 845 -> 1705
+[2026-01-13T02:04:18.618Z] Summoned spirit! Total: 23
+[2026-01-13T02:04:19.653Z] Summoned spirit! Total: 24
+[2026-01-13T02:04:20.481Z] Step 250: Magic=2353, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:04:20.895Z] Summoned spirit! Total: 25
+[2026-01-13T02:04:22.234Z] Summoned spirit! Total: 26
+[2026-01-13T02:04:23.678Z] Summoned spirit! Total: 27
+[2026-01-13T02:04:24.815Z] Magic doubled: 1705 -> 3438
+[2026-01-13T02:04:25.644Z] Step 300: Magic=3771, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:04:25.647Z] 
+=== ITERATION 30 ===
+[2026-01-13T02:04:26.459Z] Summoned spirit! Total: 1
+[2026-01-13T02:04:26.563Z] Magic doubled: 6 -> 12
+[2026-01-13T02:04:26.768Z] Magic doubled: 12 -> 24
+[2026-01-13T02:04:26.871Z] Summoned spirit! Total: 2
+[2026-01-13T02:04:27.286Z] Summoned spirit! Total: 3
+[2026-01-13T02:04:27.598Z] Magic doubled: 24 -> 50
+[2026-01-13T02:04:27.701Z] Summoned spirit! Total: 4
+[2026-01-13T02:04:28.217Z] Summoned spirit! Total: 5
+[2026-01-13T02:04:28.733Z] Summoned spirit! Total: 6
+[2026-01-13T02:04:29.040Z] Magic doubled: 50 -> 102
+[2026-01-13T02:04:29.146Z] ASCENDED! Tower level: 2
+[2026-01-13T02:04:29.351Z] Summoned spirit! Total: 7
+[2026-01-13T02:04:29.969Z] Summoned spirit! Total: 8
+[2026-01-13T02:04:30.689Z] Summoned spirit! Total: 9
+[2026-01-13T02:04:31.307Z] Step 50: Magic=201, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:04:31.412Z] Summoned spirit! Total: 10
+[2026-01-13T02:04:31.618Z] Magic doubled: 102 -> 208
+[2026-01-13T02:04:32.238Z] Summoned spirit! Total: 11
+[2026-01-13T02:04:33.167Z] Summoned spirit! Total: 12
+[2026-01-13T02:04:34.203Z] Summoned spirit! Total: 13
+[2026-01-13T02:04:35.337Z] Summoned spirit! Total: 14
+[2026-01-13T02:04:35.648Z] Magic doubled: 208 -> 419
+[2026-01-13T02:04:36.471Z] Step 100: Magic=472, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:04:36.578Z] Summoned spirit! Total: 15
+[2026-01-13T02:04:38.019Z] Summoned spirit! Total: 16
+[2026-01-13T02:04:38.949Z] Summoned spirit! Total: 17
+[2026-01-13T02:04:41.006Z] Step 150: Magic=792, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:04:41.420Z] Magic doubled: 419 -> 849
+[2026-01-13T02:04:41.626Z] Summoned spirit! Total: 18
+[2026-01-13T02:04:42.664Z] Summoned spirit! Total: 19
+[2026-01-13T02:04:43.078Z] ASCENDED! Tower level: 3
+[2026-01-13T02:04:44.006Z] Summoned spirit! Total: 20
+[2026-01-13T02:04:45.349Z] Summoned spirit! Total: 21
+[2026-01-13T02:04:46.174Z] Step 200: Magic=1384, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:04:46.901Z] Summoned spirit! Total: 22
+[2026-01-13T02:04:48.656Z] Magic doubled: 849 -> 1709
+[2026-01-13T02:04:49.380Z] Summoned spirit! Total: 23
+[2026-01-13T02:04:50.514Z] Summoned spirit! Total: 24
+[2026-01-13T02:04:51.336Z] Step 250: Magic=2366, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:04:51.647Z] Summoned spirit! Total: 25
+[2026-01-13T02:04:52.996Z] Summoned spirit! Total: 26
+[2026-01-13T02:04:54.540Z] Summoned spirit! Total: 27
+[2026-01-13T02:04:55.573Z] Magic doubled: 1709 -> 3422
+[2026-01-13T02:04:56.501Z] Step 300: Magic=3790, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:04:56.504Z] 
+=== ITERATION 31 ===
+[2026-01-13T02:04:57.318Z] Summoned spirit! Total: 1
+[2026-01-13T02:04:57.421Z] Magic doubled: 6 -> 12
+[2026-01-13T02:04:57.629Z] Magic doubled: 12 -> 24
+[2026-01-13T02:04:57.732Z] Summoned spirit! Total: 2
+[2026-01-13T02:04:58.146Z] Summoned spirit! Total: 3
+[2026-01-13T02:04:58.454Z] Magic doubled: 24 -> 49
+[2026-01-13T02:04:58.557Z] Summoned spirit! Total: 4
+[2026-01-13T02:04:59.071Z] Summoned spirit! Total: 5
+[2026-01-13T02:04:59.587Z] Summoned spirit! Total: 6
+[2026-01-13T02:04:59.897Z] Magic doubled: 49 -> 101
+[2026-01-13T02:05:00.000Z] ASCENDED! Tower level: 2
+[2026-01-13T02:05:00.310Z] Summoned spirit! Total: 7
+[2026-01-13T02:05:00.929Z] Summoned spirit! Total: 8
+[2026-01-13T02:05:01.547Z] Summoned spirit! Total: 9
+[2026-01-13T02:05:02.164Z] Step 50: Magic=201, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:05:02.268Z] Summoned spirit! Total: 10
+[2026-01-13T02:05:02.474Z] Magic doubled: 101 -> 208
+[2026-01-13T02:05:03.097Z] Summoned spirit! Total: 11
+[2026-01-13T02:05:04.027Z] Summoned spirit! Total: 12
+[2026-01-13T02:05:05.056Z] Summoned spirit! Total: 13
+[2026-01-13T02:05:06.189Z] Summoned spirit! Total: 14
+[2026-01-13T02:05:06.499Z] Magic doubled: 208 -> 417
+[2026-01-13T02:05:07.322Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:05:07.428Z] Summoned spirit! Total: 15
+[2026-01-13T02:05:08.008Z] Summoned spirit! Total: 16
+[2026-01-13T02:05:09.556Z] Summoned spirit! Total: 17
+[2026-01-13T02:05:11.613Z] Step 150: Magic=793, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:05:12.027Z] Magic doubled: 417 -> 848
+[2026-01-13T02:05:12.235Z] Summoned spirit! Total: 18
+[2026-01-13T02:05:13.263Z] Summoned spirit! Total: 19
+[2026-01-13T02:05:13.675Z] ASCENDED! Tower level: 3
+[2026-01-13T02:05:14.603Z] Summoned spirit! Total: 20
+[2026-01-13T02:05:16.046Z] Summoned spirit! Total: 21
+[2026-01-13T02:05:16.770Z] Step 200: Magic=1380, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:05:17.595Z] Summoned spirit! Total: 22
+[2026-01-13T02:05:19.246Z] Magic doubled: 848 -> 1701
+[2026-01-13T02:05:20.072Z] Summoned spirit! Total: 23
+[2026-01-13T02:05:21.102Z] Summoned spirit! Total: 24
+[2026-01-13T02:05:21.926Z] Step 250: Magic=2348, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:05:22.340Z] Summoned spirit! Total: 25
+[2026-01-13T02:05:23.679Z] Summoned spirit! Total: 26
+[2026-01-13T02:05:25.119Z] Summoned spirit! Total: 27
+[2026-01-13T02:05:26.147Z] Magic doubled: 1701 -> 3404
+[2026-01-13T02:05:27.073Z] Step 300: Magic=3737, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:05:27.076Z] 
+=== ITERATION 32 ===
+[2026-01-13T02:05:27.890Z] Summoned spirit! Total: 1
+[2026-01-13T02:05:28.098Z] Magic doubled: 7 -> 19
+[2026-01-13T02:05:28.305Z] Summoned spirit! Total: 2
+[2026-01-13T02:05:28.718Z] Summoned spirit! Total: 3
+[2026-01-13T02:05:28.923Z] Magic doubled: 19 -> 44
+[2026-01-13T02:05:29.128Z] Summoned spirit! Total: 4
+[2026-01-13T02:05:29.644Z] Summoned spirit! Total: 5
+[2026-01-13T02:05:30.057Z] Magic doubled: 44 -> 88
+[2026-01-13T02:05:30.159Z] Summoned spirit! Total: 6
+[2026-01-13T02:05:30.572Z] ASCENDED! Tower level: 2
+[2026-01-13T02:05:30.880Z] Summoned spirit! Total: 7
+[2026-01-13T02:05:31.496Z] Summoned spirit! Total: 8
+[2026-01-13T02:05:32.115Z] Summoned spirit! Total: 9
+[2026-01-13T02:05:32.425Z] Magic doubled: 88 -> 180
+[2026-01-13T02:05:32.735Z] Step 50: Magic=201, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:05:32.839Z] Summoned spirit! Total: 10
+[2026-01-13T02:05:33.662Z] Summoned spirit! Total: 11
+[2026-01-13T02:05:34.591Z] Summoned spirit! Total: 12
+[2026-01-13T02:05:35.621Z] Summoned spirit! Total: 13
+[2026-01-13T02:05:36.034Z] Magic doubled: 180 -> 364
+[2026-01-13T02:05:36.754Z] Summoned spirit! Total: 14
+[2026-01-13T02:05:37.025Z] Step 100: Magic=473, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:05:37.128Z] Summoned spirit! Total: 15
+[2026-01-13T02:05:38.570Z] Summoned spirit! Total: 16
+[2026-01-13T02:05:40.112Z] Summoned spirit! Total: 17
+[2026-01-13T02:05:41.451Z] Magic doubled: 364 -> 731
+[2026-01-13T02:05:42.172Z] Step 150: Magic=801, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:05:42.687Z] Summoned spirit! Total: 18
+[2026-01-13T02:05:43.820Z] Summoned spirit! Total: 19
+[2026-01-13T02:05:44.128Z] ASCENDED! Tower level: 3
+[2026-01-13T02:05:45.057Z] Summoned spirit! Total: 20
+[2026-01-13T02:05:46.498Z] Summoned spirit! Total: 21
+[2026-01-13T02:05:47.327Z] Step 200: Magic=1396, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:05:47.846Z] Magic doubled: 731 -> 1469
+[2026-01-13T02:05:47.949Z] Summoned spirit! Total: 22
+[2026-01-13T02:05:50.526Z] Summoned spirit! Total: 23
+[2026-01-13T02:05:51.555Z] Summoned spirit! Total: 24
+[2026-01-13T02:05:52.486Z] Step 250: Magic=2390, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:05:52.693Z] Summoned spirit! Total: 25
+[2026-01-13T02:05:54.029Z] Summoned spirit! Total: 26
+[2026-01-13T02:05:54.856Z] Magic doubled: 1469 -> 2963
+[2026-01-13T02:05:55.577Z] Summoned spirit! Total: 27
+[2026-01-13T02:05:57.638Z] Step 300: Magic=3839, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:05:57.641Z] 
+=== ITERATION 33 ===
+[2026-01-13T02:05:58.454Z] Summoned spirit! Total: 1
+[2026-01-13T02:05:58.557Z] Magic doubled: 6 -> 12
+[2026-01-13T02:05:58.762Z] Magic doubled: 12 -> 24
+[2026-01-13T02:05:58.865Z] Summoned spirit! Total: 2
+[2026-01-13T02:05:59.278Z] Summoned spirit! Total: 3
+[2026-01-13T02:05:59.589Z] Magic doubled: 24 -> 50
+[2026-01-13T02:05:59.691Z] Summoned spirit! Total: 4
+[2026-01-13T02:06:00.209Z] Summoned spirit! Total: 5
+[2026-01-13T02:06:00.724Z] Summoned spirit! Total: 6
+[2026-01-13T02:06:01.035Z] Magic doubled: 50 -> 101
+[2026-01-13T02:06:01.138Z] ASCENDED! Tower level: 2
+[2026-01-13T02:06:01.446Z] Summoned spirit! Total: 7
+[2026-01-13T02:06:02.065Z] Summoned spirit! Total: 8
+[2026-01-13T02:06:02.686Z] Summoned spirit! Total: 9
+[2026-01-13T02:06:03.306Z] Step 50: Magic=200, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:06:03.411Z] Magic doubled: 101 -> 206
+[2026-01-13T02:06:03.516Z] Summoned spirit! Total: 10
+[2026-01-13T02:06:04.342Z] Summoned spirit! Total: 11
+[2026-01-13T02:06:05.167Z] Summoned spirit! Total: 12
+[2026-01-13T02:06:06.197Z] Summoned spirit! Total: 13
+[2026-01-13T02:06:06.461Z] Summoned spirit! Total: 14
+[2026-01-13T02:06:06.771Z] Magic doubled: 206 -> 416
+[2026-01-13T02:06:07.593Z] Step 100: Magic=470, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:06:07.803Z] Summoned spirit! Total: 15
+[2026-01-13T02:06:09.143Z] Summoned spirit! Total: 16
+[2026-01-13T02:06:10.799Z] Summoned spirit! Total: 17
+[2026-01-13T02:06:12.755Z] Step 150: Magic=790, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:06:13.170Z] Magic doubled: 416 -> 845
+[2026-01-13T02:06:13.375Z] Summoned spirit! Total: 18
+[2026-01-13T02:06:14.508Z] Summoned spirit! Total: 19
+[2026-01-13T02:06:14.819Z] ASCENDED! Tower level: 3
+[2026-01-13T02:06:15.746Z] Summoned spirit! Total: 20
+[2026-01-13T02:06:17.190Z] Summoned spirit! Total: 21
+[2026-01-13T02:06:17.917Z] Step 200: Magic=1382, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:06:18.743Z] Summoned spirit! Total: 22
+[2026-01-13T02:06:20.394Z] Magic doubled: 845 -> 1705
+[2026-01-13T02:06:21.219Z] Summoned spirit! Total: 23
+[2026-01-13T02:06:22.253Z] Summoned spirit! Total: 24
+[2026-01-13T02:06:23.081Z] Step 250: Magic=2352, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:06:23.494Z] Summoned spirit! Total: 25
+[2026-01-13T02:06:24.837Z] Summoned spirit! Total: 26
+[2026-01-13T02:06:26.277Z] Summoned spirit! Total: 27
+[2026-01-13T02:06:27.410Z] Magic doubled: 1705 -> 3437
+[2026-01-13T02:06:28.237Z] Step 300: Magic=3776, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:06:28.239Z] 
+=== ITERATION 34 ===
+[2026-01-13T02:06:29.052Z] Summoned spirit! Total: 1
+[2026-01-13T02:06:29.156Z] Magic doubled: 6 -> 12
+[2026-01-13T02:06:29.361Z] Magic doubled: 12 -> 24
+[2026-01-13T02:06:29.466Z] Summoned spirit! Total: 2
+[2026-01-13T02:06:29.877Z] Summoned spirit! Total: 3
+[2026-01-13T02:06:30.188Z] Magic doubled: 24 -> 49
+[2026-01-13T02:06:30.290Z] Summoned spirit! Total: 4
+[2026-01-13T02:06:30.806Z] Summoned spirit! Total: 5
+[2026-01-13T02:06:31.322Z] Summoned spirit! Total: 6
+[2026-01-13T02:06:31.631Z] Magic doubled: 49 -> 100
+[2026-01-13T02:06:31.735Z] ASCENDED! Tower level: 2
+[2026-01-13T02:06:32.043Z] Summoned spirit! Total: 7
+[2026-01-13T02:06:32.663Z] Summoned spirit! Total: 8
+[2026-01-13T02:06:33.279Z] Summoned spirit! Total: 9
+[2026-01-13T02:06:33.900Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:06:34.004Z] Magic doubled: 100 -> 205
+[2026-01-13T02:06:34.106Z] Summoned spirit! Total: 10
+[2026-01-13T02:06:34.931Z] Summoned spirit! Total: 11
+[2026-01-13T02:06:35.004Z] Summoned spirit! Total: 12
+[2026-01-13T02:06:35.933Z] Summoned spirit! Total: 13
+[2026-01-13T02:06:37.066Z] Summoned spirit! Total: 14
+[2026-01-13T02:06:37.378Z] Magic doubled: 205 -> 415
+[2026-01-13T02:06:38.201Z] Step 100: Magic=469, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:06:38.410Z] Summoned spirit! Total: 15
+[2026-01-13T02:06:39.748Z] Summoned spirit! Total: 16
+[2026-01-13T02:06:41.404Z] Summoned spirit! Total: 17
+[2026-01-13T02:06:43.363Z] Step 150: Magic=789, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:06:43.674Z] Magic doubled: 415 -> 830
+[2026-01-13T02:06:43.982Z] Summoned spirit! Total: 18
+[2026-01-13T02:06:45.114Z] Summoned spirit! Total: 19
+[2026-01-13T02:06:45.425Z] ASCENDED! Tower level: 3
+[2026-01-13T02:06:46.350Z] Summoned spirit! Total: 20
+[2026-01-13T02:06:47.794Z] Summoned spirit! Total: 21
+[2026-01-13T02:06:48.514Z] Step 200: Magic=1377, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:06:49.340Z] Summoned spirit! Total: 22
+[2026-01-13T02:06:50.788Z] Magic doubled: 830 -> 1669
+[2026-01-13T02:06:51.821Z] Summoned spirit! Total: 23
+[2026-01-13T02:06:52.850Z] Summoned spirit! Total: 24
+[2026-01-13T02:06:53.676Z] Step 250: Magic=2354, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:06:54.089Z] Summoned spirit! Total: 25
+[2026-01-13T02:06:55.429Z] Summoned spirit! Total: 26
+[2026-01-13T02:06:56.879Z] Summoned spirit! Total: 27
+[2026-01-13T02:06:57.707Z] Magic doubled: 1669 -> 3351
+[2026-01-13T02:06:58.842Z] Step 300: Magic=3773, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:06:58.844Z] 
+=== ITERATION 35 ===
+[2026-01-13T02:06:59.658Z] Summoned spirit! Total: 1
+[2026-01-13T02:06:59.761Z] Magic doubled: 6 -> 12
+[2026-01-13T02:06:59.972Z] Magic doubled: 12 -> 24
+[2026-01-13T02:07:00.075Z] Summoned spirit! Total: 2
+[2026-01-13T02:07:00.490Z] Summoned spirit! Total: 3
+[2026-01-13T02:07:00.798Z] Magic doubled: 24 -> 49
+[2026-01-13T02:07:00.901Z] Summoned spirit! Total: 4
+[2026-01-13T02:07:01.418Z] Summoned spirit! Total: 5
+[2026-01-13T02:07:01.932Z] Summoned spirit! Total: 6
+[2026-01-13T02:07:02.243Z] Magic doubled: 49 -> 100
+[2026-01-13T02:07:02.345Z] ASCENDED! Tower level: 2
+[2026-01-13T02:07:02.656Z] Summoned spirit! Total: 7
+[2026-01-13T02:07:03.274Z] Summoned spirit! Total: 8
+[2026-01-13T02:07:03.895Z] Summoned spirit! Total: 9
+[2026-01-13T02:07:04.138Z] Step 50: Magic=200, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:07:03.762Z] Magic doubled: 100 -> 206
+[2026-01-13T02:07:03.865Z] Summoned spirit! Total: 10
+[2026-01-13T02:07:04.689Z] Summoned spirit! Total: 11
+[2026-01-13T02:07:05.514Z] Summoned spirit! Total: 12
+[2026-01-13T02:07:06.545Z] Summoned spirit! Total: 13
+[2026-01-13T02:07:07.677Z] Summoned spirit! Total: 14
+[2026-01-13T02:07:07.985Z] Magic doubled: 206 -> 416
+[2026-01-13T02:07:08.811Z] Step 100: Magic=470, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:07:09.017Z] Summoned spirit! Total: 15
+[2026-01-13T02:07:10.355Z] Summoned spirit! Total: 16
+[2026-01-13T02:07:12.003Z] Summoned spirit! Total: 17
+[2026-01-13T02:07:13.956Z] Step 150: Magic=790, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:07:14.370Z] Magic doubled: 416 -> 845
+[2026-01-13T02:07:14.578Z] Summoned spirit! Total: 18
+[2026-01-13T02:07:15.711Z] Summoned spirit! Total: 19
+[2026-01-13T02:07:16.018Z] ASCENDED! Tower level: 3
+[2026-01-13T02:07:16.946Z] Summoned spirit! Total: 20
+[2026-01-13T02:07:18.397Z] Summoned spirit! Total: 21
+[2026-01-13T02:07:19.119Z] Step 200: Magic=1378, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:07:19.946Z] Summoned spirit! Total: 22
+[2026-01-13T02:07:21.594Z] Magic doubled: 845 -> 1700
+[2026-01-13T02:07:22.416Z] Summoned spirit! Total: 23
+[2026-01-13T02:07:23.447Z] Summoned spirit! Total: 24
+[2026-01-13T02:07:24.270Z] Step 250: Magic=2348, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:07:24.683Z] Summoned spirit! Total: 25
+[2026-01-13T02:07:26.022Z] Summoned spirit! Total: 26
+[2026-01-13T02:07:27.569Z] Summoned spirit! Total: 27
+[2026-01-13T02:07:28.598Z] Magic doubled: 1700 -> 3428
+[2026-01-13T02:07:29.421Z] Step 300: Magic=3732, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:07:29.426Z] 
+=== ITERATION 36 ===
+[2026-01-13T02:07:30.238Z] Summoned spirit! Total: 1
+[2026-01-13T02:07:30.342Z] Magic doubled: 6 -> 12
+[2026-01-13T02:07:30.549Z] Magic doubled: 12 -> 24
+[2026-01-13T02:07:30.652Z] Summoned spirit! Total: 2
+[2026-01-13T02:07:31.066Z] Summoned spirit! Total: 3
+[2026-01-13T02:07:31.375Z] Magic doubled: 24 -> 50
+[2026-01-13T02:07:31.478Z] Summoned spirit! Total: 4
+[2026-01-13T02:07:31.993Z] Summoned spirit! Total: 5
+[2026-01-13T02:07:32.509Z] Summoned spirit! Total: 6
+[2026-01-13T02:07:32.818Z] Magic doubled: 50 -> 101
+[2026-01-13T02:07:32.920Z] ASCENDED! Tower level: 2
+[2026-01-13T02:07:33.231Z] Summoned spirit! Total: 7
+[2026-01-13T02:07:32.978Z] Summoned spirit! Total: 8
+[2026-01-13T02:07:33.595Z] Summoned spirit! Total: 9
+[2026-01-13T02:07:34.212Z] Step 50: Magic=201, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:07:34.315Z] Summoned spirit! Total: 10
+[2026-01-13T02:07:34.523Z] Magic doubled: 101 -> 208
+[2026-01-13T02:07:35.140Z] Summoned spirit! Total: 11
+[2026-01-13T02:07:36.066Z] Summoned spirit! Total: 12
+[2026-01-13T02:07:37.097Z] Summoned spirit! Total: 13
+[2026-01-13T02:07:38.229Z] Summoned spirit! Total: 14
+[2026-01-13T02:07:38.539Z] Magic doubled: 208 -> 418
+[2026-01-13T02:07:39.361Z] Step 100: Magic=472, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:07:39.465Z] Summoned spirit! Total: 15
+[2026-01-13T02:07:40.914Z] Summoned spirit! Total: 16
+[2026-01-13T02:07:42.463Z] Summoned spirit! Total: 17
+[2026-01-13T02:07:44.525Z] Step 150: Magic=792, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:07:44.938Z] Magic doubled: 418 -> 849
+[2026-01-13T02:07:45.143Z] Summoned spirit! Total: 18
+[2026-01-13T02:07:46.175Z] Summoned spirit! Total: 19
+[2026-01-13T02:07:46.587Z] ASCENDED! Tower level: 3
+[2026-01-13T02:07:47.513Z] Summoned spirit! Total: 20
+[2026-01-13T02:07:48.855Z] Summoned spirit! Total: 21
+[2026-01-13T02:07:49.677Z] Step 200: Magic=1384, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:07:50.400Z] Summoned spirit! Total: 22
+[2026-01-13T02:07:52.153Z] Magic doubled: 849 -> 1704
+[2026-01-13T02:07:52.977Z] Summoned spirit! Total: 23
+[2026-01-13T02:07:54.009Z] Summoned spirit! Total: 24
+[2026-01-13T02:07:54.833Z] Step 250: Magic=2352, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:07:55.246Z] Summoned spirit! Total: 25
+[2026-01-13T02:07:56.588Z] Summoned spirit! Total: 26
+[2026-01-13T02:07:58.029Z] Summoned spirit! Total: 27
+[2026-01-13T02:07:59.163Z] Magic doubled: 1704 -> 3432
+[2026-01-13T02:07:59.990Z] Step 300: Magic=3770, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:07:59.992Z] 
+=== ITERATION 37 ===
+[2026-01-13T02:08:00.805Z] Summoned spirit! Total: 1
+[2026-01-13T02:08:00.908Z] Magic doubled: 6 -> 12
+[2026-01-13T02:08:01.114Z] Magic doubled: 12 -> 24
+[2026-01-13T02:08:01.218Z] Summoned spirit! Total: 2
+[2026-01-13T02:08:01.630Z] Summoned spirit! Total: 3
+[2026-01-13T02:08:01.940Z] Magic doubled: 24 -> 49
+[2026-01-13T02:08:02.043Z] Summoned spirit! Total: 4
+[2026-01-13T02:08:02.559Z] Summoned spirit! Total: 5
+[2026-01-13T02:08:02.198Z] Summoned spirit! Total: 6
+[2026-01-13T02:08:02.507Z] Magic doubled: 49 -> 100
+[2026-01-13T02:08:02.612Z] ASCENDED! Tower level: 2
+[2026-01-13T02:08:02.920Z] Summoned spirit! Total: 7
+[2026-01-13T02:08:03.537Z] Summoned spirit! Total: 8
+[2026-01-13T02:08:04.154Z] Summoned spirit! Total: 9
+[2026-01-13T02:08:04.773Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:08:04.882Z] Magic doubled: 100 -> 205
+[2026-01-13T02:08:04.985Z] Summoned spirit! Total: 10
+[2026-01-13T02:08:05.811Z] Summoned spirit! Total: 11
+[2026-01-13T02:08:06.633Z] Summoned spirit! Total: 12
+[2026-01-13T02:08:07.663Z] Summoned spirit! Total: 13
+[2026-01-13T02:08:08.796Z] Summoned spirit! Total: 14
+[2026-01-13T02:08:09.003Z] Magic doubled: 205 -> 411
+[2026-01-13T02:08:09.932Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:08:10.035Z] Summoned spirit! Total: 15
+[2026-01-13T02:08:11.479Z] Summoned spirit! Total: 16
+[2026-01-13T02:08:13.133Z] Summoned spirit! Total: 17
+[2026-01-13T02:08:15.098Z] Step 150: Magic=790, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:08:15.409Z] Magic doubled: 411 -> 832
+[2026-01-13T02:08:15.717Z] Summoned spirit! Total: 18
+[2026-01-13T02:08:16.854Z] Summoned spirit! Total: 19
+[2026-01-13T02:08:17.165Z] ASCENDED! Tower level: 3
+[2026-01-13T02:08:18.096Z] Summoned spirit! Total: 20
+[2026-01-13T02:08:19.544Z] Summoned spirit! Total: 21
+[2026-01-13T02:08:20.265Z] Step 200: Magic=1378, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:08:21.093Z] Summoned spirit! Total: 22
+[2026-01-13T02:08:22.537Z] Magic doubled: 832 -> 1666
+[2026-01-13T02:08:23.569Z] Summoned spirit! Total: 23
+[2026-01-13T02:08:24.704Z] Summoned spirit! Total: 24
+[2026-01-13T02:08:25.427Z] Step 250: Magic=2334, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:08:25.841Z] Summoned spirit! Total: 25
+[2026-01-13T02:08:27.180Z] Summoned spirit! Total: 26
+[2026-01-13T02:08:28.727Z] Summoned spirit! Total: 27
+[2026-01-13T02:08:29.550Z] Magic doubled: 1666 -> 3360
+[2026-01-13T02:08:30.579Z] Step 300: Magic=3723, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:08:30.582Z] 
+=== ITERATION 38 ===
+[2026-01-13T02:08:31.396Z] Summoned spirit! Total: 1
+[2026-01-13T02:08:31.499Z] Magic doubled: 6 -> 12
+[2026-01-13T02:08:31.705Z] Magic doubled: 12 -> 24
+[2026-01-13T02:08:31.811Z] Summoned spirit! Total: 2
+[2026-01-13T02:08:31.348Z] Summoned spirit! Total: 3
+[2026-01-13T02:08:31.660Z] Magic doubled: 24 -> 49
+[2026-01-13T02:08:31.763Z] Summoned spirit! Total: 4
+[2026-01-13T02:08:32.282Z] Summoned spirit! Total: 5
+[2026-01-13T02:08:32.799Z] Summoned spirit! Total: 6
+[2026-01-13T02:08:33.108Z] Magic doubled: 49 -> 100
+[2026-01-13T02:08:33.211Z] ASCENDED! Tower level: 2
+[2026-01-13T02:08:33.521Z] Summoned spirit! Total: 7
+[2026-01-13T02:08:34.138Z] Summoned spirit! Total: 8
+[2026-01-13T02:08:34.758Z] Summoned spirit! Total: 9
+[2026-01-13T02:08:35.379Z] Step 50: Magic=201, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:08:35.380Z] Magic doubled: 100 -> 201
+[2026-01-13T02:08:35.485Z] Summoned spirit! Total: 10
+[2026-01-13T02:08:36.311Z] Summoned spirit! Total: 11
+[2026-01-13T02:08:37.239Z] Summoned spirit! Total: 12
+[2026-01-13T02:08:38.270Z] Summoned spirit! Total: 13
+[2026-01-13T02:08:39.299Z] Magic doubled: 201 -> 403
+[2026-01-13T02:08:39.405Z] Summoned spirit! Total: 14
+[2026-01-13T02:08:40.542Z] Step 100: Magic=472, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:08:40.647Z] Summoned spirit! Total: 15
+[2026-01-13T02:08:42.091Z] Summoned spirit! Total: 16
+[2026-01-13T02:08:43.637Z] Summoned spirit! Total: 17
+[2026-01-13T02:08:45.695Z] Step 150: Magic=793, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:08:45.802Z] Magic doubled: 403 -> 806
+[2026-01-13T02:08:46.317Z] Summoned spirit! Total: 18
+[2026-01-13T02:08:47.346Z] Summoned spirit! Total: 19
+[2026-01-13T02:08:47.762Z] ASCENDED! Tower level: 3
+[2026-01-13T02:08:48.693Z] Summoned spirit! Total: 20
+[2026-01-13T02:08:50.037Z] Summoned spirit! Total: 21
+[2026-01-13T02:08:50.860Z] Step 200: Magic=1383, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:08:51.583Z] Summoned spirit! Total: 22
+[2026-01-13T02:08:52.717Z] Magic doubled: 806 -> 1616
+[2026-01-13T02:08:54.160Z] Summoned spirit! Total: 23
+[2026-01-13T02:08:55.194Z] Summoned spirit! Total: 24
+[2026-01-13T02:08:56.021Z] Step 250: Magic=2353, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:08:56.435Z] Summoned spirit! Total: 25
+[2026-01-13T02:08:57.773Z] Summoned spirit! Total: 26
+[2026-01-13T02:08:59.216Z] Summoned spirit! Total: 27
+[2026-01-13T02:08:59.728Z] Magic doubled: 1616 -> 3257
+[2026-01-13T02:09:00.324Z] Step 300: Magic=3737, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:09:00.327Z] 
+=== ITERATION 39 ===
+[2026-01-13T02:09:01.141Z] Summoned spirit! Total: 1
+[2026-01-13T02:09:01.244Z] Magic doubled: 6 -> 12
+[2026-01-13T02:09:01.451Z] Magic doubled: 12 -> 24
+[2026-01-13T02:09:01.557Z] Summoned spirit! Total: 2
+[2026-01-13T02:09:01.969Z] Summoned spirit! Total: 3
+[2026-01-13T02:09:02.278Z] Magic doubled: 24 -> 49
+[2026-01-13T02:09:02.381Z] Summoned spirit! Total: 4
+[2026-01-13T02:09:02.896Z] Summoned spirit! Total: 5
+[2026-01-13T02:09:03.411Z] Summoned spirit! Total: 6
+[2026-01-13T02:09:03.721Z] Magic doubled: 49 -> 101
+[2026-01-13T02:09:03.824Z] ASCENDED! Tower level: 2
+[2026-01-13T02:09:04.132Z] Summoned spirit! Total: 7
+[2026-01-13T02:09:04.749Z] Summoned spirit! Total: 8
+[2026-01-13T02:09:05.370Z] Summoned spirit! Total: 9
+[2026-01-13T02:09:05.989Z] Step 50: Magic=200, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:09:06.094Z] Magic doubled: 101 -> 206
+[2026-01-13T02:09:06.198Z] Summoned spirit! Total: 10
+[2026-01-13T02:09:06.923Z] Summoned spirit! Total: 11
+[2026-01-13T02:09:07.850Z] Summoned spirit! Total: 12
+[2026-01-13T02:09:08.880Z] Summoned spirit! Total: 13
+[2026-01-13T02:09:10.016Z] Summoned spirit! Total: 14
+[2026-01-13T02:09:10.325Z] Magic doubled: 206 -> 418
+[2026-01-13T02:09:11.148Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:09:11.255Z] Summoned spirit! Total: 15
+[2026-01-13T02:09:12.695Z] Summoned spirit! Total: 16
+[2026-01-13T02:09:14.246Z] Summoned spirit! Total: 17
+[2026-01-13T02:09:16.310Z] Step 150: Magic=792, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:09:16.724Z] Magic doubled: 418 -> 847
+[2026-01-13T02:09:16.929Z] Summoned spirit! Total: 18
+[2026-01-13T02:09:17.960Z] Summoned spirit! Total: 19
+[2026-01-13T02:09:18.373Z] ASCENDED! Tower level: 3
+[2026-01-13T02:09:19.299Z] Summoned spirit! Total: 20
+[2026-01-13T02:09:20.742Z] Summoned spirit! Total: 21
+[2026-01-13T02:09:21.461Z] Step 200: Magic=1382, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:09:22.288Z] Summoned spirit! Total: 22
+[2026-01-13T02:09:23.935Z] Magic doubled: 847 -> 1702
+[2026-01-13T02:09:24.759Z] Summoned spirit! Total: 23
+[2026-01-13T02:09:25.788Z] Summoned spirit! Total: 24
+[2026-01-13T02:09:26.611Z] Step 250: Magic=2354, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:09:27.025Z] Summoned spirit! Total: 25
+[2026-01-13T02:09:28.360Z] Summoned spirit! Total: 26
+[2026-01-13T02:09:29.802Z] Summoned spirit! Total: 27
+[2026-01-13T02:09:29.970Z] Magic doubled: 1702 -> 3410
+[2026-01-13T02:09:30.899Z] Step 300: Magic=3772, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:09:30.901Z] 
+=== ITERATION 40 ===
+[2026-01-13T02:09:31.715Z] Summoned spirit! Total: 1
+[2026-01-13T02:09:31.818Z] Magic doubled: 6 -> 12
+[2026-01-13T02:09:32.026Z] Magic doubled: 12 -> 24
+[2026-01-13T02:09:32.130Z] Summoned spirit! Total: 2
+[2026-01-13T02:09:32.542Z] Summoned spirit! Total: 3
+[2026-01-13T02:09:32.852Z] Magic doubled: 24 -> 49
+[2026-01-13T02:09:32.955Z] Summoned spirit! Total: 4
+[2026-01-13T02:09:33.469Z] Summoned spirit! Total: 5
+[2026-01-13T02:09:33.985Z] Summoned spirit! Total: 6
+[2026-01-13T02:09:34.295Z] Magic doubled: 49 -> 101
+[2026-01-13T02:09:34.398Z] ASCENDED! Tower level: 2
+[2026-01-13T02:09:34.709Z] Summoned spirit! Total: 7
+[2026-01-13T02:09:35.327Z] Summoned spirit! Total: 8
+[2026-01-13T02:09:35.945Z] Summoned spirit! Total: 9
+[2026-01-13T02:09:36.563Z] Step 50: Magic=201, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:09:36.667Z] Summoned spirit! Total: 10
+[2026-01-13T02:09:36.873Z] Magic doubled: 101 -> 208
+[2026-01-13T02:09:37.493Z] Summoned spirit! Total: 11
+[2026-01-13T02:09:38.423Z] Summoned spirit! Total: 12
+[2026-01-13T02:09:39.456Z] Summoned spirit! Total: 13
+[2026-01-13T02:09:40.593Z] Summoned spirit! Total: 14
+[2026-01-13T02:09:40.901Z] Magic doubled: 208 -> 420
+[2026-01-13T02:09:41.728Z] Step 100: Magic=473, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:09:41.832Z] Summoned spirit! Total: 15
+[2026-01-13T02:09:43.283Z] Summoned spirit! Total: 16
+[2026-01-13T02:09:44.831Z] Summoned spirit! Total: 17
+[2026-01-13T02:09:46.894Z] Step 150: Magic=802, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:09:47.203Z] Magic doubled: 420 -> 843
+[2026-01-13T02:09:47.411Z] Summoned spirit! Total: 18
+[2026-01-13T02:09:48.551Z] Summoned spirit! Total: 19
+[2026-01-13T02:09:48.863Z] ASCENDED! Tower level: 3
+[2026-01-13T02:09:49.893Z] Summoned spirit! Total: 20
+[2026-01-13T02:09:51.238Z] Summoned spirit! Total: 21
+[2026-01-13T02:09:52.068Z] Step 200: Magic=1389, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:09:52.795Z] Summoned spirit! Total: 22
+[2026-01-13T02:09:54.554Z] Magic doubled: 843 -> 1710
+[2026-01-13T02:09:55.383Z] Summoned spirit! Total: 23
+[2026-01-13T02:09:56.417Z] Summoned spirit! Total: 24
+[2026-01-13T02:09:57.245Z] Step 250: Magic=2357, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:09:57.661Z] Summoned spirit! Total: 25
+[2026-01-13T02:09:59.002Z] Summoned spirit! Total: 26
+[2026-01-13T02:09:59.586Z] Summoned spirit! Total: 27
+[2026-01-13T02:10:00.724Z] Magic doubled: 1710 -> 3437
+[2026-01-13T02:10:01.553Z] Step 300: Magic=3771, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:10:01.555Z] 
+=== ITERATION 41 ===
+[2026-01-13T02:10:02.370Z] Summoned spirit! Total: 1
+[2026-01-13T02:10:02.474Z] Magic doubled: 6 -> 12
+[2026-01-13T02:10:02.683Z] Magic doubled: 12 -> 24
+[2026-01-13T02:10:02.786Z] Summoned spirit! Total: 2
+[2026-01-13T02:10:03.200Z] Summoned spirit! Total: 3
+[2026-01-13T02:10:03.508Z] Magic doubled: 24 -> 49
+[2026-01-13T02:10:03.612Z] Summoned spirit! Total: 4
+[2026-01-13T02:10:04.132Z] Summoned spirit! Total: 5
+[2026-01-13T02:10:04.648Z] Summoned spirit! Total: 6
+[2026-01-13T02:10:04.956Z] Magic doubled: 49 -> 100
+[2026-01-13T02:10:05.058Z] ASCENDED! Tower level: 2
+[2026-01-13T02:10:05.372Z] Summoned spirit! Total: 7
+[2026-01-13T02:10:05.997Z] Summoned spirit! Total: 8
+[2026-01-13T02:10:06.617Z] Summoned spirit! Total: 9
+[2026-01-13T02:10:07.237Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:10:07.341Z] Magic doubled: 100 -> 205
+[2026-01-13T02:10:07.452Z] Summoned spirit! Total: 10
+[2026-01-13T02:10:08.283Z] Summoned spirit! Total: 11
+[2026-01-13T02:10:09.211Z] Summoned spirit! Total: 12
+[2026-01-13T02:10:10.140Z] Summoned spirit! Total: 13
+[2026-01-13T02:10:11.282Z] Summoned spirit! Total: 14
+[2026-01-13T02:10:11.591Z] Magic doubled: 205 -> 415
+[2026-01-13T02:10:12.419Z] Step 100: Magic=470, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:10:12.626Z] Summoned spirit! Total: 15
+[2026-01-13T02:10:13.970Z] Summoned spirit! Total: 16
+[2026-01-13T02:10:15.522Z] Summoned spirit! Total: 17
+[2026-01-13T02:10:17.585Z] Step 150: Magic=792, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:10:17.898Z] Magic doubled: 415 -> 833
+[2026-01-13T02:10:18.206Z] Summoned spirit! Total: 18
+[2026-01-13T02:10:19.348Z] Summoned spirit! Total: 19
+[2026-01-13T02:10:19.656Z] ASCENDED! Tower level: 3
+[2026-01-13T02:10:20.587Z] Summoned spirit! Total: 20
+[2026-01-13T02:10:22.030Z] Summoned spirit! Total: 21
+[2026-01-13T02:10:22.752Z] Step 200: Magic=1379, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:10:23.579Z] Summoned spirit! Total: 22
+[2026-01-13T02:10:25.030Z] Magic doubled: 833 -> 1667
+[2026-01-13T02:10:26.063Z] Summoned spirit! Total: 23
+[2026-01-13T02:10:27.197Z] Summoned spirit! Total: 24
+[2026-01-13T02:10:27.918Z] Step 250: Magic=2338, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:10:28.332Z] Summoned spirit! Total: 25
+[2026-01-13T02:10:28.819Z] Summoned spirit! Total: 26
+[2026-01-13T02:10:30.369Z] Summoned spirit! Total: 27
+[2026-01-13T02:10:31.201Z] Magic doubled: 1667 -> 3359
+[2026-01-13T02:10:32.236Z] Step 300: Magic=3722, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:10:32.239Z] 
+=== ITERATION 42 ===
+[2026-01-13T02:10:33.054Z] Summoned spirit! Total: 1
+[2026-01-13T02:10:33.157Z] Magic doubled: 6 -> 12
+[2026-01-13T02:10:33.365Z] Magic doubled: 12 -> 24
+[2026-01-13T02:10:33.468Z] Summoned spirit! Total: 2
+[2026-01-13T02:10:33.880Z] Summoned spirit! Total: 3
+[2026-01-13T02:10:34.189Z] Magic doubled: 24 -> 49
+[2026-01-13T02:10:34.292Z] Summoned spirit! Total: 4
+[2026-01-13T02:10:34.810Z] Summoned spirit! Total: 5
+[2026-01-13T02:10:35.328Z] Summoned spirit! Total: 6
+[2026-01-13T02:10:35.642Z] Magic doubled: 49 -> 100
+[2026-01-13T02:10:35.749Z] ASCENDED! Tower level: 2
+[2026-01-13T02:10:36.057Z] Summoned spirit! Total: 7
+[2026-01-13T02:10:36.676Z] Summoned spirit! Total: 8
+[2026-01-13T02:10:37.298Z] Summoned spirit! Total: 9
+[2026-01-13T02:10:37.917Z] Step 50: Magic=200, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:10:38.021Z] Magic doubled: 100 -> 206
+[2026-01-13T02:10:38.125Z] Summoned spirit! Total: 10
+[2026-01-13T02:10:38.956Z] Summoned spirit! Total: 11
+[2026-01-13T02:10:39.783Z] Summoned spirit! Total: 12
+[2026-01-13T02:10:40.816Z] Summoned spirit! Total: 13
+[2026-01-13T02:10:41.953Z] Summoned spirit! Total: 14
+[2026-01-13T02:10:42.160Z] Magic doubled: 206 -> 413
+[2026-01-13T02:10:43.098Z] Step 100: Magic=474, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:10:43.203Z] Summoned spirit! Total: 15
+[2026-01-13T02:10:44.651Z] Summoned spirit! Total: 16
+[2026-01-13T02:10:46.204Z] Summoned spirit! Total: 17
+[2026-01-13T02:10:48.273Z] Step 150: Magic=801, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:10:48.482Z] Magic doubled: 413 -> 828
+[2026-01-13T02:10:48.792Z] Summoned spirit! Total: 18
+[2026-01-13T02:10:49.926Z] Summoned spirit! Total: 19
+[2026-01-13T02:10:50.237Z] ASCENDED! Tower level: 3
+[2026-01-13T02:10:51.167Z] Summoned spirit! Total: 20
+[2026-01-13T02:10:52.619Z] Summoned spirit! Total: 21
+[2026-01-13T02:10:53.443Z] Step 200: Magic=1396, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:10:54.170Z] Summoned spirit! Total: 22
+[2026-01-13T02:10:55.521Z] Magic doubled: 828 -> 1657
+[2026-01-13T02:10:56.658Z] Summoned spirit! Total: 23
+[2026-01-13T02:10:56.827Z] Summoned spirit! Total: 24
+[2026-01-13T02:10:57.758Z] Step 250: Magic=2380, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:10:58.071Z] Summoned spirit! Total: 25
+[2026-01-13T02:10:59.414Z] Summoned spirit! Total: 26
+[2026-01-13T02:11:00.857Z] Summoned spirit! Total: 27
+[2026-01-13T02:11:01.586Z] Magic doubled: 1657 -> 3319
+[2026-01-13T02:11:02.927Z] Step 300: Magic=3829, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:11:02.934Z] 
+=== ITERATION 43 ===
+[2026-01-13T02:11:03.750Z] Summoned spirit! Total: 1
+[2026-01-13T02:11:03.853Z] Magic doubled: 6 -> 12
+[2026-01-13T02:11:04.058Z] Magic doubled: 12 -> 24
+[2026-01-13T02:11:04.163Z] Summoned spirit! Total: 2
+[2026-01-13T02:11:04.574Z] Summoned spirit! Total: 3
+[2026-01-13T02:11:04.886Z] Magic doubled: 24 -> 49
+[2026-01-13T02:11:04.989Z] Summoned spirit! Total: 4
+[2026-01-13T02:11:05.504Z] Summoned spirit! Total: 5
+[2026-01-13T02:11:06.020Z] Summoned spirit! Total: 6
+[2026-01-13T02:11:06.330Z] Magic doubled: 49 -> 100
+[2026-01-13T02:11:06.435Z] ASCENDED! Tower level: 2
+[2026-01-13T02:11:06.747Z] Summoned spirit! Total: 7
+[2026-01-13T02:11:07.369Z] Summoned spirit! Total: 8
+[2026-01-13T02:11:07.989Z] Summoned spirit! Total: 9
+[2026-01-13T02:11:08.607Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:11:08.713Z] Magic doubled: 100 -> 205
+[2026-01-13T02:11:08.817Z] Summoned spirit! Total: 10
+[2026-01-13T02:11:09.641Z] Summoned spirit! Total: 11
+[2026-01-13T02:11:10.571Z] Summoned spirit! Total: 12
+[2026-01-13T02:11:11.503Z] Summoned spirit! Total: 13
+[2026-01-13T02:11:12.642Z] Summoned spirit! Total: 14
+[2026-01-13T02:11:12.953Z] Magic doubled: 205 -> 415
+[2026-01-13T02:11:13.776Z] Step 100: Magic=469, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:11:13.985Z] Summoned spirit! Total: 15
+[2026-01-13T02:11:15.325Z] Summoned spirit! Total: 16
+[2026-01-13T02:11:16.983Z] Summoned spirit! Total: 17
+[2026-01-13T02:11:18.942Z] Step 150: Magic=789, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:11:19.357Z] Magic doubled: 415 -> 844
+[2026-01-13T02:11:19.568Z] Summoned spirit! Total: 18
+[2026-01-13T02:11:20.706Z] Summoned spirit! Total: 19
+[2026-01-13T02:11:21.017Z] ASCENDED! Tower level: 3
+[2026-01-13T02:11:21.944Z] Summoned spirit! Total: 20
+[2026-01-13T02:11:23.391Z] Summoned spirit! Total: 21
+[2026-01-13T02:11:24.117Z] Step 200: Magic=1381, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:11:24.943Z] Summoned spirit! Total: 22
+[2026-01-13T02:11:26.592Z] Magic doubled: 844 -> 1701
+[2026-01-13T02:11:26.449Z] Summoned spirit! Total: 23
+[2026-01-13T02:11:27.481Z] Summoned spirit! Total: 24
+[2026-01-13T02:11:28.309Z] Step 250: Magic=2354, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:11:28.727Z] Summoned spirit! Total: 25
+[2026-01-13T02:11:30.070Z] Summoned spirit! Total: 26
+[2026-01-13T02:11:31.516Z] Summoned spirit! Total: 27
+[2026-01-13T02:11:32.552Z] Magic doubled: 1701 -> 3409
+[2026-01-13T02:11:33.484Z] Step 300: Magic=3782, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:11:33.487Z] 
+=== ITERATION 44 ===
+[2026-01-13T02:11:34.300Z] Summoned spirit! Total: 1
+[2026-01-13T02:11:34.403Z] Magic doubled: 6 -> 12
+[2026-01-13T02:11:34.610Z] Magic doubled: 12 -> 24
+[2026-01-13T02:11:34.713Z] Summoned spirit! Total: 2
+[2026-01-13T02:11:35.127Z] Summoned spirit! Total: 3
+[2026-01-13T02:11:35.434Z] Magic doubled: 24 -> 49
+[2026-01-13T02:11:35.538Z] Summoned spirit! Total: 4
+[2026-01-13T02:11:36.061Z] Summoned spirit! Total: 5
+[2026-01-13T02:11:36.578Z] Summoned spirit! Total: 6
+[2026-01-13T02:11:36.886Z] Magic doubled: 49 -> 100
+[2026-01-13T02:11:36.991Z] ASCENDED! Tower level: 2
+[2026-01-13T02:11:37.301Z] Summoned spirit! Total: 7
+[2026-01-13T02:11:37.920Z] Summoned spirit! Total: 8
+[2026-01-13T02:11:38.537Z] Summoned spirit! Total: 9
+[2026-01-13T02:11:39.158Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:11:39.262Z] Magic doubled: 100 -> 205
+[2026-01-13T02:11:39.365Z] Summoned spirit! Total: 10
+[2026-01-13T02:11:40.191Z] Summoned spirit! Total: 11
+[2026-01-13T02:11:41.015Z] Summoned spirit! Total: 12
+[2026-01-13T02:11:42.045Z] Summoned spirit! Total: 13
+[2026-01-13T02:11:43.183Z] Summoned spirit! Total: 14
+[2026-01-13T02:11:43.392Z] Magic doubled: 205 -> 412
+[2026-01-13T02:11:44.319Z] Step 100: Magic=472, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:11:44.433Z] Summoned spirit! Total: 15
+[2026-01-13T02:11:45.878Z] Summoned spirit! Total: 16
+[2026-01-13T02:11:47.423Z] Summoned spirit! Total: 17
+[2026-01-13T02:11:49.481Z] Step 150: Magic=792, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:11:49.792Z] Magic doubled: 412 -> 833
+[2026-01-13T02:11:50.100Z] Summoned spirit! Total: 18
+[2026-01-13T02:11:51.232Z] Summoned spirit! Total: 19
+[2026-01-13T02:11:51.545Z] ASCENDED! Tower level: 3
+[2026-01-13T02:11:52.479Z] Summoned spirit! Total: 20
+[2026-01-13T02:11:53.926Z] Summoned spirit! Total: 21
+[2026-01-13T02:11:54.647Z] Step 200: Magic=1384, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:11:55.376Z] Summoned spirit! Total: 22
+[2026-01-13T02:11:56.156Z] Magic doubled: 833 -> 1671
+[2026-01-13T02:11:57.187Z] Summoned spirit! Total: 23
+[2026-01-13T02:11:58.218Z] Summoned spirit! Total: 24
+[2026-01-13T02:11:59.045Z] Step 250: Magic=2361, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:11:59.354Z] Summoned spirit! Total: 25
+[2026-01-13T02:12:00.703Z] Summoned spirit! Total: 26
+[2026-01-13T02:12:02.251Z] Summoned spirit! Total: 27
+[2026-01-13T02:12:03.077Z] Magic doubled: 1671 -> 3358
+[2026-01-13T02:12:04.209Z] Step 300: Magic=3780, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:12:04.214Z] 
+=== ITERATION 45 ===
+[2026-01-13T02:12:05.028Z] Summoned spirit! Total: 1
+[2026-01-13T02:12:05.131Z] Magic doubled: 6 -> 12
+[2026-01-13T02:12:05.336Z] Magic doubled: 12 -> 24
+[2026-01-13T02:12:05.439Z] Summoned spirit! Total: 2
+[2026-01-13T02:12:05.853Z] Summoned spirit! Total: 3
+[2026-01-13T02:12:06.164Z] Magic doubled: 24 -> 49
+[2026-01-13T02:12:06.266Z] Summoned spirit! Total: 4
+[2026-01-13T02:12:06.783Z] Summoned spirit! Total: 5
+[2026-01-13T02:12:07.302Z] Summoned spirit! Total: 6
+[2026-01-13T02:12:07.614Z] Magic doubled: 49 -> 102
+[2026-01-13T02:12:07.717Z] ASCENDED! Tower level: 2
+[2026-01-13T02:12:08.028Z] Summoned spirit! Total: 7
+[2026-01-13T02:12:08.647Z] Summoned spirit! Total: 8
+[2026-01-13T02:12:09.265Z] Summoned spirit! Total: 9
+[2026-01-13T02:12:09.884Z] Step 50: Magic=201, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:12:09.988Z] Summoned spirit! Total: 10
+[2026-01-13T02:12:10.196Z] Magic doubled: 102 -> 208
+[2026-01-13T02:12:10.814Z] Summoned spirit! Total: 11
+[2026-01-13T02:12:11.740Z] Summoned spirit! Total: 12
+[2026-01-13T02:12:12.781Z] Summoned spirit! Total: 13
+[2026-01-13T02:12:13.916Z] Summoned spirit! Total: 14
+[2026-01-13T02:12:14.225Z] Magic doubled: 208 -> 418
+[2026-01-13T02:12:15.049Z] Step 100: Magic=472, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:12:15.152Z] Summoned spirit! Total: 15
+[2026-01-13T02:12:16.596Z] Summoned spirit! Total: 16
+[2026-01-13T02:12:18.138Z] Summoned spirit! Total: 17
+[2026-01-13T02:12:20.203Z] Step 150: Magic=803, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:12:20.516Z] Magic doubled: 418 -> 846
+[2026-01-13T02:12:20.726Z] Summoned spirit! Total: 18
+[2026-01-13T02:12:21.862Z] Summoned spirit! Total: 19
+[2026-01-13T02:12:22.170Z] ASCENDED! Tower level: 3
+[2026-01-13T02:12:23.100Z] Summoned spirit! Total: 20
+[2026-01-13T02:12:24.541Z] Summoned spirit! Total: 21
+[2026-01-13T02:12:24.507Z] Step 200: Magic=1393, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:12:25.236Z] Summoned spirit! Total: 22
+[2026-01-13T02:12:26.991Z] Magic doubled: 846 -> 1713
+[2026-01-13T02:12:27.711Z] Summoned spirit! Total: 23
+[2026-01-13T02:12:28.846Z] Summoned spirit! Total: 24
+[2026-01-13T02:12:29.671Z] Step 250: Magic=2361, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:12:29.983Z] Summoned spirit! Total: 25
+[2026-01-13T02:12:31.321Z] Summoned spirit! Total: 26
+[2026-01-13T02:12:32.866Z] Summoned spirit! Total: 27
+[2026-01-13T02:12:34.001Z] Magic doubled: 1713 -> 3442
+[2026-01-13T02:12:34.829Z] Step 300: Magic=3775, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:12:34.835Z] 
+=== ITERATION 46 ===
+[2026-01-13T02:12:35.645Z] Summoned spirit! Total: 1
+[2026-01-13T02:12:35.750Z] Magic doubled: 6 -> 12
+[2026-01-13T02:12:35.956Z] Magic doubled: 12 -> 24
+[2026-01-13T02:12:36.059Z] Summoned spirit! Total: 2
+[2026-01-13T02:12:36.473Z] Summoned spirit! Total: 3
+[2026-01-13T02:12:36.783Z] Magic doubled: 24 -> 50
+[2026-01-13T02:12:36.887Z] Summoned spirit! Total: 4
+[2026-01-13T02:12:37.405Z] Summoned spirit! Total: 5
+[2026-01-13T02:12:37.923Z] Summoned spirit! Total: 6
+[2026-01-13T02:12:38.234Z] Magic doubled: 50 -> 102
+[2026-01-13T02:12:38.337Z] ASCENDED! Tower level: 2
+[2026-01-13T02:12:38.647Z] Summoned spirit! Total: 7
+[2026-01-13T02:12:39.268Z] Summoned spirit! Total: 8
+[2026-01-13T02:12:39.887Z] Summoned spirit! Total: 9
+[2026-01-13T02:12:40.505Z] Step 50: Magic=201, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:12:40.609Z] Summoned spirit! Total: 10
+[2026-01-13T02:12:40.816Z] Magic doubled: 102 -> 208
+[2026-01-13T02:12:41.437Z] Summoned spirit! Total: 11
+[2026-01-13T02:12:42.370Z] Summoned spirit! Total: 12
+[2026-01-13T02:12:43.404Z] Summoned spirit! Total: 13
+[2026-01-13T02:12:44.541Z] Summoned spirit! Total: 14
+[2026-01-13T02:12:44.854Z] Magic doubled: 208 -> 421
+[2026-01-13T02:12:45.682Z] Step 100: Magic=474, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:12:45.787Z] Summoned spirit! Total: 15
+[2026-01-13T02:12:47.127Z] Summoned spirit! Total: 16
+[2026-01-13T02:12:48.789Z] Summoned spirit! Total: 17
+[2026-01-13T02:12:50.854Z] Step 150: Magic=804, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:12:51.167Z] Magic doubled: 421 -> 845
+[2026-01-13T02:12:51.374Z] Summoned spirit! Total: 18
+[2026-01-13T02:12:52.512Z] Summoned spirit! Total: 19
+[2026-01-13T02:12:52.824Z] ASCENDED! Tower level: 3
+[2026-01-13T02:12:53.754Z] Summoned spirit! Total: 20
+[2026-01-13T02:12:54.335Z] Summoned spirit! Total: 21
+[2026-01-13T02:12:55.163Z] Step 200: Magic=1392, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:12:55.884Z] Summoned spirit! Total: 22
+[2026-01-13T02:12:57.635Z] Magic doubled: 845 -> 1712
+[2026-01-13T02:12:58.460Z] Summoned spirit! Total: 23
+[2026-01-13T02:12:59.500Z] Summoned spirit! Total: 24
+[2026-01-13T02:13:00.325Z] Step 250: Magic=2359, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:13:00.637Z] Summoned spirit! Total: 25
+[2026-01-13T02:13:01.979Z] Summoned spirit! Total: 26
+[2026-01-13T02:13:03.527Z] Summoned spirit! Total: 27
+[2026-01-13T02:13:04.658Z] Magic doubled: 1712 -> 3450
+[2026-01-13T02:13:05.496Z] Step 300: Magic=3785, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:13:05.499Z] 
+=== ITERATION 47 ===
+[2026-01-13T02:13:06.312Z] Summoned spirit! Total: 1
+[2026-01-13T02:13:06.415Z] Magic doubled: 6 -> 12
+[2026-01-13T02:13:06.620Z] Magic doubled: 12 -> 24
+[2026-01-13T02:13:06.723Z] Summoned spirit! Total: 2
+[2026-01-13T02:13:07.136Z] Summoned spirit! Total: 3
+[2026-01-13T02:13:07.447Z] Magic doubled: 24 -> 49
+[2026-01-13T02:13:07.549Z] Summoned spirit! Total: 4
+[2026-01-13T02:13:08.065Z] Summoned spirit! Total: 5
+[2026-01-13T02:13:08.582Z] Summoned spirit! Total: 6
+[2026-01-13T02:13:08.890Z] Magic doubled: 49 -> 100
+[2026-01-13T02:13:08.996Z] ASCENDED! Tower level: 2
+[2026-01-13T02:13:09.306Z] Summoned spirit! Total: 7
+[2026-01-13T02:13:09.931Z] Summoned spirit! Total: 8
+[2026-01-13T02:13:10.551Z] Summoned spirit! Total: 9
+[2026-01-13T02:13:11.169Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:13:11.273Z] Magic doubled: 100 -> 205
+[2026-01-13T02:13:11.378Z] Summoned spirit! Total: 10
+[2026-01-13T02:13:12.204Z] Summoned spirit! Total: 11
+[2026-01-13T02:13:13.134Z] Summoned spirit! Total: 12
+[2026-01-13T02:13:14.064Z] Summoned spirit! Total: 13
+[2026-01-13T02:13:15.200Z] Summoned spirit! Total: 14
+[2026-01-13T02:13:15.512Z] Magic doubled: 205 -> 415
+[2026-01-13T02:13:16.336Z] Step 100: Magic=469, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:13:16.545Z] Summoned spirit! Total: 15
+[2026-01-13T02:13:17.886Z] Summoned spirit! Total: 16
+[2026-01-13T02:13:19.536Z] Summoned spirit! Total: 17
+[2026-01-13T02:13:21.504Z] Step 150: Magic=788, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:13:21.918Z] Magic doubled: 415 -> 843
+[2026-01-13T02:13:22.123Z] Summoned spirit! Total: 18
+[2026-01-13T02:13:23.263Z] Summoned spirit! Total: 19
+[2026-01-13T02:13:22.674Z] ASCENDED! Tower level: 3
+[2026-01-13T02:13:23.604Z] Summoned spirit! Total: 20
+[2026-01-13T02:13:25.050Z] Summoned spirit! Total: 21
+[2026-01-13T02:13:25.769Z] Step 200: Magic=1383, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:13:26.497Z] Summoned spirit! Total: 22
+[2026-01-13T02:13:28.250Z] Magic doubled: 843 -> 1703
+[2026-01-13T02:13:29.078Z] Summoned spirit! Total: 23
+[2026-01-13T02:13:30.109Z] Summoned spirit! Total: 24
+[2026-01-13T02:13:30.935Z] Step 250: Magic=2351, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:13:31.351Z] Summoned spirit! Total: 25
+[2026-01-13T02:13:32.698Z] Summoned spirit! Total: 26
+[2026-01-13T02:13:34.148Z] Summoned spirit! Total: 27
+[2026-01-13T02:13:35.287Z] Magic doubled: 1703 -> 3431
+[2026-01-13T02:13:36.115Z] Step 300: Magic=3735, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:13:36.119Z] 
+=== ITERATION 48 ===
+[2026-01-13T02:13:36.933Z] Summoned spirit! Total: 1
+[2026-01-13T02:13:37.036Z] Magic doubled: 6 -> 12
+[2026-01-13T02:13:37.241Z] Magic doubled: 12 -> 24
+[2026-01-13T02:13:37.346Z] Summoned spirit! Total: 2
+[2026-01-13T02:13:37.757Z] Summoned spirit! Total: 3
+[2026-01-13T02:13:38.068Z] Magic doubled: 24 -> 49
+[2026-01-13T02:13:38.170Z] Summoned spirit! Total: 4
+[2026-01-13T02:13:38.686Z] Summoned spirit! Total: 5
+[2026-01-13T02:13:39.202Z] Summoned spirit! Total: 6
+[2026-01-13T02:13:39.513Z] Magic doubled: 49 -> 100
+[2026-01-13T02:13:39.617Z] ASCENDED! Tower level: 2
+[2026-01-13T02:13:39.927Z] Summoned spirit! Total: 7
+[2026-01-13T02:13:40.550Z] Summoned spirit! Total: 8
+[2026-01-13T02:13:41.168Z] Summoned spirit! Total: 9
+[2026-01-13T02:13:41.787Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:13:41.891Z] Magic doubled: 100 -> 205
+[2026-01-13T02:13:41.997Z] Summoned spirit! Total: 10
+[2026-01-13T02:13:42.822Z] Summoned spirit! Total: 11
+[2026-01-13T02:13:43.751Z] Summoned spirit! Total: 12
+[2026-01-13T02:13:44.680Z] Summoned spirit! Total: 13
+[2026-01-13T02:13:45.816Z] Summoned spirit! Total: 14
+[2026-01-13T02:13:46.023Z] Magic doubled: 205 -> 411
+[2026-01-13T02:13:46.956Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:13:47.062Z] Summoned spirit! Total: 15
+[2026-01-13T02:13:48.505Z] Summoned spirit! Total: 16
+[2026-01-13T02:13:50.158Z] Summoned spirit! Total: 17
+[2026-01-13T02:13:52.123Z] Step 150: Magic=792, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:13:52.047Z] Magic doubled: 411 -> 833
+[2026-01-13T02:13:51.870Z] Summoned spirit! Total: 18
+[2026-01-13T02:13:52.906Z] Summoned spirit! Total: 19
+[2026-01-13T02:13:53.320Z] ASCENDED! Tower level: 3
+[2026-01-13T02:13:54.246Z] Summoned spirit! Total: 20
+[2026-01-13T02:13:55.691Z] Summoned spirit! Total: 21
+[2026-01-13T02:13:56.414Z] Step 200: Magic=1381, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:13:57.244Z] Summoned spirit! Total: 22
+[2026-01-13T02:13:58.690Z] Magic doubled: 833 -> 1669
+[2026-01-13T02:13:59.726Z] Summoned spirit! Total: 23
+[2026-01-13T02:14:00.759Z] Summoned spirit! Total: 24
+[2026-01-13T02:14:01.582Z] Step 250: Magic=2358, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:14:01.999Z] Summoned spirit! Total: 25
+[2026-01-13T02:14:03.345Z] Summoned spirit! Total: 26
+[2026-01-13T02:14:04.792Z] Summoned spirit! Total: 27
+[2026-01-13T02:14:05.616Z] Magic doubled: 1669 -> 3355
+[2026-01-13T02:14:06.757Z] Step 300: Magic=3782, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:14:06.760Z] 
+=== ITERATION 49 ===
+[2026-01-13T02:14:07.575Z] Summoned spirit! Total: 1
+[2026-01-13T02:14:07.781Z] Magic doubled: 7 -> 19
+[2026-01-13T02:14:07.989Z] Summoned spirit! Total: 2
+[2026-01-13T02:14:08.403Z] Summoned spirit! Total: 3
+[2026-01-13T02:14:08.608Z] Magic doubled: 19 -> 44
+[2026-01-13T02:14:08.814Z] Summoned spirit! Total: 4
+[2026-01-13T02:14:09.335Z] Summoned spirit! Total: 5
+[2026-01-13T02:14:09.747Z] Magic doubled: 44 -> 88
+[2026-01-13T02:14:09.853Z] Summoned spirit! Total: 6
+[2026-01-13T02:14:10.264Z] ASCENDED! Tower level: 2
+[2026-01-13T02:14:10.575Z] Summoned spirit! Total: 7
+[2026-01-13T02:14:11.193Z] Summoned spirit! Total: 8
+[2026-01-13T02:14:11.811Z] Summoned spirit! Total: 9
+[2026-01-13T02:14:12.124Z] Magic doubled: 88 -> 181
+[2026-01-13T02:14:12.432Z] Step 50: Magic=201, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:14:12.540Z] Summoned spirit! Total: 10
+[2026-01-13T02:14:13.369Z] Summoned spirit! Total: 11
+[2026-01-13T02:14:14.297Z] Summoned spirit! Total: 12
+[2026-01-13T02:14:15.330Z] Summoned spirit! Total: 13
+[2026-01-13T02:14:15.743Z] Magic doubled: 181 -> 365
+[2026-01-13T02:14:16.463Z] Summoned spirit! Total: 14
+[2026-01-13T02:14:17.598Z] Step 100: Magic=473, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:14:17.705Z] Summoned spirit! Total: 15
+[2026-01-13T02:14:19.154Z] Summoned spirit! Total: 16
+[2026-01-13T02:14:20.697Z] Summoned spirit! Total: 17
+[2026-01-13T02:14:21.187Z] Magic doubled: 365 -> 731
+[2026-01-13T02:14:21.909Z] Step 150: Magic=801, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:14:22.432Z] Summoned spirit! Total: 18
+[2026-01-13T02:14:23.571Z] Summoned spirit! Total: 19
+[2026-01-13T02:14:23.878Z] ASCENDED! Tower level: 3
+[2026-01-13T02:14:24.808Z] Summoned spirit! Total: 20
+[2026-01-13T02:14:26.251Z] Summoned spirit! Total: 21
+[2026-01-13T02:14:27.077Z] Step 200: Magic=1391, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:14:27.702Z] Magic doubled: 731 -> 1476
+[2026-01-13T02:14:27.805Z] Summoned spirit! Total: 22
+[2026-01-13T02:14:30.277Z] Summoned spirit! Total: 23
+[2026-01-13T02:14:31.411Z] Summoned spirit! Total: 24
+[2026-01-13T02:14:32.238Z] Step 250: Magic=2361, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:14:32.548Z] Summoned spirit! Total: 25
+[2026-01-13T02:14:33.886Z] Summoned spirit! Total: 26
+[2026-01-13T02:14:34.710Z] Magic doubled: 1476 -> 2967
+[2026-01-13T02:14:35.440Z] Summoned spirit! Total: 27
+[2026-01-13T02:14:37.400Z] Step 300: Magic=3785, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:14:37.403Z] 
+=== ITERATION 50 ===
+[2026-01-13T02:14:38.217Z] Summoned spirit! Total: 1
+[2026-01-13T02:14:38.321Z] Magic doubled: 6 -> 12
+[2026-01-13T02:14:38.527Z] Magic doubled: 12 -> 24
+[2026-01-13T02:14:38.634Z] Summoned spirit! Total: 2
+[2026-01-13T02:14:39.045Z] Summoned spirit! Total: 3
+[2026-01-13T02:14:39.356Z] Magic doubled: 24 -> 49
+[2026-01-13T02:14:39.459Z] Summoned spirit! Total: 4
+[2026-01-13T02:14:39.974Z] Summoned spirit! Total: 5
+[2026-01-13T02:14:40.490Z] Summoned spirit! Total: 6
+[2026-01-13T02:14:40.801Z] Magic doubled: 49 -> 100
+[2026-01-13T02:14:40.903Z] ASCENDED! Tower level: 2
+[2026-01-13T02:14:41.211Z] Summoned spirit! Total: 7
+[2026-01-13T02:14:41.829Z] Summoned spirit! Total: 8
+[2026-01-13T02:14:42.449Z] Summoned spirit! Total: 9
+[2026-01-13T02:14:43.067Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:14:43.171Z] Magic doubled: 100 -> 205
+[2026-01-13T02:14:43.274Z] Summoned spirit! Total: 10
+[2026-01-13T02:14:44.101Z] Summoned spirit! Total: 11
+[2026-01-13T02:14:44.924Z] Summoned spirit! Total: 12
+[2026-01-13T02:14:45.955Z] Summoned spirit! Total: 13
+[2026-01-13T02:14:47.087Z] Summoned spirit! Total: 14
+[2026-01-13T02:14:47.292Z] Magic doubled: 205 -> 411
+[2026-01-13T02:14:48.227Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:14:48.334Z] Summoned spirit! Total: 15
+[2026-01-13T02:14:49.778Z] Summoned spirit! Total: 16
+[2026-01-13T02:14:50.465Z] Summoned spirit! Total: 17
+[2026-01-13T02:14:52.531Z] Step 150: Magic=793, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:14:52.840Z] Magic doubled: 411 -> 834
+[2026-01-13T02:14:53.150Z] Summoned spirit! Total: 18
+[2026-01-13T02:14:54.182Z] Summoned spirit! Total: 19
+[2026-01-13T02:14:54.596Z] ASCENDED! Tower level: 3
+[2026-01-13T02:14:55.531Z] Summoned spirit! Total: 20
+[2026-01-13T02:14:56.873Z] Summoned spirit! Total: 21
+[2026-01-13T02:14:57.700Z] Step 200: Magic=1383, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:14:58.422Z] Summoned spirit! Total: 22
+[2026-01-13T02:14:59.975Z] Magic doubled: 834 -> 1670
+[2026-01-13T02:15:01.007Z] Summoned spirit! Total: 23
+[2026-01-13T02:15:02.038Z] Summoned spirit! Total: 24
+[2026-01-13T02:15:02.864Z] Step 250: Magic=2355, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:15:03.280Z] Summoned spirit! Total: 25
+[2026-01-13T02:15:04.626Z] Summoned spirit! Total: 26
+[2026-01-13T02:15:06.071Z] Summoned spirit! Total: 27
+[2026-01-13T02:15:06.898Z] Magic doubled: 1670 -> 3347
+[2026-01-13T02:15:08.033Z] Step 300: Magic=3749, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:15:08.037Z] 
+=== ITERATION 51 ===
+[2026-01-13T02:15:08.851Z] Summoned spirit! Total: 1
+[2026-01-13T02:15:08.953Z] Magic doubled: 6 -> 12
+[2026-01-13T02:15:09.164Z] Magic doubled: 12 -> 25
+[2026-01-13T02:15:09.267Z] Summoned spirit! Total: 2
+[2026-01-13T02:15:09.680Z] Summoned spirit! Total: 3
+[2026-01-13T02:15:10.090Z] Summoned spirit! Total: 4
+[2026-01-13T02:15:10.195Z] Magic doubled: 25 -> 50
+[2026-01-13T02:15:10.612Z] Summoned spirit! Total: 5
+[2026-01-13T02:15:11.130Z] Summoned spirit! Total: 6
+[2026-01-13T02:15:11.439Z] Magic doubled: 50 -> 101
+[2026-01-13T02:15:11.542Z] ASCENDED! Tower level: 2
+[2026-01-13T02:15:11.854Z] Summoned spirit! Total: 7
+[2026-01-13T02:15:12.472Z] Summoned spirit! Total: 8
+[2026-01-13T02:15:13.090Z] Summoned spirit! Total: 9
+[2026-01-13T02:15:13.712Z] Step 50: Magic=200, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:15:13.817Z] Magic doubled: 101 -> 206
+[2026-01-13T02:15:13.920Z] Summoned spirit! Total: 10
+[2026-01-13T02:15:14.749Z] Summoned spirit! Total: 11
+[2026-01-13T02:15:15.579Z] Summoned spirit! Total: 12
+[2026-01-13T02:15:16.608Z] Summoned spirit! Total: 13
+[2026-01-13T02:15:17.743Z] Summoned spirit! Total: 14
+[2026-01-13T02:15:18.055Z] Magic doubled: 206 -> 416
+[2026-01-13T02:15:18.885Z] Step 100: Magic=471, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:15:18.989Z] Summoned spirit! Total: 15
+[2026-01-13T02:15:19.310Z] Summoned spirit! Total: 16
+[2026-01-13T02:15:20.859Z] Summoned spirit! Total: 17
+[2026-01-13T02:15:22.930Z] Step 150: Magic=801, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:15:23.242Z] Magic doubled: 416 -> 842
+[2026-01-13T02:15:23.447Z] Summoned spirit! Total: 18
+[2026-01-13T02:15:24.581Z] Summoned spirit! Total: 19
+[2026-01-13T02:15:24.894Z] ASCENDED! Tower level: 3
+[2026-01-13T02:15:25.930Z] Summoned spirit! Total: 20
+[2026-01-13T02:15:27.274Z] Summoned spirit! Total: 21
+[2026-01-13T02:15:28.098Z] Step 200: Magic=1391, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:15:28.828Z] Summoned spirit! Total: 22
+[2026-01-13T02:15:30.481Z] Magic doubled: 842 -> 1704
+[2026-01-13T02:15:31.308Z] Summoned spirit! Total: 23
+[2026-01-13T02:15:32.346Z] Summoned spirit! Total: 24
+[2026-01-13T02:15:33.279Z] Step 250: Magic=2385, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:15:33.591Z] Summoned spirit! Total: 25
+[2026-01-13T02:15:34.931Z] Summoned spirit! Total: 26
+[2026-01-13T02:15:36.377Z] Summoned spirit! Total: 27
+[2026-01-13T02:15:37.412Z] Magic doubled: 1704 -> 3417
+[2026-01-13T02:15:38.445Z] Step 300: Magic=3848, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:15:38.447Z] 
+=== ITERATION 52 ===
+[2026-01-13T02:15:39.262Z] Summoned spirit! Total: 1
+[2026-01-13T02:15:39.365Z] Magic doubled: 6 -> 12
+[2026-01-13T02:15:39.574Z] Magic doubled: 12 -> 24
+[2026-01-13T02:15:39.677Z] Summoned spirit! Total: 2
+[2026-01-13T02:15:40.091Z] Summoned spirit! Total: 3
+[2026-01-13T02:15:40.402Z] Magic doubled: 24 -> 49
+[2026-01-13T02:15:40.506Z] Summoned spirit! Total: 4
+[2026-01-13T02:15:41.023Z] Summoned spirit! Total: 5
+[2026-01-13T02:15:41.539Z] Summoned spirit! Total: 6
+[2026-01-13T02:15:41.846Z] Magic doubled: 49 -> 100
+[2026-01-13T02:15:41.953Z] ASCENDED! Tower level: 2
+[2026-01-13T02:15:42.263Z] Summoned spirit! Total: 7
+[2026-01-13T02:15:42.889Z] Summoned spirit! Total: 8
+[2026-01-13T02:15:43.508Z] Summoned spirit! Total: 9
+[2026-01-13T02:15:44.129Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:15:44.236Z] Magic doubled: 100 -> 205
+[2026-01-13T02:15:44.340Z] Summoned spirit! Total: 10
+[2026-01-13T02:15:45.171Z] Summoned spirit! Total: 11
+[2026-01-13T02:15:46.098Z] Summoned spirit! Total: 12
+[2026-01-13T02:15:47.026Z] Summoned spirit! Total: 13
+[2026-01-13T02:15:48.160Z] Summoned spirit! Total: 14
+[2026-01-13T02:15:48.472Z] Magic doubled: 205 -> 416
+[2026-01-13T02:15:48.686Z] Step 100: Magic=470, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:15:48.895Z] Summoned spirit! Total: 15
+[2026-01-13T02:15:50.233Z] Summoned spirit! Total: 16
+[2026-01-13T02:15:51.891Z] Summoned spirit! Total: 17
+[2026-01-13T02:15:53.852Z] Step 150: Magic=791, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:15:54.267Z] Magic doubled: 416 -> 845
+[2026-01-13T02:15:54.474Z] Summoned spirit! Total: 18
+[2026-01-13T02:15:55.512Z] Summoned spirit! Total: 19
+[2026-01-13T02:15:55.926Z] ASCENDED! Tower level: 3
+[2026-01-13T02:15:56.852Z] Summoned spirit! Total: 20
+[2026-01-13T02:15:58.299Z] Summoned spirit! Total: 21
+[2026-01-13T02:15:59.027Z] Step 200: Magic=1383, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:15:59.752Z] Summoned spirit! Total: 22
+[2026-01-13T02:16:01.511Z] Magic doubled: 845 -> 1703
+[2026-01-13T02:16:02.334Z] Summoned spirit! Total: 23
+[2026-01-13T02:16:03.371Z] Summoned spirit! Total: 24
+[2026-01-13T02:16:04.202Z] Step 250: Magic=2360, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:16:04.514Z] Summoned spirit! Total: 25
+[2026-01-13T02:16:05.854Z] Summoned spirit! Total: 26
+[2026-01-13T02:16:07.412Z] Summoned spirit! Total: 27
+[2026-01-13T02:16:08.446Z] Magic doubled: 1703 -> 3416
+[2026-01-13T02:16:09.370Z] Step 300: Magic=3779, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:16:09.376Z] 
+=== ITERATION 53 ===
+[2026-01-13T02:16:10.191Z] Summoned spirit! Total: 1
+[2026-01-13T02:16:10.295Z] Magic doubled: 6 -> 12
+[2026-01-13T02:16:10.501Z] Magic doubled: 12 -> 24
+[2026-01-13T02:16:10.603Z] Summoned spirit! Total: 2
+[2026-01-13T02:16:11.016Z] Summoned spirit! Total: 3
+[2026-01-13T02:16:11.327Z] Magic doubled: 24 -> 49
+[2026-01-13T02:16:11.430Z] Summoned spirit! Total: 4
+[2026-01-13T02:16:11.947Z] Summoned spirit! Total: 5
+[2026-01-13T02:16:12.463Z] Summoned spirit! Total: 6
+[2026-01-13T02:16:12.771Z] Magic doubled: 49 -> 100
+[2026-01-13T02:16:12.881Z] ASCENDED! Tower level: 2
+[2026-01-13T02:16:13.193Z] Summoned spirit! Total: 7
+[2026-01-13T02:16:13.813Z] Summoned spirit! Total: 8
+[2026-01-13T02:16:14.432Z] Summoned spirit! Total: 9
+[2026-01-13T02:16:15.051Z] Step 50: Magic=201, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:16:15.052Z] Magic doubled: 100 -> 201
+[2026-01-13T02:16:15.156Z] Summoned spirit! Total: 10
+[2026-01-13T02:16:15.983Z] Summoned spirit! Total: 11
+[2026-01-13T02:16:16.913Z] Summoned spirit! Total: 12
+[2026-01-13T02:16:17.949Z] Summoned spirit! Total: 13
+[2026-01-13T02:16:18.105Z] Magic doubled: 201 -> 405
+[2026-01-13T02:16:18.208Z] Summoned spirit! Total: 14
+[2026-01-13T02:16:19.342Z] Step 100: Magic=473, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:16:19.449Z] Summoned spirit! Total: 15
+[2026-01-13T02:16:20.892Z] Summoned spirit! Total: 16
+[2026-01-13T02:16:22.445Z] Summoned spirit! Total: 17
+[2026-01-13T02:16:24.509Z] Step 150: Magic=802, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:16:24.616Z] Magic doubled: 405 -> 818
+[2026-01-13T02:16:25.026Z] Summoned spirit! Total: 18
+[2026-01-13T02:16:26.159Z] Summoned spirit! Total: 19
+[2026-01-13T02:16:26.471Z] ASCENDED! Tower level: 3
+[2026-01-13T02:16:27.398Z] Summoned spirit! Total: 20
+[2026-01-13T02:16:28.845Z] Summoned spirit! Total: 21
+[2026-01-13T02:16:29.673Z] Step 200: Magic=1392, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:16:30.395Z] Summoned spirit! Total: 22
+[2026-01-13T02:16:31.636Z] Magic doubled: 818 -> 1639
+[2026-01-13T02:16:32.875Z] Summoned spirit! Total: 23
+[2026-01-13T02:16:33.905Z] Summoned spirit! Total: 24
+[2026-01-13T02:16:34.835Z] Step 250: Magic=2386, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:16:35.149Z] Summoned spirit! Total: 25
+[2026-01-13T02:16:36.388Z] Summoned spirit! Total: 26
+[2026-01-13T02:16:37.936Z] Summoned spirit! Total: 27
+[2026-01-13T02:16:38.553Z] Magic doubled: 1639 -> 3296
+[2026-01-13T02:16:39.995Z] Step 300: Magic=3835, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:16:40.001Z] 
+=== ITERATION 54 ===
+[2026-01-13T02:16:40.815Z] Summoned spirit! Total: 1
+[2026-01-13T02:16:40.918Z] Magic doubled: 6 -> 12
+[2026-01-13T02:16:41.123Z] Magic doubled: 12 -> 24
+[2026-01-13T02:16:41.226Z] Summoned spirit! Total: 2
+[2026-01-13T02:16:41.639Z] Summoned spirit! Total: 3
+[2026-01-13T02:16:41.950Z] Magic doubled: 24 -> 49
+[2026-01-13T02:16:42.053Z] Summoned spirit! Total: 4
+[2026-01-13T02:16:42.569Z] Summoned spirit! Total: 5
+[2026-01-13T02:16:43.086Z] Summoned spirit! Total: 6
+[2026-01-13T02:16:43.393Z] Magic doubled: 49 -> 100
+[2026-01-13T02:16:43.499Z] ASCENDED! Tower level: 2
+[2026-01-13T02:16:43.807Z] Summoned spirit! Total: 7
+[2026-01-13T02:16:44.425Z] Summoned spirit! Total: 8
+[2026-01-13T02:16:45.043Z] Summoned spirit! Total: 9
+[2026-01-13T02:16:45.669Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:16:45.773Z] Magic doubled: 100 -> 205
+[2026-01-13T02:16:45.876Z] Summoned spirit! Total: 10
+[2026-01-13T02:16:46.703Z] Summoned spirit! Total: 11
+[2026-01-13T02:16:46.759Z] Summoned spirit! Total: 12
+[2026-01-13T02:16:47.685Z] Summoned spirit! Total: 13
+[2026-01-13T02:16:48.823Z] Summoned spirit! Total: 14
+[2026-01-13T02:16:49.132Z] Magic doubled: 205 -> 415
+[2026-01-13T02:16:49.957Z] Step 100: Magic=469, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:16:50.165Z] Summoned spirit! Total: 15
+[2026-01-13T02:16:51.512Z] Summoned spirit! Total: 16
+[2026-01-13T02:16:53.161Z] Summoned spirit! Total: 17
+[2026-01-13T02:16:55.119Z] Step 150: Magic=788, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:16:55.532Z] Magic doubled: 415 -> 843
+[2026-01-13T02:16:55.740Z] Summoned spirit! Total: 18
+[2026-01-13T02:16:56.875Z] Summoned spirit! Total: 19
+[2026-01-13T02:16:57.183Z] ASCENDED! Tower level: 3
+[2026-01-13T02:16:58.217Z] Summoned spirit! Total: 20
+[2026-01-13T02:16:59.558Z] Summoned spirit! Total: 21
+[2026-01-13T02:17:00.280Z] Step 200: Magic=1376, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:17:01.105Z] Summoned spirit! Total: 22
+[2026-01-13T02:17:02.862Z] Magic doubled: 843 -> 1710
+[2026-01-13T02:17:03.587Z] Summoned spirit! Total: 23
+[2026-01-13T02:17:04.726Z] Summoned spirit! Total: 24
+[2026-01-13T02:17:05.445Z] Step 250: Magic=2334, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:17:05.860Z] Summoned spirit! Total: 25
+[2026-01-13T02:17:07.202Z] Summoned spirit! Total: 26
+[2026-01-13T02:17:08.751Z] Summoned spirit! Total: 27
+[2026-01-13T02:17:09.783Z] Magic doubled: 1710 -> 3424
+[2026-01-13T02:17:10.611Z] Step 300: Magic=3728, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:17:10.614Z] 
+=== ITERATION 55 ===
+[2026-01-13T02:17:11.428Z] Summoned spirit! Total: 1
+[2026-01-13T02:17:11.531Z] Magic doubled: 6 -> 12
+[2026-01-13T02:17:11.740Z] Magic doubled: 12 -> 24
+[2026-01-13T02:17:11.843Z] Summoned spirit! Total: 2
+[2026-01-13T02:17:12.255Z] Summoned spirit! Total: 3
+[2026-01-13T02:17:12.563Z] Magic doubled: 24 -> 49
+[2026-01-13T02:17:12.666Z] Summoned spirit! Total: 4
+[2026-01-13T02:17:13.183Z] Summoned spirit! Total: 5
+[2026-01-13T02:17:13.699Z] Summoned spirit! Total: 6
+[2026-01-13T02:17:14.011Z] Magic doubled: 49 -> 100
+[2026-01-13T02:17:14.115Z] ASCENDED! Tower level: 2
+[2026-01-13T02:17:14.428Z] Summoned spirit! Total: 7
+[2026-01-13T02:17:15.047Z] Summoned spirit! Total: 8
+[2026-01-13T02:17:15.667Z] Summoned spirit! Total: 9
+[2026-01-13T02:17:16.285Z] Step 50: Magic=200, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:17:15.517Z] Magic doubled: 100 -> 206
+[2026-01-13T02:17:15.619Z] Summoned spirit! Total: 10
+[2026-01-13T02:17:16.442Z] Summoned spirit! Total: 11
+[2026-01-13T02:17:17.275Z] Summoned spirit! Total: 12
+[2026-01-13T02:17:18.306Z] Summoned spirit! Total: 13
+[2026-01-13T02:17:19.440Z] Summoned spirit! Total: 14
+[2026-01-13T02:17:19.751Z] Magic doubled: 206 -> 416
+[2026-01-13T02:17:20.574Z] Step 100: Magic=470, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:17:20.783Z] Summoned spirit! Total: 15
+[2026-01-13T02:17:22.121Z] Summoned spirit! Total: 16
+[2026-01-13T02:17:23.782Z] Summoned spirit! Total: 17
+[2026-01-13T02:17:25.740Z] Step 150: Magic=790, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:17:26.157Z] Magic doubled: 416 -> 845
+[2026-01-13T02:17:26.368Z] Summoned spirit! Total: 18
+[2026-01-13T02:17:27.503Z] Summoned spirit! Total: 19
+[2026-01-13T02:17:27.815Z] ASCENDED! Tower level: 3
+[2026-01-13T02:17:28.741Z] Summoned spirit! Total: 20
+[2026-01-13T02:17:30.186Z] Summoned spirit! Total: 21
+[2026-01-13T02:17:30.906Z] Step 200: Magic=1378, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:17:31.736Z] Summoned spirit! Total: 22
+[2026-01-13T02:17:33.390Z] Magic doubled: 845 -> 1700
+[2026-01-13T02:17:34.217Z] Summoned spirit! Total: 23
+[2026-01-13T02:17:35.249Z] Summoned spirit! Total: 24
+[2026-01-13T02:17:36.073Z] Step 250: Magic=2357, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:17:36.490Z] Summoned spirit! Total: 25
+[2026-01-13T02:17:37.836Z] Summoned spirit! Total: 26
+[2026-01-13T02:17:39.281Z] Summoned spirit! Total: 27
+[2026-01-13T02:17:40.314Z] Magic doubled: 1700 -> 3419
+[2026-01-13T02:17:41.249Z] Step 300: Magic=3782, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:17:41.252Z] 
+=== ITERATION 56 ===
+[2026-01-13T02:17:42.065Z] Summoned spirit! Total: 1
+[2026-01-13T02:17:42.169Z] Magic doubled: 6 -> 12
+[2026-01-13T02:17:42.375Z] Magic doubled: 12 -> 24
+[2026-01-13T02:17:42.484Z] Summoned spirit! Total: 2
+[2026-01-13T02:17:42.898Z] Summoned spirit! Total: 3
+[2026-01-13T02:17:43.207Z] Magic doubled: 24 -> 49
+[2026-01-13T02:17:43.312Z] Summoned spirit! Total: 4
+[2026-01-13T02:17:43.827Z] Summoned spirit! Total: 5
+[2026-01-13T02:17:44.341Z] Summoned spirit! Total: 6
+[2026-01-13T02:17:44.653Z] Magic doubled: 49 -> 100
+[2026-01-13T02:17:44.755Z] ASCENDED! Tower level: 2
+[2026-01-13T02:17:45.067Z] Summoned spirit! Total: 7
+[2026-01-13T02:17:44.823Z] Summoned spirit! Total: 8
+[2026-01-13T02:17:45.449Z] Summoned spirit! Total: 9
+[2026-01-13T02:17:46.069Z] Step 50: Magic=199, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:17:46.173Z] Magic doubled: 100 -> 205
+[2026-01-13T02:17:46.277Z] Summoned spirit! Total: 10
+[2026-01-13T02:17:47.107Z] Summoned spirit! Total: 11
+[2026-01-13T02:17:48.042Z] Summoned spirit! Total: 12
+[2026-01-13T02:17:48.971Z] Summoned spirit! Total: 13
+[2026-01-13T02:17:50.105Z] Summoned spirit! Total: 14
+[2026-01-13T02:17:50.418Z] Magic doubled: 205 -> 415
+[2026-01-13T02:17:51.250Z] Step 100: Magic=470, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:17:51.457Z] Summoned spirit! Total: 15
+[2026-01-13T02:17:52.802Z] Summoned spirit! Total: 16
+[2026-01-13T02:17:54.452Z] Summoned spirit! Total: 17
+[2026-01-13T02:17:56.414Z] Step 150: Magic=789, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:17:56.833Z] Magic doubled: 415 -> 844
+[2026-01-13T02:17:57.040Z] Summoned spirit! Total: 18
+[2026-01-13T02:17:58.175Z] Summoned spirit! Total: 19
+[2026-01-13T02:17:58.485Z] ASCENDED! Tower level: 3
+[2026-01-13T02:17:59.413Z] Summoned spirit! Total: 20
+[2026-01-13T02:18:00.856Z] Summoned spirit! Total: 21
+[2026-01-13T02:18:01.579Z] Step 200: Magic=1377, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:18:02.408Z] Summoned spirit! Total: 22
+[2026-01-13T02:18:04.167Z] Magic doubled: 844 -> 1714
+[2026-01-13T02:18:04.892Z] Summoned spirit! Total: 23
+[2026-01-13T02:18:06.025Z] Summoned spirit! Total: 24
+[2026-01-13T02:18:06.749Z] Step 250: Magic=2333, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:18:07.166Z] Summoned spirit! Total: 25
+[2026-01-13T02:18:08.509Z] Summoned spirit! Total: 26
+[2026-01-13T02:18:10.057Z] Summoned spirit! Total: 27
+[2026-01-13T02:18:11.190Z] Magic doubled: 1714 -> 3448
+[2026-01-13T02:18:11.914Z] Step 300: Magic=3732, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:18:11.917Z] 
+=== ITERATION 57 ===
+[2026-01-13T02:18:12.732Z] Summoned spirit! Total: 1
+[2026-01-13T02:18:12.835Z] Magic doubled: 6 -> 12
+[2026-01-13T02:18:13.041Z] Magic doubled: 12 -> 24
+[2026-01-13T02:18:13.148Z] Summoned spirit! Total: 2
+[2026-01-13T02:18:13.558Z] Summoned spirit! Total: 3
+[2026-01-13T02:18:13.868Z] Magic doubled: 24 -> 49
+[2026-01-13T02:18:13.971Z] Summoned spirit! Total: 4
+[2026-01-13T02:18:14.487Z] Summoned spirit! Total: 5
+[2026-01-13T02:18:14.122Z] Summoned spirit! Total: 6
+[2026-01-13T02:18:14.432Z] Magic doubled: 49 -> 100
+[2026-01-13T02:18:14.535Z] ASCENDED! Tower level: 2
+[2026-01-13T02:18:14.843Z] Summoned spirit! Total: 7
+[2026-01-13T02:18:15.462Z] Summoned spirit! Total: 8
+[2026-01-13T02:18:16.087Z] Summoned spirit! Total: 9
+[2026-01-13T02:18:16.707Z] Step 50: Magic=200, Spirits=9, Tower=2, Cloudlings=9
+[2026-01-13T02:18:16.811Z] Magic doubled: 100 -> 206
+[2026-01-13T02:18:16.918Z] Summoned spirit! Total: 10
+[2026-01-13T02:18:17.741Z] Summoned spirit! Total: 11
+[2026-01-13T02:18:18.566Z] Summoned spirit! Total: 12
+[2026-01-13T02:18:19.597Z] Summoned spirit! Total: 13
+[2026-01-13T02:18:20.731Z] Summoned spirit! Total: 14
+[2026-01-13T02:18:20.937Z] Magic doubled: 206 -> 413
+[2026-01-13T02:18:21.872Z] Step 100: Magic=473, Spirits=14, Tower=2, Cloudlings=14
+[2026-01-13T02:18:21.976Z] Summoned spirit! Total: 15
+[2026-01-13T02:18:23.423Z] Summoned spirit! Total: 16
+[2026-01-13T02:18:24.971Z] Summoned spirit! Total: 17
+[2026-01-13T02:18:27.034Z] Step 150: Magic=803, Spirits=17, Tower=2, Cloudlings=17
+[2026-01-13T02:18:27.240Z] Magic doubled: 413 -> 830
+[2026-01-13T02:18:27.550Z] Summoned spirit! Total: 18
+[2026-01-13T02:18:28.684Z] Summoned spirit! Total: 19
+[2026-01-13T02:18:28.992Z] ASCENDED! Tower level: 3
+[2026-01-13T02:18:29.921Z] Summoned spirit! Total: 20
+[2026-01-13T02:18:31.367Z] Summoned spirit! Total: 21
+[2026-01-13T02:18:32.191Z] Step 200: Magic=1393, Spirits=21, Tower=3, Cloudlings=21
+[2026-01-13T02:18:32.917Z] Summoned spirit! Total: 22
+[2026-01-13T02:18:34.364Z] Magic doubled: 830 -> 1669
+[2026-01-13T02:18:35.397Z] Summoned spirit! Total: 23
+[2026-01-13T02:18:36.426Z] Summoned spirit! Total: 24
+[2026-01-13T02:18:37.355Z] Step 250: Magic=2383, Spirits=24, Tower=3, Cloudlings=24
+[2026-01-13T02:18:37.668Z] Summoned spirit! Total: 25
+[2026-01-13T02:18:39.004Z] Summoned spirit! Total: 26
+[2026-01-13T02:18:40.450Z] Summoned spirit! Total: 27
+[2026-01-13T02:18:41.273Z] Magic doubled: 1669 -> 3361
+[2026-01-13T02:18:42.516Z] Step 300: Magic=3851, Spirits=27, Tower=3, Cloudlings=27
+[2026-01-13T02:18:42.519Z] 
+=== ITERATION 58 ===
+[2026-01-13T02:18:43.334Z] Summoned spirit! Total: 1
+[2026-01-13T02:18:43.425Z] [ERROR] Execute: page.evaluate: Target page, context or browser has been closed
+[2026-01-13T02:18:43.426Z] [FATAL] page.evaluate: Target page, context or browser has been closed
+[2026-01-13T02:18:43.467Z] Playtest complete

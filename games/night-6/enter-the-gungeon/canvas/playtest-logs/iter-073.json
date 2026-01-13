@@ -1,0 +1,10 @@
+{
+  "game": "enter-the-gungeon",
+  "iteration": 73,
+  "started": "2026-01-13T01:26:32.498Z",
+  "outcome": "timeout",
+  "kills": 4,
+  "roomsCleared": 1,
+  "floor": 1,
+  "duration": 30317
+}

@@ -1,0 +1,41 @@
+{
+  "game_info": {
+    "name": "Dome Keeper Clone",
+    "type": "mining_tower_defense",
+    "description": "Roguelike survival combining tower defense with mining. Mine underground for resources between enemy waves, return to dome to defend with laser weapon. Upgrade keeper and dome with collected resources."
+  },
+  "core_loop": {
+    "description": "Mine phase (dig underground, collect iron/water/cobalt) -> Return to dome -> Defense phase (laser fires at enemies) -> Spend resources on upgrades -> Repeat deeper until victory or dome destruction",
+    "estimated_duration_sec": 60,
+    "loops_for_meaningful_test": 5
+  },
+  "recommended_test_duration_sec": 300,
+  "input_scheme": {
+    "movement": { "type": "wasd_dig", "keys": ["w", "a", "s", "d"] },
+    "special_actions": [
+      { "name": "upgrade_menu", "key": "e" },
+      { "name": "drop_resource", "key": "q" },
+      { "name": "interact", "key": "Space" }
+    ],
+    "defense_controls": {
+      "aim": "mouse",
+      "fire": "mouse_click"
+    }
+  },
+  "combat_profile": {
+    "style": "tower_defense_laser",
+    "how_to_attack": "During defense phase, mouse aims dome laser. Hold click to fire continuous beam. Laser damages and stuns enemies. Keeper cannot attack directly."
+  },
+  "success_conditions": {
+    "minimum": { "resources_collected": 10, "waves_survived": 2, "tiles_mined": 20 },
+    "good_playthrough": { "waves_survived": 5, "upgrades_purchased": 2, "tiles_mined": 100 }
+  },
+  "key_features": [
+    { "name": "4-Direction Mining", "testable": true },
+    { "name": "Resource Collection", "testable": true },
+    { "name": "Wave Defense", "testable": true },
+    { "name": "Laser Weapon", "testable": true },
+    { "name": "Upgrade System", "testable": true },
+    { "name": "Camera Follow", "testable": true }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "game_info": {
+    "name": "FTL Clone",
+    "type": "space_roguelike_management",
+    "description": "Pausable real-time space combat with ship management, power distribution, crew positioning, and sector navigation"
+  },
+  "core_loop": {
+    "description": "Navigate sector map to beacons, fight enemy ships in pausable combat by managing power/weapons/crew, collect scrap rewards, upgrade ship, reach sector exit before rebel fleet catches you",
+    "estimated_duration_sec": 60,
+    "loops_for_meaningful_test": 3
+  },
+  "recommended_test_duration_sec": 180,
+  "input_scheme": {
+    "movement": { "type": "click", "description": "Click rooms to move selected crew, click beacons to jump" },
+    "primary_action": { "keys": ["Space"], "description": "Pause/unpause combat" },
+    "secondary_actions": [
+      { "name": "select_crew", "key": "1-4", "description": "Select crew member" },
+      { "name": "select_weapon", "key": "q/w/e/r", "description": "Select weapon slot" },
+      { "name": "power_up", "key": "ArrowUp", "description": "Add power to selected system" },
+      { "name": "power_down", "key": "ArrowDown", "description": "Remove power from selected system" },
+      { "name": "target_system", "key": "click", "description": "Click enemy room to target" }
+    ]
+  },
+  "combat_profile": {
+    "style": "pausable_realtime_management",
+    "how_to_attack": "Weapons auto-charge when powered. Select weapon, click enemy room to target. Weapons fire when fully charged. Manage power between shields/weapons/engines for offense/defense balance.",
+    "key_mechanics": ["Power distribution", "Weapon targeting", "Shield layers", "Crew positioning", "System damage/repair"]
+  },
+  "player": {
+    "hull": 30,
+    "reactor_power": 8,
+    "crew_count": 3,
+    "starting_weapons": ["Burst Laser II", "Artemis Missile"]
+  },
+  "success_conditions": {
+    "minimum": { "sectors_reached": 2, "ships_destroyed": 3, "jumps_completed": 8 }
+  },
+  "key_features": [
+    { "name": "Ship systems", "gdd_section": "Ship Systems", "testable": true },
+    { "name": "Power distribution", "gdd_section": "Power Management", "testable": true },
+    { "name": "Weapon combat", "gdd_section": "Weapon System", "testable": true },
+    { "name": "Shield mechanics", "gdd_section": "Shield System", "testable": true },
+    { "name": "Crew management", "gdd_section": "Crew System", "testable": true },
+    { "name": "Sector map", "gdd_section": "Sector and Event System", "testable": true }
+  ]
+}

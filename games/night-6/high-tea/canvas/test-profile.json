@@ -1,0 +1,42 @@
+{
+  "game_info": {
+    "name": "High Tea",
+    "type": "trading_strategy",
+    "description": "Historical trading strategy game about the British opium trade in 19th-century China"
+  },
+  "core_loop": {
+    "description": "Buy opium, sell at ports for silver, buy tea, ship to Britain to meet quota",
+    "estimated_duration_sec": 60,
+    "loops_for_meaningful_test": 3
+  },
+  "recommended_test_duration_sec": 180,
+  "input_scheme": {
+    "movement": { "type": "click_based", "description": "Click to interact with UI" },
+    "primary_action": { "type": "click", "description": "Click offers to accept trades" },
+    "secondary_actions": [
+      { "name": "buy_opium", "type": "click_button" },
+      { "name": "buy_tea", "type": "click_button" },
+      { "name": "accept_offer", "type": "click_offer" }
+    ]
+  },
+  "combat_profile": {
+    "style": "economic",
+    "how_to_attack": "No combat - trading mechanics only"
+  },
+  "success_conditions": {
+    "minimum": {
+      "trades_completed": 3,
+      "tea_shipped": 20
+    },
+    "victory": {
+      "description": "Meet tea quotas for 9 years"
+    }
+  },
+  "key_features": [
+    { "name": "Opium/Silver/Tea Economy", "gdd_section": "Section 3", "testable": true },
+    { "name": "Port Trading", "gdd_section": "Section 5", "testable": true },
+    { "name": "Ship Fleet System", "gdd_section": "Section 6", "testable": true },
+    { "name": "Britain Mood Meter", "gdd_section": "Section 9", "testable": true },
+    { "name": "Tea Quota System", "gdd_section": "Section 10", "testable": true }
+  ]
+}

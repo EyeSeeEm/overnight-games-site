@@ -1,0 +1,102 @@
+{
+  "game_info": {
+    "name": "Zero Sievert Clone",
+    "type": "top_down_extraction_shooter",
+    "description": "Top-down extraction shooter in post-apocalyptic wasteland. WASD movement, mouse aim, explore procedural zones, kill enemies, loot containers, reach extraction point."
+  },
+  "core_loop": {
+    "description": "Spawn in zone -> Explore and loot -> Kill enemies -> Find and reach extraction point -> Return with loot. Death means losing gear.",
+    "estimated_duration_sec": 180,
+    "loops_for_meaningful_test": 3
+  },
+  "recommended_test_duration_sec": 300,
+  "resolution": {
+    "width": 800,
+    "height": 600
+  },
+  "input_scheme": {
+    "movement": {
+      "type": "wasd",
+      "keys": ["w", "a", "s", "d"],
+      "description": "WASD moves player in 8 directions"
+    },
+    "primary_action": {
+      "type": "mouse_aim_click_shoot",
+      "keys": ["MouseMove", "MouseClick"],
+      "description": "Mouse aims weapon, click to fire"
+    },
+    "secondary_actions": [
+      { "name": "reload", "key": "r", "description": "Reload weapon" },
+      { "name": "interact", "key": "e", "description": "Loot containers, use doors" },
+      { "name": "sprint", "key": "Shift", "description": "Sprint (drains stamina)" },
+      { "name": "dodge", "key": "Space", "description": "Dodge roll" }
+    ]
+  },
+  "combat_profile": {
+    "style": "top_down_shooter_mouse_aim",
+    "how_to_attack": "Move mouse to aim, left click to fire. Bullets have travel time. Reload with R.",
+    "player_base_hp": 100,
+    "enemy_approach": "Enemies patrol, alert on sight, chase and shoot"
+  },
+  "success_conditions": {
+    "minimum": {
+      "enemies_killed": 3,
+      "survival_sec": 60,
+      "extraction": 1
+    },
+    "good_run": {
+      "enemies_killed": 8,
+      "containers_looted": 3,
+      "extraction": 1
+    }
+  },
+  "key_features": [
+    {
+      "name": "Mouse Aim Combat",
+      "gdd_section": "Section 2 - Real-Time Combat",
+      "testable": true,
+      "test_method": "Move mouse, click to shoot in that direction"
+    },
+    {
+      "name": "WASD Movement",
+      "gdd_section": "Section 2 - Movement Controls",
+      "testable": true,
+      "test_method": "WASD moves player, shift sprints"
+    },
+    {
+      "name": "Enemy AI",
+      "gdd_section": "Section 7 - Enemy Types",
+      "testable": true,
+      "test_method": "Enemies patrol, detect player, chase and shoot"
+    },
+    {
+      "name": "Extraction Point",
+      "gdd_section": "Section 8 - Zone System",
+      "testable": true,
+      "test_method": "Green extraction zone, stand in it for 3 seconds to extract"
+    },
+    {
+      "name": "Health System",
+      "gdd_section": "Section 3 - Player Stats",
+      "testable": true,
+      "test_method": "Taking damage reduces HP, death at 0"
+    },
+    {
+      "name": "Reload System",
+      "gdd_section": "Section 4 - Weapon System",
+      "testable": true,
+      "test_method": "Magazine depletes, R to reload, reload time"
+    },
+    {
+      "name": "Loot Containers",
+      "gdd_section": "Section 9 - Loot System",
+      "testable": true,
+      "test_method": "Press E near container to loot"
+    }
+  ],
+  "enemy_types": [
+    { "name": "Bandit Scout", "hp": 60, "damage": 12, "speed": 100, "behavior": "patrol_shoot" },
+    { "name": "Bandit", "hp": 80, "damage": 15, "speed": 90, "behavior": "aggressive" },
+    { "name": "Ghoul", "hp": 50, "damage": 12, "speed": 120, "behavior": "melee_rush" }
+  ]
+}

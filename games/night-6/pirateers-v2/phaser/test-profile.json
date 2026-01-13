@@ -1,0 +1,42 @@
+{
+  "game_info": {
+    "name": "Pirateers v2",
+    "type": "naval_action_adventure",
+    "description": "Top-down pirate action where player commands a ship, engages in broadside naval combat, collects loot, trades at ports, upgrades vessel. Day/night cycle with timed expeditions."
+  },
+  "core_loop": {
+    "description": "Base Phase (prepare, trade, upgrade) -> Set Sail -> Day at Sea (combat, loot, explore) -> Return to Base (automatic at timer or manual) -> Repeat",
+    "estimated_duration_sec": 180,
+    "loops_for_meaningful_test": 3
+  },
+  "recommended_test_duration_sec": 540,
+  "input_scheme": {
+    "movement": {
+      "type": "turn_based",
+      "description": "A/D turn, W/S speed control"
+    },
+    "primary_action": { "key": "Space", "description": "Fire cannons broadside" },
+    "special_actions": [
+      { "name": "special_weapon", "key": "Shift" },
+      { "name": "dock_interact", "key": "e" },
+      { "name": "weapon_slot_1", "key": "1" },
+      { "name": "weapon_slot_2", "key": "2" }
+    ]
+  },
+  "combat_profile": {
+    "style": "broadside_naval",
+    "how_to_attack": "Position ship perpendicular to enemies, press Space to fire cannons from both sides. A/D to turn, W/S to change speed. Approach ports and press E to dock."
+  },
+  "success_conditions": {
+    "minimum": { "ships_destroyed": 3, "gold_earned": 200, "days_survived": 2 },
+    "good_playthrough": { "ships_destroyed": 10, "gold_earned": 1000, "ports_visited": 3 }
+  },
+  "key_features": [
+    { "name": "Broadside Combat", "testable": true },
+    { "name": "Ship Movement", "testable": true },
+    { "name": "Day Timer", "testable": true },
+    { "name": "Port Trading", "testable": true },
+    { "name": "Cargo System", "testable": true },
+    { "name": "Ship Upgrades", "testable": true }
+  ]
+}

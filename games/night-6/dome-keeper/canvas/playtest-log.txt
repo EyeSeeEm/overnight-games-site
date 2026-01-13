@@ -1,0 +1,571 @@
+[2026-01-13T02:19:34.939Z] Starting Dome Keeper Clone Playtest
+[2026-01-13T02:19:34.940Z] Target: 200 iterations
+[2026-01-13T02:19:35.081Z] Loading game: file:///workspace/games/night-6/dome-keeper/canvas/index.html
+[2026-01-13T02:19:37.114Z] Harness detected
+[2026-01-13T02:19:37.114Z] 
+=== ITERATION 1 ===
+[2026-01-13T02:19:37.625Z] Phase: mining, Wave: 0
+[2026-01-13T02:19:41.789Z] Step 50: Phase=mining, Timer=41s, Pos=(673,303), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:19:45.089Z] Step 100: Phase=mining, Timer=37s, Pos=(631,321), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:19:49.254Z] Step 150: Phase=mining, Timer=33s, Pos=(637,325), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:19:53.422Z] Step 200: Phase=mining, Timer=29s, Pos=(613,314), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:19:57.589Z] Step 250: Phase=mining, Timer=25s, Pos=(613,314), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:20:01.753Z] Step 300: Phase=mining, Timer=21s, Pos=(613,314), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:20:05.920Z] Step 350: Phase=mining, Timer=16s, Pos=(613,314), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:20:10.086Z] Step 400: Phase=mining, Timer=12s, Pos=(613,314), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:20:13.357Z] Step 450: Phase=mining, Timer=8s, Pos=(613,314), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:20:17.524Z] Step 500: Phase=mining, Timer=4s, Pos=(613,314), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:20:20.941Z] Phase: defense, Wave: 1
+[2026-01-13T02:20:20.941Z] Wave 1 started, 3 enemies
+[2026-01-13T02:20:21.690Z] Step 550: Phase=defense, Timer=0s, Pos=(613,314), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:20:25.856Z] Step 600: Phase=defense, Timer=0s, Pos=(613,314), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:20:30.023Z] Step 650: Phase=defense, Timer=0s, Pos=(613,314), Carrying=1/5, Deposited=0/0/0, HP=776
+[2026-01-13T02:20:34.189Z] Step 700: Phase=defense, Timer=0s, Pos=(613,314), Carrying=1/5, Deposited=0/0/0, HP=608
+[2026-01-13T02:20:38.354Z] Step 750: Phase=defense, Timer=0s, Pos=(613,314), Carrying=1/5, Deposited=0/0/0, HP=464
+[2026-01-13T02:20:41.646Z] Step 800: Phase=defense, Timer=0s, Pos=(613,314), Carrying=1/5, Deposited=0/0/0, HP=320
+[2026-01-13T02:20:41.649Z] 
+=== ITERATION 2 ===
+[2026-01-13T02:20:42.153Z] Phase: mining, Wave: 0
+[2026-01-13T02:20:46.312Z] Step 50: Phase=mining, Timer=41s, Pos=(669,305), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:20:50.478Z] Step 100: Phase=mining, Timer=37s, Pos=(679,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:20:54.644Z] Step 150: Phase=mining, Timer=33s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:20:58.812Z] Step 200: Phase=mining, Timer=29s, Pos=(616,208), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:21:02.978Z] Step 250: Phase=mining, Timer=25s, Pos=(616,309), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:21:07.143Z] Step 300: Phase=mining, Timer=21s, Pos=(672,235), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:21:10.435Z] Step 350: Phase=mining, Timer=16s, Pos=(616,309), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:21:14.602Z] Step 400: Phase=mining, Timer=12s, Pos=(629,325), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:21:18.767Z] Step 450: Phase=mining, Timer=8s, Pos=(672,259), Carrying=1/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:21:22.933Z] Step 500: Phase=mining, Timer=4s, Pos=(645,205), Carrying=0/5, Deposited=4/0/0, HP=800
+[2026-01-13T02:21:26.350Z] Phase: defense, Wave: 1
+[2026-01-13T02:21:26.351Z] Wave 1 started, 3 enemies
+[2026-01-13T02:21:27.101Z] Step 550: Phase=defense, Timer=0s, Pos=(629,305), Carrying=0/5, Deposited=4/0/0, HP=800
+[2026-01-13T02:21:31.266Z] Step 600: Phase=defense, Timer=0s, Pos=(629,305), Carrying=0/5, Deposited=4/0/0, HP=800
+[2026-01-13T02:21:35.434Z] Step 650: Phase=defense, Timer=0s, Pos=(629,305), Carrying=0/5, Deposited=4/0/0, HP=776
+[2026-01-13T02:21:38.722Z] Step 700: Phase=defense, Timer=0s, Pos=(629,305), Carrying=0/5, Deposited=4/0/0, HP=620
+[2026-01-13T02:21:42.887Z] Step 750: Phase=defense, Timer=0s, Pos=(629,305), Carrying=0/5, Deposited=4/0/0, HP=476
+[2026-01-13T02:21:47.055Z] Step 800: Phase=defense, Timer=0s, Pos=(629,305), Carrying=0/5, Deposited=4/0/0, HP=320
+[2026-01-13T02:21:47.057Z] 
+=== ITERATION 3 ===
+[2026-01-13T02:21:47.560Z] Phase: mining, Wave: 0
+[2026-01-13T02:21:51.721Z] Step 50: Phase=mining, Timer=41s, Pos=(661,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:21:55.886Z] Step 100: Phase=mining, Timer=37s, Pos=(623,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:22:00.052Z] Step 150: Phase=mining, Timer=33s, Pos=(631,325), Carrying=3/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:22:04.219Z] Step 200: Phase=mining, Timer=29s, Pos=(650,237), Carrying=3/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:22:07.506Z] Step 250: Phase=mining, Timer=25s, Pos=(672,303), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:22:11.672Z] Step 300: Phase=mining, Timer=21s, Pos=(695,305), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:22:15.839Z] Step 350: Phase=mining, Timer=16s, Pos=(683,299), Carrying=1/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:22:20.006Z] Step 400: Phase=mining, Timer=12s, Pos=(683,299), Carrying=1/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:22:24.173Z] Step 450: Phase=mining, Timer=8s, Pos=(683,299), Carrying=1/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:22:28.339Z] Step 500: Phase=mining, Timer=4s, Pos=(683,299), Carrying=1/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:22:31.756Z] Phase: defense, Wave: 1
+[2026-01-13T02:22:31.756Z] Wave 1 started, 3 enemies
+[2026-01-13T02:22:32.505Z] Step 550: Phase=defense, Timer=0s, Pos=(683,299), Carrying=1/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:22:36.672Z] Step 600: Phase=defense, Timer=0s, Pos=(683,299), Carrying=1/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:22:39.961Z] Step 650: Phase=defense, Timer=0s, Pos=(683,299), Carrying=1/5, Deposited=3/0/0, HP=716
+[2026-01-13T02:22:44.128Z] Step 700: Phase=defense, Timer=0s, Pos=(683,299), Carrying=1/5, Deposited=3/0/0, HP=572
+[2026-01-13T02:22:48.296Z] Step 750: Phase=defense, Timer=0s, Pos=(683,299), Carrying=1/5, Deposited=3/0/0, HP=428
+[2026-01-13T02:22:52.462Z] Step 800: Phase=defense, Timer=0s, Pos=(683,299), Carrying=1/5, Deposited=3/0/0, HP=272
+[2026-01-13T02:22:52.464Z] 
+=== ITERATION 4 ===
+[2026-01-13T02:22:52.969Z] Phase: mining, Wave: 0
+[2026-01-13T02:22:57.127Z] Step 50: Phase=mining, Timer=41s, Pos=(643,308), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:23:01.294Z] Step 100: Phase=mining, Timer=37s, Pos=(617,309), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:23:05.462Z] Step 150: Phase=mining, Timer=33s, Pos=(622,310), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:23:08.758Z] Step 200: Phase=mining, Timer=29s, Pos=(643,209), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:23:12.924Z] Step 250: Phase=mining, Timer=25s, Pos=(616,309), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:23:17.091Z] Step 300: Phase=mining, Timer=21s, Pos=(623,309), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:23:21.257Z] Step 350: Phase=mining, Timer=16s, Pos=(616,309), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:23:25.424Z] Step 400: Phase=mining, Timer=12s, Pos=(616,309), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:23:29.591Z] Step 450: Phase=mining, Timer=8s, Pos=(679,309), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:23:33.757Z] Step 500: Phase=mining, Timer=4s, Pos=(679,309), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:23:36.264Z] Phase: defense, Wave: 1
+[2026-01-13T02:23:36.265Z] Wave 1 started, 3 enemies
+[2026-01-13T02:23:37.015Z] Step 550: Phase=defense, Timer=0s, Pos=(679,309), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:23:41.182Z] Step 600: Phase=defense, Timer=0s, Pos=(679,309), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:23:45.348Z] Step 650: Phase=defense, Timer=0s, Pos=(679,309), Carrying=0/5, Deposited=2/0/0, HP=776
+[2026-01-13T02:23:49.514Z] Step 700: Phase=defense, Timer=0s, Pos=(679,309), Carrying=0/5, Deposited=2/0/0, HP=632
+[2026-01-13T02:23:53.682Z] Step 750: Phase=defense, Timer=0s, Pos=(679,309), Carrying=0/5, Deposited=2/0/0, HP=476
+[2026-01-13T02:23:57.847Z] Step 800: Phase=defense, Timer=0s, Pos=(679,309), Carrying=0/5, Deposited=2/0/0, HP=320
+[2026-01-13T02:23:57.850Z] 
+=== ITERATION 5 ===
+[2026-01-13T02:23:58.353Z] Phase: mining, Wave: 0
+[2026-01-13T02:24:02.513Z] Step 50: Phase=mining, Timer=41s, Pos=(640,308), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:24:05.796Z] Step 100: Phase=mining, Timer=37s, Pos=(680,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:24:09.963Z] Step 150: Phase=mining, Timer=33s, Pos=(680,309), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:24:14.129Z] Step 200: Phase=mining, Timer=29s, Pos=(680,208), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:24:18.295Z] Step 250: Phase=mining, Timer=25s, Pos=(667,325), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:24:22.462Z] Step 300: Phase=mining, Timer=21s, Pos=(689,325), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:24:26.627Z] Step 350: Phase=mining, Timer=16s, Pos=(696,325), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:24:30.796Z] Step 400: Phase=mining, Timer=12s, Pos=(656,341), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:24:34.080Z] Step 450: Phase=mining, Timer=8s, Pos=(623,329), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:24:38.244Z] Step 500: Phase=mining, Timer=4s, Pos=(639,203), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:24:41.661Z] Phase: defense, Wave: 1
+[2026-01-13T02:24:41.662Z] Wave 1 started, 3 enemies
+[2026-01-13T02:24:42.411Z] Step 550: Phase=defense, Timer=0s, Pos=(656,342), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:24:46.579Z] Step 600: Phase=defense, Timer=0s, Pos=(656,342), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:24:50.746Z] Step 650: Phase=defense, Timer=0s, Pos=(656,342), Carrying=0/5, Deposited=3/0/0, HP=752
+[2026-01-13T02:24:54.911Z] Step 700: Phase=defense, Timer=0s, Pos=(656,342), Carrying=0/5, Deposited=3/0/0, HP=608
+[2026-01-13T02:24:59.078Z] Step 750: Phase=defense, Timer=0s, Pos=(656,342), Carrying=0/5, Deposited=3/0/0, HP=464
+[2026-01-13T02:25:02.358Z] Step 800: Phase=defense, Timer=0s, Pos=(656,342), Carrying=0/5, Deposited=3/0/0, HP=320
+[2026-01-13T02:25:02.360Z] 
+=== ITERATION 6 ===
+[2026-01-13T02:25:02.864Z] Phase: mining, Wave: 0
+[2026-01-13T02:25:07.023Z] Step 50: Phase=mining, Timer=41s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:25:11.190Z] Step 100: Phase=mining, Timer=37s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:25:15.357Z] Step 150: Phase=mining, Timer=33s, Pos=(663,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:25:19.523Z] Step 200: Phase=mining, Timer=29s, Pos=(680,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:25:23.689Z] Step 250: Phase=mining, Timer=25s, Pos=(680,325), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:25:27.855Z] Step 300: Phase=mining, Timer=21s, Pos=(680,306), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:25:31.130Z] Step 350: Phase=mining, Timer=16s, Pos=(684,315), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:25:35.295Z] Step 400: Phase=mining, Timer=12s, Pos=(684,315), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:25:39.461Z] Step 450: Phase=mining, Timer=8s, Pos=(684,315), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:25:43.629Z] Step 500: Phase=mining, Timer=4s, Pos=(684,315), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:25:47.046Z] Phase: defense, Wave: 1
+[2026-01-13T02:25:47.046Z] Wave 1 started, 3 enemies
+[2026-01-13T02:25:47.795Z] Step 550: Phase=defense, Timer=0s, Pos=(684,315), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:25:51.961Z] Step 600: Phase=defense, Timer=0s, Pos=(684,315), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:25:56.128Z] Step 650: Phase=defense, Timer=0s, Pos=(684,315), Carrying=1/5, Deposited=1/0/0, HP=752
+[2026-01-13T02:26:00.295Z] Step 700: Phase=defense, Timer=0s, Pos=(684,315), Carrying=1/5, Deposited=1/0/0, HP=608
+[2026-01-13T02:26:03.578Z] Step 750: Phase=defense, Timer=0s, Pos=(684,315), Carrying=1/5, Deposited=1/0/0, HP=452
+[2026-01-13T02:26:07.746Z] Step 800: Phase=defense, Timer=0s, Pos=(684,315), Carrying=1/5, Deposited=1/0/0, HP=296
+[2026-01-13T02:26:07.748Z] 
+=== ITERATION 7 ===
+[2026-01-13T02:26:08.252Z] Phase: mining, Wave: 0
+[2026-01-13T02:26:12.411Z] Step 50: Phase=mining, Timer=41s, Pos=(617,309), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:26:16.578Z] Step 100: Phase=mining, Timer=37s, Pos=(617,309), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:26:20.745Z] Step 150: Phase=mining, Timer=33s, Pos=(674,309), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:26:24.911Z] Step 200: Phase=mining, Timer=29s, Pos=(680,208), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:26:29.078Z] Step 250: Phase=mining, Timer=25s, Pos=(680,304), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:26:32.287Z] Step 300: Phase=mining, Timer=21s, Pos=(617,309), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:26:36.454Z] Step 350: Phase=mining, Timer=16s, Pos=(673,309), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:26:40.619Z] Step 400: Phase=mining, Timer=12s, Pos=(680,309), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:26:44.787Z] Step 450: Phase=mining, Timer=8s, Pos=(680,309), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:26:48.952Z] Step 500: Phase=mining, Timer=4s, Pos=(680,309), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:26:52.369Z] Phase: defense, Wave: 1
+[2026-01-13T02:26:52.370Z] Wave 1 started, 3 enemies
+[2026-01-13T02:26:53.119Z] Step 550: Phase=defense, Timer=0s, Pos=(617,309), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:26:57.285Z] Step 600: Phase=defense, Timer=0s, Pos=(617,309), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:27:00.642Z] Step 650: Phase=defense, Timer=0s, Pos=(617,309), Carrying=0/5, Deposited=2/0/0, HP=716
+[2026-01-13T02:27:04.804Z] Step 700: Phase=defense, Timer=0s, Pos=(617,309), Carrying=0/5, Deposited=2/0/0, HP=572
+[2026-01-13T02:27:08.972Z] Step 750: Phase=defense, Timer=0s, Pos=(617,309), Carrying=0/5, Deposited=2/0/0, HP=416
+[2026-01-13T02:27:13.140Z] Step 800: Phase=defense, Timer=0s, Pos=(617,309), Carrying=0/5, Deposited=2/0/0, HP=272
+[2026-01-13T02:27:13.142Z] 
+=== ITERATION 8 ===
+[2026-01-13T02:27:13.646Z] Phase: mining, Wave: 0
+[2026-01-13T02:27:17.821Z] Step 50: Phase=mining, Timer=41s, Pos=(623,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:27:21.988Z] Step 100: Phase=mining, Timer=37s, Pos=(673,309), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:27:26.153Z] Step 150: Phase=mining, Timer=33s, Pos=(617,309), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:27:29.371Z] Step 200: Phase=mining, Timer=29s, Pos=(660,201), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:27:33.538Z] Step 250: Phase=mining, Timer=25s, Pos=(600,301), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:27:37.704Z] Step 300: Phase=mining, Timer=21s, Pos=(679,308), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:27:41.872Z] Step 350: Phase=mining, Timer=16s, Pos=(607,309), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:27:46.037Z] Step 400: Phase=mining, Timer=12s, Pos=(609,298), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:27:50.204Z] Step 450: Phase=mining, Timer=8s, Pos=(609,298), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:27:54.370Z] Step 500: Phase=mining, Timer=4s, Pos=(609,298), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:27:56.899Z] Phase: defense, Wave: 1
+[2026-01-13T02:27:56.900Z] Wave 1 started, 3 enemies
+[2026-01-13T02:27:57.649Z] Step 550: Phase=defense, Timer=0s, Pos=(609,298), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:28:01.816Z] Step 600: Phase=defense, Timer=0s, Pos=(609,298), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:28:05.983Z] Step 650: Phase=defense, Timer=0s, Pos=(609,298), Carrying=1/5, Deposited=1/0/0, HP=728
+[2026-01-13T02:28:10.150Z] Step 700: Phase=defense, Timer=0s, Pos=(609,298), Carrying=1/5, Deposited=1/0/0, HP=572
+[2026-01-13T02:28:14.316Z] Step 750: Phase=defense, Timer=0s, Pos=(609,298), Carrying=1/5, Deposited=1/0/0, HP=428
+[2026-01-13T02:28:18.481Z] Step 800: Phase=defense, Timer=0s, Pos=(609,298), Carrying=1/5, Deposited=1/0/0, HP=272
+[2026-01-13T02:28:18.484Z] 
+=== ITERATION 9 ===
+[2026-01-13T02:28:18.987Z] Phase: mining, Wave: 0
+[2026-01-13T02:28:23.148Z] Step 50: Phase=mining, Timer=41s, Pos=(680,229), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:28:26.404Z] Step 100: Phase=mining, Timer=37s, Pos=(680,309), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:28:30.574Z] Step 150: Phase=mining, Timer=33s, Pos=(622,242), Carrying=5/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:28:34.737Z] Step 200: Phase=mining, Timer=29s, Pos=(649,309), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:28:38.904Z] Step 250: Phase=mining, Timer=25s, Pos=(680,309), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:28:43.071Z] Step 300: Phase=mining, Timer=21s, Pos=(680,309), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:28:47.236Z] Step 350: Phase=mining, Timer=16s, Pos=(680,309), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:28:51.404Z] Step 400: Phase=mining, Timer=12s, Pos=(680,309), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:28:54.703Z] Step 450: Phase=mining, Timer=8s, Pos=(680,309), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:28:58.871Z] Step 500: Phase=mining, Timer=4s, Pos=(680,309), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:29:02.288Z] Phase: defense, Wave: 1
+[2026-01-13T02:29:02.288Z] Wave 1 started, 3 enemies
+[2026-01-13T02:29:03.040Z] Step 550: Phase=defense, Timer=0s, Pos=(680,309), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:29:07.205Z] Step 600: Phase=defense, Timer=0s, Pos=(680,309), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:29:11.371Z] Step 650: Phase=defense, Timer=0s, Pos=(680,309), Carrying=0/5, Deposited=5/0/0, HP=752
+[2026-01-13T02:29:15.537Z] Step 700: Phase=defense, Timer=0s, Pos=(680,309), Carrying=0/5, Deposited=5/0/0, HP=596
+[2026-01-13T02:29:19.703Z] Step 750: Phase=defense, Timer=0s, Pos=(680,309), Carrying=0/5, Deposited=5/0/0, HP=428
+[2026-01-13T02:29:23.870Z] Step 800: Phase=defense, Timer=0s, Pos=(680,309), Carrying=0/5, Deposited=5/0/0, HP=284
+[2026-01-13T02:29:23.871Z] 
+=== ITERATION 10 ===
+[2026-01-13T02:29:23.479Z] Phase: mining, Wave: 0
+[2026-01-13T02:29:27.640Z] Step 50: Phase=mining, Timer=41s, Pos=(616,256), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:29:31.806Z] Step 100: Phase=mining, Timer=37s, Pos=(616,245), Carrying=4/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:29:35.974Z] Step 150: Phase=mining, Timer=33s, Pos=(616,310), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:29:40.139Z] Step 200: Phase=mining, Timer=29s, Pos=(656,310), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:29:44.306Z] Step 250: Phase=mining, Timer=25s, Pos=(636,310), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:29:48.473Z] Step 300: Phase=mining, Timer=21s, Pos=(673,310), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:29:52.641Z] Step 350: Phase=mining, Timer=16s, Pos=(616,310), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:29:55.915Z] Step 400: Phase=mining, Timer=12s, Pos=(679,310), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:30:00.081Z] Step 450: Phase=mining, Timer=8s, Pos=(679,310), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:30:04.247Z] Step 500: Phase=mining, Timer=4s, Pos=(656,310), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:30:07.664Z] Phase: defense, Wave: 1
+[2026-01-13T02:30:07.665Z] Wave 1 started, 3 enemies
+[2026-01-13T02:30:08.414Z] Step 550: Phase=defense, Timer=0s, Pos=(680,310), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:30:12.581Z] Step 600: Phase=defense, Timer=0s, Pos=(680,310), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:30:16.747Z] Step 650: Phase=defense, Timer=0s, Pos=(680,310), Carrying=0/5, Deposited=5/0/0, HP=740
+[2026-01-13T02:30:20.913Z] Step 700: Phase=defense, Timer=0s, Pos=(680,310), Carrying=0/5, Deposited=5/0/0, HP=596
+[2026-01-13T02:30:24.184Z] Step 750: Phase=defense, Timer=0s, Pos=(680,310), Carrying=0/5, Deposited=5/0/0, HP=452
+[2026-01-13T02:30:28.352Z] Step 800: Phase=defense, Timer=0s, Pos=(680,310), Carrying=0/5, Deposited=5/0/0, HP=296
+[2026-01-13T02:30:28.439Z] 
+=== ITERATION 11 ===
+[2026-01-13T02:30:28.942Z] Phase: mining, Wave: 0
+[2026-01-13T02:30:33.102Z] Step 50: Phase=mining, Timer=41s, Pos=(616,229), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:30:37.266Z] Step 100: Phase=mining, Timer=37s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:30:41.431Z] Step 150: Phase=mining, Timer=33s, Pos=(672,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:30:45.598Z] Step 200: Phase=mining, Timer=29s, Pos=(680,212), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:30:49.765Z] Step 250: Phase=mining, Timer=25s, Pos=(652,243), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:30:53.034Z] Step 300: Phase=mining, Timer=21s, Pos=(652,314), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:30:57.201Z] Step 350: Phase=mining, Timer=16s, Pos=(616,247), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:31:01.366Z] Step 400: Phase=mining, Timer=12s, Pos=(672,321), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:31:05.533Z] Step 450: Phase=mining, Timer=8s, Pos=(659,201), Carrying=0/5, Deposited=4/0/0, HP=800
+[2026-01-13T02:31:09.699Z] Step 500: Phase=mining, Timer=4s, Pos=(611,314), Carrying=1/5, Deposited=4/0/0, HP=800
+[2026-01-13T02:31:13.115Z] Phase: defense, Wave: 1
+[2026-01-13T02:31:13.116Z] Wave 1 started, 3 enemies
+[2026-01-13T02:31:13.867Z] Step 550: Phase=defense, Timer=0s, Pos=(611,314), Carrying=1/5, Deposited=4/0/0, HP=800
+[2026-01-13T02:31:18.032Z] Step 600: Phase=defense, Timer=0s, Pos=(611,314), Carrying=1/5, Deposited=4/0/0, HP=800
+[2026-01-13T02:31:21.306Z] Step 650: Phase=defense, Timer=0s, Pos=(611,314), Carrying=1/5, Deposited=4/0/0, HP=752
+[2026-01-13T02:31:25.472Z] Step 700: Phase=defense, Timer=0s, Pos=(611,314), Carrying=1/5, Deposited=4/0/0, HP=608
+[2026-01-13T02:31:29.638Z] Step 750: Phase=defense, Timer=0s, Pos=(611,314), Carrying=1/5, Deposited=4/0/0, HP=452
+[2026-01-13T02:31:33.805Z] Step 800: Phase=defense, Timer=0s, Pos=(611,314), Carrying=1/5, Deposited=4/0/0, HP=308
+[2026-01-13T02:31:33.807Z] 
+=== ITERATION 12 ===
+[2026-01-13T02:31:34.311Z] Phase: mining, Wave: 0
+[2026-01-13T02:31:38.471Z] Step 50: Phase=mining, Timer=41s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:31:42.638Z] Step 100: Phase=mining, Timer=37s, Pos=(680,309), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:31:46.804Z] Step 150: Phase=mining, Timer=33s, Pos=(616,309), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:31:50.078Z] Step 200: Phase=mining, Timer=29s, Pos=(616,208), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:31:54.245Z] Step 250: Phase=mining, Timer=25s, Pos=(616,309), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:31:58.413Z] Step 300: Phase=mining, Timer=21s, Pos=(646,309), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:32:02.579Z] Step 350: Phase=mining, Timer=16s, Pos=(679,309), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:32:06.744Z] Step 400: Phase=mining, Timer=12s, Pos=(679,309), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:32:10.912Z] Step 450: Phase=mining, Timer=8s, Pos=(679,309), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:32:15.077Z] Step 500: Phase=mining, Timer=4s, Pos=(646,309), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:32:18.494Z] Phase: defense, Wave: 1
+[2026-01-13T02:32:18.494Z] Wave 1 started, 3 enemies
+[2026-01-13T02:32:18.352Z] Step 550: Phase=defense, Timer=0s, Pos=(672,238), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:32:22.519Z] Step 600: Phase=defense, Timer=0s, Pos=(672,238), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:32:26.686Z] Step 650: Phase=defense, Timer=0s, Pos=(672,238), Carrying=0/5, Deposited=2/0/0, HP=740
+[2026-01-13T02:32:30.853Z] Step 700: Phase=defense, Timer=0s, Pos=(672,238), Carrying=0/5, Deposited=2/0/0, HP=596
+[2026-01-13T02:32:35.019Z] Step 750: Phase=defense, Timer=0s, Pos=(672,238), Carrying=0/5, Deposited=2/0/0, HP=440
+[2026-01-13T02:32:39.187Z] Step 800: Phase=defense, Timer=0s, Pos=(672,238), Carrying=0/5, Deposited=2/0/0, HP=284
+[2026-01-13T02:32:39.189Z] 
+=== ITERATION 13 ===
+[2026-01-13T02:32:39.693Z] Phase: mining, Wave: 0
+[2026-01-13T02:32:43.852Z] Step 50: Phase=mining, Timer=41s, Pos=(640,308), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:32:48.019Z] Step 100: Phase=mining, Timer=37s, Pos=(617,308), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:32:51.285Z] Step 150: Phase=mining, Timer=33s, Pos=(653,309), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:32:55.453Z] Step 200: Phase=mining, Timer=29s, Pos=(627,207), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:32:59.619Z] Step 250: Phase=mining, Timer=25s, Pos=(617,310), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:33:03.784Z] Step 300: Phase=mining, Timer=21s, Pos=(617,310), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:33:07.951Z] Step 350: Phase=mining, Timer=16s, Pos=(679,310), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:33:12.118Z] Step 400: Phase=mining, Timer=12s, Pos=(623,310), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:33:16.285Z] Step 450: Phase=mining, Timer=8s, Pos=(679,310), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:33:19.532Z] Step 500: Phase=mining, Timer=4s, Pos=(639,310), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:33:22.949Z] Phase: defense, Wave: 1
+[2026-01-13T02:33:22.949Z] Wave 1 started, 3 enemies
+[2026-01-13T02:33:23.699Z] Step 550: Phase=defense, Timer=0s, Pos=(630,310), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:33:27.866Z] Step 600: Phase=defense, Timer=0s, Pos=(630,310), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:33:32.032Z] Step 650: Phase=defense, Timer=0s, Pos=(630,310), Carrying=0/5, Deposited=1/0/0, HP=752
+[2026-01-13T02:33:36.199Z] Step 700: Phase=defense, Timer=0s, Pos=(630,310), Carrying=0/5, Deposited=1/0/0, HP=608
+[2026-01-13T02:33:40.365Z] Step 750: Phase=defense, Timer=0s, Pos=(630,310), Carrying=0/5, Deposited=1/0/0, HP=452
+[2026-01-13T02:33:44.533Z] Step 800: Phase=defense, Timer=0s, Pos=(630,310), Carrying=0/5, Deposited=1/0/0, HP=296
+[2026-01-13T02:33:44.534Z] 
+=== ITERATION 14 ===
+[2026-01-13T02:33:45.039Z] Phase: mining, Wave: 0
+[2026-01-13T02:33:48.301Z] Step 50: Phase=mining, Timer=41s, Pos=(679,265), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:33:52.468Z] Step 100: Phase=mining, Timer=37s, Pos=(673,310), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:33:56.633Z] Step 150: Phase=mining, Timer=33s, Pos=(617,325), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:34:00.801Z] Step 200: Phase=mining, Timer=29s, Pos=(612,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:34:04.966Z] Step 250: Phase=mining, Timer=25s, Pos=(612,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:34:09.133Z] Step 300: Phase=mining, Timer=21s, Pos=(612,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:34:13.299Z] Step 350: Phase=mining, Timer=16s, Pos=(612,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:34:16.574Z] Step 400: Phase=mining, Timer=12s, Pos=(612,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:34:20.741Z] Step 450: Phase=mining, Timer=8s, Pos=(612,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:34:24.906Z] Step 500: Phase=mining, Timer=4s, Pos=(612,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:34:28.324Z] Phase: defense, Wave: 1
+[2026-01-13T02:34:28.324Z] Wave 1 started, 3 enemies
+[2026-01-13T02:34:29.075Z] Step 550: Phase=defense, Timer=0s, Pos=(612,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:34:33.240Z] Step 600: Phase=defense, Timer=0s, Pos=(612,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:34:37.406Z] Step 650: Phase=defense, Timer=0s, Pos=(612,315), Carrying=2/5, Deposited=0/0/0, HP=752
+[2026-01-13T02:34:41.574Z] Step 700: Phase=defense, Timer=0s, Pos=(612,315), Carrying=2/5, Deposited=0/0/0, HP=608
+[2026-01-13T02:34:44.828Z] Step 750: Phase=defense, Timer=0s, Pos=(612,315), Carrying=2/5, Deposited=0/0/0, HP=464
+[2026-01-13T02:34:48.995Z] Step 800: Phase=defense, Timer=0s, Pos=(612,315), Carrying=2/5, Deposited=0/0/0, HP=320
+[2026-01-13T02:34:48.997Z] 
+=== ITERATION 15 ===
+[2026-01-13T02:34:49.500Z] Phase: mining, Wave: 0
+[2026-01-13T02:34:53.660Z] Step 50: Phase=mining, Timer=41s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:34:57.827Z] Step 100: Phase=mining, Timer=37s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:35:01.993Z] Step 150: Phase=mining, Timer=33s, Pos=(680,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:35:06.160Z] Step 200: Phase=mining, Timer=29s, Pos=(680,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:35:10.327Z] Step 250: Phase=mining, Timer=25s, Pos=(617,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:35:13.596Z] Step 300: Phase=mining, Timer=21s, Pos=(617,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:35:17.763Z] Step 350: Phase=mining, Timer=16s, Pos=(653,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:35:21.930Z] Step 400: Phase=mining, Timer=12s, Pos=(617,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:35:26.097Z] Step 450: Phase=mining, Timer=8s, Pos=(617,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:35:30.262Z] Step 500: Phase=mining, Timer=4s, Pos=(657,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:35:33.680Z] Phase: defense, Wave: 1
+[2026-01-13T02:35:33.680Z] Wave 1 started, 3 enemies
+[2026-01-13T02:35:34.430Z] Step 550: Phase=defense, Timer=0s, Pos=(631,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:35:38.596Z] Step 600: Phase=defense, Timer=0s, Pos=(631,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:35:41.864Z] Step 650: Phase=defense, Timer=0s, Pos=(631,309), Carrying=0/5, Deposited=0/0/0, HP=752
+[2026-01-13T02:35:46.030Z] Step 700: Phase=defense, Timer=0s, Pos=(631,309), Carrying=0/5, Deposited=0/0/0, HP=584
+[2026-01-13T02:35:50.198Z] Step 750: Phase=defense, Timer=0s, Pos=(631,309), Carrying=0/5, Deposited=0/0/0, HP=440
+[2026-01-13T02:35:54.364Z] Step 800: Phase=defense, Timer=0s, Pos=(631,309), Carrying=0/5, Deposited=0/0/0, HP=296
+[2026-01-13T02:35:54.366Z] 
+=== ITERATION 16 ===
+[2026-01-13T02:35:54.869Z] Phase: mining, Wave: 0
+[2026-01-13T02:35:59.030Z] Step 50: Phase=mining, Timer=41s, Pos=(640,283), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:36:03.196Z] Step 100: Phase=mining, Timer=37s, Pos=(617,283), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:36:07.364Z] Step 150: Phase=mining, Timer=33s, Pos=(623,309), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:36:11.529Z] Step 200: Phase=mining, Timer=29s, Pos=(679,208), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:36:14.797Z] Step 250: Phase=mining, Timer=25s, Pos=(679,309), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:36:18.963Z] Step 300: Phase=mining, Timer=21s, Pos=(666,309), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:36:23.131Z] Step 350: Phase=mining, Timer=16s, Pos=(695,321), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:36:27.296Z] Step 400: Phase=mining, Timer=12s, Pos=(683,315), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:36:31.463Z] Step 450: Phase=mining, Timer=8s, Pos=(683,315), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:36:35.629Z] Step 500: Phase=mining, Timer=4s, Pos=(683,315), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:36:39.045Z] Phase: defense, Wave: 1
+[2026-01-13T02:36:39.046Z] Wave 1 started, 3 enemies
+[2026-01-13T02:36:39.798Z] Step 550: Phase=defense, Timer=0s, Pos=(683,315), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:36:43.061Z] Step 600: Phase=defense, Timer=0s, Pos=(683,315), Carrying=1/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:36:47.228Z] Step 650: Phase=defense, Timer=0s, Pos=(683,315), Carrying=1/5, Deposited=1/0/0, HP=776
+[2026-01-13T02:36:51.394Z] Step 700: Phase=defense, Timer=0s, Pos=(683,315), Carrying=1/5, Deposited=1/0/0, HP=620
+[2026-01-13T02:36:55.561Z] Step 750: Phase=defense, Timer=0s, Pos=(683,315), Carrying=1/5, Deposited=1/0/0, HP=476
+[2026-01-13T02:36:59.728Z] Step 800: Phase=defense, Timer=0s, Pos=(683,315), Carrying=1/5, Deposited=1/0/0, HP=332
+[2026-01-13T02:36:59.729Z] 
+=== ITERATION 17 ===
+[2026-01-13T02:37:00.233Z] Phase: mining, Wave: 0
+[2026-01-13T02:37:04.393Z] Step 50: Phase=mining, Timer=41s, Pos=(616,308), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:37:08.559Z] Step 100: Phase=mining, Timer=37s, Pos=(672,310), Carrying=3/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:37:11.791Z] Step 150: Phase=mining, Timer=33s, Pos=(652,310), Carrying=3/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:37:15.957Z] Step 200: Phase=mining, Timer=29s, Pos=(626,221), Carrying=3/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:37:20.124Z] Step 250: Phase=mining, Timer=25s, Pos=(623,201), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:37:24.290Z] Step 300: Phase=mining, Timer=21s, Pos=(616,208), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:37:28.456Z] Step 350: Phase=mining, Timer=16s, Pos=(679,309), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:37:32.623Z] Step 400: Phase=mining, Timer=12s, Pos=(616,309), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:37:36.789Z] Step 450: Phase=mining, Timer=8s, Pos=(616,309), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:37:40.049Z] Step 500: Phase=mining, Timer=4s, Pos=(679,309), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:37:43.466Z] Phase: defense, Wave: 1
+[2026-01-13T02:37:43.466Z] Wave 1 started, 3 enemies
+[2026-01-13T02:37:44.216Z] Step 550: Phase=defense, Timer=0s, Pos=(639,325), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:37:48.384Z] Step 600: Phase=defense, Timer=0s, Pos=(639,325), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:37:52.550Z] Step 650: Phase=defense, Timer=0s, Pos=(639,325), Carrying=0/5, Deposited=3/0/0, HP=752
+[2026-01-13T02:37:56.717Z] Step 700: Phase=defense, Timer=0s, Pos=(639,325), Carrying=0/5, Deposited=3/0/0, HP=608
+[2026-01-13T02:38:00.883Z] Step 750: Phase=defense, Timer=0s, Pos=(639,325), Carrying=0/5, Deposited=3/0/0, HP=464
+[2026-01-13T02:38:05.050Z] Step 800: Phase=defense, Timer=0s, Pos=(639,325), Carrying=0/5, Deposited=3/0/0, HP=308
+[2026-01-13T02:38:05.052Z] 
+=== ITERATION 18 ===
+[2026-01-13T02:38:05.554Z] Phase: mining, Wave: 0
+[2026-01-13T02:38:08.830Z] Step 50: Phase=mining, Timer=41s, Pos=(623,265), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:38:12.996Z] Step 100: Phase=mining, Timer=37s, Pos=(601,310), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:38:17.163Z] Step 150: Phase=mining, Timer=33s, Pos=(584,325), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:38:21.329Z] Step 200: Phase=mining, Timer=29s, Pos=(611,283), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:38:25.496Z] Step 250: Phase=mining, Timer=25s, Pos=(611,283), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:38:29.663Z] Step 300: Phase=mining, Timer=21s, Pos=(611,283), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:38:33.830Z] Step 350: Phase=mining, Timer=16s, Pos=(611,283), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:38:37.090Z] Step 400: Phase=mining, Timer=12s, Pos=(611,283), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:38:41.256Z] Step 450: Phase=mining, Timer=8s, Pos=(611,283), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:38:45.424Z] Step 500: Phase=mining, Timer=4s, Pos=(611,283), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:38:48.840Z] Phase: defense, Wave: 1
+[2026-01-13T02:38:48.840Z] Wave 1 started, 3 enemies
+[2026-01-13T02:38:49.589Z] Step 550: Phase=defense, Timer=0s, Pos=(611,283), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:38:53.756Z] Step 600: Phase=defense, Timer=0s, Pos=(611,283), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:38:57.922Z] Step 650: Phase=defense, Timer=0s, Pos=(611,283), Carrying=2/5, Deposited=0/0/0, HP=752
+[2026-01-13T02:39:02.089Z] Step 700: Phase=defense, Timer=0s, Pos=(611,283), Carrying=2/5, Deposited=0/0/0, HP=608
+[2026-01-13T02:39:06.255Z] Step 750: Phase=defense, Timer=0s, Pos=(611,283), Carrying=2/5, Deposited=0/0/0, HP=452
+[2026-01-13T02:39:09.519Z] Step 800: Phase=defense, Timer=0s, Pos=(611,283), Carrying=2/5, Deposited=0/0/0, HP=308
+[2026-01-13T02:39:09.521Z] 
+=== ITERATION 19 ===
+[2026-01-13T02:39:10.025Z] Phase: mining, Wave: 0
+[2026-01-13T02:39:14.186Z] Step 50: Phase=mining, Timer=41s, Pos=(616,309), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:39:18.353Z] Step 100: Phase=mining, Timer=37s, Pos=(628,321), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:39:22.519Z] Step 150: Phase=mining, Timer=33s, Pos=(607,326), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:39:26.685Z] Step 200: Phase=mining, Timer=29s, Pos=(614,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:39:30.852Z] Step 250: Phase=mining, Timer=25s, Pos=(614,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:39:35.019Z] Step 300: Phase=mining, Timer=21s, Pos=(614,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:39:38.282Z] Step 350: Phase=mining, Timer=16s, Pos=(614,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:39:42.448Z] Step 400: Phase=mining, Timer=12s, Pos=(614,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:39:46.615Z] Step 450: Phase=mining, Timer=8s, Pos=(614,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:39:50.781Z] Step 500: Phase=mining, Timer=4s, Pos=(614,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:39:54.198Z] Phase: defense, Wave: 1
+[2026-01-13T02:39:54.198Z] Wave 1 started, 3 enemies
+[2026-01-13T02:39:54.949Z] Step 550: Phase=defense, Timer=0s, Pos=(614,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:39:59.114Z] Step 600: Phase=defense, Timer=0s, Pos=(614,315), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:40:03.282Z] Step 650: Phase=defense, Timer=0s, Pos=(614,315), Carrying=2/5, Deposited=0/0/0, HP=704
+[2026-01-13T02:40:06.540Z] Step 700: Phase=defense, Timer=0s, Pos=(614,315), Carrying=2/5, Deposited=0/0/0, HP=560
+[2026-01-13T02:40:10.707Z] Step 750: Phase=defense, Timer=0s, Pos=(614,315), Carrying=2/5, Deposited=0/0/0, HP=416
+[2026-01-13T02:40:14.874Z] Step 800: Phase=defense, Timer=0s, Pos=(614,315), Carrying=2/5, Deposited=0/0/0, HP=260
+[2026-01-13T02:40:14.875Z] 
+=== ITERATION 20 ===
+[2026-01-13T02:40:15.379Z] Phase: mining, Wave: 0
+[2026-01-13T02:40:19.539Z] Step 50: Phase=mining, Timer=41s, Pos=(647,269), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:40:23.706Z] Step 100: Phase=mining, Timer=37s, Pos=(657,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:40:27.873Z] Step 150: Phase=mining, Timer=33s, Pos=(676,203), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:40:32.039Z] Step 200: Phase=mining, Timer=29s, Pos=(643,309), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:40:35.303Z] Step 250: Phase=mining, Timer=25s, Pos=(623,309), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:40:39.470Z] Step 300: Phase=mining, Timer=21s, Pos=(672,309), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:40:43.637Z] Step 350: Phase=mining, Timer=16s, Pos=(623,309), Carrying=0/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:40:47.804Z] Step 400: Phase=mining, Timer=12s, Pos=(629,284), Carrying=1/5, Deposited=5/0/0, HP=800
+[2026-01-13T02:40:51.969Z] Step 450: Phase=mining, Timer=8s, Pos=(616,233), Carrying=0/5, Deposited=6/0/0, HP=800
+[2026-01-13T02:40:56.136Z] Step 500: Phase=mining, Timer=4s, Pos=(616,233), Carrying=0/5, Deposited=6/0/0, HP=800
+[2026-01-13T02:40:59.553Z] Phase: defense, Wave: 1
+[2026-01-13T02:40:59.554Z] Wave 1 started, 3 enemies
+[2026-01-13T02:41:00.303Z] Step 550: Phase=defense, Timer=0s, Pos=(616,325), Carrying=0/5, Deposited=6/0/0, HP=800
+[2026-01-13T02:41:03.568Z] Step 600: Phase=defense, Timer=0s, Pos=(616,325), Carrying=0/5, Deposited=6/0/0, HP=800
+[2026-01-13T02:41:07.734Z] Step 650: Phase=defense, Timer=0s, Pos=(616,325), Carrying=0/5, Deposited=6/0/0, HP=740
+[2026-01-13T02:41:11.901Z] Step 700: Phase=defense, Timer=0s, Pos=(616,325), Carrying=0/5, Deposited=6/0/0, HP=584
+[2026-01-13T02:41:16.068Z] Step 750: Phase=defense, Timer=0s, Pos=(616,325), Carrying=0/5, Deposited=6/0/0, HP=428
+[2026-01-13T02:41:20.236Z] Step 800: Phase=defense, Timer=0s, Pos=(616,325), Carrying=0/5, Deposited=6/0/0, HP=284
+[2026-01-13T02:41:20.320Z] 
+=== ITERATION 21 ===
+[2026-01-13T02:41:20.824Z] Phase: mining, Wave: 0
+[2026-01-13T02:41:24.984Z] Step 50: Phase=mining, Timer=41s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:41:29.150Z] Step 100: Phase=mining, Timer=37s, Pos=(679,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:41:32.417Z] Step 150: Phase=mining, Timer=33s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:41:36.583Z] Step 200: Phase=mining, Timer=29s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:41:40.749Z] Step 250: Phase=mining, Timer=25s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:41:44.916Z] Step 300: Phase=mining, Timer=21s, Pos=(623,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:41:49.081Z] Step 350: Phase=mining, Timer=16s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:41:53.250Z] Step 400: Phase=mining, Timer=12s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:41:57.415Z] Step 450: Phase=mining, Timer=8s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:42:00.675Z] Step 500: Phase=mining, Timer=4s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:42:04.091Z] Phase: defense, Wave: 1
+[2026-01-13T02:42:04.091Z] Wave 1 started, 3 enemies
+[2026-01-13T02:42:04.841Z] Step 550: Phase=defense, Timer=0s, Pos=(679,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:42:09.008Z] Step 600: Phase=defense, Timer=0s, Pos=(679,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:42:13.175Z] Step 650: Phase=defense, Timer=0s, Pos=(679,309), Carrying=0/5, Deposited=0/0/0, HP=740
+[2026-01-13T02:42:17.342Z] Step 700: Phase=defense, Timer=0s, Pos=(679,309), Carrying=0/5, Deposited=0/0/0, HP=596
+[2026-01-13T02:42:21.508Z] Step 750: Phase=defense, Timer=0s, Pos=(679,309), Carrying=0/5, Deposited=0/0/0, HP=440
+[2026-01-13T02:42:25.674Z] Step 800: Phase=defense, Timer=0s, Pos=(679,309), Carrying=0/5, Deposited=0/0/0, HP=284
+[2026-01-13T02:42:25.676Z] 
+=== ITERATION 22 ===
+[2026-01-13T02:42:26.179Z] Phase: mining, Wave: 0
+[2026-01-13T02:42:29.416Z] Step 50: Phase=mining, Timer=41s, Pos=(653,229), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:42:33.582Z] Step 100: Phase=mining, Timer=37s, Pos=(679,310), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:42:37.748Z] Step 150: Phase=mining, Timer=33s, Pos=(679,310), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:42:41.914Z] Step 200: Phase=mining, Timer=29s, Pos=(679,195), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:42:46.081Z] Step 250: Phase=mining, Timer=25s, Pos=(679,310), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:42:50.248Z] Step 300: Phase=mining, Timer=21s, Pos=(673,310), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:42:54.413Z] Step 350: Phase=mining, Timer=16s, Pos=(617,287), Carrying=0/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:42:58.581Z] Step 400: Phase=mining, Timer=12s, Pos=(673,281), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:43:01.841Z] Step 450: Phase=mining, Timer=8s, Pos=(626,342), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:43:06.009Z] Step 500: Phase=mining, Timer=4s, Pos=(631,342), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:43:09.425Z] Phase: defense, Wave: 1
+[2026-01-13T02:43:09.425Z] Wave 1 started, 3 enemies
+[2026-01-13T02:43:10.175Z] Step 550: Phase=defense, Timer=0s, Pos=(617,358), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:43:14.342Z] Step 600: Phase=defense, Timer=0s, Pos=(617,358), Carrying=0/5, Deposited=3/0/0, HP=800
+[2026-01-13T02:43:18.508Z] Step 650: Phase=defense, Timer=0s, Pos=(617,358), Carrying=0/5, Deposited=3/0/0, HP=716
+[2026-01-13T02:43:22.675Z] Step 700: Phase=defense, Timer=0s, Pos=(617,358), Carrying=0/5, Deposited=3/0/0, HP=572
+[2026-01-13T02:43:26.842Z] Step 750: Phase=defense, Timer=0s, Pos=(617,358), Carrying=0/5, Deposited=3/0/0, HP=428
+[2026-01-13T02:43:30.099Z] Step 800: Phase=defense, Timer=0s, Pos=(617,358), Carrying=0/5, Deposited=3/0/0, HP=284
+[2026-01-13T02:43:30.100Z] 
+=== ITERATION 23 ===
+[2026-01-13T02:43:30.603Z] Phase: mining, Wave: 0
+[2026-01-13T02:43:34.766Z] Step 50: Phase=mining, Timer=41s, Pos=(660,303), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:43:38.932Z] Step 100: Phase=mining, Timer=37s, Pos=(617,309), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:43:43.099Z] Step 150: Phase=mining, Timer=33s, Pos=(622,309), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:43:47.265Z] Step 200: Phase=mining, Timer=29s, Pos=(686,282), Carrying=3/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:43:51.431Z] Step 250: Phase=mining, Timer=25s, Pos=(686,282), Carrying=3/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:43:55.598Z] Step 300: Phase=mining, Timer=21s, Pos=(686,282), Carrying=3/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:43:58.845Z] Step 350: Phase=mining, Timer=16s, Pos=(686,282), Carrying=3/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:44:03.010Z] Step 400: Phase=mining, Timer=12s, Pos=(686,282), Carrying=3/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:44:07.177Z] Step 450: Phase=mining, Timer=8s, Pos=(686,282), Carrying=3/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:44:11.344Z] Step 500: Phase=mining, Timer=4s, Pos=(686,282), Carrying=3/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:44:14.760Z] Phase: defense, Wave: 1
+[2026-01-13T02:44:14.760Z] Wave 1 started, 3 enemies
+[2026-01-13T02:44:15.512Z] Step 550: Phase=defense, Timer=0s, Pos=(686,282), Carrying=3/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:44:19.677Z] Step 600: Phase=defense, Timer=0s, Pos=(686,282), Carrying=3/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:44:23.844Z] Step 650: Phase=defense, Timer=0s, Pos=(686,282), Carrying=3/5, Deposited=0/0/0, HP=752
+[2026-01-13T02:44:27.107Z] Step 700: Phase=defense, Timer=0s, Pos=(686,282), Carrying=3/5, Deposited=0/0/0, HP=596
+[2026-01-13T02:44:31.275Z] Step 750: Phase=defense, Timer=0s, Pos=(686,282), Carrying=3/5, Deposited=0/0/0, HP=452
+[2026-01-13T02:44:35.440Z] Step 800: Phase=defense, Timer=0s, Pos=(686,282), Carrying=3/5, Deposited=0/0/0, HP=296
+[2026-01-13T02:44:35.442Z] 
+=== ITERATION 24 ===
+[2026-01-13T02:44:35.945Z] Phase: mining, Wave: 0
+[2026-01-13T02:44:40.108Z] Step 50: Phase=mining, Timer=41s, Pos=(616,309), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:44:44.274Z] Step 100: Phase=mining, Timer=37s, Pos=(680,310), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:44:48.440Z] Step 150: Phase=mining, Timer=33s, Pos=(675,310), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:44:52.606Z] Step 200: Phase=mining, Timer=29s, Pos=(616,209), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:44:55.865Z] Step 250: Phase=mining, Timer=25s, Pos=(600,244), Carrying=0/5, Deposited=1/1/0, HP=800
+[2026-01-13T02:45:00.033Z] Step 300: Phase=mining, Timer=21s, Pos=(680,309), Carrying=0/5, Deposited=1/1/0, HP=800
+[2026-01-13T02:45:04.200Z] Step 350: Phase=mining, Timer=16s, Pos=(680,309), Carrying=0/5, Deposited=1/1/0, HP=800
+[2026-01-13T02:45:08.367Z] Step 400: Phase=mining, Timer=12s, Pos=(680,309), Carrying=0/5, Deposited=1/1/0, HP=800
+[2026-01-13T02:45:12.532Z] Step 450: Phase=mining, Timer=8s, Pos=(680,309), Carrying=0/5, Deposited=1/1/0, HP=800
+[2026-01-13T02:45:16.699Z] Step 500: Phase=mining, Timer=4s, Pos=(667,253), Carrying=0/5, Deposited=2/1/0, HP=800
+[2026-01-13T02:45:20.115Z] Phase: defense, Wave: 1
+[2026-01-13T02:45:20.116Z] Wave 1 started, 3 enemies
+[2026-01-13T02:45:20.865Z] Step 550: Phase=defense, Timer=0s, Pos=(616,319), Carrying=0/5, Deposited=2/1/0, HP=800
+[2026-01-13T02:45:24.124Z] Step 600: Phase=defense, Timer=0s, Pos=(616,319), Carrying=0/5, Deposited=2/1/0, HP=800
+[2026-01-13T02:45:28.291Z] Step 650: Phase=defense, Timer=0s, Pos=(616,319), Carrying=0/5, Deposited=2/1/0, HP=764
+[2026-01-13T02:45:32.458Z] Step 700: Phase=defense, Timer=0s, Pos=(616,319), Carrying=0/5, Deposited=2/1/0, HP=620
+[2026-01-13T02:45:36.625Z] Step 750: Phase=defense, Timer=0s, Pos=(616,319), Carrying=0/5, Deposited=2/1/0, HP=464
+[2026-01-13T02:45:40.790Z] Step 800: Phase=defense, Timer=0s, Pos=(616,319), Carrying=0/5, Deposited=2/1/0, HP=308
+[2026-01-13T02:45:40.792Z] 
+=== ITERATION 25 ===
+[2026-01-13T02:45:41.294Z] Phase: mining, Wave: 0
+[2026-01-13T02:45:45.457Z] Step 50: Phase=mining, Timer=41s, Pos=(643,229), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:45:49.623Z] Step 100: Phase=mining, Timer=37s, Pos=(617,306), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:45:52.883Z] Step 150: Phase=mining, Timer=33s, Pos=(617,310), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:45:57.048Z] Step 200: Phase=mining, Timer=29s, Pos=(680,208), Carrying=2/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:46:01.214Z] Step 250: Phase=mining, Timer=25s, Pos=(690,240), Carrying=1/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:46:05.382Z] Step 300: Phase=mining, Timer=21s, Pos=(684,235), Carrying=1/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:46:09.547Z] Step 350: Phase=mining, Timer=16s, Pos=(684,235), Carrying=1/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:46:13.714Z] Step 400: Phase=mining, Timer=12s, Pos=(684,235), Carrying=1/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:46:17.880Z] Step 450: Phase=mining, Timer=8s, Pos=(684,235), Carrying=1/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:46:22.047Z] Step 500: Phase=mining, Timer=4s, Pos=(684,235), Carrying=1/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:46:24.455Z] Phase: defense, Wave: 1
+[2026-01-13T02:46:24.455Z] Wave 1 started, 3 enemies
+[2026-01-13T02:46:25.204Z] Step 550: Phase=defense, Timer=0s, Pos=(684,235), Carrying=1/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:46:29.370Z] Step 600: Phase=defense, Timer=0s, Pos=(684,235), Carrying=1/5, Deposited=2/0/0, HP=800
+[2026-01-13T02:46:33.536Z] Step 650: Phase=defense, Timer=0s, Pos=(684,235), Carrying=1/5, Deposited=2/0/0, HP=740
+[2026-01-13T02:46:37.703Z] Step 700: Phase=defense, Timer=0s, Pos=(684,235), Carrying=1/5, Deposited=2/0/0, HP=584
+[2026-01-13T02:46:41.869Z] Step 750: Phase=defense, Timer=0s, Pos=(684,235), Carrying=1/5, Deposited=2/0/0, HP=440
+[2026-01-13T02:46:46.037Z] Step 800: Phase=defense, Timer=0s, Pos=(684,235), Carrying=1/5, Deposited=2/0/0, HP=296
+[2026-01-13T02:46:46.038Z] 
+=== ITERATION 26 ===
+[2026-01-13T02:46:46.542Z] Phase: mining, Wave: 0
+[2026-01-13T02:46:50.702Z] Step 50: Phase=mining, Timer=41s, Pos=(672,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:46:54.038Z] Step 100: Phase=mining, Timer=37s, Pos=(621,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:46:58.204Z] Step 150: Phase=mining, Timer=33s, Pos=(680,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:47:02.372Z] Step 200: Phase=mining, Timer=29s, Pos=(680,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:47:06.538Z] Step 250: Phase=mining, Timer=25s, Pos=(680,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:47:10.703Z] Step 300: Phase=mining, Timer=21s, Pos=(653,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:47:14.870Z] Step 350: Phase=mining, Timer=16s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:47:19.038Z] Step 400: Phase=mining, Timer=12s, Pos=(680,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:47:22.286Z] Step 450: Phase=mining, Timer=8s, Pos=(673,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:47:26.452Z] Step 500: Phase=mining, Timer=4s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:47:29.868Z] Phase: defense, Wave: 1
+[2026-01-13T02:47:29.869Z] Wave 1 started, 3 enemies
+[2026-01-13T02:47:30.619Z] Step 550: Phase=defense, Timer=0s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:47:34.785Z] Step 600: Phase=defense, Timer=0s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:47:38.952Z] Step 650: Phase=defense, Timer=0s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=728
+[2026-01-13T02:47:43.119Z] Step 700: Phase=defense, Timer=0s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=584
+[2026-01-13T02:47:47.285Z] Step 750: Phase=defense, Timer=0s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=440
+[2026-01-13T02:47:50.026Z] Step 800: Phase=defense, Timer=0s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=284
+[2026-01-13T02:47:50.029Z] 
+=== ITERATION 27 ===
+[2026-01-13T02:47:50.532Z] Phase: mining, Wave: 0
+[2026-01-13T02:47:54.692Z] Step 50: Phase=mining, Timer=41s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:47:58.860Z] Step 100: Phase=mining, Timer=37s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:48:03.027Z] Step 150: Phase=mining, Timer=33s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:48:07.193Z] Step 200: Phase=mining, Timer=29s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:48:11.359Z] Step 250: Phase=mining, Timer=25s, Pos=(616,309), Carrying=0/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:48:15.526Z] Step 300: Phase=mining, Timer=21s, Pos=(680,207), Carrying=1/5, Deposited=0/0/0, HP=800
+[2026-01-13T02:48:19.278Z] Step 350: Phase=mining, Timer=16s, Pos=(616,255), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:48:23.444Z] Step 400: Phase=mining, Timer=12s, Pos=(616,309), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:48:27.611Z] Step 450: Phase=mining, Timer=8s, Pos=(680,309), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:48:31.777Z] Step 500: Phase=mining, Timer=4s, Pos=(616,309), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:48:35.195Z] Phase: defense, Wave: 1
+[2026-01-13T02:48:35.195Z] Wave 1 started, 3 enemies
+[2026-01-13T02:48:35.943Z] Step 550: Phase=defense, Timer=0s, Pos=(680,309), Carrying=0/5, Deposited=1/0/0, HP=800
+[2026-01-13T02:48:37.097Z] [ERROR] Execute: page.evaluate: Target page, context or browser has been closed
+[2026-01-13T02:48:37.100Z] 
+=== ITERATION 28 ===
+[2026-01-13T02:48:37.104Z] [FATAL] page.evaluate: Target page, context or browser has been closed
+[2026-01-13T02:48:37.114Z] Playtest complete

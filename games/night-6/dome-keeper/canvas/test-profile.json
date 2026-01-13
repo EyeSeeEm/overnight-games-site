@@ -1,0 +1,131 @@
+{
+  "game_info": {
+    "name": "Dome Keeper Clone",
+    "type": "mining_tower_defense_roguelike",
+    "description": "Roguelike survival combining tower defense with mining. Control a keeper who mines underground for resources between enemy waves, then returns to the dome to defend it using a laser weapon."
+  },
+  "core_loop": {
+    "description": "Mine phase (75s): Dig tunnels, collect resources, explore -> Defense phase: Enemies attack dome, fire laser to defend -> Upgrade: Spend resources on upgrades -> Repeat until dome destroyed or relic retrieved",
+    "estimated_duration_sec": 300,
+    "loops_for_meaningful_test": 3
+  },
+  "recommended_test_duration_sec": 180,
+  "resolution": {
+    "width": 800,
+    "height": 600
+  },
+  "map_config": {
+    "width": 80,
+    "height": 100,
+    "tile_size": 16,
+    "dome_position": { "x": 40, "y": 5 }
+  },
+  "input_scheme": {
+    "movement": {
+      "type": "wasd_dig",
+      "keys": ["w", "a", "s", "d"],
+      "description": "WASD moves keeper AND digs in that direction"
+    },
+    "primary_action": {
+      "type": "mouse_aim_fire",
+      "keys": ["MouseMove", "MouseClick"],
+      "description": "Mouse aims laser during defense, click to fire"
+    },
+    "secondary_actions": [
+      { "name": "interact", "key": "Space", "description": "Pick up resources, activate nodes" },
+      { "name": "upgrade_menu", "key": "e", "description": "Open upgrade menu at dome" },
+      { "name": "drop_resources", "key": "q", "description": "Drop carried resources" }
+    ]
+  },
+  "game_phases": {
+    "mining": {
+      "duration_sec": 75,
+      "player_action": "dig_collect_explore",
+      "enemies_active": false
+    },
+    "defense": {
+      "duration_sec": "until_wave_cleared",
+      "player_action": "return_to_dome_fire_laser",
+      "enemies_active": true
+    }
+  },
+  "combat_profile": {
+    "style": "tower_defense_laser",
+    "how_to_attack": "During defense phase, move mouse to aim laser turret on dome, hold click to fire continuous beam at enemies",
+    "dome_base_hp": 800,
+    "enemy_approach": "Enemies walk/fly toward dome from screen edges"
+  },
+  "success_conditions": {
+    "minimum": {
+      "waves_survived": 3,
+      "resources_collected": 10,
+      "survival_sec": 180
+    },
+    "good_run": {
+      "waves_survived": 5,
+      "upgrades_purchased": 2,
+      "resources_collected": 30
+    }
+  },
+  "key_features": [
+    {
+      "name": "4-Direction Digging",
+      "gdd_section": "Feedback Requirements - Digging in All Directions",
+      "testable": true,
+      "test_method": "Press WASD to dig in all 4 cardinal directions"
+    },
+    {
+      "name": "Camera Follow",
+      "gdd_section": "Feedback Requirements - Camera Zoom and Follow",
+      "testable": true,
+      "test_method": "Camera should follow keeper, show ~15x12 tiles"
+    },
+    {
+      "name": "Wave Timer",
+      "gdd_section": "Section 8 - Wave System",
+      "testable": true,
+      "test_method": "Timer counts down mining phase, then enemies spawn"
+    },
+    {
+      "name": "Laser Defense",
+      "gdd_section": "Section 6 - Dome Weapons",
+      "testable": true,
+      "test_method": "During defense, aim with mouse, fire with click"
+    },
+    {
+      "name": "Resource Collection",
+      "gdd_section": "Section 4 - Mining System",
+      "testable": true,
+      "test_method": "Mine ore tiles, collect iron/water/cobalt"
+    },
+    {
+      "name": "Upgrade Shop",
+      "gdd_section": "Feedback Requirements - Upgrade Shop",
+      "testable": true,
+      "test_method": "Press E at dome to open upgrade menu, spend resources"
+    },
+    {
+      "name": "Dome Health",
+      "gdd_section": "Section 5 - The Dome",
+      "testable": true,
+      "test_method": "Enemies damage dome, HP decreases, game over at 0"
+    },
+    {
+      "name": "Rock Variety",
+      "gdd_section": "Feedback Requirements - Rock Type Variety",
+      "testable": true,
+      "test_method": "Different colored rocks with different HP values"
+    }
+  ],
+  "resources": [
+    { "name": "Iron", "color": "#B87333", "spawn_depth": "0+" },
+    { "name": "Water", "color": "#4A90D9", "spawn_depth": "5+" },
+    { "name": "Cobalt", "color": "#8B5CF6", "spawn_depth": "15+" }
+  ],
+  "enemy_types_simplified": [
+    { "name": "Walker", "hp": 40, "damage": 12, "speed": 90, "behavior": "ground_melee" },
+    { "name": "Flyer", "hp": 20, "damage": 15, "speed": 120, "behavior": "aerial_ranged" },
+    { "name": "Hornet", "hp": 100, "damage": 45, "speed": 65, "behavior": "fast_ground" },
+    { "name": "Tick", "hp": 5, "damage": 15, "speed": 40, "behavior": "swarm" }
+  ]
+}

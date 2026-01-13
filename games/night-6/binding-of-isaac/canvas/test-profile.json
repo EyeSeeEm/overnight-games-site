@@ -1,0 +1,140 @@
+{
+  "game_info": {
+    "name": "Binding of Isaac Clone",
+    "type": "twin_stick_roguelike",
+    "description": "Top-down roguelike dungeon crawler with twin-stick shooter mechanics. Player controls a crying child navigating procedurally generated basement floors, shooting tears at enemies, collecting items that stack and synergize, and fighting bosses to descend deeper."
+  },
+  "core_loop": {
+    "description": "Enter room -> Clear enemies (doors lock until cleared) -> Collect pickups -> Find treasure/shop/boss rooms -> Beat boss -> Descend to next floor -> Repeat until death or victory",
+    "estimated_duration_sec": 180,
+    "loops_for_meaningful_test": 3
+  },
+  "recommended_test_duration_sec": 300,
+  "resolution": {
+    "width": 800,
+    "height": 600
+  },
+  "room_grid": {
+    "tiles_x": 13,
+    "tiles_y": 7,
+    "tile_size": 32
+  },
+  "input_scheme": {
+    "movement": {
+      "type": "wasd",
+      "keys": ["w", "a", "s", "d"],
+      "description": "8-directional movement with WASD"
+    },
+    "primary_action": {
+      "type": "twin_stick_fire",
+      "keys": ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"],
+      "description": "Fire tears in cardinal directions with arrow keys"
+    },
+    "secondary_actions": [
+      { "name": "drop_bomb", "key": "e", "description": "Place bomb at player position" },
+      { "name": "use_active_item", "key": "Space", "description": "Use active item if charged" },
+      { "name": "toggle_map", "key": "Tab", "description": "Hold for full map, tap to cycle minimap" },
+      { "name": "drop_consumable", "key": "q", "description": "Drop held card/pill" }
+    ]
+  },
+  "combat_profile": {
+    "style": "twin_stick",
+    "how_to_attack": "Press arrow keys to fire tears in that direction while moving with WASD. Tears are projectiles that damage enemies on contact.",
+    "player_base_stats": {
+      "health": "3 red hearts",
+      "damage": 3.5,
+      "tears_delay": 10,
+      "range": 23.75,
+      "shot_speed": 1.0,
+      "speed": 1.0
+    },
+    "enemy_contact_damage": "0.5-1 heart depending on enemy type"
+  },
+  "success_conditions": {
+    "minimum": {
+      "rooms_cleared": 3,
+      "enemies_killed": 5,
+      "survival_sec": 60
+    },
+    "good_run": {
+      "floors_completed": 1,
+      "boss_killed": true,
+      "items_collected": 2
+    }
+  },
+  "key_features": [
+    {
+      "name": "13x7 Room Grid",
+      "gdd_section": "Section 22 - Critical Room Layout",
+      "testable": true,
+      "test_method": "Verify room dimensions and tile-aligned objects"
+    },
+    {
+      "name": "Twin-Stick Shooting",
+      "gdd_section": "Section 2 - Core Combat System",
+      "testable": true,
+      "test_method": "WASD moves, Arrow keys fire tears"
+    },
+    {
+      "name": "Health System (Hearts)",
+      "gdd_section": "Section 3 - Health System",
+      "testable": true,
+      "test_method": "Take damage, verify heart loss and i-frames"
+    },
+    {
+      "name": "Room Transitions",
+      "gdd_section": "Section 8 - Room Types",
+      "testable": true,
+      "test_method": "Clear room, doors open, walk through to next room"
+    },
+    {
+      "name": "Enemy Spawn Animation",
+      "gdd_section": "Section 9 - Enemy Spawn Behavior",
+      "testable": true,
+      "test_method": "Enemies play spawn animation, cannot attack during spawn"
+    },
+    {
+      "name": "Procedural Floor Generation",
+      "gdd_section": "Section 7 - Floor Structure",
+      "testable": true,
+      "test_method": "Verify breadth-first room expansion, special room placement"
+    },
+    {
+      "name": "Fog of War",
+      "gdd_section": "Section 21 - Critical Implementation Notes",
+      "testable": true,
+      "test_method": "Minimap only shows discovered rooms"
+    },
+    {
+      "name": "Item Pickups",
+      "gdd_section": "Section 4 - Pickup System",
+      "testable": true,
+      "test_method": "Collect hearts, coins, bombs, keys"
+    },
+    {
+      "name": "Destructible Objects",
+      "gdd_section": "Feedback Requirements - Poops Must Be Destroyable",
+      "testable": true,
+      "test_method": "Shoot poop, verify damage states and destruction"
+    },
+    {
+      "name": "Room Persistence",
+      "gdd_section": "Feedback Requirements - Room Persistence",
+      "testable": true,
+      "test_method": "Leave room, return, verify killed enemies stay dead"
+    }
+  ],
+  "known_issues_from_gdd": [
+    "Player can get stuck in objects when entering rooms",
+    "Previous crashes when shooting/killing certain enemies",
+    "Room transition crashes/hangs",
+    "No damage numbers should appear (not Isaac style)"
+  ],
+  "chapter_progression": [
+    { "chapter": 1, "floors": ["Basement I", "Basement II"], "rooms": "7-11", "theme": "Brown/Tan" },
+    { "chapter": 2, "floors": ["Caves I", "Caves II"], "rooms": "11-15", "theme": "Gray/Blue" },
+    { "chapter": 3, "floors": ["Depths I", "Depths II"], "rooms": "15-19", "theme": "Dark Gray/Red" },
+    { "chapter": 4, "floors": ["Womb I", "Womb II"], "rooms": "9-11", "theme": "Red/Flesh" }
+  ],
+  "boss_list_chapter_1": ["Monstro", "Duke of Flies", "Larry Jr.", "Gemini", "The Haunt", "Dingle"]
+}

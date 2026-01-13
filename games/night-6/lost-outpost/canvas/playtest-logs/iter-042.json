@@ -1,0 +1,10 @@
+{
+  "game": "lost-outpost",
+  "iteration": 42,
+  "started": "2026-01-13T01:02:20.806Z",
+  "outcome": "timeout",
+  "kills": 6,
+  "duration": 30012,
+  "level": 1,
+  "xp": 80
+}

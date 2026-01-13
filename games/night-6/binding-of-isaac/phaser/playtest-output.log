@@ -1,0 +1,48 @@
+Starting Binding of Isaac playtest...
+Harness detected.
+
+=== Iteration 1 ===
+  ERROR: No player state!
+  TIMEOUT at step 1. Kills: 0
+
+=== Iteration 2 ===
+  Step 50: HP=undefined, Enemies=0, Kills=0
+  Step 100: HP=undefined, Enemies=0, Kills=0
+  Step 150: HP=undefined, Enemies=3, Kills=0
+  Step 200: HP=undefined, Enemies=0, Kills=3
+  Step 250: HP=undefined, Enemies=0, Kills=3
+  Step 300: HP=undefined, Enemies=0, Kills=3
+  TIMEOUT at step 300. Kills: 3
+
+=== Iteration 3 ===
+  Step 50: HP=undefined, Enemies=0, Kills=0
+  Step 100: HP=undefined, Enemies=0, Kills=0
+  Step 150: HP=undefined, Enemies=0, Kills=0
+  Step 200: HP=undefined, Enemies=0, Kills=0
+  Step 250: HP=undefined, Enemies=0, Kills=0
+  Step 300: HP=undefined, Enemies=0, Kills=0
+  TIMEOUT at step 300. Kills: 0
+
+=== Iteration 4 ===
+  Step 50: HP=undefined, Enemies=0, Kills=0
+  Step 100: HP=undefined, Enemies=0, Kills=0
+  Step 150: HP=undefined, Enemies=0, Kills=0
+  Step 200: HP=undefined, Enemies=0, Kills=0
+  Step 250: HP=undefined, Enemies=0, Kills=2
+  Step 300: HP=undefined, Enemies=0, Kills=4
+  TIMEOUT at step 300. Kills: 4
+
+=== Iteration 5 ===
+  Step 50: HP=undefined, Enemies=0, Kills=0
+  Step 100: HP=undefined, Enemies=0, Kills=0
+  Step 150: HP=undefined, Enemies=0, Kills=0
+  Step 200: HP=undefined, Enemies=0, Kills=0
+  Step 250: HP=undefined, Enemies=0, Kills=0
+  Step 300: HP=undefined, Enemies=0, Kills=0
+  TIMEOUT at step 300. Kills: 0
+
+=== Iteration 6 ===
+  Step 50: HP=undefined, Enemies=0, Kills=0
+  Step 100: HP=undefined, Enemies=0, Kills=0
+  Step 150: HP=undefined, Enemies=0, Kills=0
+  Step 200: HP=undefined, Enemies=0, Kills=0

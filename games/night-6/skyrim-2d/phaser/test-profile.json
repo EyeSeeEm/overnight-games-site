@@ -1,0 +1,97 @@
+{
+  "game_info": {
+    "name": "Frostfall: A 2D Skyrim Demake",
+    "type": "action_rpg",
+    "description": "Top-down pixel art RPG capturing Skyrim's exploration-driven gameplay with combat, quests, and character progression. Features Nordic fantasy setting, multiple enemy types, and open-world exploration."
+  },
+  "core_loop": {
+    "description": "EXPLORE -> DISCOVER -> FIGHT -> LOOT -> UPGRADE -> EXPLORE. Player navigates overworld, enters dungeons, fights enemies, collects loot, levels up skills, and returns for more.",
+    "estimated_duration_sec": 120,
+    "loops_for_meaningful_test": 5
+  },
+  "recommended_test_duration_sec": 600,
+  "input_scheme": {
+    "movement": { "type": "wasd", "keys": ["w", "a", "s", "d"] },
+    "primary_action": { "type": "mouse_click", "description": "Attack (melee swing / fire arrow / cast spell)" },
+    "secondary_action": { "type": "mouse_right_click", "description": "Block (melee) / Aim (bow) / Charge spell" },
+    "special_actions": [
+      { "name": "dodge_roll", "key": "Shift" },
+      { "name": "sprint", "key": "Shift", "hold": true },
+      { "name": "interact", "key": "e" },
+      { "name": "inventory", "key": "Tab" },
+      { "name": "quick_slot_1", "key": "1" },
+      { "name": "quick_slot_2", "key": "2" },
+      { "name": "quick_slot_3", "key": "3" },
+      { "name": "ability", "key": "Space" }
+    ]
+  },
+  "combat_profile": {
+    "style": "action_rpg",
+    "how_to_attack": "Left click to swing weapon/fire bow/cast spell in direction of mouse. Hold right click to block with shield or charge spell. Hold left click for power attack (uses more stamina)."
+  },
+  "success_conditions": {
+    "minimum": {
+      "enemies_killed": 5,
+      "survival_sec": 60,
+      "quests_started": 1
+    },
+    "good_playthrough": {
+      "enemies_killed": 20,
+      "survival_sec": 300,
+      "quests_completed": 1,
+      "dungeons_cleared": 1
+    }
+  },
+  "key_features": [
+    { "name": "Combat System", "gdd_section": "Section 5", "testable": true, "test_method": "Attack enemies with sword, bow, or magic" },
+    { "name": "Movement & Dodging", "gdd_section": "Section 4.2", "testable": true, "test_method": "Move with WASD, dodge roll with Shift" },
+    { "name": "Skills & Leveling", "gdd_section": "Section 4.3", "testable": true, "test_method": "Gain XP from combat, level up skills" },
+    { "name": "Inventory System", "gdd_section": "Section 19.2", "testable": true, "test_method": "Open inventory, equip items" },
+    { "name": "Quest System", "gdd_section": "Section 14", "testable": true, "test_method": "Accept and complete quests from NPCs" },
+    { "name": "NPC Interaction", "gdd_section": "Section 15", "testable": true, "test_method": "Talk to NPCs, trade with merchants" },
+    { "name": "Enemy AI", "gdd_section": "Section 8.5", "testable": true, "test_method": "Enemies patrol, detect, chase, attack" },
+    { "name": "World Exploration", "gdd_section": "Section 13", "testable": true, "test_method": "Navigate between towns, dungeons, overworld" },
+    { "name": "Loot System", "gdd_section": "Section 11", "testable": true, "test_method": "Open chests, collect enemy drops" }
+  ],
+  "test_scenarios": [
+    {
+      "name": "basic_combat",
+      "description": "Kill a few bandits and survive",
+      "steps": ["Find enemy", "Attack with sword", "Dodge attacks", "Collect loot"]
+    },
+    {
+      "name": "dungeon_clear",
+      "description": "Enter and clear Embershard Mine",
+      "steps": ["Enter mine", "Clear rooms", "Defeat boss", "Collect boss loot"]
+    },
+    {
+      "name": "quest_completion",
+      "description": "Complete a side quest",
+      "steps": ["Talk to NPC", "Accept quest", "Complete objective", "Return for reward"]
+    },
+    {
+      "name": "exploration",
+      "description": "Explore the world and discover locations",
+      "steps": ["Leave starting area", "Find new locations", "Talk to NPCs", "Shop for gear"]
+    }
+  ],
+  "enemy_types": [
+    { "name": "Bandit", "hp": 40, "damage": 8, "behavior": "patrol_chase" },
+    { "name": "Bandit Archer", "hp": 30, "damage": 10, "behavior": "ranged_flee" },
+    { "name": "Bandit Chief", "hp": 80, "damage": 15, "behavior": "aggressive_power_attacks" },
+    { "name": "Wolf", "hp": 25, "damage": 6, "behavior": "pack_circle" },
+    { "name": "Alpha Wolf", "hp": 50, "damage": 10, "behavior": "leads_pack" },
+    { "name": "Draugr", "hp": 50, "damage": 10, "behavior": "guard_slow_chase" },
+    { "name": "Draugr Archer", "hp": 35, "damage": 12, "behavior": "ranged_slow" },
+    { "name": "Draugr Wight", "hp": 80, "damage": 15, "behavior": "aggressive_power_attacks" },
+    { "name": "Draugr Deathlord", "hp": 150, "damage": 25, "behavior": "boss_shout_knockback" }
+  ],
+  "expected_state_fields": {
+    "gameState": ["menu", "playing", "paused", "gameover", "victory", "dialogue", "inventory", "shop"],
+    "player": ["x", "y", "health", "maxHealth", "magicka", "maxMagicka", "stamina", "maxStamina", "level", "gold", "direction"],
+    "enemies": ["x", "y", "type", "health", "maxHealth", "state", "direction"],
+    "currentMap": "string",
+    "quests": ["activeQuests", "completedQuests"],
+    "inventory": "array"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "game_info": {
+    "name": "Motherload Clone",
+    "type": "mining_game",
+    "description": "Mining game on Mars. Control drilling pod, extract valuable minerals underground, return to surface before fuel runs out, sell minerals, buy upgrades, dig deeper until reaching the planet's core."
+  },
+  "core_loop": {
+    "description": "Drill underground collecting minerals -> Return to surface before fuel runs out -> Sell minerals at processor -> Buy fuel -> Upgrade equipment at shops -> Dig deeper -> Repeat",
+    "estimated_duration_sec": 120,
+    "loops_for_meaningful_test": 5
+  },
+  "recommended_test_duration_sec": 600,
+  "input_scheme": {
+    "movement": {
+      "type": "arrows_or_wasd",
+      "keys": ["w", "a", "s", "d", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]
+    },
+    "special_actions": [
+      { "name": "interact_shop", "key": "e" },
+      { "name": "use_item", "key": "1" }
+    ]
+  },
+  "combat_profile": {
+    "style": "none",
+    "how_to_attack": "N/A - mining game. Use arrow keys to move and drill. Down drills downward. Return to surface to sell minerals and refuel."
+  },
+  "success_conditions": {
+    "minimum": { "minerals_collected": 5, "depth_reached": 200, "cash_earned": 500 },
+    "good_playthrough": { "minerals_collected": 20, "depth_reached": 1000, "upgrades_purchased": 3 }
+  },
+  "key_features": [
+    { "name": "Drilling Mechanics", "testable": true },
+    { "name": "Fuel Management", "testable": true },
+    { "name": "Mineral Collection", "testable": true },
+    { "name": "Shop System", "testable": true },
+    { "name": "Upgrade System", "testable": true },
+    { "name": "Depth Progression", "testable": true }
+  ]
+}

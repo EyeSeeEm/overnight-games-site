@@ -1,0 +1,57 @@
+{
+  "game_info": {
+    "name": "Quasimorph Clone",
+    "type": "turn_based_tactical",
+    "description": "Turn-based tactical extraction roguelike on space stations. XCOM-style combat with AP system, cover mechanics, and corruption meter that spawns increasingly dangerous enemies."
+  },
+  "core_loop": {
+    "description": "Tactical combat using action points, move/shoot/reload cycle, manage corruption, reach extraction point",
+    "estimated_duration_sec": 900,
+    "loops_for_meaningful_test": 1
+  },
+  "recommended_test_duration_sec": 300,
+  "input_scheme": {
+    "movement": { "type": "click_to_move", "keys": ["click"] },
+    "primary_action": { "keys": ["click"], "description": "Click tile to move or enemy to attack" },
+    "secondary_actions": [
+      { "name": "end_turn", "key": "Enter" },
+      { "name": "reload", "key": "r" },
+      { "name": "change_stance", "key": "Tab" },
+      { "name": "use_item_1", "key": "1" },
+      { "name": "use_item_2", "key": "2" }
+    ]
+  },
+  "combat_profile": {
+    "style": "turn_based_tactical",
+    "how_to_attack": "Click on enemy to fire weapon. Costs 1-2 AP depending on weapon. Cover reduces damage taken."
+  },
+  "success_conditions": {
+    "minimum": {
+      "enemies_killed": 3,
+      "turns_survived": 10
+    },
+    "full_run": {
+      "reach_extraction": true,
+      "corruption_managed": true
+    }
+  },
+  "key_features": [
+    { "name": "AP System", "gdd_section": "Turn-Based Combat System", "testable": true, "description": "1-3 AP per turn based on stance" },
+    { "name": "Cover System", "gdd_section": "Cover System", "testable": true, "description": "Half/Full cover with damage reduction" },
+    { "name": "Corruption Meter", "gdd_section": "Corruption System", "testable": true, "description": "Rises each turn, spawns harder enemies" },
+    { "name": "Wound System", "gdd_section": "Wound & Health System", "testable": true, "description": "Body parts with wound penalties" },
+    { "name": "Fog of War", "gdd_section": "Line of Sight", "testable": true, "description": "Vision range 8 tiles" },
+    { "name": "Enemy AI", "gdd_section": "Enemy AI Behaviors", "testable": true, "description": "Patrol, hunt, ambush behaviors" }
+  ],
+  "resources_to_track": [
+    { "name": "health", "max": 100 },
+    { "name": "action_points", "max": 3 },
+    { "name": "corruption", "max": 1000, "critical_threshold": 800 },
+    { "name": "ammo", "varies": true }
+  ],
+  "stances": {
+    "sneak": { "ap": 1, "description": "Stealthy, can use inventory" },
+    "walk": { "ap": 2, "description": "Standard movement" },
+    "run": { "ap": 3, "description": "Fast but no items/healing" }
+  }
+}

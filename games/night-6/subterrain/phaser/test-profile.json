@@ -1,0 +1,42 @@
+{
+  "game_info": {
+    "name": "Isolation Protocol",
+    "type": "survival_horror",
+    "description": "Top-down survival horror in underground research facility overrun by infection. Manage survival meters, fight mutants, craft items, escape before infection reaches 100%."
+  },
+  "core_loop": {
+    "description": "Check survival meters -> Address critical needs at base -> Plan expedition to sector -> Fight/avoid enemies -> Loot containers -> Return to base -> Craft items -> Repeat until ready for Escape Pod",
+    "estimated_duration_sec": 900,
+    "loops_for_meaningful_test": 3
+  },
+  "recommended_test_duration_sec": 600,
+  "input_scheme": {
+    "movement": { "type": "wasd", "keys": ["w", "a", "s", "d"] },
+    "primary_action": { "key": "Space", "description": "Attack/Melee" },
+    "special_actions": [
+      { "name": "interact", "key": "e" },
+      { "name": "inventory", "key": "Tab" },
+      { "name": "map", "key": "m" },
+      { "name": "dodge", "key": "Shift" },
+      { "name": "quick_slot_1", "key": "1" },
+      { "name": "quick_slot_2", "key": "2" },
+      { "name": "quick_slot_3", "key": "3" }
+    ]
+  },
+  "combat_profile": {
+    "style": "real_time_melee_focused",
+    "how_to_attack": "Use WASD to move toward enemies, Space to melee attack. Shift to dodge. Find/craft weapons for better damage. Manage stamina during combat."
+  },
+  "success_conditions": {
+    "minimum": { "enemies_killed": 5, "containers_looted": 5, "survival_minutes": 5 },
+    "good_playthrough": { "sectors_cleared": 3, "red_keycard_found": true, "escape_achieved": true }
+  },
+  "key_features": [
+    { "name": "Survival Meters", "gdd_section": "Section 4", "testable": true },
+    { "name": "5 Sector Map", "gdd_section": "Section 5", "testable": true },
+    { "name": "Enemy Types", "gdd_section": "Section 9", "testable": true },
+    { "name": "Crafting System", "gdd_section": "Section 7", "testable": true },
+    { "name": "Power Management", "gdd_section": "Section 10", "testable": true },
+    { "name": "Win Condition", "gdd_section": "Section 13", "testable": true }
+  ]
+}

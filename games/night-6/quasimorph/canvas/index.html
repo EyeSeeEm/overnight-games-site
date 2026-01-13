@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quasimorph Clone - Tactical Extraction</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a12;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        #gameContainer {
+            position: relative;
+            width: 800px;
+            height: 600px;
+        }
+        #gameCanvas {
+            display: block;
+            background: #111;
+            cursor: crosshair;
+        }
+        #uiOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .ui-panel {
+            position: absolute;
+            background: rgba(10, 15, 25, 0.95);
+            border: 1px solid #234;
+            padding: 8px;
+            color: #8af;
+            font-size: 12px;
+        }
+        #topBar {
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 10px;
+            background: rgba(10, 15, 25, 0.95);
+            border-bottom: 1px solid #234;
+        }
+        #bottomBar {
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 10px;
+            background: rgba(10, 15, 25, 0.95);
+            border-top: 1px solid #234;
+        }
+        .bar-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .bar-fill {
+            width: 100px;
+            height: 12px;
+            background: #1a1a2a;
+            border: 1px solid #234;
+        }
+        .bar-inner {
+            height: 100%;
+            transition: width 0.3s;
+        }
+        .hp-bar { background: linear-gradient(to right, #a22, #f44); }
+        .ap-bar { background: linear-gradient(to right, #28a, #4cf); }
+        .corruption-bar { background: linear-gradient(to right, #a2a, #f4f); }
+        #turnIndicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 28px;
+            font-weight: bold;
+            color: #f44;
+            text-shadow: 0 0 20px #f00;
+            display: none;
+            z-index: 100;
+        }
+        #floatingText {
+            position: absolute;
+            font-size: 16px;
+            font-weight: bold;
+            color: #ff0;
+            text-shadow: 0 0 5px #000;
+            pointer-events: none;
+            display: none;
+        }
+        #menuScreen, #gameoverScreen, #victoryScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 15, 0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #8af;
+            pointer-events: auto;
+            z-index: 200;
+        }
+        #menuScreen h1 {
+            font-size: 48px;
+            color: #f4f;
+            text-shadow: 0 0 30px #f0f;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #68a;
+            margin-bottom: 30px;
+        }
+        .menu-btn {
+            background: transparent;
+            border: 2px solid #48f;
+            color: #8af;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-family: inherit;
+            cursor: pointer;
+            margin: 8px;
+            transition: all 0.2s;
+        }
+        .menu-btn:hover {
+            background: #48f;
+            color: #000;
+        }
+        .hidden { display: none !important; }
+        #actionPanel {
+            bottom: 60px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            pointer-events: auto;
+        }
+        .action-btn {
+            background: #123;
+            border: 1px solid #48f;
+            color: #8af;
+            padding: 5px 10px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .action-btn:hover { background: #234; }
+        .action-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+        #weaponInfo {
+            bottom: 60px;
+            left: 10px;
+        }
+        #stanceInfo {
+            top: 35px;
+            right: 10px;
+        }
+        .controls-hint {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #456;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="uiOverlay">
+            <div id="topBar" class="ui-panel">
+                <div class="bar-container">
+                    <span>HP:</span>
+                    <div class="bar-fill"><div id="hpBar" class="bar-inner hp-bar" style="width:100%"></div></div>
+                    <span id="hpText">100</span>
+                </div>
+                <div class="bar-container">
+                    <span>AP:</span>
+                    <div class="bar-fill" style="width:60px"><div id="apBar" class="bar-inner ap-bar" style="width:66%"></div></div>
+                    <span id="apText">2/3</span>
+                </div>
+                <div id="turnInfo">TURN: <span id="turnNum">1</span></div>
+                <div class="bar-container">
+                    <span>CORRUPTION:</span>
+                    <div class="bar-fill"><div id="corruptionBar" class="bar-inner corruption-bar" style="width:0%"></div></div>
+                    <span id="corruptionText">0</span>
+                </div>
+            </div>
+            <div id="bottomBar" class="ui-panel">
+                <div id="weaponDisplay">[1] Combat Rifle: 20/20</div>
+                <div id="stanceDisplay">STANCE: Walk (2 AP)</div>
+                <div id="objectiveDisplay">OBJECTIVE: Reach Extraction</div>
+            </div>
+            <div id="turnIndicator">ENEMY TURN</div>
+            <div id="floatingText"></div>
+            <div id="actionPanel" class="ui-panel">
+                <button class="action-btn" onclick="endTurn()">End Turn [Enter]</button>
+                <button class="action-btn" onclick="reloadWeapon()">Reload [R]</button>
+                <button class="action-btn" onclick="cycleStance()">Stance [Tab]</button>
+            </div>
+            <div id="weaponInfo" class="ui-panel">
+                <div>Primary: <span id="primaryWeapon">Combat Rifle</span></div>
+                <div>Ammo: <span id="ammoCount">20/20</span></div>
+                <div>Range: <span id="weaponRange">10</span></div>
+            </div>
+            <div id="stanceInfo" class="ui-panel">
+                <div id="currentStance">WALK</div>
+                <div id="stanceAP">2 AP/turn</div>
+            </div>
+            <div class="controls-hint">Click to move/attack | R: Reload | Tab: Stance | Enter: End Turn</div>
+        </div>
+        <div id="menuScreen">
+            <h1>QUASIMORPH</h1>
+            <p class="subtitle">Tactical Extraction Roguelike</p>
+            <button class="menu-btn" onclick="startGame()">DEPLOY</button>
+            <p style="margin-top:30px;color:#456;font-size:11px;">Turn-based combat | Cover system | Corruption meter</p>
+        </div>
+        <div id="gameoverScreen" class="hidden">
+            <h1 style="color:#f44;">CLONE LOST</h1>
+            <p class="subtitle" id="deathReason">Your clone has been terminated.</p>
+            <div id="deathStats"></div>
+            <button class="menu-btn" onclick="startGame()">REDEPLOY</button>
+        </div>
+        <div id="victoryScreen" class="hidden">
+            <h1 style="color:#4f4;">EXTRACTED</h1>
+            <p class="subtitle">Mission successful. Clone preserved.</p>
+            <div id="victoryStats"></div>
+            <button class="menu-btn" onclick="startGame()">NEW MISSION</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>

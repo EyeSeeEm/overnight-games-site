@@ -1,0 +1,61 @@
+{
+  "game_info": {
+    "name": "Isolation Protocol",
+    "type": "survival_horror",
+    "description": "Subterrain-style survival horror with survival meters, infection system, sector exploration, and escape goal"
+  },
+  "core_loop": {
+    "description": "Manage survival meters, explore sectors, fight enemies, collect resources, craft items, reach escape pod",
+    "estimated_duration_sec": 120,
+    "loops_for_meaningful_test": 3
+  },
+  "recommended_test_duration_sec": 300,
+  "input_scheme": {
+    "movement": { "type": "wasd", "keys": ["w", "a", "s", "d"] },
+    "primary_action": { "type": "mouse_click", "description": "Attack with left click" },
+    "secondary_actions": [
+      { "name": "interact", "key": "e" },
+      { "name": "inventory", "key": "Tab" },
+      { "name": "map", "key": "m" },
+      { "name": "quick_slot_1", "key": "1" },
+      { "name": "quick_slot_2", "key": "2" },
+      { "name": "quick_slot_3", "key": "3" }
+    ]
+  },
+  "combat_profile": {
+    "style": "twin_stick_melee",
+    "how_to_attack": "Left click to attack in mouse direction. Player has melee and ranged weapons."
+  },
+  "success_conditions": {
+    "minimum": {
+      "enemies_killed": 3,
+      "survival_sec": 60,
+      "sectors_visited": 2
+    },
+    "victory": {
+      "description": "Reach escape pod sector with red keycard"
+    }
+  },
+  "survival_meters": {
+    "health": { "max": 100, "decay_per_sec": 0 },
+    "hunger": { "max": 100, "decay_per_sec": 0.1 },
+    "thirst": { "max": 100, "decay_per_sec": 0.2 },
+    "fatigue": { "max": 100, "decay_per_sec": 0.067 },
+    "infection": { "max": 100, "decay_per_sec": 0 }
+  },
+  "sectors": [
+    { "name": "Central Hub", "power_cost": 0, "safe": true },
+    { "name": "Storage Wing", "power_cost": 100, "enemies": "3-5 Shamblers, 1-2 Crawlers" },
+    { "name": "Medical Bay", "power_cost": 150, "enemies": "2-3 Shamblers, 2-3 Spitters" },
+    { "name": "Research Lab", "power_cost": 200, "enemies": "3-4 Crawlers, 2 Spitters, 1 Brute" },
+    { "name": "Escape Pod", "power_cost": 300, "enemies": "4-5 mixed, 2 Brutes" }
+  ],
+  "key_features": [
+    { "name": "Survival Meters", "gdd_section": "Section 4", "testable": true },
+    { "name": "Global Infection Clock", "gdd_section": "Section 3", "testable": true },
+    { "name": "Power Management", "gdd_section": "Section 10", "testable": true },
+    { "name": "Crafting System", "gdd_section": "Section 7", "testable": true },
+    { "name": "5 Enemy Types", "gdd_section": "Section 9", "testable": true },
+    { "name": "Sector Exploration", "gdd_section": "Section 5", "testable": true }
+  ]
+}

@@ -1,0 +1,45 @@
+Starting playtest for Station Breach...
+Harness detected
+
+=== Iteration 1 ===
+  Step 50: HP=100, Enemies=13, Visible=1, Kills=1
+  Step 100: HP=100, Enemies=13, Visible=1, Kills=1
+  Step 150: HP=100, Enemies=13, Visible=1, Kills=1
+  Step 200: HP=100, Enemies=13, Visible=1, Kills=1
+  Step 250: HP=100, Enemies=13, Visible=1, Kills=1
+  Step 300: HP=100, Enemies=13, Visible=1, Kills=1
+  Timeout at step 300. Kills: 1
+
+=== Iteration 2 ===
+  Step 50: HP=100, Enemies=12, Visible=1, Kills=1
+  Step 100: HP=100, Enemies=12, Visible=1, Kills=1
+  Step 150: HP=100, Enemies=12, Visible=1, Kills=1
+  Step 200: HP=100, Enemies=12, Visible=1, Kills=1
+  Step 250: HP=100, Enemies=12, Visible=1, Kills=1
+  Step 300: HP=100, Enemies=12, Visible=1, Kills=1
+  Timeout at step 300. Kills: 1
+
+=== Iteration 3 ===
+  Step 50: HP=100, Enemies=12, Visible=1, Kills=1
+  Step 100: HP=100, Enemies=12, Visible=1, Kills=1
+  Step 150: HP=100, Enemies=12, Visible=1, Kills=1
+  Step 200: HP=100, Enemies=12, Visible=1, Kills=1
+  Step 250: HP=100, Enemies=12, Visible=1, Kills=1
+  Step 300: HP=100, Enemies=12, Visible=1, Kills=1
+  Timeout at step 300. Kills: 1
+
+=== Iteration 4 ===
+  Step 50: HP=100, Enemies=12, Visible=0, Kills=2
+  Step 100: HP=100, Enemies=12, Visible=0, Kills=2
+  Step 150: HP=100, Enemies=12, Visible=0, Kills=2
+  Step 200: HP=100, Enemies=12, Visible=0, Kills=2
+  Step 250: HP=100, Enemies=12, Visible=0, Kills=2
+  Step 300: HP=100, Enemies=12, Visible=0, Kills=2
+  Timeout at step 300. Kills: 2
+
+=== Iteration 5 ===
+  Step 50: HP=100, Enemies=12, Visible=0, Kills=2
+  Step 100: HP=100, Enemies=12, Visible=0, Kills=2
+  Step 150: HP=100, Enemies=12, Visible=1, Kills=2
+  Step 200: HP=100, Enemies=12, Visible=1, Kills=2
+  Step 250: HP=100, Enemies=12, Visible=1, Kills=2

@@ -1,0 +1,10 @@
+{
+  "game": "ftl",
+  "iteration": 38,
+  "started": "2026-01-13T01:36:38.901Z",
+  "outcome": "timeout",
+  "shipsDestroyed": 4,
+  "jumps": 10,
+  "sector": 2,
+  "duration": 95195
+}

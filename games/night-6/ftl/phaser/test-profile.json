@@ -1,0 +1,40 @@
+{
+  "game_info": {
+    "name": "FTL Clone",
+    "type": "spaceship_roguelike",
+    "description": "Real-time-with-pause spaceship roguelike. Manage ship systems, distribute power, direct crew, target enemy systems. Jump through sectors while staying ahead of rebel fleet."
+  },
+  "core_loop": {
+    "description": "View sector map -> Jump to beacon -> Encounter event/combat -> Collect rewards -> Repeat until sector exit -> Choose next sector -> Reach Sector 8 and defeat flagship",
+    "estimated_duration_sec": 120,
+    "loops_for_meaningful_test": 5
+  },
+  "recommended_test_duration_sec": 600,
+  "input_scheme": {
+    "primary_action": { "type": "mouse_click", "description": "Select systems, target weapons, move crew" },
+    "special_actions": [
+      { "name": "pause_toggle", "key": "Space" },
+      { "name": "power_shields", "key": "1" },
+      { "name": "power_weapons", "key": "2" },
+      { "name": "power_engines", "key": "3" },
+      { "name": "fire_weapons", "key": "f" },
+      { "name": "jump_ftl", "key": "j" }
+    ]
+  },
+  "combat_profile": {
+    "style": "pausable_realtime",
+    "how_to_attack": "Click on enemy room to target, weapons auto-fire when charged. Space to pause and issue orders. Manage power between shields/weapons/engines."
+  },
+  "success_conditions": {
+    "minimum": { "jumps_completed": 5, "ships_destroyed": 3, "scrap_earned": 100 },
+    "good_playthrough": { "sectors_completed": 3, "ships_destroyed": 10, "crew_alive": 3 }
+  },
+  "key_features": [
+    { "name": "Pausable Combat", "testable": true },
+    { "name": "Power Management", "testable": true },
+    { "name": "Weapon Systems", "testable": true },
+    { "name": "Shield System", "testable": true },
+    { "name": "Sector Map", "testable": true },
+    { "name": "Random Events", "testable": true }
+  ]
+}

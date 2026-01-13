@@ -1,0 +1,40 @@
+{
+  "game_info": {
+    "name": "Star of Providence Clone",
+    "type": "bullet_hell_roguelike",
+    "description": "Top-down bullet-hell shooter. Pilot ship through procedural floors, dodge bullets, defeat enemies and bosses."
+  },
+  "core_loop": {
+    "description": "Navigate rooms, dodge bullet patterns, shoot enemies, collect power-ups, beat boss, descend to next floor.",
+    "estimated_duration_sec": 120,
+    "loops_for_meaningful_test": 2
+  },
+  "recommended_test_duration_sec": 240,
+  "input_scheme": {
+    "movement": { "type": "wasd", "keys": ["w", "a", "s", "d"] },
+    "primary_action": { "type": "keyboard", "key": "Space", "description": "Shoot" },
+    "secondary_actions": [
+      { "name": "focus", "key": "Shift", "description": "Slow precise movement" },
+      { "name": "dash", "key": "z", "description": "I-frames dash" },
+      { "name": "bomb", "key": "x", "description": "Clear screen of bullets" }
+    ]
+  },
+  "combat_profile": {
+    "style": "bullet_hell",
+    "how_to_attack": "Hold Space to shoot continuously. Dodge enemy bullet patterns. Use focus (Shift) for precise dodging, dash (Z) for i-frames, bomb (X) to clear bullets."
+  },
+  "success_conditions": {
+    "minimum": {
+      "enemies_killed": 10,
+      "survival_sec": 30,
+      "floors_cleared": 1
+    }
+  },
+  "key_features": [
+    { "name": "Bullet hell patterns", "gdd_section": "Section 1", "testable": true },
+    { "name": "Focus mode", "gdd_section": "Section 2 Controls", "testable": true },
+    { "name": "Dash with i-frames", "gdd_section": "Section 2 Dash Mechanics", "testable": true },
+    { "name": "Bomb system", "gdd_section": "Section 2", "testable": true },
+    { "name": "Multiple weapon types", "gdd_section": "Section 3", "testable": true }
+  ]
+}

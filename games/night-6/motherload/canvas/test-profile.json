@@ -1,0 +1,89 @@
+{
+  "game_info": {
+    "name": "Motherload Clone",
+    "type": "mining_resource_management",
+    "description": "Mars mining game. Control drill pod with arrows/WASD. Drill left/right/down to collect minerals. Fly up to surface. Sell at processor, buy fuel, upgrade equipment. Manage fuel to avoid getting stranded."
+  },
+  "core_loop": {
+    "description": "Drill underground -> Collect minerals -> Return to surface before fuel runs out -> Sell minerals -> Buy fuel -> Buy upgrades -> Dig deeper -> Repeat",
+    "estimated_duration_sec": 60,
+    "loops_for_meaningful_test": 3
+  },
+  "recommended_test_duration_sec": 180,
+  "resolution": {
+    "width": 800,
+    "height": 600
+  },
+  "input_scheme": {
+    "movement": {
+      "type": "directional_drill",
+      "keys": ["w", "s", "a", "d", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"],
+      "description": "Left/Right = move/drill sideways, Up = fly, Down = drill down"
+    },
+    "primary_action": {
+      "type": "drilling",
+      "keys": ["ArrowDown", "ArrowLeft", "ArrowRight", "s", "a", "d"],
+      "description": "Directional drilling based on movement keys"
+    },
+    "secondary_actions": [
+      { "name": "use_fuel_reserve", "key": "f", "description": "Use fuel reserve item" },
+      { "name": "use_repair", "key": "r", "description": "Use repair nanobot" }
+    ]
+  },
+  "resource_profile": {
+    "fuel": {
+      "depletes_on": "flying_up",
+      "refill_at": "fuel_station",
+      "critical_at": 20
+    },
+    "cargo": {
+      "limited_by": "weight",
+      "deposit_at": "mineral_processor"
+    }
+  },
+  "success_conditions": {
+    "minimum": {
+      "minerals_collected": 3,
+      "gold_earned": 100,
+      "depth_reached": 50
+    },
+    "good_run": {
+      "minerals_collected": 10,
+      "gold_earned": 500,
+      "depth_reached": 200,
+      "upgrades_purchased": 1
+    }
+  },
+  "key_features": [
+    {
+      "name": "Directional Drilling",
+      "gdd_section": "Section 17 - Critical Notes",
+      "testable": true,
+      "test_method": "Press left/right/down to drill in corresponding direction"
+    },
+    {
+      "name": "Fuel Management",
+      "gdd_section": "Section 2 - Player Pod",
+      "testable": true,
+      "test_method": "Fuel depletes while flying up, refill at surface"
+    },
+    {
+      "name": "Mineral Collection",
+      "gdd_section": "Section 4 - Minerals",
+      "testable": true,
+      "test_method": "Drill minerals to add to cargo, sell at processor"
+    },
+    {
+      "name": "Surface Shops",
+      "gdd_section": "Section 10 - Surface Buildings",
+      "testable": true,
+      "test_method": "Interact with buildings to sell/buy"
+    }
+  ],
+  "mineral_types": [
+    { "name": "Ironium", "value": 30, "minDepth": 25, "color": "#8B4513" },
+    { "name": "Bronzium", "value": 60, "minDepth": 25, "color": "#CD7F32" },
+    { "name": "Silverium", "value": 100, "minDepth": 25, "color": "#C0C0C0" },
+    { "name": "Goldium", "value": 250, "minDepth": 250, "color": "#FFD700" }
+  ]
+}

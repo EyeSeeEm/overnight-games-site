@@ -1,0 +1,685 @@
+[2026-01-13T01:49:36.009Z] Starting Motherload Clone Playtest
+[2026-01-13T01:49:36.011Z] Target: 200 iterations
+[2026-01-13T01:49:36.167Z] Loading game: file:///workspace/games/night-6/motherload/canvas/index.html
+[2026-01-13T01:49:38.212Z] Harness detected
+[2026-01-13T01:49:38.212Z] 
+=== ITERATION 1 ===
+[2026-01-13T01:49:38.721Z] Fuel: 10.0 -> 15.0
+[2026-01-13T01:49:41.015Z] Collected mineral! Total: 1
+[2026-01-13T01:49:41.951Z] Collected mineral! Total: 2
+[2026-01-13T01:49:44.658Z] Collected mineral! Total: 3
+[2026-01-13T01:49:44.969Z] Collected mineral! Total: 4
+[2026-01-13T01:49:48.504Z] Collected mineral! Total: 5
+[2026-01-13T01:49:49.131Z] Step 100: Depth=183ft, Fuel=14.8, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:49:52.872Z] Fuel: 15.0 -> 13.0
+[2026-01-13T01:49:57.033Z] Fuel: 13.0 -> 11.0
+[2026-01-13T01:49:59.521Z] Step 200: Depth=176ft, Fuel=9.7, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:50:01.185Z] Fuel: 11.0 -> 8.9
+[2026-01-13T01:50:04.497Z] Fuel: 8.9 -> 6.9
+[2026-01-13T01:50:08.749Z] Fuel: 6.9 -> 4.9
+[2026-01-13T01:50:09.065Z] Step 300: Depth=176ft, Fuel=4.7, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:50:12.901Z] Fuel: 4.9 -> 2.9
+[2026-01-13T01:50:17.062Z] Fuel: 2.9 -> 0.8
+[2026-01-13T01:50:19.443Z] Step 400: Depth=200ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:50:29.812Z] Step 500: Depth=200ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:50:29.816Z] 
+=== ITERATION 2 ===
+[2026-01-13T01:50:30.325Z] Fuel: 10.0 -> 15.0
+[2026-01-13T01:50:32.679Z] Collected mineral! Total: 1
+[2026-01-13T01:50:34.648Z] Collected mineral! Total: 2
+[2026-01-13T01:50:36.621Z] Collected mineral! Total: 3
+[2026-01-13T01:50:37.553Z] Collected mineral! Total: 4
+[2026-01-13T01:50:39.833Z] Step 100: Depth=165ft, Fuel=14.9, Cash=$0, Cargo=4, Minerals=4
+[2026-01-13T01:50:42.116Z] Collected mineral! Total: 5
+[2026-01-13T01:50:46.371Z] Fuel: 15.0 -> 13.0
+[2026-01-13T01:50:50.201Z] Step 200: Depth=215ft, Fuel=11.1, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:50:50.517Z] Fuel: 13.0 -> 11.0
+[2026-01-13T01:50:54.664Z] Fuel: 11.0 -> 9.0
+[2026-01-13T01:50:58.812Z] Fuel: 9.0 -> 6.9
+[2026-01-13T01:51:00.571Z] Step 300: Depth=215ft, Fuel=6.1, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:51:02.214Z] Fuel: 6.9 -> 4.9
+[2026-01-13T01:51:06.469Z] Fuel: 4.9 -> 2.8
+[2026-01-13T01:51:10.096Z] Step 400: Depth=215ft, Fuel=1.1, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:51:10.616Z] Fuel: 2.8 -> 0.8
+[2026-01-13T01:51:20.466Z] Step 500: Depth=226ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:51:20.468Z] 
+=== ITERATION 3 ===
+[2026-01-13T01:51:20.973Z] Fuel: 10.0 -> 15.0
+[2026-01-13T01:51:23.255Z] Collected mineral! Total: 1
+[2026-01-13T01:51:24.915Z] Collected mineral! Total: 2
+[2026-01-13T01:51:25.955Z] Collected mineral! Total: 3
+[2026-01-13T01:51:28.856Z] Collected mineral! Total: 4
+[2026-01-13T01:51:29.167Z] Collected mineral! Total: 5
+[2026-01-13T01:51:31.346Z] Step 100: Depth=124ft, Fuel=13.8, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:51:32.292Z] Fuel: 15.0 -> 13.0
+[2026-01-13T01:51:36.434Z] Fuel: 13.0 -> 11.0
+[2026-01-13T01:51:40.579Z] Fuel: 11.0 -> 9.0
+[2026-01-13T01:51:40.891Z] Step 200: Depth=124ft, Fuel=8.8, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:51:44.728Z] Fuel: 9.0 -> 6.9
+[2026-01-13T01:51:48.975Z] Fuel: 6.9 -> 4.9
+[2026-01-13T01:51:51.261Z] Step 300: Depth=124ft, Fuel=3.8, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:51:53.126Z] Fuel: 4.9 -> 2.9
+[2026-01-13T01:51:57.259Z] Fuel: 2.9 -> 0.9
+[2026-01-13T01:52:00.767Z] Step 400: Depth=135ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:52:11.109Z] Step 500: Depth=135ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:52:11.115Z] 
+=== ITERATION 4 ===
+[2026-01-13T01:52:11.623Z] Fuel: 10.0 -> 15.0
+[2026-01-13T01:52:13.385Z] Collected mineral! Total: 1
+[2026-01-13T01:52:16.072Z] Collected mineral! Total: 2
+[2026-01-13T01:52:16.384Z] Collected mineral! Total: 3
+[2026-01-13T01:52:17.727Z] Collected mineral! Total: 4
+[2026-01-13T01:52:18.658Z] Collected mineral! Total: 5
+[2026-01-13T01:52:21.971Z] Step 100: Depth=111ft, Fuel=13.4, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:52:22.800Z] Fuel: 15.0 -> 13.0
+[2026-01-13T01:52:26.941Z] Fuel: 13.0 -> 11.0
+[2026-01-13T01:52:30.254Z] Fuel: 11.0 -> 8.9
+[2026-01-13T01:52:31.501Z] Step 200: Depth=111ft, Fuel=8.3, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:52:34.401Z] Fuel: 8.9 -> 6.9
+[2026-01-13T01:52:38.538Z] Fuel: 6.9 -> 4.9
+[2026-01-13T01:52:41.849Z] Step 300: Depth=111ft, Fuel=3.3, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:52:42.783Z] Fuel: 4.9 -> 2.8
+[2026-01-13T01:52:47.030Z] Fuel: 2.8 -> 0.8
+[2026-01-13T01:52:52.201Z] Step 400: Depth=148ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:53:01.719Z] Step 500: Depth=148ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:53:01.721Z] 
+=== ITERATION 5 ===
+[2026-01-13T01:53:02.231Z] Fuel: 10.0 -> 15.0
+[2026-01-13T01:53:05.646Z] Collected mineral! Total: 1
+[2026-01-13T01:53:07.928Z] Collected mineral! Total: 2
+[2026-01-13T01:53:12.384Z] Collected mineral! Total: 3
+[2026-01-13T01:53:12.593Z] Step 100: Depth=200ft, Fuel=14.7, Cash=$0, Cargo=3, Minerals=3
+[2026-01-13T01:53:20.478Z] Collected mineral! Total: 4
+[2026-01-13T01:53:22.974Z] Step 200: Depth=408ft, Fuel=14.5, Cash=$0, Cargo=4, Minerals=4
+[2026-01-13T01:53:29.180Z] Collected mineral! Total: 5
+[2026-01-13T01:53:32.393Z] Fuel: 15.0 -> 13.0
+[2026-01-13T01:53:32.501Z] Step 300: Depth=540ft, Fuel=12.9, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:53:36.542Z] Fuel: 13.0 -> 11.0
+[2026-01-13T01:53:40.778Z] Fuel: 11.0 -> 8.9
+[2026-01-13T01:53:42.853Z] Step 400: Depth=540ft, Fuel=7.9, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:53:44.924Z] Fuel: 8.9 -> 6.9
+[2026-01-13T01:53:49.161Z] Fuel: 6.9 -> 4.8
+[2026-01-13T01:53:53.203Z] Step 500: Depth=540ft, Fuel=2.9, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:53:53.289Z] 
+=== ITERATION 6 ===
+[2026-01-13T01:53:53.794Z] Fuel: 10.0 -> 15.0
+[2026-01-13T01:53:56.802Z] Collected mineral! Total: 1
+[2026-01-13T01:53:57.530Z] Collected mineral! Total: 2
+[2026-01-13T01:53:57.844Z] Collected mineral! Total: 3
+[2026-01-13T01:53:59.194Z] Collected mineral! Total: 4
+[2026-01-13T01:53:59.502Z] Collected mineral! Total: 5
+[2026-01-13T01:54:03.344Z] Step 100: Depth=124ft, Fuel=13.2, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:54:03.758Z] Fuel: 15.0 -> 13.0
+[2026-01-13T01:54:07.896Z] Fuel: 13.0 -> 11.0
+[2026-01-13T01:54:12.142Z] Fuel: 11.0 -> 8.9
+[2026-01-13T01:54:13.693Z] Step 200: Depth=124ft, Fuel=8.1, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:54:16.292Z] Fuel: 8.9 -> 6.9
+[2026-01-13T01:54:20.429Z] Fuel: 6.9 -> 4.9
+[2026-01-13T01:54:24.062Z] Step 300: Depth=124ft, Fuel=3.1, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:54:24.582Z] Fuel: 4.9 -> 2.9
+[2026-01-13T01:54:27.881Z] Fuel: 2.9 -> 0.8
+[2026-01-13T01:54:33.579Z] Step 400: Depth=148ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:54:43.933Z] Step 500: Depth=148ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:54:43.934Z] 
+=== ITERATION 7 ===
+[2026-01-13T01:54:44.437Z] Fuel: 10.0 -> 15.0
+[2026-01-13T01:54:51.996Z] Collected mineral! Total: 1
+[2026-01-13T01:54:53.967Z] Collected mineral! Total: 2
+[2026-01-13T01:54:54.280Z] Collected mineral! Total: 3
+[2026-01-13T01:54:54.802Z] Step 100: Depth=200ft, Fuel=15.0, Cash=$0, Cargo=3, Minerals=3
+[2026-01-13T01:54:56.555Z] Collected mineral! Total: 4
+[2026-01-13T01:55:01.418Z] Collected mineral! Total: 5
+[2026-01-13T01:55:04.318Z] Step 200: Depth=345ft, Fuel=13.4, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:55:05.153Z] Fuel: 15.0 -> 13.0
+[2026-01-13T01:55:09.289Z] Fuel: 13.0 -> 11.0
+[2026-01-13T01:55:13.431Z] Fuel: 11.0 -> 9.0
+[2026-01-13T01:55:14.676Z] Step 300: Depth=345ft, Fuel=8.4, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:55:17.576Z] Fuel: 9.0 -> 7.0
+[2026-01-13T01:55:21.717Z] Fuel: 7.0 -> 4.9
+[2026-01-13T01:55:24.169Z] Step 400: Depth=345ft, Fuel=3.3, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:55:25.002Z] Fuel: 4.9 -> 2.9
+[2026-01-13T01:55:29.149Z] Fuel: 2.9 -> 0.9
+[2026-01-13T01:55:34.533Z] Step 500: Depth=369ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:55:34.535Z] 
+=== ITERATION 8 ===
+[2026-01-13T01:55:35.042Z] Fuel: 10.0 -> 15.0
+[2026-01-13T01:55:38.877Z] Collected mineral! Total: 1
+[2026-01-13T01:55:45.415Z] Step 100: Depth=174ft, Fuel=15.0, Cash=$0, Cargo=1, Minerals=1
+[2026-01-13T01:55:46.763Z] Collected mineral! Total: 2
+[2026-01-13T01:55:54.949Z] Step 200: Depth=395ft, Fuel=15.0, Cash=$0, Cargo=2, Minerals=2
+[2026-01-13T01:55:55.159Z] Collected mineral! Total: 3
+[2026-01-13T01:55:55.472Z] Collected mineral! Total: 4
+[2026-01-13T01:55:57.856Z] Collected mineral! Total: 5
+[2026-01-13T01:56:02.107Z] Fuel: 15.0 -> 13.0
+[2026-01-13T01:56:05.312Z] Step 300: Depth=423ft, Fuel=11.4, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:56:06.356Z] Fuel: 13.0 -> 10.9
+[2026-01-13T01:56:10.494Z] Fuel: 10.9 -> 8.9
+[2026-01-13T01:56:14.637Z] Fuel: 8.9 -> 6.9
+[2026-01-13T01:56:15.671Z] Step 400: Depth=423ft, Fuel=6.4, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:56:18.774Z] Fuel: 6.9 -> 4.9
+[2026-01-13T01:56:22.910Z] Fuel: 4.9 -> 2.9
+[2026-01-13T01:56:25.177Z] Step 500: Depth=423ft, Fuel=1.3, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:56:25.179Z] 
+=== ITERATION 9 ===
+[2026-01-13T01:56:25.682Z] Fuel: 10.0 -> 15.0
+[2026-01-13T01:56:27.747Z] Collected mineral! Total: 1
+[2026-01-13T01:56:30.332Z] Collected mineral! Total: 2
+[2026-01-13T01:56:36.020Z] Step 100: Depth=174ft, Fuel=15.0, Cash=$0, Cargo=2, Minerals=2
+[2026-01-13T01:56:36.645Z] Collected mineral! Total: 3
+[2026-01-13T01:56:37.059Z] Collected mineral! Total: 4
+[2026-01-13T01:56:37.370Z] Collected mineral! Total: 5
+[2026-01-13T01:56:41.818Z] Fuel: 15.0 -> 13.0
+[2026-01-13T01:56:45.960Z] Fuel: 13.0 -> 11.0
+[2026-01-13T01:56:46.377Z] Step 200: Depth=202ft, Fuel=10.7, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:56:50.105Z] Fuel: 11.0 -> 8.9
+[2026-01-13T01:56:53.510Z] Fuel: 8.9 -> 6.9
+[2026-01-13T01:56:55.888Z] Step 300: Depth=202ft, Fuel=5.7, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:56:57.652Z] Fuel: 6.9 -> 4.9
+[2026-01-13T01:57:01.906Z] Fuel: 4.9 -> 2.8
+[2026-01-13T01:57:06.054Z] Fuel: 2.8 -> 0.8
+[2026-01-13T01:57:06.259Z] Step 400: Depth=202ft, Fuel=0.7, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:57:16.616Z] Step 500: Depth=213ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:57:16.618Z] 
+=== ITERATION 10 ===
+[2026-01-13T01:57:17.122Z] Fuel: 10.0 -> 15.0
+[2026-01-13T01:57:18.571Z] Collected mineral! Total: 1
+[2026-01-13T01:57:20.227Z] Collected mineral! Total: 2
+[2026-01-13T01:57:20.539Z] Collected mineral! Total: 3
+[2026-01-13T01:57:20.853Z] Collected mineral! Total: 4
+[2026-01-13T01:57:21.329Z] Collected mineral! Total: 5
+[2026-01-13T01:57:25.787Z] Fuel: 15.0 -> 13.0
+[2026-01-13T01:57:26.619Z] Step 100: Depth=85ft, Fuel=12.6, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:57:29.939Z] Fuel: 13.0 -> 11.0
+[2026-01-13T01:57:34.078Z] Fuel: 11.0 -> 9.0
+[2026-01-13T01:57:36.975Z] Step 200: Depth=85ft, Fuel=7.5, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:57:38.220Z] Fuel: 9.0 -> 6.9
+[2026-01-13T01:57:42.367Z] Fuel: 6.9 -> 4.9
+[2026-01-13T01:57:46.511Z] Fuel: 4.9 -> 2.9
+[2026-01-13T01:57:47.339Z] Step 300: Depth=85ft, Fuel=2.5, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:57:50.652Z] Fuel: 2.9 -> 0.9
+[2026-01-13T01:57:56.851Z] Step 400: Depth=109ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:58:07.196Z] Step 500: Depth=109ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:58:07.286Z] 
+=== ITERATION 11 ===
+[2026-01-13T01:58:07.791Z] Fuel: 10.0 -> 15.0
+[2026-01-13T01:58:12.963Z] Collected mineral! Total: 1
+[2026-01-13T01:58:13.690Z] Collected mineral! Total: 2
+[2026-01-13T01:58:13.998Z] Collected mineral! Total: 3
+[2026-01-13T01:58:14.309Z] Collected mineral! Total: 4
+[2026-01-13T01:58:18.133Z] Step 100: Depth=148ft, Fuel=14.8, Cash=$0, Cargo=4, Minerals=4
+[2026-01-13T01:58:19.783Z] Collected mineral! Total: 5
+[2026-01-13T01:58:23.824Z] Fuel: 15.0 -> 13.0
+[2026-01-13T01:58:27.652Z] Step 200: Depth=202ft, Fuel=11.1, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:58:27.966Z] Fuel: 13.0 -> 11.0
+[2026-01-13T01:58:32.203Z] Fuel: 11.0 -> 8.9
+[2026-01-13T01:58:36.348Z] Fuel: 8.9 -> 6.9
+[2026-01-13T01:58:38.004Z] Step 300: Depth=202ft, Fuel=6.1, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:58:40.597Z] Fuel: 6.9 -> 4.8
+[2026-01-13T01:58:44.733Z] Fuel: 4.8 -> 2.8
+[2026-01-13T01:58:48.348Z] Step 400: Depth=202ft, Fuel=1.1, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:58:48.866Z] Fuel: 2.8 -> 0.8
+[2026-01-13T01:58:57.841Z] Step 500: Depth=226ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:58:57.843Z] 
+=== ITERATION 12 ===
+[2026-01-13T01:58:58.346Z] Fuel: 10.0 -> 15.0
+[2026-01-13T01:59:08.695Z] Step 100: Depth=174ft, Fuel=15.0, Cash=$0, Cargo=1, Minerals=1
+[2026-01-13T01:59:08.697Z] Collected mineral! Total: 1
+[2026-01-13T01:59:15.428Z] Collected mineral! Total: 2
+[2026-01-13T01:59:18.214Z] Step 200: Depth=421ft, Fuel=14.8, Cash=$0, Cargo=2, Minerals=2
+[2026-01-13T01:59:21.324Z] Collected mineral! Total: 3
+[2026-01-13T01:59:21.949Z] Collected mineral! Total: 4
+[2026-01-13T01:59:28.579Z] Step 300: Depth=577ft, Fuel=14.4, Cash=$0, Cargo=4, Minerals=4
+[2026-01-13T01:59:30.352Z] Collected mineral! Total: 5
+[2026-01-13T01:59:33.670Z] Fuel: 15.0 -> 13.0
+[2026-01-13T01:59:37.819Z] Fuel: 13.0 -> 10.9
+[2026-01-13T01:59:38.965Z] Step 400: Depth=605ft, Fuel=10.4, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:59:41.978Z] Fuel: 10.9 -> 8.9
+[2026-01-13T01:59:46.119Z] Fuel: 8.9 -> 6.9
+[2026-01-13T01:59:48.485Z] Step 500: Depth=605ft, Fuel=5.4, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T01:59:48.486Z] 
+=== ITERATION 13 ===
+[2026-01-13T01:59:48.994Z] Fuel: 10.0 -> 15.0
+[2026-01-13T01:59:50.237Z] Collected mineral! Total: 1
+[2026-01-13T01:59:50.550Z] Collected mineral! Total: 2
+[2026-01-13T01:59:51.175Z] Collected mineral! Total: 3
+[2026-01-13T01:59:52.002Z] Collected mineral! Total: 4
+[2026-01-13T01:59:52.315Z] Collected mineral! Total: 5
+[2026-01-13T01:59:56.570Z] Fuel: 15.0 -> 13.0
+[2026-01-13T01:59:59.375Z] Step 100: Depth=46ft, Fuel=11.7, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:00:00.830Z] Fuel: 13.0 -> 11.0
+[2026-01-13T02:00:04.983Z] Fuel: 11.0 -> 8.9
+[2026-01-13T02:00:09.236Z] Fuel: 8.9 -> 6.9
+[2026-01-13T02:00:09.760Z] Step 200: Depth=46ft, Fuel=6.6, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:00:13.395Z] Fuel: 6.9 -> 4.9
+[2026-01-13T02:00:16.702Z] Fuel: 4.9 -> 2.9
+[2026-01-13T02:00:19.287Z] Step 300: Depth=46ft, Fuel=1.6, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:00:20.950Z] Fuel: 2.9 -> 0.8
+[2026-01-13T02:00:29.666Z] Step 400: Depth=83ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:00:40.051Z] Step 500: Depth=83ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:00:40.053Z] 
+=== ITERATION 14 ===
+[2026-01-13T02:00:40.557Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:00:42.425Z] Collected mineral! Total: 1
+[2026-01-13T02:00:44.882Z] Collected mineral! Total: 2
+[2026-01-13T02:00:46.231Z] Collected mineral! Total: 3
+[2026-01-13T02:00:47.577Z] Collected mineral! Total: 4
+[2026-01-13T02:00:48.298Z] Collected mineral! Total: 5
+[2026-01-13T02:00:50.063Z] Step 100: Depth=163ft, Fuel=14.3, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:00:52.768Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:00:56.916Z] Fuel: 13.0 -> 11.0
+[2026-01-13T02:01:00.446Z] Step 200: Depth=163ft, Fuel=9.2, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:01:01.067Z] Fuel: 11.0 -> 8.9
+[2026-01-13T02:01:05.213Z] Fuel: 8.9 -> 6.9
+[2026-01-13T02:01:09.363Z] Fuel: 6.9 -> 4.9
+[2026-01-13T02:01:10.813Z] Step 300: Depth=163ft, Fuel=4.2, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:01:13.522Z] Fuel: 4.9 -> 2.9
+[2026-01-13T02:01:16.687Z] Fuel: 2.9 -> 0.9
+[2026-01-13T02:01:20.110Z] Step 400: Depth=187ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:01:30.449Z] Step 500: Depth=187ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:01:30.450Z] 
+=== ITERATION 15 ===
+[2026-01-13T02:01:30.954Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:01:41.298Z] Step 100: Depth=148ft, Fuel=14.6, Cash=$0, Cargo=0, Minerals=0
+[2026-01-13T02:01:41.607Z] Collected mineral! Total: 1
+[2026-01-13T02:01:45.415Z] Collected mineral! Total: 2
+[2026-01-13T02:01:47.896Z] Collected mineral! Total: 3
+[2026-01-13T02:01:49.247Z] Collected mineral! Total: 4
+[2026-01-13T02:01:49.559Z] Collected mineral! Total: 5
+[2026-01-13T02:01:51.005Z] Step 200: Depth=319ft, Fuel=14.1, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:01:53.280Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:01:57.421Z] Fuel: 13.0 -> 11.0
+[2026-01-13T02:02:01.346Z] Step 300: Depth=319ft, Fuel=9.1, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:02:01.660Z] Fuel: 11.0 -> 8.9
+[2026-01-13T02:02:05.808Z] Fuel: 8.9 -> 6.9
+[2026-01-13T02:02:09.955Z] Fuel: 6.9 -> 4.9
+[2026-01-13T02:02:11.722Z] Step 400: Depth=319ft, Fuel=4.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:02:13.206Z] Fuel: 4.9 -> 2.9
+[2026-01-13T02:02:17.453Z] Fuel: 2.9 -> 0.8
+[2026-01-13T02:02:21.173Z] Step 500: Depth=343ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:02:21.266Z] 
+=== ITERATION 16 ===
+[2026-01-13T02:02:21.769Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:02:25.290Z] Collected mineral! Total: 1
+[2026-01-13T02:02:28.300Z] Collected mineral! Total: 2
+[2026-01-13T02:02:29.540Z] Collected mineral! Total: 3
+[2026-01-13T02:02:32.136Z] Step 100: Depth=213ft, Fuel=14.9, Cash=$0, Cargo=3, Minerals=3
+[2026-01-13T02:02:33.482Z] Collected mineral! Total: 4
+[2026-01-13T02:02:34.102Z] Collected mineral! Total: 5
+[2026-01-13T02:02:38.339Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:02:41.589Z] Step 200: Depth=267ft, Fuel=11.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:02:41.591Z] Fuel: 13.0 -> 11.0
+[2026-01-13T02:02:45.736Z] Fuel: 11.0 -> 9.0
+[2026-01-13T02:02:49.871Z] Fuel: 9.0 -> 6.9
+[2026-01-13T02:02:51.942Z] Step 300: Depth=267ft, Fuel=5.9, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:02:54.021Z] Fuel: 6.9 -> 4.9
+[2026-01-13T02:02:58.163Z] Fuel: 4.9 -> 2.9
+[2026-01-13T02:03:02.302Z] Step 400: Depth=267ft, Fuel=0.9, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:03:02.303Z] Fuel: 2.9 -> 0.9
+[2026-01-13T02:03:11.780Z] Step 500: Depth=291ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:03:11.782Z] 
+=== ITERATION 17 ===
+[2026-01-13T02:03:12.286Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:03:15.083Z] Collected mineral! Total: 1
+[2026-01-13T02:03:16.431Z] Collected mineral! Total: 2
+[2026-01-13T02:03:17.463Z] Collected mineral! Total: 3
+[2026-01-13T02:03:18.081Z] Collected mineral! Total: 4
+[2026-01-13T02:03:22.528Z] Collected mineral! Total: 5
+[2026-01-13T02:03:22.632Z] Step 100: Depth=200ft, Fuel=14.9, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:03:26.866Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:03:31.000Z] Fuel: 13.0 -> 11.0
+[2026-01-13T02:03:32.968Z] Step 200: Depth=202ft, Fuel=10.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:03:35.238Z] Fuel: 11.0 -> 8.9
+[2026-01-13T02:03:39.372Z] Fuel: 8.9 -> 6.9
+[2026-01-13T02:03:42.483Z] Step 300: Depth=202ft, Fuel=5.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:03:42.690Z] Fuel: 6.9 -> 4.9
+[2026-01-13T02:03:46.822Z] Fuel: 4.9 -> 2.9
+[2026-01-13T02:03:50.959Z] Fuel: 2.9 -> 0.9
+[2026-01-13T02:03:52.825Z] Step 400: Depth=203ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:04:03.184Z] Step 500: Depth=226ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:04:03.186Z] 
+=== ITERATION 18 ===
+[2026-01-13T02:04:03.690Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:04:06.276Z] Collected mineral! Total: 1
+[2026-01-13T02:04:06.692Z] Collected mineral! Total: 2
+[2026-01-13T02:04:08.870Z] Collected mineral! Total: 3
+[2026-01-13T02:04:12.939Z] Step 100: Depth=200ft, Fuel=14.8, Cash=$0, Cargo=3, Minerals=3
+[2026-01-13T02:04:18.430Z] Collected mineral! Total: 4
+[2026-01-13T02:04:19.151Z] Collected mineral! Total: 5
+[2026-01-13T02:04:22.984Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:04:23.297Z] Step 200: Depth=293ft, Fuel=12.8, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:04:27.230Z] Fuel: 13.0 -> 10.9
+[2026-01-13T02:04:31.475Z] Fuel: 10.9 -> 8.9
+[2026-01-13T02:04:33.651Z] Step 300: Depth=293ft, Fuel=7.8, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:04:35.618Z] Fuel: 8.9 -> 6.9
+[2026-01-13T02:04:39.138Z] Fuel: 6.9 -> 4.8
+[2026-01-13T02:04:43.274Z] Fuel: 4.8 -> 2.8
+[2026-01-13T02:04:43.382Z] Step 400: Depth=293ft, Fuel=2.8, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:04:47.522Z] Fuel: 2.8 -> 0.8
+[2026-01-13T02:04:53.723Z] Step 500: Depth=317ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:04:53.725Z] 
+=== ITERATION 19 ===
+[2026-01-13T02:04:54.231Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:04:56.399Z] Collected mineral! Total: 1
+[2026-01-13T02:05:03.332Z] Collected mineral! Total: 2
+[2026-01-13T02:05:04.262Z] Collected mineral! Total: 3
+[2026-01-13T02:05:04.572Z] Step 100: Depth=252ft, Fuel=14.7, Cash=$0, Cargo=3, Minerals=3
+[2026-01-13T02:05:05.815Z] Collected mineral! Total: 4
+[2026-01-13T02:05:08.575Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:05:12.708Z] Fuel: 13.0 -> 11.0
+[2026-01-13T02:05:14.052Z] Step 200: Depth=280ft, Fuel=10.3, Cash=$0, Cargo=4, Minerals=4
+[2026-01-13T02:05:16.842Z] Fuel: 11.0 -> 8.9
+[2026-01-13T02:05:20.978Z] Fuel: 8.9 -> 6.9
+[2026-01-13T02:05:24.391Z] Step 300: Depth=280ft, Fuel=5.3, Cash=$0, Cargo=4, Minerals=4
+[2026-01-13T02:05:25.118Z] Fuel: 6.9 -> 4.9
+[2026-01-13T02:05:29.244Z] Fuel: 4.9 -> 2.9
+[2026-01-13T02:05:33.378Z] Fuel: 2.9 -> 0.9
+[2026-01-13T02:05:34.725Z] Step 400: Depth=280ft, Fuel=0.2, Cash=$0, Cargo=4, Minerals=4
+[2026-01-13T02:05:44.192Z] Step 500: Depth=291ft, Fuel=0.0, Cash=$0, Cargo=4, Minerals=4
+[2026-01-13T02:05:44.194Z] 
+=== ITERATION 20 ===
+[2026-01-13T02:05:44.697Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:05:45.841Z] Collected mineral! Total: 1
+[2026-01-13T02:05:51.012Z] Collected mineral! Total: 2
+[2026-01-13T02:05:52.362Z] Collected mineral! Total: 3
+[2026-01-13T02:05:52.674Z] Collected mineral! Total: 4
+[2026-01-13T02:05:53.087Z] Collected mineral! Total: 5
+[2026-01-13T02:05:55.055Z] Step 100: Depth=150ft, Fuel=14.2, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:05:57.637Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:06:01.769Z] Fuel: 13.0 -> 11.0
+[2026-01-13T02:06:05.377Z] Step 200: Depth=150ft, Fuel=9.2, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:06:05.896Z] Fuel: 11.0 -> 9.0
+[2026-01-13T02:06:09.169Z] Fuel: 9.0 -> 6.9
+[2026-01-13T02:06:13.307Z] Fuel: 6.9 -> 4.9
+[2026-01-13T02:06:14.857Z] Step 300: Depth=150ft, Fuel=4.2, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:06:17.443Z] Fuel: 4.9 -> 2.9
+[2026-01-13T02:06:21.685Z] Fuel: 2.9 -> 0.9
+[2026-01-13T02:06:25.204Z] Step 400: Depth=161ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:06:34.691Z] Step 500: Depth=161ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:06:34.776Z] 
+=== ITERATION 21 ===
+[2026-01-13T02:06:35.281Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:06:38.078Z] Collected mineral! Total: 1
+[2026-01-13T02:06:45.007Z] Collected mineral! Total: 2
+[2026-01-13T02:06:45.316Z] Collected mineral! Total: 3
+[2026-01-13T02:06:45.628Z] Step 100: Depth=114ft, Fuel=14.9, Cash=$0, Cargo=3, Minerals=3
+[2026-01-13T02:06:46.867Z] Collected mineral! Total: 4
+[2026-01-13T02:06:47.181Z] Collected mineral! Total: 5
+[2026-01-13T02:06:51.110Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:06:55.250Z] Fuel: 13.0 -> 10.9
+[2026-01-13T02:06:55.974Z] Step 200: Depth=124ft, Fuel=10.6, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:06:59.392Z] Fuel: 10.9 -> 8.9
+[2026-01-13T02:07:03.530Z] Fuel: 8.9 -> 6.9
+[2026-01-13T02:07:05.471Z] Step 300: Depth=124ft, Fuel=5.5, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:07:06.818Z] Fuel: 6.9 -> 4.9
+[2026-01-13T02:07:10.953Z] Fuel: 4.9 -> 2.9
+[2026-01-13T02:07:15.084Z] Fuel: 2.9 -> 0.9
+[2026-01-13T02:07:15.807Z] Step 400: Depth=124ft, Fuel=0.5, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:07:26.155Z] Step 500: Depth=161ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:07:26.159Z] 
+=== ITERATION 22 ===
+[2026-01-13T02:07:26.665Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:07:36.128Z] Step 100: Depth=161ft, Fuel=14.9, Cash=$0, Cargo=0, Minerals=0
+[2026-01-13T02:07:46.471Z] Step 200: Depth=317ft, Fuel=14.8, Cash=$0, Cargo=0, Minerals=0
+[2026-01-13T02:07:47.398Z] Collected mineral! Total: 1
+[2026-01-13T02:07:47.811Z] Collected mineral! Total: 2
+[2026-01-13T02:07:49.360Z] Collected mineral! Total: 3
+[2026-01-13T02:07:53.182Z] Collected mineral! Total: 4
+[2026-01-13T02:07:54.943Z] Collected mineral! Total: 5
+[2026-01-13T02:07:56.798Z] Step 300: Depth=501ft, Fuel=13.9, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:07:58.664Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:08:02.030Z] Fuel: 13.0 -> 10.9
+[2026-01-13T02:08:06.167Z] Fuel: 10.9 -> 8.9
+[2026-01-13T02:08:06.270Z] Step 400: Depth=501ft, Fuel=8.9, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:08:10.412Z] Fuel: 8.9 -> 6.9
+[2026-01-13T02:08:14.550Z] Fuel: 6.9 -> 4.9
+[2026-01-13T02:08:16.616Z] Step 500: Depth=501ft, Fuel=3.9, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:08:16.618Z] 
+=== ITERATION 23 ===
+[2026-01-13T02:08:17.121Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:08:22.919Z] Collected mineral! Total: 1
+[2026-01-13T02:08:23.230Z] Collected mineral! Total: 2
+[2026-01-13T02:08:23.544Z] Collected mineral! Total: 3
+[2026-01-13T02:08:24.480Z] Collected mineral! Total: 4
+[2026-01-13T02:08:27.477Z] Step 100: Depth=200ft, Fuel=14.8, Cash=$0, Cargo=4, Minerals=4
+[2026-01-13T02:08:27.682Z] Collected mineral! Total: 5
+[2026-01-13T02:08:31.720Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:08:34.991Z] Fuel: 13.0 -> 11.0
+[2026-01-13T02:08:36.957Z] Step 200: Depth=215ft, Fuel=10.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:08:39.129Z] Fuel: 11.0 -> 9.0
+[2026-01-13T02:08:43.274Z] Fuel: 9.0 -> 7.0
+[2026-01-13T02:08:47.309Z] Step 300: Depth=215ft, Fuel=5.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:08:47.518Z] Fuel: 7.0 -> 4.9
+[2026-01-13T02:08:51.657Z] Fuel: 4.9 -> 2.9
+[2026-01-13T02:08:55.894Z] Fuel: 2.9 -> 0.8
+[2026-01-13T02:08:57.655Z] Step 400: Depth=215ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:09:07.158Z] Step 500: Depth=226ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:09:07.160Z] 
+=== ITERATION 24 ===
+[2026-01-13T02:09:07.663Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:09:16.359Z] Collected mineral! Total: 1
+[2026-01-13T02:09:18.013Z] Step 100: Depth=187ft, Fuel=15.0, Cash=$0, Cargo=1, Minerals=1
+[2026-01-13T02:09:28.360Z] Step 200: Depth=382ft, Fuel=14.8, Cash=$0, Cargo=1, Minerals=1
+[2026-01-13T02:09:28.878Z] Collected mineral! Total: 2
+[2026-01-13T02:09:29.504Z] Collected mineral! Total: 3
+[2026-01-13T02:09:32.153Z] Collected mineral! Total: 4
+[2026-01-13T02:09:33.604Z] Collected mineral! Total: 5
+[2026-01-13T02:09:37.430Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:09:37.844Z] Step 300: Depth=475ft, Fuel=12.8, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:09:41.570Z] Fuel: 13.0 -> 11.0
+[2026-01-13T02:09:45.828Z] Fuel: 11.0 -> 8.9
+[2026-01-13T02:09:48.210Z] Step 400: Depth=475ft, Fuel=7.7, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:09:49.971Z] Fuel: 8.9 -> 6.9
+[2026-01-13T02:09:54.114Z] Fuel: 6.9 -> 4.9
+[2026-01-13T02:09:58.262Z] Fuel: 4.9 -> 2.9
+[2026-01-13T02:09:58.571Z] Step 500: Depth=475ft, Fuel=2.7, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:09:58.577Z] 
+=== ITERATION 25 ===
+[2026-01-13T02:09:59.081Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:10:00.086Z] Collected mineral! Total: 1
+[2026-01-13T02:10:03.925Z] Collected mineral! Total: 2
+[2026-01-13T02:10:05.275Z] Collected mineral! Total: 3
+[2026-01-13T02:10:05.588Z] Collected mineral! Total: 4
+[2026-01-13T02:10:08.601Z] Step 100: Depth=200ft, Fuel=14.9, Cash=$0, Cargo=4, Minerals=4
+[2026-01-13T02:10:11.201Z] Collected mineral! Total: 5
+[2026-01-13T02:10:15.664Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:10:18.983Z] Step 200: Depth=241ft, Fuel=11.4, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:10:19.815Z] Fuel: 13.0 -> 11.0
+[2026-01-13T02:10:24.071Z] Fuel: 11.0 -> 8.9
+[2026-01-13T02:10:28.221Z] Fuel: 8.9 -> 6.9
+[2026-01-13T02:10:28.501Z] Step 300: Depth=241ft, Fuel=6.3, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:10:31.522Z] Fuel: 6.9 -> 4.9
+[2026-01-13T02:10:35.784Z] Fuel: 4.9 -> 2.8
+[2026-01-13T02:10:38.892Z] Step 400: Depth=241ft, Fuel=1.3, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:10:39.937Z] Fuel: 2.8 -> 0.8
+[2026-01-13T02:10:49.287Z] Step 500: Depth=291ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:10:49.371Z] 
+=== ITERATION 26 ===
+[2026-01-13T02:10:49.874Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:10:54.959Z] Collected mineral! Total: 1
+[2026-01-13T02:10:58.771Z] Collected mineral! Total: 2
+[2026-01-13T02:10:59.392Z] Step 100: Depth=148ft, Fuel=15.0, Cash=$0, Cargo=2, Minerals=2
+[2026-01-13T02:11:00.121Z] Collected mineral! Total: 3
+[2026-01-13T02:11:00.434Z] Collected mineral! Total: 4
+[2026-01-13T02:11:06.654Z] Collected mineral! Total: 5
+[2026-01-13T02:11:09.768Z] Step 200: Depth=306ft, Fuel=13.5, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:11:10.805Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:11:14.957Z] Fuel: 13.0 -> 10.9
+[2026-01-13T02:11:19.206Z] Fuel: 10.9 -> 8.9
+[2026-01-13T02:11:20.141Z] Step 300: Depth=306ft, Fuel=8.4, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:11:23.464Z] Fuel: 8.9 -> 6.8
+[2026-01-13T02:11:26.743Z] Fuel: 6.8 -> 4.8
+[2026-01-13T02:11:29.543Z] Step 400: Depth=306ft, Fuel=3.4, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:11:30.998Z] Fuel: 4.8 -> 2.7
+[2026-01-13T02:11:35.250Z] Fuel: 2.7 -> 0.7
+[2026-01-13T02:11:39.912Z] Step 500: Depth=317ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:11:39.914Z] 
+=== ITERATION 27 ===
+[2026-01-13T02:11:40.416Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:11:43.530Z] Collected mineral! Total: 1
+[2026-01-13T02:11:48.713Z] Collected mineral! Total: 2
+[2026-01-13T02:11:50.783Z] Step 100: Depth=161ft, Fuel=14.9, Cash=$0, Cargo=2, Minerals=2
+[2026-01-13T02:11:50.887Z] Collected mineral! Total: 3
+[2026-01-13T02:12:00.397Z] Step 200: Depth=408ft, Fuel=14.9, Cash=$0, Cargo=3, Minerals=3
+[2026-01-13T02:12:02.461Z] Collected mineral! Total: 4
+[2026-01-13T02:12:04.840Z] Collected mineral! Total: 5
+[2026-01-13T02:12:08.885Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:12:10.753Z] Step 300: Depth=501ft, Fuel=12.1, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:12:13.036Z] Fuel: 13.0 -> 11.0
+[2026-01-13T02:12:17.174Z] Fuel: 11.0 -> 8.9
+[2026-01-13T02:12:21.106Z] Step 400: Depth=501ft, Fuel=7.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:12:21.316Z] Fuel: 8.9 -> 6.9
+[2026-01-13T02:12:24.605Z] Fuel: 6.9 -> 4.9
+[2026-01-13T02:12:28.743Z] Fuel: 4.9 -> 2.9
+[2026-01-13T02:12:30.610Z] Step 500: Depth=501ft, Fuel=2.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:12:30.612Z] 
+=== ITERATION 28 ===
+[2026-01-13T02:12:31.117Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:12:35.148Z] Collected mineral! Total: 1
+[2026-01-13T02:12:36.076Z] Collected mineral! Total: 2
+[2026-01-13T02:12:41.470Z] Step 100: Depth=148ft, Fuel=14.8, Cash=$0, Cargo=2, Minerals=2
+[2026-01-13T02:12:44.484Z] Collected mineral! Total: 3
+[2026-01-13T02:12:51.861Z] Step 200: Depth=384ft, Fuel=14.4, Cash=$0, Cargo=3, Minerals=3
+[2026-01-13T02:12:56.904Z] Collected mineral! Total: 4
+[2026-01-13T02:12:57.940Z] Collected mineral! Total: 5
+[2026-01-13T02:13:01.053Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:13:01.368Z] Step 300: Depth=475ft, Fuel=12.8, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:13:05.207Z] Fuel: 13.0 -> 10.9
+[2026-01-13T02:13:09.352Z] Fuel: 10.9 -> 8.9
+[2026-01-13T02:13:11.739Z] Step 400: Depth=475ft, Fuel=7.8, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:13:13.500Z] Fuel: 8.9 -> 6.9
+[2026-01-13T02:13:17.651Z] Fuel: 6.9 -> 4.9
+[2026-01-13T02:13:21.800Z] Fuel: 4.9 -> 2.9
+[2026-01-13T02:13:22.113Z] Step 500: Depth=475ft, Fuel=2.7, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:13:22.115Z] 
+=== ITERATION 29 ===
+[2026-01-13T02:13:22.619Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:13:24.622Z] Collected mineral! Total: 1
+[2026-01-13T02:13:24.934Z] Collected mineral! Total: 2
+[2026-01-13T02:13:25.555Z] Collected mineral! Total: 3
+[2026-01-13T02:13:27.421Z] Collected mineral! Total: 4
+[2026-01-13T02:13:32.087Z] Step 100: Depth=174ft, Fuel=14.7, Cash=$0, Cargo=4, Minerals=4
+[2026-01-13T02:13:32.403Z] Collected mineral! Total: 5
+[2026-01-13T02:13:36.239Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:13:40.382Z] Fuel: 13.0 -> 11.0
+[2026-01-13T02:13:42.455Z] Step 200: Depth=189ft, Fuel=10.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:13:44.523Z] Fuel: 11.0 -> 9.0
+[2026-01-13T02:13:48.666Z] Fuel: 9.0 -> 6.9
+[2026-01-13T02:13:51.938Z] Step 300: Depth=189ft, Fuel=4.9, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:13:51.940Z] Fuel: 6.9 -> 4.9
+[2026-01-13T02:13:56.188Z] Fuel: 4.9 -> 2.9
+[2026-01-13T02:14:00.333Z] Fuel: 2.9 -> 0.9
+[2026-01-13T02:14:02.309Z] Step 400: Depth=187ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:14:12.662Z] Step 500: Depth=187ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:14:12.665Z] 
+=== ITERATION 30 ===
+[2026-01-13T02:14:13.172Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:14:14.933Z] Collected mineral! Total: 1
+[2026-01-13T02:14:16.389Z] Collected mineral! Total: 2
+[2026-01-13T02:14:22.686Z] Step 100: Depth=200ft, Fuel=14.6, Cash=$0, Cargo=2, Minerals=2
+[2026-01-13T02:14:25.176Z] Collected mineral! Total: 3
+[2026-01-13T02:14:26.522Z] Collected mineral! Total: 4
+[2026-01-13T02:14:26.834Z] Collected mineral! Total: 5
+[2026-01-13T02:14:30.461Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:14:33.042Z] Step 200: Depth=319ft, Fuel=11.7, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:14:34.707Z] Fuel: 13.0 -> 10.9
+[2026-01-13T02:14:38.854Z] Fuel: 10.9 -> 8.9
+[2026-01-13T02:14:43.101Z] Fuel: 8.9 -> 6.9
+[2026-01-13T02:14:43.408Z] Step 300: Depth=319ft, Fuel=6.7, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:14:47.254Z] Fuel: 6.9 -> 4.9
+[2026-01-13T02:14:50.522Z] Fuel: 4.9 -> 2.9
+[2026-01-13T02:14:52.907Z] Step 400: Depth=319ft, Fuel=1.7, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:14:54.674Z] Fuel: 2.9 -> 0.8
+[2026-01-13T02:15:03.277Z] Step 500: Depth=330ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:15:03.369Z] 
+=== ITERATION 31 ===
+[2026-01-13T02:15:03.873Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:15:04.703Z] Collected mineral! Total: 1
+[2026-01-13T02:15:13.421Z] Collected mineral! Total: 2
+[2026-01-13T02:15:14.252Z] Step 100: Depth=200ft, Fuel=14.8, Cash=$0, Cargo=2, Minerals=2
+[2026-01-13T02:15:16.124Z] Collected mineral! Total: 3
+[2026-01-13T02:15:16.540Z] Collected mineral! Total: 4
+[2026-01-13T02:15:20.083Z] Collected mineral! Total: 5
+[2026-01-13T02:15:23.510Z] Step 200: Depth=293ft, Fuel=13.1, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:15:23.824Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:15:27.973Z] Fuel: 13.0 -> 11.0
+[2026-01-13T02:15:32.113Z] Fuel: 11.0 -> 9.0
+[2026-01-13T02:15:33.882Z] Step 300: Depth=293ft, Fuel=8.1, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:15:36.271Z] Fuel: 9.0 -> 7.0
+[2026-01-13T02:15:40.515Z] Fuel: 7.0 -> 4.9
+[2026-01-13T02:15:44.248Z] Step 400: Depth=293ft, Fuel=3.1, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:15:44.664Z] Fuel: 4.9 -> 2.9
+[2026-01-13T02:15:48.212Z] Fuel: 2.9 -> 0.9
+[2026-01-13T02:15:54.023Z] Step 500: Depth=343ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:15:54.026Z] 
+=== ITERATION 32 ===
+[2026-01-13T02:15:54.531Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:15:57.323Z] Collected mineral! Total: 1
+[2026-01-13T02:16:01.060Z] Collected mineral! Total: 2
+[2026-01-13T02:16:02.511Z] Collected mineral! Total: 3
+[2026-01-13T02:16:03.447Z] Collected mineral! Total: 4
+[2026-01-13T02:16:04.902Z] Step 100: Depth=161ft, Fuel=14.8, Cash=$0, Cargo=4, Minerals=4
+[2026-01-13T02:16:05.834Z] Collected mineral! Total: 5
+[2026-01-13T02:16:10.197Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:16:14.334Z] Fuel: 13.0 -> 11.0
+[2026-01-13T02:16:15.273Z] Step 200: Depth=189ft, Fuel=10.5, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:16:17.708Z] Fuel: 11.0 -> 8.9
+[2026-01-13T02:16:21.863Z] Fuel: 8.9 -> 6.9
+[2026-01-13T02:16:24.770Z] Step 300: Depth=189ft, Fuel=5.5, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:16:26.015Z] Fuel: 6.9 -> 4.9
+[2026-01-13T02:16:30.156Z] Fuel: 4.9 -> 2.9
+[2026-01-13T02:16:34.301Z] Fuel: 2.9 -> 0.8
+[2026-01-13T02:16:35.134Z] Step 400: Depth=189ft, Fuel=0.4, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:16:45.473Z] Step 500: Depth=213ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:16:45.475Z] 
+=== ITERATION 33 ===
+[2026-01-13T02:16:45.982Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:16:47.584Z] Collected mineral! Total: 1
+[2026-01-13T02:16:48.516Z] Collected mineral! Total: 2
+[2026-01-13T02:16:50.175Z] Collected mineral! Total: 3
+[2026-01-13T02:16:51.528Z] Collected mineral! Total: 4
+[2026-01-13T02:16:55.048Z] Collected mineral! Total: 5
+[2026-01-13T02:16:55.463Z] Step 100: Depth=176ft, Fuel=14.8, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:16:59.298Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:17:03.442Z] Fuel: 13.0 -> 11.0
+[2026-01-13T02:17:05.824Z] Step 200: Depth=176ft, Fuel=9.8, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:17:07.584Z] Fuel: 11.0 -> 9.0
+[2026-01-13T02:17:11.728Z] Fuel: 9.0 -> 7.0
+[2026-01-13T02:17:15.878Z] Fuel: 7.0 -> 4.9
+[2026-01-13T02:17:16.186Z] Step 300: Depth=176ft, Fuel=4.8, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:17:19.150Z] Fuel: 4.9 -> 2.9
+[2026-01-13T02:17:23.303Z] Fuel: 2.9 -> 0.9
+[2026-01-13T02:17:25.688Z] Step 400: Depth=187ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:17:36.056Z] Step 500: Depth=187ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:17:36.058Z] 
+=== ITERATION 34 ===
+[2026-01-13T02:17:36.567Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:17:39.055Z] Collected mineral! Total: 1
+[2026-01-13T02:17:46.071Z] Step 100: Depth=213ft, Fuel=14.8, Cash=$0, Cargo=1, Minerals=1
+[2026-01-13T02:17:48.051Z] Collected mineral! Total: 2
+[2026-01-13T02:17:48.362Z] Collected mineral! Total: 3
+[2026-01-13T02:17:50.026Z] Collected mineral! Total: 4
+[2026-01-13T02:17:51.375Z] Collected mineral! Total: 5
+[2026-01-13T02:17:55.319Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:17:56.457Z] Step 200: Depth=345ft, Fuel=12.4, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:17:59.568Z] Fuel: 13.0 -> 10.9
+[2026-01-13T02:18:03.719Z] Fuel: 10.9 -> 8.9
+[2026-01-13T02:18:06.825Z] Step 300: Depth=345ft, Fuel=7.4, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:18:07.869Z] Fuel: 8.9 -> 6.9
+[2026-01-13T02:18:12.019Z] Fuel: 6.9 -> 4.8
+[2026-01-13T02:18:15.290Z] Fuel: 4.8 -> 2.8
+[2026-01-13T02:18:16.333Z] Step 400: Depth=345ft, Fuel=2.3, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:18:19.543Z] Fuel: 2.8 -> 0.8
+[2026-01-13T02:18:26.693Z] Step 500: Depth=382ft, Fuel=0.0, Cash=$0, Cargo=5, Minerals=5
+[2026-01-13T02:18:26.697Z] 
+=== ITERATION 35 ===
+[2026-01-13T02:18:27.203Z] Fuel: 10.0 -> 15.0
+[2026-01-13T02:18:29.373Z] Collected mineral! Total: 1
+[2026-01-13T02:18:34.225Z] Collected mineral! Total: 2
+[2026-01-13T02:18:34.540Z] Collected mineral! Total: 3
+[2026-01-13T02:18:37.552Z] Step 100: Depth=161ft, Fuel=15.0, Cash=$0, Cargo=3, Minerals=3
+[2026-01-13T02:18:38.175Z] Collected mineral! Total: 4
+[2026-01-13T02:18:38.487Z] Collected mineral! Total: 5
+[2026-01-13T02:18:42.623Z] Fuel: 15.0 -> 13.0
+[2026-01-13T02:18:43.416Z] [ERROR] Execute: page.evaluate: Target page, context or browser has been closed
+[2026-01-13T02:18:43.420Z] [FATAL] page.screenshot: Target page, context or browser has been closed
+[2026-01-13T02:18:43.430Z] Playtest complete

@@ -1,0 +1,413 @@
+Starting FTL Clone batch test...
+
+
+=== Iteration 1/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 4
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 1, Ships: 3, Jumps: 5
+  Step 150, Sector 1, Ships: 3, Jumps: 5
+  Step 200, Sector 1, Ships: 3, Jumps: 5
+  Iteration 1 complete: 3 ships, 5 jumps
+
+=== Iteration 2/200 ===
+  Ship destroyed! (1 this run)
+  Ship destroyed! (2 this run)
+  Step 50, Sector 1, Ships: 2, Jumps: 4
+  Ship destroyed! (3 this run)
+  Step 100, Sector 2, Ships: 3, Jumps: 8
+  Step 150, Sector 2, Ships: 3, Jumps: 8
+  Step 200, Sector 2, Ships: 3, Jumps: 8
+  Iteration 2 complete: 3 ships, 8 jumps
+
+=== Iteration 3/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 3
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 2, Ships: 3, Jumps: 6
+  Ship destroyed! (4 this run)
+  Ship destroyed! (5 this run)
+  Step 150, Sector 2, Ships: 5, Jumps: 7
+  Step 200, Sector 2, Ships: 5, Jumps: 9
+  Iteration 3 complete: 5 ships, 9 jumps
+
+=== Iteration 4/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 2
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Ship destroyed! (4 this run)
+  Step 100, Sector 2, Ships: 4, Jumps: 6
+  Step 150, Sector 2, Ships: 4, Jumps: 6
+  Step 200, Sector 2, Ships: 4, Jumps: 6
+  Iteration 4 complete: 4 ships, 6 jumps
+
+=== Iteration 5/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 2
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 1, Ships: 3, Jumps: 4
+  Ship destroyed! (4 this run)
+  Ship destroyed! (5 this run)
+  Step 150, Sector 2, Ships: 5, Jumps: 8
+  Step 200, Sector 2, Ships: 5, Jumps: 8
+  Iteration 5 complete: 5 ships, 8 jumps
+
+=== Iteration 6/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 2
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 1, Ships: 3, Jumps: 5
+  Step 150, Sector 1, Ships: 3, Jumps: 5
+  Step 200, Sector 1, Ships: 3, Jumps: 5
+  Iteration 6 complete: 3 ships, 5 jumps
+
+=== Iteration 7/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 3
+  Ship destroyed! (2 this run)
+  Step 100, Sector 1, Ships: 2, Jumps: 4
+  Ship destroyed! (3 this run)
+  Ship destroyed! (4 this run)
+  Step 150, Sector 1, Ships: 4, Jumps: 5
+  Step 200, Sector 1, Ships: 4, Jumps: 5
+  Iteration 7 complete: 4 ships, 5 jumps
+
+=== Iteration 8/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 3
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 1, Ships: 3, Jumps: 5
+  Step 150, Sector 1, Ships: 3, Jumps: 5
+  Step 200, Sector 1, Ships: 3, Jumps: 5
+  Iteration 8 complete: 3 ships, 5 jumps
+
+=== Iteration 9/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 3
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 1, Ships: 3, Jumps: 5
+  Ship destroyed! (4 this run)
+  Step 150, Sector 1, Ships: 4, Jumps: 5
+  Step 200, Sector 1, Ships: 4, Jumps: 5
+  Iteration 9 complete: 4 ships, 5 jumps
+
+=== Iteration 10/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 2, Ships: 1, Jumps: 7
+  Step 100, Sector 2, Ships: 1, Jumps: 7
+  Step 150, Sector 2, Ships: 1, Jumps: 7
+  Death at sector 2
+  Iteration 10 complete: 1 ships, 7 jumps
+
+=== Iteration 11/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 4
+  Ship destroyed! (2 this run)
+  Step 100, Sector 1, Ships: 2, Jumps: 5
+  Ship destroyed! (3 this run)
+  Step 150, Sector 1, Ships: 3, Jumps: 5
+  Step 200, Sector 1, Ships: 3, Jumps: 5
+  Iteration 11 complete: 3 ships, 5 jumps
+
+=== Iteration 12/200 ===
+  Step 50, Sector 1, Ships: 0, Jumps: 1
+  Step 100, Sector 1, Ships: 0, Jumps: 1
+  Step 150, Sector 1, Ships: 0, Jumps: 1
+  Step 200, Sector 1, Ships: 0, Jumps: 1
+  Iteration 12 complete: 0 ships, 1 jumps
+
+=== Iteration 13/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 2, Ships: 1, Jumps: 6
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 2, Ships: 3, Jumps: 9
+  Ship destroyed! (4 this run)
+  Step 150, Sector 3, Ships: 4, Jumps: 11
+  Ship destroyed! (5 this run)
+  Ship destroyed! (6 this run)
+  Step 200, Sector 3, Ships: 6, Jumps: 14
+  Iteration 13 complete: 6 ships, 14 jumps
+
+=== Iteration 14/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 4
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 1, Ships: 3, Jumps: 5
+  Step 150, Sector 1, Ships: 3, Jumps: 5
+  Step 200, Sector 1, Ships: 3, Jumps: 5
+  Iteration 14 complete: 3 ships, 5 jumps
+
+=== Iteration 15/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 2
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 1, Ships: 3, Jumps: 5
+  Ship destroyed! (4 this run)
+  Step 150, Sector 1, Ships: 4, Jumps: 5
+  Step 200, Sector 1, Ships: 4, Jumps: 5
+  Iteration 15 complete: 4 ships, 5 jumps
+
+=== Iteration 16/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 4
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 2, Ships: 3, Jumps: 7
+  Ship destroyed! (4 this run)
+  Step 150, Sector 2, Ships: 4, Jumps: 8
+  Step 200, Sector 2, Ships: 4, Jumps: 8
+  Iteration 16 complete: 4 ships, 8 jumps
+
+=== Iteration 17/200 ===
+  Ship destroyed! (1 this run)
+  Ship destroyed! (2 this run)
+  Step 50, Sector 1, Ships: 2, Jumps: 5
+  Step 100, Sector 1, Ships: 2, Jumps: 5
+  Step 150, Sector 1, Ships: 2, Jumps: 5
+  Step 200, Sector 1, Ships: 2, Jumps: 5
+  Iteration 17 complete: 2 ships, 5 jumps
+
+=== Iteration 18/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 2
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 1, Ships: 3, Jumps: 4
+  Ship destroyed! (4 this run)
+  Ship destroyed! (5 this run)
+  Step 150, Sector 1, Ships: 5, Jumps: 5
+  Step 200, Sector 1, Ships: 5, Jumps: 5
+  Iteration 18 complete: 5 ships, 5 jumps
+
+=== Iteration 19/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 4
+  Ship destroyed! (2 this run)
+  Step 100, Sector 2, Ships: 2, Jumps: 6
+  Step 150, Sector 2, Ships: 2, Jumps: 6
+  Step 200, Sector 2, Ships: 2, Jumps: 6
+  Iteration 19 complete: 2 ships, 6 jumps
+
+=== Iteration 20/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 2
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 1, Ships: 3, Jumps: 5
+  Ship destroyed! (4 this run)
+  Step 150, Sector 1, Ships: 4, Jumps: 5
+  Step 200, Sector 1, Ships: 4, Jumps: 5
+  Iteration 20 complete: 4 ships, 5 jumps
+
+=== Iteration 21/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 2
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Ship destroyed! (4 this run)
+  Step 100, Sector 2, Ships: 4, Jumps: 6
+  Ship destroyed! (5 this run)
+  Step 150, Sector 2, Ships: 5, Jumps: 8
+  Step 200, Sector 2, Ships: 5, Jumps: 8
+  Iteration 21 complete: 5 ships, 8 jumps
+
+=== Iteration 22/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 1
+  Step 100, Sector 1, Ships: 1, Jumps: 1
+  Step 150, Sector 1, Ships: 1, Jumps: 1
+  Step 200, Sector 1, Ships: 1, Jumps: 1
+  Iteration 22 complete: 1 ships, 1 jumps
+
+=== Iteration 23/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 4
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 1, Ships: 3, Jumps: 5
+  Step 150, Sector 1, Ships: 3, Jumps: 5
+  Step 200, Sector 1, Ships: 3, Jumps: 5
+  Iteration 23 complete: 3 ships, 5 jumps
+
+=== Iteration 24/200 ===
+  Ship destroyed! (1 this run)
+  Ship destroyed! (2 this run)
+  Step 50, Sector 2, Ships: 2, Jumps: 6
+  Ship destroyed! (3 this run)
+  Ship destroyed! (4 this run)
+  Step 100, Sector 2, Ships: 4, Jumps: 9
+  Ship destroyed! (5 this run)
+  Step 150, Sector 2, Ships: 5, Jumps: 10
+  Step 200, Sector 2, Ships: 5, Jumps: 10
+  Iteration 24 complete: 5 ships, 10 jumps
+
+=== Iteration 25/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 2, Ships: 1, Jumps: 6
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 2, Ships: 3, Jumps: 10
+  Ship destroyed! (4 this run)
+  Step 150, Sector 2, Ships: 4, Jumps: 10
+  Step 200, Sector 2, Ships: 4, Jumps: 10
+  Iteration 25 complete: 4 ships, 10 jumps
+  Checkpoint 25: Ships=86, Jumps=156, Deaths=1, MaxSector=3
+  Reloading page...
+
+=== Iteration 26/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 2
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 1, Ships: 3, Jumps: 4
+  Ship destroyed! (4 this run)
+  Ship destroyed! (5 this run)
+  Step 150, Sector 1, Ships: 5, Jumps: 5
+  Step 200, Sector 1, Ships: 5, Jumps: 5
+  Iteration 26 complete: 5 ships, 5 jumps
+
+=== Iteration 27/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 2
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 1, Ships: 3, Jumps: 4
+  Ship destroyed! (4 this run)
+  Step 150, Sector 1, Ships: 4, Jumps: 5
+  Ship destroyed! (5 this run)
+  Step 200, Sector 1, Ships: 5, Jumps: 5
+  Iteration 27 complete: 5 ships, 5 jumps
+
+=== Iteration 28/200 ===
+  Step 50, Sector 1, Ships: 0, Jumps: 1
+  Step 100, Sector 1, Ships: 0, Jumps: 1
+  Step 150, Sector 1, Ships: 0, Jumps: 1
+  Step 200, Sector 1, Ships: 0, Jumps: 1
+  Iteration 28 complete: 0 ships, 1 jumps
+
+=== Iteration 29/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 4
+  Ship destroyed! (2 this run)
+  Step 100, Sector 2, Ships: 2, Jumps: 7
+  Step 150, Sector 2, Ships: 2, Jumps: 7
+  Step 200, Sector 2, Ships: 2, Jumps: 7
+  Iteration 29 complete: 2 ships, 7 jumps
+
+=== Iteration 30/200 ===
+  Ship destroyed! (1 this run)
+  Ship destroyed! (2 this run)
+  Step 50, Sector 2, Ships: 2, Jumps: 8
+  Step 100, Sector 2, Ships: 2, Jumps: 8
+  Step 150, Sector 2, Ships: 2, Jumps: 8
+  Step 200, Sector 2, Ships: 2, Jumps: 8
+  Iteration 30 complete: 2 ships, 8 jumps
+
+=== Iteration 31/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 5
+  Step 100, Sector 1, Ships: 1, Jumps: 5
+  Step 150, Sector 1, Ships: 1, Jumps: 5
+  Step 200, Sector 1, Ships: 1, Jumps: 5
+  Iteration 31 complete: 1 ships, 5 jumps
+
+=== Iteration 32/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 3
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 2, Ships: 3, Jumps: 6
+  Step 150, Sector 2, Ships: 3, Jumps: 6
+  Step 200, Sector 2, Ships: 3, Jumps: 6
+  Iteration 32 complete: 3 ships, 6 jumps
+
+=== Iteration 33/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 2
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 1, Ships: 3, Jumps: 4
+  Ship destroyed! (4 this run)
+  Ship destroyed! (5 this run)
+  Step 150, Sector 1, Ships: 5, Jumps: 5
+  Step 200, Sector 1, Ships: 5, Jumps: 5
+  Iteration 33 complete: 5 ships, 5 jumps
+
+=== Iteration 34/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 2, Ships: 1, Jumps: 6
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 2, Ships: 3, Jumps: 8
+  Ship destroyed! (4 this run)
+  Step 150, Sector 2, Ships: 4, Jumps: 9
+  Ship destroyed! (5 this run)
+  Ship destroyed! (6 this run)
+  Step 200, Sector 2, Ships: 6, Jumps: 10
+  Iteration 34 complete: 6 ships, 10 jumps
+
+=== Iteration 35/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 2
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 1, Ships: 3, Jumps: 4
+  Ship destroyed! (4 this run)
+  Ship destroyed! (5 this run)
+  Step 150, Sector 1, Ships: 5, Jumps: 5
+  Step 200, Sector 1, Ships: 5, Jumps: 5
+  Iteration 35 complete: 5 ships, 5 jumps
+
+=== Iteration 36/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 4
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 1, Ships: 3, Jumps: 5
+  Step 150, Sector 1, Ships: 3, Jumps: 5
+  Step 200, Sector 1, Ships: 3, Jumps: 5
+  Iteration 36 complete: 3 ships, 5 jumps
+
+=== Iteration 37/200 ===
+  Ship destroyed! (1 this run)
+  Ship destroyed! (2 this run)
+  Step 50, Sector 1, Ships: 2, Jumps: 3
+  Ship destroyed! (3 this run)
+  Ship destroyed! (4 this run)
+  Step 100, Sector 2, Ships: 4, Jumps: 6
+  Ship destroyed! (5 this run)
+  Step 150, Sector 2, Ships: 5, Jumps: 8
+  Ship destroyed! (6 this run)
+  Step 200, Sector 2, Ships: 6, Jumps: 9
+  Iteration 37 complete: 6 ships, 9 jumps
+
+=== Iteration 38/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 3
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 2, Ships: 3, Jumps: 6
+  Ship destroyed! (4 this run)
+  Error in iteration 38: page.evaluate: Target page, context or browser has been closed
+  Failed to recover, restarting browser...
+
+========================================
+BATCH TEST RESULTS
+========================================
+Total Ships Destroyed: 133
+Total Jumps: 234
+Total Deaths: 1
+Max Sector Reached: 3
+Successful Iterations: 37/37
+Average Ships/Iteration: 3.59
+========================================

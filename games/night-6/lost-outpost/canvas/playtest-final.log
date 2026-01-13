@@ -1,0 +1,6 @@
+Checkpoint 25: Kills=146, Deaths=0, MaxLevel=2
+Checkpoint 50: Kills=319, Deaths=0, MaxLevel=2
+Checkpoint 75: Kills=491, Deaths=0, MaxLevel=2
+Checkpoint 100: Kills=668, Deaths=0, MaxLevel=2
+page.evaluate: Target page, context or browser has been closed
+    at /workspace/games/night-6/lost-outpost/canvas/batch-test.js:103:24

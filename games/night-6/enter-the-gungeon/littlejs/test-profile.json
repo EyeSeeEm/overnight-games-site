@@ -1,0 +1,40 @@
+{
+  "game_info": {
+    "name": "Enter the Gungeon Clone",
+    "type": "bullet_hell_roguelike",
+    "description": "Bullet-hell roguelike dungeon crawler with dodge rolling, weapon variety, and procedural floors."
+  },
+  "core_loop": {
+    "description": "Clear room of enemies, collect weapons/items, find floor boss, defeat boss, descend to next floor.",
+    "estimated_duration_sec": 120,
+    "loops_for_meaningful_test": 2
+  },
+  "recommended_test_duration_sec": 240,
+  "input_scheme": {
+    "movement": { "type": "wasd", "keys": ["w", "a", "s", "d"] },
+    "primary_action": { "type": "mouse_aim_click", "description": "Mouse aims, click shoots" },
+    "secondary_actions": [
+      { "name": "dodge_roll", "key": "Shift" },
+      { "name": "reload", "key": "r" },
+      { "name": "use_blank", "key": "q" },
+      { "name": "interact", "key": "e" }
+    ]
+  },
+  "combat_profile": {
+    "style": "twin_stick_bullet_hell",
+    "how_to_attack": "Aim with mouse, left-click to shoot. Shift to dodge roll through bullets (i-frames). Q to clear screen with blank. Manage ammo with R."
+  },
+  "success_conditions": {
+    "minimum": {
+      "enemies_killed": 10,
+      "rooms_cleared": 3
+    }
+  },
+  "key_features": [
+    { "name": "Dodge Roll", "gdd_section": "Movement & Combat", "testable": true },
+    { "name": "Bullet patterns", "gdd_section": "Enemies", "testable": true },
+    { "name": "Weapon variety", "gdd_section": "Weapon System", "testable": true },
+    { "name": "Blanks", "gdd_section": "Movement & Combat", "testable": true },
+    { "name": "Floor progression", "gdd_section": "Core Loop", "testable": true }
+  ]
+}

@@ -1,0 +1,523 @@
+[2026-01-13T01:49:36.010Z] Starting Pirateers Clone Playtest
+[2026-01-13T01:49:36.011Z] Target: 200 iterations
+[2026-01-13T01:49:36.169Z] Loading game: file:///workspace/games/night-6/pirateers-v2/canvas/index.html
+[2026-01-13T01:49:38.212Z] Harness detected
+[2026-01-13T01:49:38.212Z] 
+=== ITERATION 1 ===
+[2026-01-13T01:49:49.136Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=6, Kills=0
+[2026-01-13T01:49:51.535Z] Took damage: 100 -> 88
+[2026-01-13T01:49:59.546Z] Step 200: Day=1, Armor=88, Gold=0, Enemies=6, Kills=0
+[2026-01-13T01:50:03.815Z] Took damage: 88 -> 76
+[2026-01-13T01:50:09.111Z] Step 300: Day=1, Armor=76, Gold=0, Enemies=6, Kills=0
+[2026-01-13T01:50:10.778Z] Took damage: 76 -> 64
+[2026-01-13T01:50:13.585Z] Kill! Total this run: 1
+[2026-01-13T01:50:14.313Z] Took damage: 64 -> 52
+[2026-01-13T01:50:19.510Z] Step 400: Day=1, Armor=52, Gold=0, Enemies=5, Kills=1
+[2026-01-13T01:50:24.179Z] Took damage: 52 -> 40
+[2026-01-13T01:50:29.893Z] Step 500: Day=1, Armor=40, Gold=0, Enemies=5, Kills=1
+[2026-01-13T01:50:32.077Z] Took damage: 40 -> 28
+[2026-01-13T01:50:36.311Z] Took damage: 28 -> 16
+[2026-01-13T01:50:36.722Z] Took damage: 16 -> 1
+[2026-01-13T01:50:39.430Z] Step 600: Day=1, Armor=1, Gold=0, Enemies=5, Kills=1
+[2026-01-13T01:50:39.433Z] 
+=== ITERATION 2 ===
+[2026-01-13T01:50:42.641Z] Took damage: 100 -> 88
+[2026-01-13T01:50:50.336Z] Step 100: Day=1, Armor=88, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:50:52.632Z] Took damage: 88 -> 76
+[2026-01-13T01:51:00.521Z] Took damage: 76 -> 64
+[2026-01-13T01:51:00.731Z] Step 200: Day=1, Armor=64, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:51:04.668Z] Took damage: 64 -> 52
+[2026-01-13T01:51:10.267Z] Step 300: Day=1, Armor=52, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:51:12.553Z] Took damage: 52 -> 40
+[2026-01-13T01:51:20.666Z] Step 400: Day=1, Armor=40, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:51:30.949Z] Kill! Total this run: 1
+[2026-01-13T01:51:31.052Z] Step 500: Day=1, Armor=40, Gold=0, Enemies=7, Kills=1
+[2026-01-13T01:51:40.618Z] Step 600: Day=1, Armor=40, Gold=0, Enemies=7, Kills=1
+[2026-01-13T01:51:40.623Z] 
+=== ITERATION 3 ===
+[2026-01-13T01:51:51.516Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:52:01.059Z] Step 200: Day=1, Armor=100, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:52:11.424Z] Step 300: Day=1, Armor=100, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:52:15.884Z] Kill! Total this run: 1
+[2026-01-13T01:52:21.802Z] Step 400: Day=1, Armor=100, Gold=0, Enemies=7, Kills=1
+[2026-01-13T01:52:30.403Z] Took damage: 100 -> 85
+[2026-01-13T01:52:31.336Z] Step 500: Day=1, Armor=85, Gold=0, Enemies=7, Kills=1
+[2026-01-13T01:52:35.585Z] Took damage: 85 -> 73
+[2026-01-13T01:52:37.248Z] Took damage: 73 -> 58
+[2026-01-13T01:52:39.523Z] Took damage: 58 -> 43
+[2026-01-13T01:52:41.709Z] Step 600: Day=1, Armor=43, Gold=0, Enemies=7, Kills=1
+[2026-01-13T01:52:41.711Z] 
+=== ITERATION 4 ===
+[2026-01-13T01:52:52.585Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:53:02.139Z] Step 200: Day=1, Armor=100, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:53:05.045Z] Kill! Total this run: 1
+[2026-01-13T01:53:05.980Z] Collected gold: 34g, total: 34
+[2026-01-13T01:53:12.516Z] Step 300: Day=1, Armor=100, Gold=34, Enemies=7, Kills=1
+[2026-01-13T01:53:17.392Z] Took damage: 100 -> 88
+[2026-01-13T01:53:22.900Z] Step 400: Day=1, Armor=88, Gold=34, Enemies=7, Kills=1
+[2026-01-13T01:53:25.285Z] Took damage: 88 -> 76
+[2026-01-13T01:53:32.439Z] Step 500: Day=1, Armor=76, Gold=34, Enemies=7, Kills=1
+[2026-01-13T01:53:37.418Z] Took damage: 76 -> 64
+[2026-01-13T01:53:39.493Z] Kill! Total this run: 2
+[2026-01-13T01:53:42.819Z] Step 600: Day=1, Armor=64, Gold=34, Enemies=6, Kills=2
+[2026-01-13T01:53:42.821Z] 
+=== ITERATION 5 ===
+[2026-01-13T01:53:49.555Z] Took damage: 100 -> 88
+[2026-01-13T01:53:51.323Z] Took damage: 88 -> 73
+[2026-01-13T01:53:52.054Z] Took damage: 73 -> 61
+[2026-01-13T01:53:53.718Z] Step 100: Day=1, Armor=61, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:53:56.209Z] Took damage: 61 -> 46
+[2026-01-13T01:53:56.927Z] Took damage: 46 -> 34
+[2026-01-13T01:53:59.102Z] Took damage: 34 -> 22
+[2026-01-13T01:54:01.182Z] Took damage: 22 -> 7
+[2026-01-13T01:54:03.259Z] Step 200: Day=1, Armor=7, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:54:13.620Z] Step 300: Day=1, Armor=7, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:54:19.120Z] Died at step 353, armor was 7
+[2026-01-13T01:54:19.120Z] Final: Kills=0, Gold=0
+[2026-01-13T01:54:19.213Z] 
+=== ITERATION 6 ===
+[2026-01-13T01:54:29.249Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=7, Kills=0
+[2026-01-13T01:54:33.821Z] Took damage: 100 -> 88
+[2026-01-13T01:54:37.557Z] Took damage: 88 -> 76
+[2026-01-13T01:54:39.635Z] Step 200: Day=1, Armor=76, Gold=0, Enemies=7, Kills=0
+[2026-01-13T01:54:42.649Z] Took damage: 76 -> 64
+[2026-01-13T01:54:44.104Z] Took damage: 64 -> 52
+[2026-01-13T01:54:49.189Z] Took damage: 52 -> 40
+[2026-01-13T01:54:49.815Z] Kill! Total this run: 1
+[2026-01-13T01:54:49.918Z] Collected gold: 33g, total: 33
+[2026-01-13T01:54:50.021Z] Step 300: Day=1, Armor=40, Gold=33, Enemies=6, Kills=1
+[2026-01-13T01:54:55.730Z] Took damage: 40 -> 28
+[2026-01-13T01:54:59.575Z] Step 400: Day=1, Armor=28, Gold=33, Enemies=6, Kills=1
+[2026-01-13T01:54:59.990Z] Took damage: 28 -> 16
+[2026-01-13T01:55:04.864Z] Took damage: 16 -> 4
+[2026-01-13T01:55:08.600Z] Died at step 487, armor was 4
+[2026-01-13T01:55:08.600Z] Final: Kills=1, Gold=33
+[2026-01-13T01:55:08.602Z] 
+=== ITERATION 7 ===
+[2026-01-13T01:55:12.638Z] Took damage: 100 -> 88
+[2026-01-13T01:55:19.483Z] Step 100: Day=1, Armor=88, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:55:20.112Z] Took damage: 88 -> 73
+[2026-01-13T01:55:20.421Z] Took damage: 73 -> 61
+[2026-01-13T01:55:27.362Z] Took damage: 61 -> 49
+[2026-01-13T01:55:29.025Z] Step 200: Day=1, Armor=49, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:55:29.751Z] Took damage: 49 -> 34
+[2026-01-13T01:55:31.314Z] Took damage: 34 -> 22
+[2026-01-13T01:55:34.012Z] Kill! Total this run: 1
+[2026-01-13T01:55:39.407Z] Step 300: Day=1, Armor=22, Gold=0, Enemies=7, Kills=1
+[2026-01-13T01:55:40.234Z] Took damage: 22 -> 10
+[2026-01-13T01:55:49.794Z] Step 400: Day=1, Armor=10, Gold=0, Enemies=7, Kills=1
+[2026-01-13T01:55:51.250Z] Died at step 414, armor was 10
+[2026-01-13T01:55:51.251Z] Final: Kills=1, Gold=0
+[2026-01-13T01:55:51.252Z] 
+=== ITERATION 8 ===
+[2026-01-13T01:55:54.756Z] Took damage: 100 -> 85
+[2026-01-13T01:56:01.295Z] Step 100: Day=1, Armor=85, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:56:04.624Z] Took damage: 85 -> 70
+[2026-01-13T01:56:11.678Z] Step 200: Day=1, Armor=70, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:56:17.592Z] Took damage: 70 -> 55
+[2026-01-13T01:56:22.054Z] Step 300: Day=1, Armor=55, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:56:31.583Z] Step 400: Day=1, Armor=55, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:56:35.322Z] Took damage: 55 -> 40
+[2026-01-13T01:56:36.880Z] Kill! Total this run: 1
+[2026-01-13T01:56:41.960Z] Step 500: Day=1, Armor=40, Gold=0, Enemies=7, Kills=1
+[2026-01-13T01:56:42.166Z] Collected gold: 42g, total: 42
+[2026-01-13T01:56:43.000Z] Took damage: 40 -> 25
+[2026-01-13T01:56:48.092Z] Took damage: 25 -> 10
+[2026-01-13T01:56:52.354Z] Step 600: Day=1, Armor=10, Gold=42, Enemies=7, Kills=1
+[2026-01-13T01:56:52.359Z] 
+=== ITERATION 9 ===
+[2026-01-13T01:57:02.417Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=10, Kills=0
+[2026-01-13T01:57:05.218Z] Took damage: 100 -> 88
+[2026-01-13T01:57:12.802Z] Step 200: Day=1, Armor=88, Gold=0, Enemies=10, Kills=0
+[2026-01-13T01:57:13.115Z] Took damage: 88 -> 76
+[2026-01-13T01:57:22.322Z] Step 300: Day=1, Armor=76, Gold=0, Enemies=10, Kills=0
+[2026-01-13T01:57:25.127Z] Took damage: 76 -> 64
+[2026-01-13T01:57:27.309Z] Kill! Total this run: 1
+[2026-01-13T01:57:30.952Z] Took damage: 64 -> 52
+[2026-01-13T01:57:32.717Z] Step 400: Day=1, Armor=52, Gold=0, Enemies=9, Kills=1
+[2026-01-13T01:57:35.834Z] Took damage: 52 -> 40
+[2026-01-13T01:57:40.818Z] Took damage: 40 -> 28
+[2026-01-13T01:57:43.105Z] Step 500: Day=1, Armor=28, Gold=0, Enemies=9, Kills=1
+[2026-01-13T01:57:48.824Z] Took damage: 28 -> 16
+[2026-01-13T01:57:51.413Z] Took damage: 16 -> 4
+[2026-01-13T01:57:52.659Z] Step 600: Day=1, Armor=4, Gold=0, Enemies=9, Kills=1
+[2026-01-13T01:57:52.661Z] 
+=== ITERATION 10 ===
+[2026-01-13T01:58:03.564Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=9, Kills=0
+[2026-01-13T01:58:13.952Z] Step 200: Day=1, Armor=100, Gold=0, Enemies=9, Kills=0
+[2026-01-13T01:58:21.521Z] Took damage: 100 -> 88
+[2026-01-13T01:58:23.498Z] Step 300: Day=1, Armor=88, Gold=0, Enemies=9, Kills=0
+[2026-01-13T01:58:26.509Z] Took damage: 88 -> 76
+[2026-01-13T01:58:26.717Z] Kill! Total this run: 1
+[2026-01-13T01:58:26.820Z] Collected gold: 35g, total: 35
+[2026-01-13T01:58:33.879Z] Step 400: Day=1, Armor=76, Gold=35, Enemies=8, Kills=1
+[2026-01-13T01:58:39.469Z] Kill! Total this run: 2
+[2026-01-13T01:58:44.237Z] Step 500: Day=1, Armor=76, Gold=35, Enemies=7, Kills=2
+[2026-01-13T01:58:52.920Z] Kill! Total this run: 3
+[2026-01-13T01:58:52.921Z] Collected gold: 25g, total: 60
+[2026-01-13T01:58:53.752Z] Step 600: Day=1, Armor=76, Gold=60, Enemies=6, Kills=3
+[2026-01-13T01:58:53.845Z] 
+=== ITERATION 11 ===
+[2026-01-13T01:59:04.716Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:59:08.342Z] Took damage: 100 -> 85
+[2026-01-13T01:59:15.095Z] Step 200: Day=1, Armor=85, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:59:16.244Z] Took damage: 85 -> 70
+[2026-01-13T01:59:24.646Z] Step 300: Day=1, Armor=70, Gold=0, Enemies=8, Kills=0
+[2026-01-13T01:59:28.284Z] Kill! Total this run: 1
+[2026-01-13T01:59:35.038Z] Step 400: Day=1, Armor=70, Gold=0, Enemies=7, Kills=1
+[2026-01-13T01:59:45.445Z] Step 500: Day=1, Armor=70, Gold=0, Enemies=7, Kills=1
+[2026-01-13T01:59:46.901Z] Kill! Total this run: 2
+[2026-01-13T01:59:46.901Z] Collected gold: 25g, total: 25
+[2026-01-13T01:59:50.630Z] Took damage: 70 -> 58
+[2026-01-13T01:59:54.994Z] Step 600: Day=1, Armor=58, Gold=25, Enemies=6, Kills=2
+[2026-01-13T01:59:54.996Z] 
+=== ITERATION 12 ===
+[2026-01-13T02:00:04.864Z] Took damage: 100 -> 85
+[2026-01-13T02:00:05.904Z] Step 100: Day=1, Armor=85, Gold=0, Enemies=8, Kills=0
+[2026-01-13T02:00:16.310Z] Step 200: Day=1, Armor=85, Gold=0, Enemies=8, Kills=0
+[2026-01-13T02:00:21.935Z] Took damage: 85 -> 70
+[2026-01-13T02:00:25.889Z] Step 300: Day=1, Armor=70, Gold=0, Enemies=8, Kills=0
+[2026-01-13T02:00:28.390Z] Kill! Total this run: 1
+[2026-01-13T02:00:29.427Z] Took damage: 70 -> 55
+[2026-01-13T02:00:32.342Z] Collected gold: 46g, total: 46
+[2026-01-13T02:00:36.294Z] Step 400: Day=1, Armor=55, Gold=46, Enemies=7, Kills=1
+[2026-01-13T02:00:42.429Z] Took damage: 55 -> 40
+[2026-01-13T02:00:45.828Z] Step 500: Day=1, Armor=40, Gold=46, Enemies=7, Kills=1
+[2026-01-13T02:00:50.297Z] Kill! Total this run: 2
+[2026-01-13T02:00:56.201Z] Step 600: Day=1, Armor=40, Gold=46, Enemies=6, Kills=2
+[2026-01-13T02:00:56.205Z] 
+=== ITERATION 13 ===
+[2026-01-13T02:01:07.109Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=8, Kills=0
+[2026-01-13T02:01:16.429Z] Step 200: Day=1, Armor=100, Gold=0, Enemies=8, Kills=0
+[2026-01-13T02:01:25.367Z] Took damage: 100 -> 88
+[2026-01-13T02:01:26.820Z] Step 300: Day=1, Armor=88, Gold=0, Enemies=8, Kills=0
+[2026-01-13T02:01:28.271Z] Took damage: 88 -> 76
+[2026-01-13T02:01:33.250Z] Took damage: 76 -> 64
+[2026-01-13T02:01:37.185Z] Step 400: Day=1, Armor=64, Gold=0, Enemies=8, Kills=0
+[2026-01-13T02:01:45.572Z] Took damage: 64 -> 52
+[2026-01-13T02:01:46.922Z] Step 500: Day=1, Armor=52, Gold=0, Enemies=8, Kills=0
+[2026-01-13T02:01:56.980Z] Kill! Total this run: 1
+[2026-01-13T02:01:57.294Z] Step 600: Day=1, Armor=52, Gold=0, Enemies=7, Kills=1
+[2026-01-13T02:01:57.297Z] 
+=== ITERATION 14 ===
+[2026-01-13T02:02:03.713Z] Took damage: 100 -> 88
+[2026-01-13T02:02:08.175Z] Step 100: Day=1, Armor=88, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:02:12.679Z] Took damage: 88 -> 76
+[2026-01-13T02:02:17.658Z] Step 200: Day=1, Armor=76, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:02:20.564Z] Took damage: 76 -> 64
+[2026-01-13T02:02:26.889Z] Took damage: 64 -> 52
+[2026-01-13T02:02:27.518Z] Took damage: 52 -> 40
+[2026-01-13T02:02:28.037Z] Step 300: Day=1, Armor=40, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:02:31.668Z] Took damage: 40 -> 28
+[2026-01-13T02:02:35.704Z] Took damage: 28 -> 16
+[2026-01-13T02:02:38.402Z] Step 400: Day=1, Armor=16, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:02:46.740Z] Took damage: 16 -> 4
+[2026-01-13T02:02:47.878Z] Step 500: Day=1, Armor=4, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:02:49.227Z] Died at step 513, armor was 4
+[2026-01-13T02:02:49.227Z] Final: Kills=0, Gold=0
+[2026-01-13T02:02:49.229Z] 
+=== ITERATION 15 ===
+[2026-01-13T02:03:00.112Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=6, Kills=0
+[2026-01-13T02:03:03.630Z] Took damage: 100 -> 88
+[2026-01-13T02:03:10.460Z] Step 200: Day=1, Armor=88, Gold=0, Enemies=6, Kills=0
+[2026-01-13T02:03:10.541Z] Took damage: 88 -> 76
+[2026-01-13T02:03:13.338Z] Kill! Total this run: 1
+[2026-01-13T02:03:18.507Z] Took damage: 76 -> 64
+[2026-01-13T02:03:19.956Z] Step 300: Day=1, Armor=64, Gold=0, Enemies=5, Kills=1
+[2026-01-13T02:03:21.101Z] Took damage: 64 -> 52
+[2026-01-13T02:03:23.171Z] Took damage: 52 -> 40
+[2026-01-13T02:03:25.763Z] Took damage: 40 -> 28
+[2026-01-13T02:03:30.313Z] Step 400: Day=1, Armor=28, Gold=0, Enemies=5, Kills=1
+[2026-01-13T02:03:31.456Z] Took damage: 28 -> 16
+[2026-01-13T02:03:35.700Z] Took damage: 16 -> 4
+[2026-01-13T02:03:39.839Z] Step 500: Day=1, Armor=4, Gold=0, Enemies=5, Kills=1
+[2026-01-13T02:03:50.206Z] Step 600: Day=1, Armor=4, Gold=0, Enemies=5, Kills=1
+[2026-01-13T02:03:50.309Z] 
+=== ITERATION 16 ===
+[2026-01-13T02:04:01.169Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:04:03.970Z] Took damage: 100 -> 88
+[2026-01-13T02:04:06.353Z] Took damage: 88 -> 76
+[2026-01-13T02:04:10.447Z] Step 200: Day=1, Armor=76, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:04:13.255Z] Took damage: 76 -> 64
+[2026-01-13T02:04:15.741Z] Took damage: 64 -> 52
+[2026-01-13T02:04:20.822Z] Step 300: Day=1, Armor=52, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:04:21.033Z] Took damage: 52 -> 40
+[2026-01-13T02:04:23.522Z] Took damage: 40 -> 28
+[2026-01-13T02:04:24.253Z] Took damage: 28 -> 16
+[2026-01-13T02:04:31.202Z] Step 400: Day=1, Armor=16, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:04:39.405Z] Took damage: 16 -> 4
+[2026-01-13T02:04:40.958Z] Step 500: Day=1, Armor=4, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:04:47.288Z] Died at step 561, armor was 4
+[2026-01-13T02:04:47.288Z] Final: Kills=0, Gold=0
+[2026-01-13T02:04:47.290Z] 
+=== ITERATION 17 ===
+[2026-01-13T02:04:58.148Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=6, Kills=0
+[2026-01-13T02:04:58.774Z] Took damage: 100 -> 88
+[2026-01-13T02:05:03.852Z] Took damage: 88 -> 76
+[2026-01-13T02:05:05.920Z] Took damage: 76 -> 64
+[2026-01-13T02:05:07.441Z] Took damage: 64 -> 52
+[2026-01-13T02:05:07.646Z] Step 200: Day=1, Armor=52, Gold=0, Enemies=6, Kills=0
+[2026-01-13T02:05:08.477Z] Took damage: 52 -> 40
+[2026-01-13T02:05:15.525Z] Took damage: 40 -> 28
+[2026-01-13T02:05:16.569Z] Took damage: 28 -> 16
+[2026-01-13T02:05:18.018Z] Step 300: Day=1, Armor=16, Gold=0, Enemies=6, Kills=0
+[2026-01-13T02:05:18.124Z] Took damage: 16 -> 4
+[2026-01-13T02:05:28.380Z] Step 400: Day=1, Armor=4, Gold=0, Enemies=6, Kills=0
+[2026-01-13T02:05:37.878Z] Step 500: Day=1, Armor=4, Gold=0, Enemies=6, Kills=0
+[2026-01-13T02:05:43.677Z] Died at step 556, armor was 4
+[2026-01-13T02:05:43.677Z] Final: Kills=0, Gold=0
+[2026-01-13T02:05:43.679Z] 
+=== ITERATION 18 ===
+[2026-01-13T02:05:50.190Z] Took damage: 100 -> 85
+[2026-01-13T02:05:54.543Z] Step 100: Day=1, Armor=85, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:05:57.958Z] Took damage: 85 -> 70
+[2026-01-13T02:06:03.242Z] Took damage: 70 -> 55
+[2026-01-13T02:06:04.897Z] Step 200: Day=1, Armor=55, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:06:09.113Z] Took damage: 55 -> 43
+[2026-01-13T02:06:13.266Z] Took damage: 43 -> 31
+[2026-01-13T02:06:14.407Z] Step 300: Day=1, Armor=31, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:06:17.319Z] Took damage: 31 -> 19
+[2026-01-13T02:06:24.790Z] Step 400: Day=1, Armor=19, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:06:25.105Z] Took damage: 19 -> 4
+[2026-01-13T02:06:28.834Z] Died at step 439, armor was 4
+[2026-01-13T02:06:28.834Z] Final: Kills=0, Gold=0
+[2026-01-13T02:06:28.836Z] 
+=== ITERATION 19 ===
+[2026-01-13T02:06:38.840Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:06:42.780Z] Took damage: 100 -> 85
+[2026-01-13T02:06:49.210Z] Step 200: Day=1, Armor=85, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:06:50.661Z] Took damage: 85 -> 70
+[2026-01-13T02:06:55.741Z] Took damage: 70 -> 55
+[2026-01-13T02:06:59.574Z] Step 300: Day=1, Armor=55, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:07:03.616Z] Took damage: 55 -> 40
+[2026-01-13T02:07:09.086Z] Step 400: Day=1, Armor=40, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:07:15.620Z] Took damage: 40 -> 25
+[2026-01-13T02:07:19.466Z] Step 500: Day=1, Armor=25, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:07:29.833Z] Step 600: Day=1, Armor=25, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:07:29.835Z] 
+=== ITERATION 20 ===
+[2026-01-13T02:07:35.585Z] Took damage: 100 -> 85
+[2026-01-13T02:07:39.840Z] Step 100: Day=1, Armor=85, Gold=0, Enemies=9, Kills=0
+[2026-01-13T02:07:43.578Z] Took damage: 85 -> 70
+[2026-01-13T02:07:48.546Z] Kill! Total this run: 1
+[2026-01-13T02:07:48.547Z] Collected gold: 34g, total: 34
+[2026-01-13T02:07:50.209Z] Step 200: Day=1, Armor=70, Gold=34, Enemies=8, Kills=1
+[2026-01-13T02:07:51.346Z] Took damage: 70 -> 58
+[2026-01-13T02:07:52.897Z] Kill! Total this run: 2
+[2026-01-13T02:07:56.422Z] Took damage: 58 -> 46
+[2026-01-13T02:07:58.185Z] Took damage: 46 -> 34
+[2026-01-13T02:08:00.566Z] Step 300: Day=1, Armor=34, Gold=34, Enemies=7, Kills=2
+[2026-01-13T02:08:01.499Z] Took damage: 34 -> 22
+[2026-01-13T02:08:02.386Z] Took damage: 22 -> 10
+[2026-01-13T02:08:10.054Z] Step 400: Day=1, Armor=10, Gold=34, Enemies=7, Kills=2
+[2026-01-13T02:08:10.572Z] Died at step 405, armor was 10
+[2026-01-13T02:08:10.576Z] Final: Kills=2, Gold=34
+[2026-01-13T02:08:10.678Z] 
+=== ITERATION 21 ===
+[2026-01-13T02:08:14.398Z] Took damage: 100 -> 88
+[2026-01-13T02:08:15.017Z] Took damage: 88 -> 76
+[2026-01-13T02:08:19.895Z] Took damage: 76 -> 64
+[2026-01-13T02:08:21.553Z] Step 100: Day=1, Armor=64, Gold=0, Enemies=9, Kills=0
+[2026-01-13T02:08:24.359Z] Took damage: 64 -> 52
+[2026-01-13T02:08:27.886Z] Took damage: 52 -> 40
+[2026-01-13T02:08:31.545Z] Step 200: Day=1, Armor=40, Gold=0, Enemies=9, Kills=0
+[2026-01-13T02:08:31.997Z] Took damage: 40 -> 28
+[2026-01-13T02:08:34.906Z] Took damage: 28 -> 16
+[2026-01-13T02:08:35.738Z] Took damage: 16 -> 1
+[2026-01-13T02:08:40.408Z] Died at step 290, armor was 1
+[2026-01-13T02:08:40.408Z] Final: Kills=0, Gold=0
+[2026-01-13T02:08:40.410Z] 
+=== ITERATION 22 ===
+[2026-01-13T02:08:51.288Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=10, Kills=0
+[2026-01-13T02:09:00.829Z] Step 200: Day=1, Armor=100, Gold=0, Enemies=10, Kills=0
+[2026-01-13T02:09:08.724Z] Took damage: 100 -> 88
+[2026-01-13T02:09:11.212Z] Step 300: Day=1, Armor=88, Gold=0, Enemies=10, Kills=0
+[2026-01-13T02:09:21.596Z] Step 400: Day=1, Armor=88, Gold=0, Enemies=10, Kills=0
+[2026-01-13T02:09:30.699Z] Kill! Total this run: 1
+[2026-01-13T02:09:31.117Z] Step 500: Day=1, Armor=88, Gold=0, Enemies=9, Kills=1
+[2026-01-13T02:09:32.256Z] Collected gold: 32g, total: 32
+[2026-01-13T02:09:41.484Z] Step 600: Day=1, Armor=88, Gold=32, Enemies=9, Kills=1
+[2026-01-13T02:09:41.486Z] 
+=== ITERATION 23 ===
+[2026-01-13T02:09:47.917Z] Took damage: 100 -> 88
+[2026-01-13T02:09:50.304Z] Took damage: 88 -> 76
+[2026-01-13T02:09:52.385Z] Step 100: Day=1, Armor=76, Gold=0, Enemies=9, Kills=0
+[2026-01-13T02:09:55.095Z] Took damage: 76 -> 64
+[2026-01-13T02:09:55.404Z] Took damage: 64 -> 52
+[2026-01-13T02:09:58.217Z] Took damage: 52 -> 40
+[2026-01-13T02:10:01.938Z] Step 200: Day=1, Armor=40, Gold=0, Enemies=9, Kills=0
+[2026-01-13T02:10:02.044Z] Took damage: 40 -> 28
+[2026-01-13T02:10:07.869Z] Took damage: 28 -> 16
+[2026-01-13T02:10:12.341Z] Step 300: Day=1, Armor=16, Gold=0, Enemies=9, Kills=0
+[2026-01-13T02:10:17.955Z] Took damage: 16 -> 1
+[2026-01-13T02:10:19.935Z] Died at step 373, armor was 1
+[2026-01-13T02:10:19.935Z] Final: Kills=0, Gold=0
+[2026-01-13T02:10:19.937Z] 
+=== ITERATION 24 ===
+[2026-01-13T02:10:27.891Z] Took damage: 100 -> 88
+[2026-01-13T02:10:29.973Z] Step 100: Day=1, Armor=88, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:10:32.896Z] Took damage: 88 -> 76
+[2026-01-13T02:10:40.372Z] Step 200: Day=1, Armor=76, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:10:50.781Z] Step 300: Day=1, Armor=76, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:10:51.617Z] Kill! Total this run: 1
+[2026-01-13T02:11:00.317Z] Step 400: Day=1, Armor=76, Gold=0, Enemies=6, Kills=1
+[2026-01-13T02:11:02.502Z] Took damage: 76 -> 64
+[2026-01-13T02:11:09.572Z] Kill! Total this run: 2
+[2026-01-13T02:11:10.100Z] Collected gold: 30g, total: 30
+[2026-01-13T02:11:10.723Z] Step 500: Day=1, Armor=64, Gold=30, Enemies=5, Kills=2
+[2026-01-13T02:11:12.703Z] Took damage: 64 -> 49
+[2026-01-13T02:11:20.401Z] Took damage: 49 -> 34
+[2026-01-13T02:11:21.121Z] Step 600: Day=1, Armor=34, Gold=30, Enemies=5, Kills=2
+[2026-01-13T02:11:21.122Z] 
+=== ITERATION 25 ===
+[2026-01-13T02:11:26.524Z] Took damage: 100 -> 88
+[2026-01-13T02:11:31.066Z] Step 100: Day=1, Armor=76, Gold=0, Enemies=10, Kills=0
+[2026-01-13T02:11:31.067Z] Took damage: 88 -> 76
+[2026-01-13T02:11:33.352Z] Took damage: 76 -> 64
+[2026-01-13T02:11:33.768Z] Took damage: 64 -> 52
+[2026-01-13T02:11:36.270Z] Took damage: 52 -> 40
+[2026-01-13T02:11:39.281Z] Took damage: 40 -> 28
+[2026-01-13T02:11:41.260Z] Took damage: 28 -> 16
+[2026-01-13T02:11:41.468Z] Step 200: Day=1, Armor=16, Gold=0, Enemies=10, Kills=0
+[2026-01-13T02:11:41.782Z] Took damage: 16 -> 4
+[2026-01-13T02:11:43.964Z] Died at step 224, armor was 4
+[2026-01-13T02:11:43.964Z] Final: Kills=0, Gold=0
+[2026-01-13T02:11:44.046Z] 
+=== ITERATION 26 ===
+[2026-01-13T02:11:54.932Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:11:56.656Z] Took damage: 100 -> 88
+[2026-01-13T02:12:04.445Z] Took damage: 88 -> 76
+[2026-01-13T02:12:04.548Z] Step 200: Day=1, Armor=76, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:12:14.835Z] Took damage: 76 -> 64
+[2026-01-13T02:12:14.939Z] Step 300: Day=1, Armor=64, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:12:15.150Z] Kill! Total this run: 1
+[2026-01-13T02:12:19.920Z] Collected gold: 43g, total: 43
+[2026-01-13T02:12:21.067Z] Took damage: 64 -> 52
+[2026-01-13T02:12:24.457Z] Step 400: Day=1, Armor=52, Gold=43, Enemies=6, Kills=1
+[2026-01-13T02:12:25.290Z] Took damage: 52 -> 40
+[2026-01-13T02:12:33.175Z] Took damage: 40 -> 28
+[2026-01-13T02:12:34.840Z] Step 500: Day=1, Armor=28, Gold=43, Enemies=6, Kills=1
+[2026-01-13T02:12:35.257Z] Kill! Total this run: 2
+[2026-01-13T02:12:41.276Z] Took damage: 28 -> 16
+[2026-01-13T02:12:45.220Z] Step 600: Day=1, Armor=16, Gold=43, Enemies=5, Kills=2
+[2026-01-13T02:12:45.221Z] 
+=== ITERATION 27 ===
+[2026-01-13T02:12:55.256Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=8, Kills=0
+[2026-01-13T02:12:55.366Z] Took damage: 100 -> 85
+[2026-01-13T02:12:58.270Z] Took damage: 85 -> 73
+[2026-01-13T02:13:03.156Z] Took damage: 73 -> 61
+[2026-01-13T02:13:05.654Z] Step 200: Day=1, Armor=61, Gold=0, Enemies=8, Kills=0
+[2026-01-13T02:13:07.008Z] Took damage: 61 -> 46
+[2026-01-13T02:13:13.668Z] Took damage: 46 -> 34
+[2026-01-13T02:13:16.066Z] Step 300: Day=1, Armor=34, Gold=0, Enemies=8, Kills=0
+[2026-01-13T02:13:19.918Z] Took damage: 34 -> 19
+[2026-01-13T02:13:23.799Z] Took damage: 19 -> 7
+[2026-01-13T02:13:25.564Z] Step 400: Day=1, Armor=7, Gold=0, Enemies=8, Kills=0
+[2026-01-13T02:13:32.932Z] Died at step 471, armor was 7
+[2026-01-13T02:13:32.932Z] Final: Kills=0, Gold=0
+[2026-01-13T02:13:32.934Z] 
+=== ITERATION 28 ===
+[2026-01-13T02:13:43.837Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=10, Kills=0
+[2026-01-13T02:13:53.376Z] Step 200: Day=1, Armor=100, Gold=0, Enemies=10, Kills=0
+[2026-01-13T02:14:03.778Z] Step 300: Day=1, Armor=100, Gold=0, Enemies=10, Kills=0
+[2026-01-13T02:14:04.091Z] Took damage: 100 -> 85
+[2026-01-13T02:14:14.181Z] Step 400: Day=1, Armor=85, Gold=0, Enemies=10, Kills=0
+[2026-01-13T02:14:16.994Z] Took damage: 85 -> 70
+[2026-01-13T02:14:23.726Z] Step 500: Day=1, Armor=70, Gold=0, Enemies=10, Kills=0
+[2026-01-13T02:14:26.536Z] Took damage: 70 -> 55
+[2026-01-13T02:14:34.119Z] Step 600: Day=1, Armor=55, Gold=0, Enemies=10, Kills=0
+[2026-01-13T02:14:34.121Z] 
+=== ITERATION 29 ===
+[2026-01-13T02:14:45.009Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=6, Kills=0
+[2026-01-13T02:14:54.537Z] Step 200: Day=1, Armor=100, Gold=0, Enemies=6, Kills=0
+[2026-01-13T02:14:57.142Z] Took damage: 100 -> 88
+[2026-01-13T02:14:59.636Z] Took damage: 88 -> 76
+[2026-01-13T02:15:02.337Z] Took damage: 76 -> 64
+[2026-01-13T02:15:04.837Z] Took damage: 64 -> 52
+[2026-01-13T02:15:04.940Z] Step 300: Day=1, Armor=52, Gold=0, Enemies=6, Kills=0
+[2026-01-13T02:15:07.223Z] Kill! Total this run: 1
+[2026-01-13T02:15:07.223Z] Collected gold: 33g, total: 33
+[2026-01-13T02:15:10.022Z] Took damage: 52 -> 40
+[2026-01-13T02:15:15.318Z] Step 400: Day=1, Armor=40, Gold=33, Enemies=5, Kills=1
+[2026-01-13T02:15:17.815Z] Kill! Total this run: 2
+[2026-01-13T02:15:24.578Z] Step 500: Day=1, Armor=40, Gold=33, Enemies=4, Kills=2
+[2026-01-13T02:15:34.959Z] Step 600: Day=1, Armor=40, Gold=33, Enemies=4, Kills=2
+[2026-01-13T02:15:34.961Z] 
+=== ITERATION 30 ===
+[2026-01-13T02:15:41.481Z] Took damage: 100 -> 88
+[2026-01-13T02:15:43.768Z] Took damage: 88 -> 76
+[2026-01-13T02:15:45.844Z] Step 100: Day=1, Armor=76, Gold=0, Enemies=8, Kills=0
+[2026-01-13T02:15:45.948Z] Took damage: 76 -> 61
+[2026-01-13T02:15:48.151Z] Took damage: 61 -> 49
+[2026-01-13T02:15:53.352Z] Took damage: 49 -> 34
+[2026-01-13T02:15:55.637Z] Step 200: Day=1, Armor=34, Gold=0, Enemies=8, Kills=0
+[2026-01-13T02:15:56.063Z] Took damage: 34 -> 19
+[2026-01-13T02:16:05.848Z] Took damage: 19 -> 7
+[2026-01-13T02:16:06.054Z] Step 300: Day=1, Armor=7, Gold=0, Enemies=8, Kills=0
+[2026-01-13T02:16:06.987Z] Died at step 309, armor was 7
+[2026-01-13T02:16:06.987Z] Final: Kills=0, Gold=0
+[2026-01-13T02:16:07.087Z] 
+=== ITERATION 31 ===
+[2026-01-13T02:16:14.764Z] Took damage: 100 -> 88
+[2026-01-13T02:16:17.160Z] Took damage: 88 -> 76
+[2026-01-13T02:16:17.987Z] Step 100: Day=1, Armor=76, Gold=0, Enemies=8, Kills=0
+[2026-01-13T02:16:21.172Z] Took damage: 76 -> 64
+[2026-01-13T02:16:24.186Z] Took damage: 64 -> 52
+[2026-01-13T02:16:25.327Z] Kill! Total this run: 1
+[2026-01-13T02:16:27.508Z] Step 200: Day=1, Armor=52, Gold=0, Enemies=7, Kills=1
+[2026-01-13T02:16:28.965Z] Took damage: 52 -> 40
+[2026-01-13T02:16:37.895Z] Step 300: Day=1, Armor=40, Gold=0, Enemies=7, Kills=1
+[2026-01-13T02:16:41.838Z] Took damage: 40 -> 28
+[2026-01-13T02:16:44.123Z] Kill! Total this run: 2
+[2026-01-13T02:16:45.892Z] Took damage: 28 -> 16
+[2026-01-13T02:16:46.000Z] Collected gold: 30g, total: 30
+[2026-01-13T02:16:46.855Z] Took damage: 16 -> 4
+[2026-01-13T02:16:47.410Z] Step 400: Day=1, Armor=4, Gold=30, Enemies=6, Kills=2
+[2026-01-13T02:16:57.784Z] Step 500: Day=1, Armor=4, Gold=30, Enemies=6, Kills=2
+[2026-01-13T02:17:03.914Z] Died at step 559, armor was 4
+[2026-01-13T02:17:03.914Z] Final: Kills=2, Gold=30
+[2026-01-13T02:17:03.916Z] 
+=== ITERATION 32 ===
+[2026-01-13T02:17:14.828Z] Step 100: Day=1, Armor=100, Gold=0, Enemies=9, Kills=0
+[2026-01-13T02:17:16.002Z] Took damage: 100 -> 85
+[2026-01-13T02:17:24.342Z] Step 200: Day=1, Armor=85, Gold=0, Enemies=9, Kills=0
+[2026-01-13T02:17:25.905Z] Took damage: 85 -> 70
+[2026-01-13T02:17:31.108Z] Took damage: 70 -> 55
+[2026-01-13T02:17:32.152Z] Took damage: 55 -> 40
+[2026-01-13T02:17:34.753Z] Step 300: Day=1, Armor=40, Gold=0, Enemies=9, Kills=0
+[2026-01-13T02:17:40.890Z] Took damage: 40 -> 28
+[2026-01-13T02:17:42.667Z] Kill! Total this run: 1
+[2026-01-13T02:17:45.167Z] Step 400: Day=1, Armor=28, Gold=0, Enemies=8, Kills=1
+[2026-01-13T02:17:44.923Z] Took damage: 28 -> 16
+[2026-01-13T02:17:54.505Z] Took damage: 16 -> 1
+[2026-01-13T02:17:54.717Z] Step 500: Day=1, Armor=1, Gold=0, Enemies=8, Kills=1
+[2026-01-13T02:17:58.249Z] Died at step 534, armor was 1
+[2026-01-13T02:17:58.250Z] Final: Kills=1, Gold=0
+[2026-01-13T02:17:58.251Z] 
+=== ITERATION 33 ===
+[2026-01-13T02:18:06.965Z] Took damage: 100 -> 85
+[2026-01-13T02:18:09.139Z] Step 100: Day=1, Armor=85, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:18:11.220Z] Took damage: 85 -> 73
+[2026-01-13T02:18:12.368Z] Took damage: 73 -> 58
+[2026-01-13T02:18:14.259Z] Took damage: 58 -> 43
+[2026-01-13T02:18:15.636Z] Took damage: 43 -> 31
+[2026-01-13T02:18:16.259Z] Took damage: 31 -> 16
+[2026-01-13T02:18:18.238Z] Took damage: 16 -> 4
+[2026-01-13T02:18:18.654Z] Step 200: Day=1, Armor=4, Gold=0, Enemies=7, Kills=0
+[2026-01-13T02:18:20.835Z] Died at step 221, armor was 4
+[2026-01-13T02:18:20.836Z] Final: Kills=0, Gold=0
+[2026-01-13T02:18:20.838Z] 
+=== ITERATION 34 ===
+[2026-01-13T02:18:25.505Z] Took damage: 100 -> 85
+[2026-01-13T02:18:30.393Z] Took damage: 85 -> 70
+[2026-01-13T02:18:31.750Z] Step 100: Day=1, Armor=70, Gold=0, Enemies=10, Kills=0
+[2026-01-13T02:18:32.786Z] Took damage: 70 -> 55
+[2026-01-13T02:18:35.793Z] Took damage: 55 -> 43
+[2026-01-13T02:18:38.287Z] Took damage: 43 -> 31
+[2026-01-13T02:18:40.785Z] Took damage: 31 -> 19
+[2026-01-13T02:18:42.131Z] Step 200: Day=1, Armor=19, Gold=0, Enemies=10, Kills=0
+[2026-01-13T02:18:43.405Z] [ERROR] Execute: page.evaluate: Target page, context or browser has been closed
+[2026-01-13T02:18:43.408Z] 
+=== ITERATION 35 ===
+[2026-01-13T02:18:43.410Z] [FATAL] page.evaluate: Target page, context or browser has been closed
+[2026-01-13T02:18:43.422Z] Playtest complete

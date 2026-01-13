@@ -1,0 +1,69 @@
+{
+  "game_info": {
+    "name": "Derelict",
+    "type": "survival_horror_topdown",
+    "description": "2D top-down survival horror on a dying spaceship. Manage O2, power systems, and navigate through darkness with limited vision cone. Escape before the ship falls apart."
+  },
+  "core_loop": {
+    "description": "Navigate rooms, manage O2 and power, avoid/fight enemies, find keycards to progress through 6 sectors, reach escape pod",
+    "estimated_duration_sec": 1200,
+    "loops_for_meaningful_test": 1
+  },
+  "recommended_test_duration_sec": 300,
+  "input_scheme": {
+    "movement": { "type": "wasd", "keys": ["w", "a", "s", "d"] },
+    "primary_action": { "keys": ["click"], "description": "Attack (melee or ranged)" },
+    "secondary_actions": [
+      { "name": "flashlight", "key": "f" },
+      { "name": "interact", "key": "e" },
+      { "name": "run", "key": "Shift" },
+      { "name": "inventory", "key": "Tab" },
+      { "name": "map", "key": "m" },
+      { "name": "item_slot_1", "key": "1" },
+      { "name": "item_slot_2", "key": "2" },
+      { "name": "item_slot_3", "key": "3" },
+      { "name": "item_slot_4", "key": "4" },
+      { "name": "item_slot_5", "key": "5" },
+      { "name": "item_slot_6", "key": "6" }
+    ]
+  },
+  "combat_profile": {
+    "style": "melee_and_ranged",
+    "how_to_attack": "Face enemy with mouse cursor, left click to attack. Melee weapons hit in front, ranged weapons shoot toward cursor."
+  },
+  "success_conditions": {
+    "minimum": {
+      "survive_sec": 60,
+      "rooms_explored": 3,
+      "enemies_killed": 1
+    },
+    "full_run": {
+      "reach_escape_pod": true,
+      "sectors_cleared": 6
+    }
+  },
+  "key_features": [
+    { "name": "Vision Cone", "gdd_section": "Visibility System", "testable": true, "description": "90-degree cone, enemies invisible outside" },
+    { "name": "O2 Management", "gdd_section": "Core Resources - Oxygen", "testable": true, "description": "Constant drain, must find canisters" },
+    { "name": "Power Allocation", "gdd_section": "Core Resources - Power", "testable": true, "description": "FTL-style bars, allocate to systems" },
+    { "name": "Structural Integrity", "gdd_section": "Core Resources", "testable": true, "description": "Ship decay timer" },
+    { "name": "Sector Progression", "gdd_section": "Ship Layout", "testable": true, "description": "6 sectors with keycards" },
+    { "name": "Enemy Types", "gdd_section": "Enemy Types", "testable": true, "description": "Crawler, Shambler, Stalker, Bloater, Hunter, Mimic" },
+    { "name": "Spaceship Phase", "gdd_section": "Feedback Requirements", "testable": true, "description": "After escape, fly to other derelicts" }
+  ],
+  "resources_to_track": [
+    { "name": "oxygen", "max": 100, "critical_threshold": 20 },
+    { "name": "health", "max": 100, "critical_threshold": 25 },
+    { "name": "structural_integrity", "max": 100, "critical_threshold": 25 },
+    { "name": "power_bars", "max": 8, "starting": 4 },
+    { "name": "flashlight_battery", "max": 60, "unit": "seconds" }
+  ],
+  "enemy_stats": {
+    "crawler": { "hp": 30, "damage": 15, "speed": 80 },
+    "shambler": { "hp": 60, "damage": 25, "speed": 50 },
+    "stalker": { "hp": 45, "damage": 20, "speed": 150 },
+    "bloater": { "hp": 100, "damage": 10, "speed": 40, "explodes": true },
+    "hunter": { "hp": 80, "damage": 35, "speed": 180 },
+    "mimic": { "hp": 50, "damage": 30, "speed": 100 }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "game_info": {
+    "name": "Brotato Clone",
+    "type": "arena_roguelike_survivor",
+    "description": "Top-down arena survivor with auto-firing weapons, wave-based combat, shop between waves, and stat upgrades"
+  },
+  "core_loop": {
+    "description": "Fight wave of aliens, collect XP/materials, level up with stat choices, buy items in shop, repeat for 20 waves",
+    "estimated_duration_sec": 45,
+    "loops_for_meaningful_test": 3
+  },
+  "recommended_test_duration_sec": 120,
+  "input_scheme": {
+    "movement": { "type": "wasd", "keys": ["w", "a", "s", "d"] },
+    "primary_action": { "type": "auto", "description": "Weapons auto-fire at nearest enemy" },
+    "secondary_actions": [
+      { "name": "shop_buy", "key": "1-4", "description": "Buy shop items" },
+      { "name": "continue", "key": "Space", "description": "Continue to next wave" }
+    ]
+  },
+  "combat_profile": {
+    "style": "auto_aim_survivor",
+    "how_to_attack": "Weapons automatically fire at nearest enemies. WASD to move and dodge enemies.",
+    "key_mechanics": ["Auto-aim weapons", "Wave survival", "Shop between waves", "XP leveling"]
+  },
+  "player": {
+    "hp": 10,
+    "weapon_slots": 6,
+    "movement_speed": 200
+  },
+  "success_conditions": {
+    "minimum": { "waves_survived": 3, "enemies_killed": 30 }
+  },
+  "key_features": [
+    { "name": "Auto-aim combat", "gdd_section": "Combat", "testable": true },
+    { "name": "Wave system", "gdd_section": "Wave System", "testable": true },
+    { "name": "Shop between waves", "gdd_section": "Shop System", "testable": true },
+    { "name": "XP/leveling", "gdd_section": "Experience & Leveling", "testable": true },
+    { "name": "Multiple enemy types", "gdd_section": "Enemy System", "testable": true }
+  ]
+}

@@ -1,0 +1,16 @@
+Checkpoint 25: Kills=37, Deaths=22, Score=668, MaxFloor=1
+Checkpoint 50: Kills=75, Deaths=44, Score=1368, MaxFloor=1
+Checkpoint 75: Kills=115, Deaths=68, Score=2027, MaxFloor=1
+Checkpoint 100: Kills=144, Deaths=92, Score=2536, MaxFloor=1
+Checkpoint 125: Kills=176, Deaths=116, Score=3096, MaxFloor=1
+Checkpoint 150: Kills=215, Deaths=140, Score=3763, MaxFloor=1
+Checkpoint 175: Kills=262, Deaths=163, Score=4631, MaxFloor=1
+Checkpoint 200: Kills=308, Deaths=184, Score=5557, MaxFloor=1
+
+=== FINAL RESULTS ===
+Iterations: 200
+Total kills: 308
+Total deaths: 184
+Total score: 5557
+Max floor reached: 1
+Avg kills/iter: 1.54

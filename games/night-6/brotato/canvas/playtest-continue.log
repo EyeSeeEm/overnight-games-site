@@ -1,0 +1,5 @@
+Checkpoint 25: Kills=360, Deaths=0, Victories=0, MaxWave=1
+Checkpoint 50: Kills=725, Deaths=0, Victories=0, MaxWave=1
+Checkpoint 75: Kills=1083, Deaths=0, Victories=0, MaxWave=1
+page.evaluate: Target page, context or browser has been closed
+    at /workspace/games/night-6/brotato/canvas/batch-test.js:119:28

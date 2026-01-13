@@ -1,0 +1,42 @@
+{
+  "game_info": {
+    "name": "X-COM Classic Clone",
+    "type": "turn_based_tactics",
+    "description": "Turn-based tactical strategy. Control soldiers with Time Units (TU), manage actions (move, shoot, crouch), fight aliens in fog-of-war combat with reaction fire system."
+  },
+  "core_loop": {
+    "description": "Select soldier -> Spend TU on actions (move/shoot/crouch) -> End turn -> Alien turn with reaction fire -> Repeat until all aliens killed or soldiers dead",
+    "estimated_duration_sec": 300,
+    "loops_for_meaningful_test": 3
+  },
+  "recommended_test_duration_sec": 600,
+  "input_scheme": {
+    "movement": { "type": "click_to_move", "description": "Click tile to move soldier" },
+    "primary_action": { "type": "click", "description": "Click enemy to target for shooting" },
+    "special_actions": [
+      { "name": "snap_shot", "key": "1" },
+      { "name": "aimed_shot", "key": "2" },
+      { "name": "auto_shot", "key": "3" },
+      { "name": "crouch", "key": "c" },
+      { "name": "end_turn", "key": "Enter" },
+      { "name": "next_soldier", "key": "Tab" }
+    ]
+  },
+  "combat_profile": {
+    "style": "turn_based_tactical",
+    "how_to_attack": "Select soldier, click enemy to target, choose shot type (1=snap, 2=aimed, 3=auto). Each shot costs TU%. Crouching improves accuracy. End turn when done."
+  },
+  "success_conditions": {
+    "minimum": { "aliens_killed": 3, "soldiers_survived": 1 },
+    "good_playthrough": { "mission_complete": true, "soldiers_survived": 4 }
+  },
+  "key_features": [
+    { "name": "Time Units System", "gdd_section": "Section 1.1", "testable": true },
+    { "name": "Shot Types", "gdd_section": "Section 1.1", "testable": true },
+    { "name": "Fog of War", "gdd_section": "Section 1.7", "testable": true },
+    { "name": "Reaction Fire", "gdd_section": "Section 1.3", "testable": true },
+    { "name": "Cover System", "gdd_section": "Section 1.7", "testable": true },
+    { "name": "Alien AI", "gdd_section": "Section 1.8", "testable": true },
+    { "name": "Procedural Maps", "gdd_section": "Feedback", "testable": true }
+  ]
+}

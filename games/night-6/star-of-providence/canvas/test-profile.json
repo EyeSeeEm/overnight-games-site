@@ -1,0 +1,44 @@
+{
+  "game_info": {
+    "name": "Star of Providence Clone",
+    "type": "bullet_hell_roguelike",
+    "description": "Top-down bullet-hell shooter with procedural floors, weapon keywords, ship selection, and precision dodging mechanics"
+  },
+  "core_loop": {
+    "description": "Select ship, clear rooms of enemies, collect weapons/ammo, defeat boss, descend to next floor",
+    "estimated_duration_sec": 60,
+    "loops_for_meaningful_test": 3
+  },
+  "recommended_test_duration_sec": 180,
+  "input_scheme": {
+    "movement": { "type": "wasd_or_arrows", "keys": ["w", "a", "s", "d", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"] },
+    "primary_action": { "type": "hold", "keys": ["Space"], "description": "Fire weapon" },
+    "secondary_actions": [
+      { "name": "focus", "key": "Shift", "description": "Slow movement for precision dodging" },
+      { "name": "bomb", "key": "x", "description": "Clear bullets, damage enemies" },
+      { "name": "dash", "key": "z", "description": "I-frames, pass through bullets" }
+    ]
+  },
+  "combat_profile": {
+    "style": "bullet_hell",
+    "how_to_attack": "Hold Space to continuously fire. Use WASD to move, Shift to focus (slow precise movement), Z to dash through bullets",
+    "key_mechanics": ["Tiny hitbox for dodging", "Focus mode slows ship", "Dash has i-frames", "Bombs clear screen"]
+  },
+  "player": {
+    "hp": 4,
+    "hitbox_radius": 4,
+    "normal_speed": 250,
+    "focus_speed": 100,
+    "starting_bombs": 2
+  },
+  "success_conditions": {
+    "minimum": { "enemies_killed": 20, "survival_sec": 30 }
+  },
+  "key_features": [
+    { "name": "Bullet-hell combat", "testable": true },
+    { "name": "Focus/slow mode", "testable": true },
+    { "name": "Dash i-frames", "testable": true },
+    { "name": "Bomb screen clear", "testable": true },
+    { "name": "Weapon pickups", "testable": true }
+  ]
+}

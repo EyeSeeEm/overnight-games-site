@@ -1,0 +1,79 @@
+{
+  "game_info": {
+    "name": "Station Breach",
+    "type": "twin_stick_shooter_survival_horror",
+    "description": "Top-down twin-stick shooter on a derelict space station overrun by aliens. Fight through 4 decks, collect keycards, buy upgrades from INTEX terminals, defeat the Queen, and escape before self-destruct."
+  },
+  "core_loop": {
+    "description": "Navigate rooms, clear enemies, collect keycards to unlock new sections, find weapons, use credits at INTEX terminals for upgrades, progress through 4 decks, defeat bosses, escape before timer expires",
+    "estimated_duration_sec": 120,
+    "loops_for_meaningful_test": 5
+  },
+  "recommended_test_duration_sec": 600,
+  "input_scheme": {
+    "movement": { "type": "wasd", "keys": ["w", "a", "s", "d"] },
+    "aim": { "type": "mouse", "description": "Mouse position determines aim direction" },
+    "primary_action": { "type": "click", "keys": ["click"], "description": "Left click to shoot" },
+    "secondary_actions": [
+      { "name": "reload", "key": "r" },
+      { "name": "interact", "key": "e" },
+      { "name": "sprint", "key": "Shift" },
+      { "name": "switch_weapon", "key": "q" },
+      { "name": "use_medkit", "key": "h" },
+      { "name": "open_door", "key": "Space" }
+    ]
+  },
+  "combat_profile": {
+    "style": "twin_stick_mouse_aim",
+    "how_to_attack": "WASD to move, mouse to aim, left click to fire. R to reload. Multiple weapons with different stats.",
+    "weapons": [
+      { "name": "Pistol", "damage": 15, "fire_rate": 4, "starting": true },
+      { "name": "Shotgun", "damage": 48, "fire_rate": 1.2, "location": "Deck 1 Armory" },
+      { "name": "SMG", "damage": 10, "fire_rate": 12, "location": "Deck 1 Security" },
+      { "name": "Assault Rifle", "damage": 20, "fire_rate": 6, "location": "Deck 2" },
+      { "name": "Flamethrower", "damage": 5, "continuous": true, "location": "Deck 2" },
+      { "name": "Plasma Rifle", "damage": 40, "fire_rate": 2, "location": "Deck 3" },
+      { "name": "Rocket Launcher", "damage": 100, "fire_rate": 0.8, "location": "Deck 4" }
+    ]
+  },
+  "enemies": [
+    { "name": "Drone", "hp": 20, "damage": 10, "behavior": "rush_melee", "decks": [1,2,3,4] },
+    { "name": "Spitter", "hp": 30, "damage": 15, "behavior": "ranged_retreat", "decks": [1,2,3,4] },
+    { "name": "Lurker", "hp": 40, "damage": 20, "behavior": "ambush_fast", "decks": [2,3,4] },
+    { "name": "Brute", "hp": 100, "damage": 30, "behavior": "tank_charge", "decks": [2,3,4] },
+    { "name": "Exploder", "hp": 15, "damage": 50, "behavior": "suicide_bomber", "decks": [3,4] },
+    { "name": "Matriarch", "hp": 80, "damage": 25, "behavior": "spawner", "decks": [3,4] },
+    { "name": "Elite Drone", "hp": 50, "damage": 15, "behavior": "fast_armored", "decks": [4] },
+    { "name": "Queen", "hp": 500, "damage": 40, "behavior": "boss_phases", "decks": [4] }
+  ],
+  "progression": {
+    "keycards": ["green", "blue", "yellow", "red"],
+    "keycard_hierarchy": "Higher keycards open all lower doors",
+    "decks": [
+      { "name": "Deck 1 - Cargo/Security", "keycard_found": "green", "enemies": 40 },
+      { "name": "Deck 2 - Engineering", "keycard_found": "blue", "enemies": 60, "puzzle": "power_routing" },
+      { "name": "Deck 3 - Labs", "keycard_found": "yellow", "enemies": 80, "miniboss": "Specimen Alpha" },
+      { "name": "Deck 4 - Command", "keycard_found": "red", "enemies": 100, "boss": "Queen" }
+    ]
+  },
+  "success_conditions": {
+    "minimum": { "enemies_killed": 10, "survival_sec": 60, "rooms_cleared": 3 },
+    "victory": { "defeat_queen": true, "escape_before_timer": true }
+  },
+  "key_features": [
+    { "name": "Twin-stick shooting", "gdd_section": "Section 2-3", "testable": true },
+    { "name": "Keycard progression", "gdd_section": "Section 5", "testable": true },
+    { "name": "INTEX shop terminals", "gdd_section": "Section 6", "testable": true },
+    { "name": "Self-destruct sequence", "gdd_section": "Section 9", "testable": true },
+    { "name": "Boss fights", "gdd_section": "Section 10", "testable": true },
+    { "name": "Raycasting vision", "gdd_section": "Feedback Section 4", "testable": true },
+    { "name": "Enemy AI with sound reaction", "gdd_section": "Feedback Section 7", "testable": true }
+  ],
+  "technical": {
+    "resolution": "1280x720",
+    "tile_size": 32,
+    "player_speed": 180,
+    "player_sprint_speed": 270,
+    "camera": "follow_player_with_lerp"
+  }
+}

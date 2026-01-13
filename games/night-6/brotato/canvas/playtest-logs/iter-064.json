@@ -1,0 +1,10 @@
+{
+  "game": "brotato",
+  "iteration": 64,
+  "started": "2026-01-13T01:42:05.191Z",
+  "outcome": "timeout",
+  "kills": 16,
+  "wave": 1,
+  "gold": 40,
+  "duration": 37116
+}

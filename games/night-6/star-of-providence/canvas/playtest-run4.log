@@ -1,0 +1,7 @@
+Checkpoint 25: Kills=40, Deaths=24, Score=742, MaxFloor=1
+Checkpoint 50: Kills=70, Deaths=49, Score=1284, MaxFloor=1
+Checkpoint 75: Kills=100, Deaths=74, Score=1783, MaxFloor=1
+Checkpoint 100: Kills=140, Deaths=96, Score=2444, MaxFloor=1
+Checkpoint 125: Kills=184, Deaths=120, Score=3252, MaxFloor=1
+page.evaluate: Target page, context or browser has been closed
+    at /workspace/games/night-6/star-of-providence/canvas/batch-test.js:77:24

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Isolation Protocol</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+        }
+        #gameCanvas {
+            display: block;
+            background: #111;
+            border: 2px solid #333;
+        }
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+        .meter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .meter {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .meter-label {
+            color: #888;
+            font-size: 10px;
+            width: 60px;
+            text-transform: uppercase;
+        }
+        .meter-bar {
+            width: 100px;
+            height: 12px;
+            background: #222;
+            border: 1px solid #444;
+            position: relative;
+        }
+        .meter-fill {
+            height: 100%;
+            transition: width 0.3s;
+        }
+        .meter-value {
+            color: #fff;
+            font-size: 10px;
+            width: 30px;
+            text-align: right;
+        }
+        #health-fill { background: linear-gradient(90deg, #f44, #c00); }
+        #hunger-fill { background: linear-gradient(90deg, #fa0, #a60); }
+        #thirst-fill { background: linear-gradient(90deg, #0af, #06a); }
+        #fatigue-fill { background: linear-gradient(90deg, #888, #555); }
+        #infection-fill { background: linear-gradient(90deg, #0f0, #090); }
+        #global-infection {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: #0f0;
+            font-size: 14px;
+            text-shadow: 0 0 10px #0f0;
+            pointer-events: none;
+        }
+        #time-display {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 12px;
+            pointer-events: none;
+        }
+        #quick-slots {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            display: flex;
+            gap: 5px;
+            pointer-events: none;
+        }
+        .quick-slot {
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.7);
+            border: 2px solid #555;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 10px;
+        }
+        .quick-slot-key {
+            color: #888;
+            font-size: 8px;
+        }
+        #sector-name {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            pointer-events: none;
+        }
+        #power-display {
+            position: absolute;
+            top: 80px;
+            right: 10px;
+            color: #ff0;
+            font-size: 11px;
+            pointer-events: none;
+        }
+        #menu-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+        #menu-overlay h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #f44;
+            text-shadow: 0 0 20px #f44;
+        }
+        #menu-overlay p {
+            color: #888;
+            margin-bottom: 30px;
+            max-width: 400px;
+            text-align: center;
+            line-height: 1.6;
+        }
+        #start-btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            background: #333;
+            border: 2px solid #666;
+            color: #fff;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        #start-btn:hover {
+            background: #444;
+            border-color: #888;
+        }
+        .hidden { display: none !important; }
+        #gameover-overlay, #victory-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+        #gameover-overlay h1 { color: #f44; }
+        #victory-overlay h1 { color: #4f4; }
+        #inventory-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            border: 2px solid #555;
+            padding: 20px;
+            color: #fff;
+            min-width: 300px;
+        }
+        #inventory-overlay h2 {
+            margin-bottom: 15px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+        #inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 40px);
+            gap: 5px;
+        }
+        .inv-slot {
+            width: 40px;
+            height: 40px;
+            background: #222;
+            border: 1px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        .inv-slot:hover {
+            border-color: #888;
+        }
+        .inv-slot.selected {
+            border-color: #ff0;
+        }
+        #item-info {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #444;
+            font-size: 12px;
+        }
+        #messages {
+            position: absolute;
+            top: 100px;
+            left: 10px;
+            color: #ff0;
+            font-size: 12px;
+            pointer-events: none;
+        }
+        .message {
+            margin-bottom: 5px;
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+        <div id="hud">
+            <div class="meter-group">
+                <div class="meter">
+                    <span class="meter-label">Health</span>
+                    <div class="meter-bar"><div id="health-fill" class="meter-fill" style="width: 100%"></div></div>
+                    <span id="health-value" class="meter-value">100</span>
+                </div>
+                <div class="meter">
+                    <span class="meter-label">Hunger</span>
+                    <div class="meter-bar"><div id="hunger-fill" class="meter-fill" style="width: 0%"></div></div>
+                    <span id="hunger-value" class="meter-value">0</span>
+                </div>
+                <div class="meter">
+                    <span class="meter-label">Thirst</span>
+                    <div class="meter-bar"><div id="thirst-fill" class="meter-fill" style="width: 0%"></div></div>
+                    <span id="thirst-value" class="meter-value">0</span>
+                </div>
+                <div class="meter">
+                    <span class="meter-label">Fatigue</span>
+                    <div class="meter-bar"><div id="fatigue-fill" class="meter-fill" style="width: 0%"></div></div>
+                    <span id="fatigue-value" class="meter-value">0</span>
+                </div>
+                <div class="meter">
+                    <span class="meter-label">Infection</span>
+                    <div class="meter-bar"><div id="infection-fill" class="meter-fill" style="width: 0%"></div></div>
+                    <span id="infection-value" class="meter-value">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="time-display">00:00</div>
+        <div id="power-display">POWER: 500/500</div>
+        <div id="global-infection">GLOBAL: 0%</div>
+        <div id="sector-name">CENTRAL HUB</div>
+
+        <div id="quick-slots">
+            <div class="quick-slot" id="slot-1"><span class="quick-slot-key">1</span><span id="slot-1-item">-</span></div>
+            <div class="quick-slot" id="slot-2"><span class="quick-slot-key">2</span><span id="slot-2-item">-</span></div>
+            <div class="quick-slot" id="slot-3"><span class="quick-slot-key">3</span><span id="slot-3-item">-</span></div>
+        </div>
+
+        <div id="messages"></div>
+
+        <div id="menu-overlay">
+            <h1>ISOLATION PROTOCOL</h1>
+            <p>The outbreak has overrun the facility. You are the sole survivor. Find the escape pod before the infection consumes everything.</p>
+            <p style="color: #666; font-size: 11px;">WASD - Move | LMB - Attack | E - Interact | Tab - Inventory</p>
+            <button id="start-btn">BEGIN ISOLATION</button>
+        </div>
+
+        <div id="gameover-overlay" class="hidden">
+            <h1>YOU DIED</h1>
+            <p id="death-reason">The facility claims another victim.</p>
+            <button id="restart-btn" style="margin-top: 20px; padding: 10px 30px; background: #333; border: 2px solid #666; color: #fff; cursor: pointer;">TRY AGAIN</button>
+        </div>
+
+        <div id="victory-overlay" class="hidden">
+            <h1>ESCAPED!</h1>
+            <p id="victory-stats">You made it out alive.</p>
+            <button id="victory-restart-btn" style="margin-top: 20px; padding: 10px 30px; background: #333; border: 2px solid #666; color: #fff; cursor: pointer;">PLAY AGAIN</button>
+        </div>
+
+        <div id="inventory-overlay" class="hidden">
+            <h2>INVENTORY</h2>
+            <div id="inventory-grid"></div>
+            <div id="item-info">Select an item</div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

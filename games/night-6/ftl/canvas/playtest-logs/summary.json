@@ -1,0 +1,10 @@
+{
+  "iterations": 37,
+  "totalShipsDestroyed": 133,
+  "totalJumps": 234,
+  "totalDeaths": 1,
+  "maxSector": 3,
+  "successfulIterations": 37,
+  "avgShipsPerIter": 3.5945945945945947,
+  "completed": "2026-01-13T02:01:21.216Z"
+}

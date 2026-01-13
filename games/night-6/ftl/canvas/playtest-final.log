@@ -1,0 +1,40 @@
+Starting FTL Clone batch test...
+
+
+=== Iteration 1/200 ===
+  Ship destroyed! (1 this run)
+  Ship destroyed! (2 this run)
+  Step 50, Sector 1, Ships: 2, Jumps: 3
+  Ship destroyed! (3 this run)
+  Step 100, Sector 1, Ships: 3, Jumps: 5
+  Ship destroyed! (4 this run)
+  Step 150, Sector 1, Ships: 4, Jumps: 5
+  Step 200, Sector 1, Ships: 4, Jumps: 5
+  Iteration 1 complete: 4 ships, 5 jumps
+
+=== Iteration 2/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 2, Ships: 1, Jumps: 6
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 2, Ships: 3, Jumps: 8
+  Ship destroyed! (4 this run)
+  Step 150, Sector 2, Ships: 4, Jumps: 10
+  Ship destroyed! (5 this run)
+  Step 200, Sector 2, Ships: 5, Jumps: 10
+  Iteration 2 complete: 5 ships, 10 jumps
+
+=== Iteration 3/200 ===
+  Ship destroyed! (1 this run)
+  Step 50, Sector 1, Ships: 1, Jumps: 2
+  Ship destroyed! (2 this run)
+  Ship destroyed! (3 this run)
+  Step 100, Sector 2, Ships: 3, Jumps: 6
+  Step 150, Sector 2, Ships: 3, Jumps: 6
+  Ship destroyed! (4 this run)
+  Step 200, Sector 2, Ships: 4, Jumps: 7
+  Iteration 3 complete: 4 ships, 7 jumps
+
+=== Iteration 4/200 ===
+  Step 50, Sector 1, Ships: 0, Jumps: 1
+  Step 100, Sector 1, Ships: 0, Jumps: 1

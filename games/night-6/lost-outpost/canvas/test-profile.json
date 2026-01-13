@@ -1,0 +1,44 @@
+{
+  "game_info": {
+    "name": "Lost Outpost",
+    "type": "top_down_survival_horror_shooter",
+    "description": "Top-down survival horror shooter exploring derelict space station and alien-infested planet, fighting bug-like creatures with rank progression"
+  },
+  "core_loop": {
+    "description": "Explore dark corridors, fight aliens, collect credits/ammo, upgrade at terminals, reach exit",
+    "estimated_duration_sec": 60,
+    "loops_for_meaningful_test": 3
+  },
+  "recommended_test_duration_sec": 180,
+  "input_scheme": {
+    "movement": { "type": "wasd", "keys": ["w", "a", "s", "d"] },
+    "primary_action": { "type": "click", "keys": ["mouse0"], "description": "Shoot" },
+    "secondary_actions": [
+      { "name": "reload", "key": "r", "description": "Reload weapon" },
+      { "name": "interact", "key": "Space", "description": "Use terminals, open doors" },
+      { "name": "weapon_select", "key": "q", "description": "Hold to select weapon" }
+    ]
+  },
+  "combat_profile": {
+    "style": "twin_stick_mouse_aim",
+    "how_to_attack": "Use mouse to aim, left click to shoot. WASD to move. R to reload. Space to interact with terminals.",
+    "key_mechanics": ["Mouse aiming", "Limited ammo with reload", "Flashlight visibility", "XP/rank progression"]
+  },
+  "player": {
+    "hp": 100,
+    "lives": 3,
+    "starting_weapon": "assault_rifle",
+    "movement_speed": 200
+  },
+  "success_conditions": {
+    "minimum": { "enemies_killed": 10, "survival_sec": 45 }
+  },
+  "key_features": [
+    { "name": "Top-down shooter combat", "gdd_section": "Core Gameplay Loop", "testable": true },
+    { "name": "XP/rank progression", "gdd_section": "Progression Systems", "testable": true },
+    { "name": "Weapon unlocks", "gdd_section": "Weapons", "testable": true },
+    { "name": "Multiple enemy types", "gdd_section": "Enemies", "testable": true },
+    { "name": "Terminal interactions", "gdd_section": "Level Elements", "testable": true },
+    { "name": "Lives system", "gdd_section": "Progression Systems", "testable": true }
+  ]
+}

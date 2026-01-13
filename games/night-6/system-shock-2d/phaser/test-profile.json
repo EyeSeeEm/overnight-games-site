@@ -1,0 +1,76 @@
+{
+  "game_info": {
+    "name": "System Shock 2D: Whispers of M.A.R.I.A.",
+    "type": "immersive_sim_horror",
+    "description": "Top-down survival horror immersive sim. Player awakens on space station Von Braun where AI M.A.R.I.A. has gone rogue. Features twin-stick combat, hacking, stealth, and multiple solutions to obstacles across 5 decks."
+  },
+  "core_loop": {
+    "description": "EXPLORE -> DISCOVER (loot, logs) -> FIGHT/HACK/SNEAK -> UPGRADE SKILLS -> EXPLORE DEEPER. Player navigates station decks, fights cyborgs/mutants, hacks systems, finds audio logs revealing story.",
+    "estimated_duration_sec": 180,
+    "loops_for_meaningful_test": 5
+  },
+  "recommended_test_duration_sec": 900,
+  "input_scheme": {
+    "movement": { "type": "wasd", "keys": ["w", "a", "s", "d"] },
+    "aim": { "type": "mouse_position", "description": "Player sprite rotates toward mouse" },
+    "primary_action": { "type": "mouse_click", "description": "Fire weapon / Melee attack" },
+    "secondary_action": { "type": "mouse_right_click", "description": "Use equipped item / Throw grenade" },
+    "special_actions": [
+      { "name": "sprint", "key": "Shift", "hold": true },
+      { "name": "crouch", "key": "Ctrl", "hold": true },
+      { "name": "interact", "key": "e" },
+      { "name": "flashlight", "key": "f" },
+      { "name": "quick_heal", "key": "q" },
+      { "name": "reload", "key": "r" },
+      { "name": "inventory", "key": "Tab" },
+      { "name": "map", "key": "m" },
+      { "name": "dodge_roll", "key": "Space" },
+      { "name": "quick_slot_1", "key": "1" },
+      { "name": "quick_slot_2", "key": "2" },
+      { "name": "quick_slot_3", "key": "3" },
+      { "name": "quick_slot_4", "key": "4" }
+    ]
+  },
+  "combat_profile": {
+    "style": "twin_stick_shooter",
+    "how_to_attack": "Aim with mouse position, left click to fire weapon or melee. Space to dodge roll with i-frames."
+  },
+  "success_conditions": {
+    "minimum": {
+      "enemies_killed": 5,
+      "survival_sec": 60,
+      "rooms_explored": 3
+    },
+    "good_playthrough": {
+      "enemies_killed": 15,
+      "survival_sec": 300,
+      "decks_visited": 2,
+      "hacks_completed": 3
+    }
+  },
+  "key_features": [
+    { "name": "Twin-Stick Combat", "gdd_section": "Section 4", "testable": true },
+    { "name": "Hacking Mini-Game", "gdd_section": "Section 6", "testable": true },
+    { "name": "Stealth System", "gdd_section": "Section 4.3", "testable": true },
+    { "name": "RPG Progression", "gdd_section": "Section 7", "testable": true },
+    { "name": "Multiple Enemy Types", "gdd_section": "Section 5", "testable": true },
+    { "name": "Audio Logs Story", "gdd_section": "Section 10", "testable": true },
+    { "name": "M.A.R.I.A. Events", "gdd_section": "Section 11", "testable": true },
+    { "name": "Vision/Lighting", "gdd_section": "Section 14.3", "testable": true }
+  ],
+  "enemy_types": [
+    { "name": "Cyborg Drone", "hp": 30, "damage": 10, "behavior": "patrol_chase" },
+    { "name": "Cyborg Soldier", "hp": 60, "damage": 15, "behavior": "ranged_cover" },
+    { "name": "Cyborg Assassin", "hp": 40, "damage": 25, "behavior": "cloak_ambush" },
+    { "name": "Cyborg Heavy", "hp": 120, "damage": 20, "behavior": "tank_slow" },
+    { "name": "Mutant Crawler", "hp": 20, "damage": 8, "behavior": "fast_swarm" },
+    { "name": "Security Bot", "hp": 80, "damage": 18, "behavior": "patrol_alert" }
+  ],
+  "expected_state_fields": {
+    "gameState": ["menu", "playing", "paused", "gameover", "victory", "hacking", "inventory"],
+    "player": ["x", "y", "health", "maxHealth", "energy", "maxEnergy", "ammo", "currentWeapon"],
+    "enemies": ["x", "y", "type", "health", "state"],
+    "currentDeck": "number",
+    "skills": "object"
+  }
+}

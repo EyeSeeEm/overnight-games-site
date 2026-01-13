@@ -1,0 +1,82 @@
+{
+  "game_info": {
+    "name": "Pirateers Clone",
+    "type": "top_down_naval_action",
+    "description": "Top-down pirate naval combat. Control ship with A/D to turn, W/S for speed. Fire broadside cannons with Space. Destroy enemies, collect loot, survive the day."
+  },
+  "core_loop": {
+    "description": "Start day -> Sail and fight enemies -> Collect loot -> Survive until day ends or return to base -> Upgrade ship -> Repeat",
+    "estimated_duration_sec": 180,
+    "loops_for_meaningful_test": 2
+  },
+  "recommended_test_duration_sec": 240,
+  "resolution": {
+    "width": 960,
+    "height": 640
+  },
+  "input_scheme": {
+    "movement": {
+      "type": "ship_turn_throttle",
+      "keys": ["w", "s", "a", "d"],
+      "description": "A/D turn left/right, W/S increase/decrease speed"
+    },
+    "primary_action": {
+      "type": "broadside_fire",
+      "keys": ["Space"],
+      "description": "Fire cannons from both sides"
+    },
+    "secondary_actions": [
+      { "name": "special_weapon", "key": "Shift", "description": "Fire special weapon" },
+      { "name": "weapon_select", "keys": ["1", "2", "3", "4"], "description": "Select weapon slot" }
+    ]
+  },
+  "combat_profile": {
+    "style": "broadside_naval",
+    "how_to_attack": "Position ship broadside to enemy, press Space to fire cannons from both port and starboard",
+    "player_base_hp": 100,
+    "enemy_approach": "Enemies patrol and attack when in range"
+  },
+  "success_conditions": {
+    "minimum": {
+      "enemies_destroyed": 2,
+      "gold_collected": 50,
+      "survive_day": 1
+    },
+    "good_run": {
+      "enemies_destroyed": 5,
+      "gold_collected": 200,
+      "survive_day": 3
+    }
+  },
+  "key_features": [
+    {
+      "name": "Broadside Combat",
+      "gdd_section": "Section 4 - Combat System",
+      "testable": true,
+      "test_method": "Space fires cannons from both sides of ship"
+    },
+    {
+      "name": "Ship Movement",
+      "gdd_section": "Section 4.1 - Controls",
+      "testable": true,
+      "test_method": "A/D turns ship, W/S controls speed"
+    },
+    {
+      "name": "Day Timer",
+      "gdd_section": "Section 2.1 - Day/Night Cycle",
+      "testable": true,
+      "test_method": "Timer counts down, day ends when expired"
+    },
+    {
+      "name": "Loot Collection",
+      "gdd_section": "Section 4.5 - Damage & Destruction",
+      "testable": true,
+      "test_method": "Destroyed ships drop loot, collect by sailing over"
+    }
+  ],
+  "enemy_types": [
+    { "name": "Merchant Ship", "hp": 50, "damage": 5, "speed": 60, "behavior": "flee" },
+    { "name": "Navy Sloop", "hp": 80, "damage": 12, "speed": 100, "behavior": "patrol_attack" },
+    { "name": "Pirate Raider", "hp": 100, "damage": 15, "speed": 120, "behavior": "aggressive" }
+  ]
+}

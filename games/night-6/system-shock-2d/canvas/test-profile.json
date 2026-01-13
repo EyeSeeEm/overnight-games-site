@@ -1,0 +1,45 @@
+{
+  "game_info": {
+    "name": "System Shock 2D: Whispers of M.A.R.I.A.",
+    "type": "immersive_sim_horror",
+    "description": "Twin-stick survival horror with hacking, multiple solutions, skills, and AI antagonist"
+  },
+  "core_loop": {
+    "description": "Explore decks, fight/hack/sneak past enemies, collect items, upgrade skills, defeat M.A.R.I.A.",
+    "estimated_duration_sec": 180,
+    "loops_for_meaningful_test": 2
+  },
+  "recommended_test_duration_sec": 300,
+  "input_scheme": {
+    "movement": { "type": "wasd", "keys": ["w", "a", "s", "d"] },
+    "primary_action": { "type": "mouse_click", "description": "Shoot/attack with left click" },
+    "secondary_actions": [
+      { "name": "interact", "key": "e" },
+      { "name": "flashlight", "key": "f" },
+      { "name": "reload", "key": "r" },
+      { "name": "dodge", "key": "Space" },
+      { "name": "inventory", "key": "Tab" },
+      { "name": "quick_heal", "key": "q" }
+    ]
+  },
+  "combat_profile": {
+    "style": "twin_stick_shooter",
+    "how_to_attack": "WASD to move, mouse to aim, left click to shoot. Weapons include pistol, shotgun, laser."
+  },
+  "success_conditions": {
+    "minimum": {
+      "enemies_killed": 5,
+      "rooms_explored": 3
+    },
+    "victory": {
+      "description": "Defeat M.A.R.I.A. on Deck 5"
+    }
+  },
+  "key_features": [
+    { "name": "Twin-stick Combat", "gdd_section": "Section 4", "testable": true },
+    { "name": "Hacking Mini-game", "gdd_section": "Section 6", "testable": true },
+    { "name": "Skill Progression", "gdd_section": "Section 7", "testable": true },
+    { "name": "Vision Cone", "gdd_section": "Feedback", "testable": true },
+    { "name": "Multiple Enemy Types", "gdd_section": "Section 5", "testable": true }
+  ]
+}

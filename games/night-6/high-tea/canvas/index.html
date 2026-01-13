@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High Tea - Trading Strategy</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #1a1410;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+        }
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background: #2a2018;
+            border: 3px solid #8b7355;
+        }
+        #gameCanvas {
+            display: block;
+            position: absolute;
+            top: 60px;
+            left: 150px;
+            width: 500px;
+            height: 400px;
+            background: #3a4a5a;
+            border: 2px solid #8b7355;
+        }
+        #top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 55px;
+            background: linear-gradient(180deg, #3a2a1a 0%, #2a1a10 100%);
+            border-bottom: 2px solid #8b7355;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 20px;
+        }
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .stat-label {
+            color: #8b7355;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+        .stat-value {
+            color: #e8d4a8;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        #mood-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #mood-bar {
+            width: 200px;
+            height: 16px;
+            background: #1a1410;
+            border: 1px solid #8b7355;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        #mood-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4a4, #6c6);
+            transition: width 0.5s, background 0.5s;
+        }
+        #left-panel {
+            position: absolute;
+            top: 60px;
+            left: 5px;
+            width: 140px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .trade-panel {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #8b7355;
+            padding: 10px;
+        }
+        .panel-title {
+            color: #e8d4a8;
+            font-size: 12px;
+            text-align: center;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #8b7355;
+            padding-bottom: 5px;
+        }
+        .panel-price {
+            color: #ffd700;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .buy-buttons {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+        .buy-btn {
+            width: 35px;
+            height: 28px;
+            background: #3a2a1a;
+            border: 1px solid #8b7355;
+            color: #e8d4a8;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .buy-btn:hover {
+            background: #4a3a2a;
+        }
+        .buy-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .panel-stock {
+            color: #888;
+            font-size: 10px;
+            text-align: center;
+            margin-top: 8px;
+        }
+        #ships-panel {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #8b7355;
+            padding: 10px;
+        }
+        .ship-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: #4a3a2a;
+            border: 1px solid #8b7355;
+            border-radius: 3px;
+            margin: 2px;
+            font-size: 12px;
+            text-align: center;
+            line-height: 18px;
+        }
+        .ship-icon.available { background: #2a4a2a; }
+        .ship-icon.en-route { background: #4a4a2a; }
+        #bottom-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 130px;
+            background: linear-gradient(180deg, #2a1a10 0%, #1a1008 100%);
+            border-top: 2px solid #8b7355;
+            padding: 10px;
+        }
+        #quota-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        #quota-info {
+            color: #e8d4a8;
+            font-size: 12px;
+        }
+        #clipper-timer {
+            color: #ffd700;
+            font-size: 14px;
+        }
+        #quota-bar {
+            width: 100%;
+            height: 20px;
+            background: #1a1410;
+            border: 1px solid #8b7355;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        #quota-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #654, #876);
+            transition: width 0.3s;
+        }
+        #news-ticker {
+            color: #888;
+            font-size: 11px;
+            font-style: italic;
+            text-align: center;
+            padding: 5px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 3px;
+        }
+        #speed-controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+        }
+        .speed-btn {
+            width: 30px;
+            height: 25px;
+            background: #3a2a1a;
+            border: 1px solid #8b7355;
+            color: #e8d4a8;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        .speed-btn.active {
+            background: #5a4a3a;
+            border-color: #ffd700;
+        }
+        #menu-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(20, 15, 10, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #e8d4a8;
+        }
+        #menu-overlay h1 {
+            font-size: 42px;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px #000;
+            margin-bottom: 10px;
+        }
+        #menu-overlay h2 {
+            font-size: 14px;
+            color: #8b7355;
+            margin-bottom: 30px;
+        }
+        #menu-overlay p {
+            color: #888;
+            margin-bottom: 20px;
+            max-width: 500px;
+            text-align: center;
+            line-height: 1.6;
+            font-size: 13px;
+        }
+        #start-btn {
+            padding: 15px 40px;
+            font-size: 16px;
+            background: #3a2a1a;
+            border: 2px solid #ffd700;
+            color: #ffd700;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        #start-btn:hover {
+            background: #4a3a2a;
+        }
+        .hidden { display: none !important; }
+        #gameover-overlay, #victory-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #e8d4a8;
+        }
+        #gameover-overlay h1 { color: #a44; font-size: 32px; }
+        #victory-overlay h1 { color: #4a4; font-size: 32px; }
+        .result-stats {
+            color: #888;
+            margin: 20px 0;
+            text-align: center;
+            line-height: 1.8;
+        }
+        .restart-btn {
+            margin-top: 20px;
+            padding: 10px 30px;
+            background: #3a2a1a;
+            border: 2px solid #8b7355;
+            color: #e8d4a8;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .offer-popup {
+            position: absolute;
+            background: rgba(40, 30, 20, 0.95);
+            border: 2px solid #ffd700;
+            padding: 10px;
+            border-radius: 5px;
+            color: #e8d4a8;
+            font-size: 11px;
+            cursor: pointer;
+            z-index: 100;
+            pointer-events: auto;
+        }
+        .offer-popup:hover {
+            background: rgba(60, 50, 40, 0.95);
+        }
+        .offer-port { color: #ffd700; font-weight: bold; }
+        .offer-details { margin: 5px 0; }
+        .offer-risk { font-size: 10px; color: #888; }
+        .trade-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(40, 30, 20, 0.98);
+            border: 3px solid #ffd700;
+            padding: 20px;
+            border-radius: 10px;
+            color: #e8d4a8;
+            font-size: 14px;
+            text-align: center;
+            z-index: 200;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+        .trade-success { border-color: #4a4; }
+        .trade-fail { border-color: #a44; }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="top-bar">
+            <div class="stat-box">
+                <span class="stat-label">Year</span>
+                <span class="stat-value" id="year-display">1830</span>
+            </div>
+            <div id="mood-container">
+                <span class="stat-label">Britain's Mood</span>
+                <div id="mood-bar"><div id="mood-fill" style="width: 80%"></div></div>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Silver</span>
+                <span class="stat-value" id="silver-display">500</span>
+            </div>
+        </div>
+
+        <div id="left-panel">
+            <div class="trade-panel" id="opium-panel">
+                <div class="panel-title">BUY OPIUM</div>
+                <div class="panel-price">Price: <span id="opium-price">25</span></div>
+                <div class="buy-buttons">
+                    <button class="buy-btn" data-resource="opium" data-amount="5">5</button>
+                    <button class="buy-btn" data-resource="opium" data-amount="10">10</button>
+                    <button class="buy-btn" data-resource="opium" data-amount="15">15</button>
+                </div>
+                <div class="panel-stock">Stock: <span id="opium-stock">0</span></div>
+            </div>
+
+            <div class="trade-panel" id="tea-panel">
+                <div class="panel-title">BUY TEA</div>
+                <div class="panel-price">Price: <span id="tea-price">18</span></div>
+                <div class="buy-buttons">
+                    <button class="buy-btn" data-resource="tea" data-amount="5">5</button>
+                    <button class="buy-btn" data-resource="tea" data-amount="10">10</button>
+                    <button class="buy-btn" data-resource="tea" data-amount="15">15</button>
+                </div>
+                <div class="panel-stock">Stock: <span id="tea-stock">0</span></div>
+            </div>
+
+            <div id="ships-panel">
+                <div class="panel-title">SHIPS</div>
+                <div id="ship-icons"></div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="500" height="400"></canvas>
+
+        <div id="bottom-panel">
+            <div id="quota-panel">
+                <div id="quota-info">Tea Quota: <span id="quota-current">0</span> / <span id="quota-target">60</span></div>
+                <div id="clipper-timer">Clipper arrives in: <span id="timer-value">60</span>s</div>
+            </div>
+            <div id="quota-bar"><div id="quota-fill" style="width: 0%"></div></div>
+            <div id="news-ticker">Welcome to the Pearl River Delta. Britain demands tea.</div>
+        </div>
+
+        <div id="speed-controls">
+            <button class="speed-btn active" data-speed="1">1x</button>
+            <button class="speed-btn" data-speed="2">2x</button>
+            <button class="speed-btn" data-speed="3">3x</button>
+        </div>
+
+        <div id="menu-overlay">
+            <h1>HIGH TEA</h1>
+            <h2>A Trading Strategy Game</h2>
+            <p>The year is 1830. Britain craves tea, but China only accepts silver. Your solution? Sell opium to Chinese ports and use the proceeds to buy tea for the Crown.</p>
+            <p style="color: #666; font-size: 11px;">Buy opium | Accept port offers | Earn silver | Buy tea | Ship to Britain</p>
+            <button id="start-btn">BEGIN TRADING</button>
+        </div>
+
+        <div id="gameover-overlay" class="hidden">
+            <h1>TRADING EMPIRE COLLAPSED</h1>
+            <div class="result-stats" id="fail-stats"></div>
+            <button class="restart-btn" id="restart-btn">TRY AGAIN</button>
+        </div>
+
+        <div id="victory-overlay" class="hidden">
+            <h1>TRADE COMPLETE</h1>
+            <div class="result-stats" id="victory-stats"></div>
+            <button class="restart-btn" id="victory-restart-btn">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

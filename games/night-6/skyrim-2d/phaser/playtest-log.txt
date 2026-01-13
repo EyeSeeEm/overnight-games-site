@@ -1,0 +1,78 @@
+[2026-01-12T20:51:35.598Z] Starting Frostfall playtest...
+[2026-01-12T20:51:39.148Z] Game loaded
+[2026-01-12T20:51:39.153Z] Harness found
+[2026-01-12T20:51:39.153Z] 
+=== ITERATION 1/100 ===
+[2026-01-12T20:51:47.789Z] Step 20: random exploration | HP: 100/100 | Gold: 50 | Map: riverwood | Enemies: 0
+[2026-01-12T20:51:56.137Z] Step 40: random exploration | HP: 100/100 | Gold: 50 | Map: whiterun_plains | Enemies: 5
+[2026-01-12T20:52:04.423Z] Step 60: random exploration | HP: 100/100 | Gold: 50 | Map: whiterun_plains | Enemies: 5
+[2026-01-12T20:52:10.769Z] Killed 1 enemy/enemies! Total: 1
+[2026-01-12T20:52:11.989Z] Killed 1 enemy/enemies! Total: 2
+[2026-01-12T20:52:12.296Z] Step 80: chasing bandit_archer | HP: 68/100 | Gold: 50 | Map: whiterun_plains | Enemies: 3
+[2026-01-12T20:52:15.036Z] Killed 1 enemy/enemies! Total: 3
+[2026-01-12T20:52:20.439Z] Step 100: random exploration | HP: 48/100 | Gold: 80 | Map: whiterun_plains | Enemies: 2
+[2026-01-12T20:52:29.446Z] Step 120: random exploration | HP: 48/100 | Gold: 80 | Map: whiterun_plains | Enemies: 2
+[2026-01-12T20:52:37.912Z] Ending iteration at step 138 for variety
+[2026-01-12T20:52:37.913Z] Iteration 1 complete. Steps: 138, Kills: 3
+[2026-01-12T20:52:40.086Z] 
+=== ITERATION 2/100 ===
+[2026-01-12T20:52:49.378Z] Step 20: random exploration | HP: 100/100 | Gold: 50 | Map: riverwood | Enemies: 0
+[2026-01-12T20:52:57.131Z] Killed 1 enemy/enemies! Total: 4
+[2026-01-12T20:52:57.538Z] Step 40: attacking wolf at distance 39 | HP: 76/100 | Gold: 50 | Map: whiterun_plains | Enemies: 4
+[2026-01-12T20:52:59.974Z] Killed 1 enemy/enemies! Total: 5
+[2026-01-12T20:53:06.174Z] Step 60: moving to exit | HP: 64/100 | Gold: 50 | Map: whiterun_plains | Enemies: 3
+[2026-01-12T20:53:14.123Z] Killed 3 enemy/enemies! Total: 8
+[2026-01-12T20:53:15.100Z] Step 80: talking to Lucan | HP: 64/100 | Gold: 50 | Map: riverwood | Enemies: 0
+[2026-01-12T20:53:23.573Z] Step 100: moving to exit | HP: 64/100 | Gold: 50 | Map: riverwood | Enemies: 0
+[2026-01-12T20:53:31.027Z] Ending iteration at step 117 for variety
+[2026-01-12T20:53:31.027Z] Iteration 2 complete. Steps: 117, Kills: 5
+[2026-01-12T20:53:33.124Z] 
+=== ITERATION 3/100 ===
+[2026-01-12T20:53:42.173Z] Step 20: random exploration | HP: 100/100 | Gold: 50 | Map: riverwood | Enemies: 0
+[2026-01-12T20:53:51.049Z] Step 40: random exploration | HP: 100/100 | Gold: 50 | Map: riverwood | Enemies: 0
+[2026-01-12T20:53:57.639Z] Ending iteration at step 54 for variety
+[2026-01-12T20:53:57.639Z] Iteration 3 complete. Steps: 54, Kills: 0
+[2026-01-12T20:53:59.709Z] 
+=== ITERATION 4/100 ===
+[2026-01-12T20:54:08.801Z] Step 20: random exploration | HP: 100/100 | Gold: 50 | Map: riverwood | Enemies: 0
+[2026-01-12T20:54:17.797Z] Step 40: random exploration | HP: 100/100 | Gold: 50 | Map: riverwood | Enemies: 0
+[2026-01-12T20:54:22.567Z] Killed 1 enemy/enemies! Total: 9
+[2026-01-12T20:54:24.597Z] Killed 1 enemy/enemies! Total: 10
+[2026-01-12T20:54:25.710Z] Ending iteration at step 59 for variety
+[2026-01-12T20:54:25.710Z] Iteration 4 complete. Steps: 59, Kills: 2
+[2026-01-12T20:54:27.779Z] 
+=== ITERATION 5/100 ===
+[2026-01-12T20:54:36.306Z] Step 20: random exploration | HP: 100/100 | Gold: 50 | Map: riverwood | Enemies: 0
+[2026-01-12T20:54:45.013Z] Step 40: random exploration | HP: 100/100 | Gold: 50 | Map: riverwood | Enemies: 0
+[2026-01-12T20:54:53.526Z] Step 60: moving to exit | HP: 100/100 | Gold: 50 | Map: riverwood | Enemies: 0
+[2026-01-12T20:55:02.476Z] Step 80: random exploration | HP: 100/100 | Gold: 50 | Map: whiterun_plains | Enemies: 5
+[2026-01-12T20:55:11.218Z] Step 100: moving to exit | HP: 100/100 | Gold: 50 | Map: whiterun_plains | Enemies: 5
+[2026-01-12T20:55:13.804Z] Killed 5 enemy/enemies! Total: 15
+[2026-01-12T20:55:19.251Z] Step 120: attacking wolf at distance 39 | HP: 88/100 | Gold: 50 | Map: whiterun_plains | Enemies: 5
+[2026-01-12T20:55:20.061Z] Killed 1 enemy/enemies! Total: 16
+[2026-01-12T20:55:23.301Z] Killed 1 enemy/enemies! Total: 17
+[2026-01-12T20:55:27.401Z] Step 140: random exploration | HP: 64/100 | Gold: 80 | Map: whiterun_plains | Enemies: 3
+[2026-01-12T20:55:36.390Z] Step 160: moving to exit | HP: 64/100 | Gold: 80 | Map: whiterun_plains | Enemies: 3
+[2026-01-12T20:55:36.793Z] Ending iteration at step 160 for variety
+[2026-01-12T20:55:36.794Z] Iteration 5 complete. Steps: 160, Kills: 7
+[2026-01-12T20:55:38.907Z] 
+=== ITERATION 6/100 ===
+[2026-01-12T20:55:47.743Z] Step 20: random exploration | HP: 100/100 | Gold: 50 | Map: riverwood | Enemies: 0
+[2026-01-12T20:55:56.591Z] Step 40: moving to exit | HP: 100/100 | Gold: 50 | Map: riverwood | Enemies: 0
+[2026-01-12T20:56:04.845Z] Step 60: random exploration | HP: 100/100 | Gold: 50 | Map: riverwood | Enemies: 0
+[2026-01-12T20:56:14.252Z] Step 80: random exploration | HP: 100/100 | Gold: 50 | Map: riverwood | Enemies: 0
+[2026-01-12T20:56:22.702Z] Step 100: random exploration | HP: 100/100 | Gold: 50 | Map: riverwood | Enemies: 0
+[2026-01-12T20:56:29.963Z] Step 116: Execute error: page.evaluate: Target page, context or browser has been closed
+[2026-01-12T20:56:29.963Z] Fatal error: page.evaluate: Target page, context or browser has been closed
+[2026-01-12T20:56:30.002Z] 
+========== PLAYTEST SUMMARY ==========
+[2026-01-12T20:56:30.002Z] Total Iterations: 100
+[2026-01-12T20:56:30.002Z] Total Kills: 17
+[2026-01-12T20:56:30.002Z] Total Deaths: 0
+[2026-01-12T20:56:30.002Z] Max Gold: 80
+[2026-01-12T20:56:30.002Z] Quests Completed: 0
+[2026-01-12T20:56:30.002Z] Maps Visited: riverwood, whiterun_plains
+[2026-01-12T20:56:30.002Z] Bugs Found: 2
+[2026-01-12T20:56:30.002Z]   Bug 1: Execute error: page.evaluate: Target page, context or browser has been closed
+[2026-01-12T20:56:30.002Z]   Bug 2: Fatal: page.evaluate: Target page, context or browser has been closed
+[2026-01-12T20:56:30.002Z] ======================================

@@ -1,0 +1,36 @@
+{
+  "game_info": {
+    "name": "Brotato Clone",
+    "type": "arena_survivor",
+    "description": "Wave-based arena survivor with auto-aim weapons, shop between waves, and stat building."
+  },
+  "core_loop": {
+    "description": "Survive enemy waves, collect XP/materials, shop between waves, upgrade stats.",
+    "estimated_duration_sec": 60,
+    "loops_for_meaningful_test": 5
+  },
+  "recommended_test_duration_sec": 300,
+  "input_scheme": {
+    "movement": { "type": "wasd", "keys": ["w", "a", "s", "d"] },
+    "primary_action": { "type": "auto_aim", "description": "Weapons fire automatically at nearest enemy" },
+    "secondary_actions": [
+      { "name": "confirm", "key": "Space" }
+    ]
+  },
+  "combat_profile": {
+    "style": "auto_aim_survivor",
+    "how_to_attack": "Move with WASD to dodge enemies. Weapons fire automatically. Collect drops and survive each wave."
+  },
+  "success_conditions": {
+    "minimum": {
+      "waves_survived": 3,
+      "enemies_killed": 20
+    }
+  },
+  "key_features": [
+    { "name": "Auto-aim weapons", "gdd_section": "Combat", "testable": true },
+    { "name": "Wave survival", "gdd_section": "Core Loop", "testable": true },
+    { "name": "Shop system", "gdd_section": "Shop", "testable": true },
+    { "name": "Stat upgrades", "gdd_section": "Experience & Leveling", "testable": true }
+  ]
+}

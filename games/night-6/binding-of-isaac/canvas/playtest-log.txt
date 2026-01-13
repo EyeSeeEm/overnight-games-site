@@ -1,0 +1,814 @@
+[2026-01-13T02:49:27.600Z] Starting Binding of Isaac Clone Playtest
+[2026-01-13T02:49:27.601Z] Target: 200 iterations
+[2026-01-13T02:49:27.706Z] Loading game: file:///workspace/games/night-6/binding-of-isaac/canvas/index.html
+[2026-01-13T02:49:29.732Z] Harness detected
+[2026-01-13T02:49:29.733Z] 
+=== ITERATION 1 ===
+[2026-01-13T02:49:34.316Z] Entered room (3,4), type: normal
+[2026-01-13T02:49:35.462Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:49:40.678Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:49:45.893Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:49:45.893Z] Max steps reached. Enemies killed: 0
+[2026-01-13T02:49:45.895Z] 
+=== ITERATION 2 ===
+[2026-01-13T02:49:47.252Z] Entered room (3,4), type: normal
+[2026-01-13T02:49:50.700Z] Step 50: HP=3, Enemies=2
+[2026-01-13T02:49:55.913Z] Step 100: HP=1.5, Enemies=0
+[2026-01-13T02:50:01.122Z] Step 150: HP=1.5, Enemies=0
+[2026-01-13T02:50:01.122Z] Max steps reached. Enemies killed: 3
+[2026-01-13T02:50:01.124Z] 
+=== ITERATION 3 ===
+[2026-01-13T02:50:01.732Z] Entered room (4,5), type: normal
+[2026-01-13T02:50:06.844Z] Step 50: HP=2, Enemies=1
+[2026-01-13T02:50:11.010Z] Entered room (3,5), type: normal
+[2026-01-13T02:50:12.059Z] Step 100: HP=3, Enemies=5
+[2026-01-13T02:50:16.348Z] Step 150: HP=3, Enemies=1
+[2026-01-13T02:50:16.348Z] Max steps reached. Enemies killed: 5
+[2026-01-13T02:50:16.350Z] 
+=== ITERATION 4 ===
+[2026-01-13T02:50:18.624Z] Entered room (3,4), type: treasure
+[2026-01-13T02:50:22.059Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:50:27.260Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:50:32.458Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:50:32.459Z] Max steps reached. Enemies killed: 0
+[2026-01-13T02:50:32.460Z] 
+=== ITERATION 5 ===
+[2026-01-13T02:50:38.159Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:50:43.353Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:50:47.630Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:50:47.630Z] Max steps reached. Enemies killed: 0
+[2026-01-13T02:50:47.632Z] 
+=== ITERATION 6 ===
+[2026-01-13T02:50:48.241Z] Entered room (4,5), type: normal
+[2026-01-13T02:50:49.800Z] Entered room (4,6), type: boss
+[2026-01-13T02:50:53.339Z] Step 50: HP=1, Enemies=1
+[2026-01-13T02:50:53.860Z] Died at step 55. Enemies killed: 0, Rooms cleared: 2
+[2026-01-13T02:50:53.861Z] 
+=== ITERATION 7 ===
+[2026-01-13T02:50:54.470Z] Entered room (4,5), type: boss
+[2026-01-13T02:50:59.570Z] Step 50: HP=3, Enemies=1
+[2026-01-13T02:51:04.777Z] Step 100: HP=1, Enemies=1
+[2026-01-13T02:51:04.883Z] Died at step 101. Enemies killed: 0, Rooms cleared: 1
+[2026-01-13T02:51:04.885Z] 
+=== ITERATION 8 ===
+[2026-01-13T02:51:09.441Z] Entered room (3,4), type: normal
+[2026-01-13T02:51:10.588Z] Step 50: HP=3, Enemies=2
+[2026-01-13T02:51:14.867Z] Step 100: HP=3, Enemies=2
+[2026-01-13T02:51:19.856Z] Entered room (2,4), type: normal
+[2026-01-13T02:51:20.063Z] Step 150: HP=3, Enemies=3
+[2026-01-13T02:51:20.063Z] Max steps reached. Enemies killed: 3
+[2026-01-13T02:51:20.065Z] 
+=== ITERATION 9 ===
+[2026-01-13T02:51:20.673Z] Entered room (4,5), type: normal
+[2026-01-13T02:51:25.774Z] Step 50: HP=3, Enemies=2
+[2026-01-13T02:51:30.972Z] Step 100: HP=3, Enemies=1
+[2026-01-13T02:51:36.169Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:51:36.170Z] Max steps reached. Enemies killed: 4
+[2026-01-13T02:51:36.171Z] 
+=== ITERATION 10 ===
+[2026-01-13T02:51:38.438Z] Entered room (3,4), type: normal
+[2026-01-13T02:51:41.869Z] Step 50: HP=3, Enemies=2
+[2026-01-13T02:51:46.141Z] Step 100: HP=3, Enemies=2
+[2026-01-13T02:51:51.337Z] Step 150: HP=3, Enemies=2
+[2026-01-13T02:51:51.337Z] Max steps reached. Enemies killed: 1
+[2026-01-13T02:51:51.391Z] Screenshot saved: screenshot-iter-10.png
+[2026-01-13T02:51:51.391Z] 
+=== ITERATION 11 ===
+[2026-01-13T02:51:53.658Z] Entered room (3,4), type: normal
+[2026-01-13T02:51:57.091Z] Step 50: HP=3, Enemies=1
+[2026-01-13T02:52:02.284Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:52:06.233Z] Entered room (3,5), type: normal
+[2026-01-13T02:52:07.486Z] Step 150: HP=3, Enemies=4
+[2026-01-13T02:52:07.486Z] Max steps reached. Enemies killed: 2
+[2026-01-13T02:52:07.488Z] 
+=== ITERATION 12 ===
+[2026-01-13T02:52:09.757Z] Entered room (3,4), type: boss
+[2026-01-13T02:52:12.269Z] Step 50: HP=3, Enemies=1
+[2026-01-13T02:52:16.751Z] Died at step 93. Enemies killed: 0, Rooms cleared: 1
+[2026-01-13T02:52:16.752Z] 
+=== ITERATION 13 ===
+[2026-01-13T02:52:21.107Z] Entered room (4,5), type: normal
+[2026-01-13T02:52:22.461Z] Step 50: HP=3, Enemies=2
+[2026-01-13T02:52:27.675Z] Step 100: HP=3, Enemies=2
+[2026-01-13T02:52:32.888Z] Step 150: HP=3, Enemies=1
+[2026-01-13T02:52:32.888Z] Max steps reached. Enemies killed: 1
+[2026-01-13T02:52:32.890Z] 
+=== ITERATION 14 ===
+[2026-01-13T02:52:38.588Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:52:42.824Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:52:48.021Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:52:48.022Z] Max steps reached. Enemies killed: 0
+[2026-01-13T02:52:48.023Z] 
+=== ITERATION 15 ===
+[2026-01-13T02:52:53.724Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:52:57.781Z] Entered room (3,4), type: normal
+[2026-01-13T02:52:58.927Z] Step 100: HP=3, Enemies=3
+[2026-01-13T02:53:03.823Z] Died at step 147. Enemies killed: 1, Rooms cleared: 1
+[2026-01-13T02:53:03.825Z] 
+=== ITERATION 16 ===
+[2026-01-13T02:53:09.517Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:53:13.782Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:53:18.975Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:53:18.976Z] Max steps reached. Enemies killed: 0
+[2026-01-13T02:53:18.977Z] 
+=== ITERATION 17 ===
+[2026-01-13T02:53:24.676Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:53:29.862Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:53:35.052Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:53:35.052Z] Max steps reached. Enemies killed: 0
+[2026-01-13T02:53:35.054Z] 
+=== ITERATION 18 ===
+[2026-01-13T02:53:39.822Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:53:45.014Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:53:50.208Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:53:50.209Z] Max steps reached. Enemies killed: 0
+[2026-01-13T02:53:50.210Z] 
+=== ITERATION 19 ===
+[2026-01-13T02:53:55.903Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:53:56.215Z] Entered room (4,5), type: normal
+[2026-01-13T02:54:01.100Z] Step 100: HP=1.5, Enemies=1
+[2026-01-13T02:54:03.904Z] Entered room (3,5), type: normal
+[2026-01-13T02:54:06.292Z] Step 150: HP=0.5, Enemies=1
+[2026-01-13T02:54:06.292Z] Max steps reached. Enemies killed: 2
+[2026-01-13T02:54:06.294Z] 
+=== ITERATION 20 ===
+[2026-01-13T02:54:11.053Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:54:16.248Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:54:21.441Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:54:21.441Z] Max steps reached. Enemies killed: 0
+[2026-01-13T02:54:21.482Z] Screenshot saved: screenshot-iter-20.png
+[2026-01-13T02:54:21.483Z] 
+=== ITERATION 21 ===
+[2026-01-13T02:54:22.090Z] Entered room (4,5), type: boss
+[2026-01-13T02:54:26.147Z] Died at step 40. Enemies killed: 0, Rooms cleared: 1
+[2026-01-13T02:54:26.149Z] 
+=== ITERATION 22 ===
+[2026-01-13T02:54:28.419Z] Entered room (3,4), type: normal
+[2026-01-13T02:54:31.853Z] Step 50: HP=3, Enemies=1
+[2026-01-13T02:54:37.051Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:54:41.324Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:54:41.324Z] Max steps reached. Enemies killed: 2
+[2026-01-13T02:54:41.326Z] 
+=== ITERATION 23 ===
+[2026-01-13T02:54:43.600Z] Entered room (3,4), type: boss
+[2026-01-13T02:54:47.031Z] Step 50: HP=3, Enemies=1
+[2026-01-13T02:54:50.984Z] Died at step 88. Enemies killed: 0, Rooms cleared: 1
+[2026-01-13T02:54:50.986Z] 
+=== ITERATION 24 ===
+[2026-01-13T02:54:56.697Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:55:01.900Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:55:06.171Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:55:06.171Z] Max steps reached. Enemies killed: 0
+[2026-01-13T02:55:06.172Z] 
+=== ITERATION 25 ===
+[2026-01-13T02:55:11.875Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:55:17.064Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:55:22.254Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:55:22.254Z] Max steps reached. Enemies killed: 0
+[2026-01-13T02:55:22.256Z] 
+=== ITERATION 26 ===
+[2026-01-13T02:55:27.948Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:55:33.139Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:55:33.970Z] Entered room (3,4), type: normal
+[2026-01-13T02:55:37.408Z] Step 150: HP=2, Enemies=0
+[2026-01-13T02:55:37.409Z] Max steps reached. Enemies killed: 2
+[2026-01-13T02:55:37.411Z] 
+=== ITERATION 27 ===
+[2026-01-13T02:55:43.099Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:55:48.286Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:55:53.470Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:55:53.470Z] Max steps reached. Enemies killed: 0
+[2026-01-13T02:55:53.472Z] 
+=== ITERATION 28 ===
+[2026-01-13T02:55:59.166Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:56:03.952Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:56:08.630Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:56:08.630Z] Max steps reached. Enemies killed: 0
+[2026-01-13T02:56:08.632Z] 
+=== ITERATION 29 ===
+[2026-01-13T02:56:10.799Z] Entered room (3,4), type: normal
+[2026-01-13T02:56:14.344Z] Step 50: HP=3, Enemies=3
+[2026-01-13T02:56:19.548Z] Step 100: HP=2, Enemies=1
+[2026-01-13T02:56:23.499Z] Entered room (2,4), type: normal
+[2026-01-13T02:56:24.748Z] Step 150: HP=2.5, Enemies=2
+[2026-01-13T02:56:24.748Z] Max steps reached. Enemies killed: 3
+[2026-01-13T02:56:24.749Z] 
+=== ITERATION 30 ===
+[2026-01-13T02:56:30.453Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:56:32.629Z] Entered room (4,5), type: treasure
+[2026-01-13T02:56:34.711Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:56:39.912Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:56:39.912Z] Max steps reached. Enemies killed: 0
+[2026-01-13T02:56:39.958Z] Screenshot saved: screenshot-iter-30.png
+[2026-01-13T02:56:39.958Z] 
+=== ITERATION 31 ===
+[2026-01-13T02:56:42.123Z] Entered room (3,4), type: normal
+[2026-01-13T02:56:45.661Z] Step 50: HP=3, Enemies=2
+[2026-01-13T02:56:50.862Z] Step 100: HP=2, Enemies=1
+[2026-01-13T02:56:56.060Z] Step 150: HP=2, Enemies=1
+[2026-01-13T02:56:56.060Z] Max steps reached. Enemies killed: 1
+[2026-01-13T02:56:56.061Z] 
+=== ITERATION 32 ===
+[2026-01-13T02:56:58.328Z] Entered room (3,4), type: normal
+[2026-01-13T02:57:01.754Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:57:06.007Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:57:11.191Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:57:11.191Z] Max steps reached. Enemies killed: 3
+[2026-01-13T02:57:11.193Z] 
+=== ITERATION 33 ===
+[2026-01-13T02:57:13.458Z] Entered room (3,4), type: normal
+[2026-01-13T02:57:16.882Z] Step 50: HP=3, Enemies=1
+[2026-01-13T02:57:17.815Z] Entered room (3,5), type: boss
+[2026-01-13T02:57:22.072Z] Step 100: HP=3, Enemies=1
+[2026-01-13T02:57:25.499Z] Died at step 133. Enemies killed: 1, Rooms cleared: 2
+[2026-01-13T02:57:25.501Z] 
+=== ITERATION 34 ===
+[2026-01-13T02:57:29.841Z] Entered room (4,5), type: normal
+[2026-01-13T02:57:31.194Z] Step 50: HP=3, Enemies=3
+[2026-01-13T02:57:35.452Z] Step 100: HP=1, Enemies=0
+[2026-01-13T02:57:38.255Z] Entered room (3,5), type: treasure
+[2026-01-13T02:57:40.642Z] Step 150: HP=1, Enemies=0
+[2026-01-13T02:57:40.642Z] Max steps reached. Enemies killed: 3
+[2026-01-13T02:57:40.644Z] 
+=== ITERATION 35 ===
+[2026-01-13T02:57:42.914Z] Entered room (3,4), type: normal
+[2026-01-13T02:57:46.348Z] Step 50: HP=2.5, Enemies=5
+[2026-01-13T02:57:51.556Z] Step 100: HP=3, Enemies=1
+[2026-01-13T02:57:56.746Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:57:56.746Z] Max steps reached. Enemies killed: 5
+[2026-01-13T02:57:56.747Z] 
+=== ITERATION 36 ===
+[2026-01-13T02:58:01.473Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:58:01.578Z] Entered room (3,4), type: normal
+[2026-01-13T02:58:06.682Z] Step 100: HP=2, Enemies=1
+[2026-01-13T02:58:10.320Z] Entered room (2,4), type: boss
+[2026-01-13T02:58:11.882Z] Step 150: HP=2, Enemies=1
+[2026-01-13T02:58:11.882Z] Max steps reached. Enemies killed: 3
+[2026-01-13T02:58:11.884Z] 
+=== ITERATION 37 ===
+[2026-01-13T02:58:17.588Z] Step 50: HP=3, Enemies=1
+[2026-01-13T02:58:19.875Z] Died at step 72. Enemies killed: 0, Rooms cleared: 0
+[2026-01-13T02:58:19.877Z] 
+=== ITERATION 38 ===
+[2026-01-13T02:58:22.146Z] Entered room (3,4), type: normal
+[2026-01-13T02:58:25.584Z] Step 50: HP=3, Enemies=4
+[2026-01-13T02:58:29.873Z] Step 100: HP=3, Enemies=3
+[2026-01-13T02:58:35.079Z] Step 150: HP=3, Enemies=1
+[2026-01-13T02:58:35.080Z] Max steps reached. Enemies killed: 3
+[2026-01-13T02:58:35.081Z] 
+=== ITERATION 39 ===
+[2026-01-13T02:58:40.782Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:58:45.979Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:58:51.171Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:58:51.171Z] Max steps reached. Enemies killed: 0
+[2026-01-13T02:58:51.173Z] 
+=== ITERATION 40 ===
+[2026-01-13T02:58:56.861Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:59:01.114Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:59:06.299Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:59:06.299Z] Max steps reached. Enemies killed: 0
+[2026-01-13T02:59:06.347Z] Screenshot saved: screenshot-iter-40.png
+[2026-01-13T02:59:06.348Z] 
+=== ITERATION 41 ===
+[2026-01-13T02:59:12.040Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:59:17.233Z] Step 100: HP=3, Enemies=0
+[2026-01-13T02:59:22.418Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:59:22.418Z] Max steps reached. Enemies killed: 0
+[2026-01-13T02:59:22.420Z] 
+=== ITERATION 42 ===
+[2026-01-13T02:59:23.029Z] Entered room (4,5), type: normal
+[2026-01-13T02:59:27.186Z] Step 50: HP=2.5, Enemies=1
+[2026-01-13T02:59:32.380Z] Step 100: HP=2.5, Enemies=1
+[2026-01-13T02:59:37.570Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:59:37.570Z] Max steps reached. Enemies killed: 3
+[2026-01-13T02:59:37.572Z] 
+=== ITERATION 43 ===
+[2026-01-13T02:59:38.179Z] Entered room (4,5), type: boss
+[2026-01-13T02:59:42.329Z] Died at step 41. Enemies killed: 0, Rooms cleared: 1
+[2026-01-13T02:59:42.331Z] 
+=== ITERATION 44 ===
+[2026-01-13T02:59:48.018Z] Step 50: HP=3, Enemies=0
+[2026-01-13T02:59:50.821Z] Entered room (4,5), type: normal
+[2026-01-13T02:59:53.211Z] Step 100: HP=3, Enemies=2
+[2026-01-13T02:59:57.478Z] Step 150: HP=3, Enemies=0
+[2026-01-13T02:59:57.478Z] Max steps reached. Enemies killed: 2
+[2026-01-13T02:59:57.479Z] 
+=== ITERATION 45 ===
+[2026-01-13T02:59:58.088Z] Entered room (4,5), type: treasure
+[2026-01-13T03:00:03.180Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:00:08.384Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:00:13.587Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:00:13.587Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:00:13.589Z] 
+=== ITERATION 46 ===
+[2026-01-13T03:00:19.286Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:00:24.068Z] Entered room (4,5), type: normal
+[2026-01-13T03:00:24.482Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:00:25.520Z] Entered room (4,6), type: boss
+[2026-01-13T03:00:28.623Z] Died at step 149. Enemies killed: 0, Rooms cleared: 2
+[2026-01-13T03:00:28.625Z] 
+=== ITERATION 47 ===
+[2026-01-13T03:00:29.234Z] Entered room (4,5), type: normal
+[2026-01-13T03:00:33.501Z] Entered room (4,6), type: normal
+[2026-01-13T03:00:34.332Z] Step 50: HP=2, Enemies=2
+[2026-01-13T03:00:39.533Z] Step 100: HP=1.5, Enemies=1
+[2026-01-13T03:00:44.733Z] Step 150: HP=1.5, Enemies=1
+[2026-01-13T03:00:44.734Z] Max steps reached. Enemies killed: 3
+[2026-01-13T03:00:44.736Z] 
+=== ITERATION 48 ===
+[2026-01-13T03:00:50.434Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:00:54.699Z] Step 100: HP=1, Enemies=1
+[2026-01-13T03:00:54.805Z] Died at step 101. Enemies killed: 0, Rooms cleared: 0
+[2026-01-13T03:00:54.807Z] 
+=== ITERATION 49 ===
+[2026-01-13T03:00:59.356Z] Entered room (3,4), type: boss
+[2026-01-13T03:01:00.500Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:01:05.690Z] Step 100: HP=1, Enemies=1
+[2026-01-13T03:01:06.521Z] Died at step 108. Enemies killed: 0, Rooms cleared: 1
+[2026-01-13T03:01:06.523Z] 
+=== ITERATION 50 ===
+[2026-01-13T03:01:08.787Z] Entered room (3,4), type: normal
+[2026-01-13T03:01:12.213Z] Step 50: HP=3, Enemies=3
+[2026-01-13T03:01:17.409Z] Step 100: HP=3, Enemies=2
+[2026-01-13T03:01:22.602Z] Step 150: HP=3, Enemies=1
+[2026-01-13T03:01:22.603Z] Max steps reached. Enemies killed: 2
+[2026-01-13T03:01:22.654Z] Screenshot saved: screenshot-iter-50.png
+[2026-01-13T03:01:22.655Z] 
+=== ITERATION 51 ===
+[2026-01-13T03:01:27.157Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:01:32.346Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:01:37.533Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:01:37.533Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:01:37.535Z] 
+=== ITERATION 52 ===
+[2026-01-13T03:01:43.226Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:01:48.409Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:01:52.874Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:01:52.874Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:01:52.875Z] 
+=== ITERATION 53 ===
+[2026-01-13T03:01:58.568Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:02:03.748Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:02:08.938Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:02:08.938Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:02:08.939Z] 
+=== ITERATION 54 ===
+[2026-01-13T03:02:12.550Z] Entered room (4,5), type: treasure
+[2026-01-13T03:02:14.626Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:02:19.813Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:02:24.023Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:02:24.023Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:02:24.024Z] 
+=== ITERATION 55 ===
+[2026-01-13T03:02:29.723Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:02:32.009Z] Died at step 72. Enemies killed: 0, Rooms cleared: 0
+[2026-01-13T03:02:32.010Z] 
+=== ITERATION 56 ===
+[2026-01-13T03:02:32.618Z] Entered room (4,5), type: normal
+[2026-01-13T03:02:37.704Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:02:42.896Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:02:48.082Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:02:48.082Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:02:48.084Z] 
+=== ITERATION 57 ===
+[2026-01-13T03:02:52.811Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:02:52.812Z] Entered room (3,4), type: normal
+[2026-01-13T03:02:58.016Z] Step 100: HP=3, Enemies=4
+[2026-01-13T03:03:03.217Z] Step 150: HP=3, Enemies=3
+[2026-01-13T03:03:03.217Z] Max steps reached. Enemies killed: 2
+[2026-01-13T03:03:03.219Z] 
+=== ITERATION 58 ===
+[2026-01-13T03:03:05.484Z] Entered room (3,4), type: normal
+[2026-01-13T03:03:08.911Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:03:14.098Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:03:19.282Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:03:19.282Z] Max steps reached. Enemies killed: 2
+[2026-01-13T03:03:19.283Z] 
+=== ITERATION 59 ===
+[2026-01-13T03:03:22.267Z] Entered room (4,5), type: normal
+[2026-01-13T03:03:24.035Z] Step 50: HP=3, Enemies=4
+[2026-01-13T03:03:29.232Z] Step 100: HP=1, Enemies=0
+[2026-01-13T03:03:34.418Z] Step 150: HP=1, Enemies=0
+[2026-01-13T03:03:34.418Z] Max steps reached. Enemies killed: 4
+[2026-01-13T03:03:34.420Z] 
+=== ITERATION 60 ===
+[2026-01-13T03:03:40.105Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:03:45.297Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:03:49.544Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:03:49.544Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:03:49.588Z] Screenshot saved: screenshot-iter-60.png
+[2026-01-13T03:03:49.588Z] 
+=== ITERATION 61 ===
+[2026-01-13T03:03:55.287Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:04:00.492Z] Step 100: HP=1, Enemies=1
+[2026-01-13T03:04:00.598Z] Died at step 101. Enemies killed: 0, Rooms cleared: 0
+[2026-01-13T03:04:00.599Z] 
+=== ITERATION 62 ===
+[2026-01-13T03:04:02.870Z] Entered room (3,4), type: normal
+[2026-01-13T03:04:06.309Z] Step 50: HP=3, Enemies=3
+[2026-01-13T03:04:11.509Z] Step 100: HP=3, Enemies=2
+[2026-01-13T03:04:16.706Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:04:16.706Z] Max steps reached. Enemies killed: 5
+[2026-01-13T03:04:16.707Z] 
+=== ITERATION 63 ===
+[2026-01-13T03:04:21.457Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:04:26.434Z] Entered room (3,4), type: normal
+[2026-01-13T03:04:26.641Z] Step 100: HP=3, Enemies=3
+[2026-01-13T03:04:31.838Z] Step 150: HP=3, Enemies=1
+[2026-01-13T03:04:31.838Z] Max steps reached. Enemies killed: 2
+[2026-01-13T03:04:31.840Z] 
+=== ITERATION 64 ===
+[2026-01-13T03:04:34.109Z] Entered room (3,4), type: boss
+[2026-01-13T03:04:37.538Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:04:41.597Z] Died at step 89. Enemies killed: 0, Rooms cleared: 1
+[2026-01-13T03:04:41.598Z] 
+=== ITERATION 65 ===
+[2026-01-13T03:04:47.285Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:04:51.528Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:04:56.714Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:04:56.714Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:04:56.716Z] 
+=== ITERATION 66 ===
+[2026-01-13T03:04:58.983Z] Entered room (3,4), type: shop
+[2026-01-13T03:05:02.403Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:05:07.592Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:05:12.784Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:05:12.784Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:05:12.785Z] 
+=== ITERATION 67 ===
+[2026-01-13T03:05:13.393Z] Entered room (4,5), type: normal
+[2026-01-13T03:05:17.510Z] Step 50: HP=2.5, Enemies=1
+[2026-01-13T03:05:22.704Z] Step 100: HP=2.5, Enemies=1
+[2026-01-13T03:05:27.902Z] Step 150: HP=2.5, Enemies=1
+[2026-01-13T03:05:27.902Z] Max steps reached. Enemies killed: 2
+[2026-01-13T03:05:27.904Z] 
+=== ITERATION 68 ===
+[2026-01-13T03:05:30.169Z] Entered room (3,4), type: normal
+[2026-01-13T03:05:33.597Z] Step 50: HP=2.5, Enemies=1
+[2026-01-13T03:05:38.787Z] Step 100: HP=2.5, Enemies=0
+[2026-01-13T03:05:43.355Z] Entered room (3,5), type: normal
+[2026-01-13T03:05:43.978Z] Step 150: HP=2.5, Enemies=3
+[2026-01-13T03:05:43.978Z] Max steps reached. Enemies killed: 2
+[2026-01-13T03:05:43.980Z] 
+=== ITERATION 69 ===
+[2026-01-13T03:05:48.728Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:05:53.922Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:05:59.114Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:05:59.114Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:05:59.115Z] 
+=== ITERATION 70 ===
+[2026-01-13T03:06:01.381Z] Entered room (3,4), type: normal
+[2026-01-13T03:06:04.813Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:06:09.999Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:06:14.244Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:06:14.244Z] Max steps reached. Enemies killed: 1
+[2026-01-13T03:06:14.298Z] Screenshot saved: screenshot-iter-70.png
+[2026-01-13T03:06:14.298Z] 
+=== ITERATION 71 ===
+[2026-01-13T03:06:14.907Z] Entered room (4,5), type: normal
+[2026-01-13T03:06:20.001Z] Step 50: HP=2, Enemies=0
+[2026-01-13T03:06:25.193Z] Step 100: HP=2, Enemies=0
+[2026-01-13T03:06:30.387Z] Step 150: HP=2, Enemies=0
+[2026-01-13T03:06:30.388Z] Max steps reached. Enemies killed: 1
+[2026-01-13T03:06:30.389Z] 
+=== ITERATION 72 ===
+[2026-01-13T03:06:36.081Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:06:38.264Z] Entered room (3,4), type: normal
+[2026-01-13T03:06:41.277Z] Step 100: HP=3, Enemies=1
+[2026-01-13T03:06:45.511Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:06:45.511Z] Max steps reached. Enemies killed: 1
+[2026-01-13T03:06:45.513Z] 
+=== ITERATION 73 ===
+[2026-01-13T03:06:51.199Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:06:56.388Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:07:01.575Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:07:01.575Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:07:01.577Z] 
+=== ITERATION 74 ===
+[2026-01-13T03:07:07.269Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:07:12.453Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:07:16.682Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:07:16.682Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:07:16.684Z] 
+=== ITERATION 75 ===
+[2026-01-13T03:07:18.950Z] Entered room (3,4), type: boss
+[2026-01-13T03:07:22.373Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:07:26.113Z] Died at step 86. Enemies killed: 0, Rooms cleared: 1
+[2026-01-13T03:07:26.115Z] 
+=== ITERATION 76 ===
+[2026-01-13T03:07:28.382Z] Entered room (3,4), type: normal
+[2026-01-13T03:07:31.808Z] Step 50: HP=3, Enemies=2
+[2026-01-13T03:07:34.616Z] Died at step 77. Enemies killed: 2, Rooms cleared: 1
+[2026-01-13T03:07:34.617Z] 
+=== ITERATION 77 ===
+[2026-01-13T03:07:40.309Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:07:44.553Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:07:49.738Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:07:49.739Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:07:49.740Z] 
+=== ITERATION 78 ===
+[2026-01-13T03:07:53.459Z] Entered room (4,5), type: normal
+[2026-01-13T03:07:54.918Z] Entered room (4,6), type: normal
+[2026-01-13T03:07:55.437Z] Step 50: HP=3, Enemies=3
+[2026-01-13T03:08:00.644Z] Step 100: HP=3, Enemies=2
+[2026-01-13T03:08:05.834Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:08:05.834Z] Max steps reached. Enemies killed: 3
+[2026-01-13T03:08:05.836Z] 
+=== ITERATION 79 ===
+[2026-01-13T03:08:08.519Z] Entered room (3,4), type: normal
+[2026-01-13T03:08:10.580Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:08:15.773Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:08:20.966Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:08:20.967Z] Max steps reached. Enemies killed: 1
+[2026-01-13T03:08:20.968Z] 
+=== ITERATION 80 ===
+[2026-01-13T03:08:25.522Z] Entered room (3,4), type: normal
+[2026-01-13T03:08:26.667Z] Step 50: HP=3, Enemies=4
+[2026-01-13T03:08:31.870Z] Step 100: HP=3, Enemies=3
+[2026-01-13T03:08:37.064Z] Step 150: HP=2.5, Enemies=1
+[2026-01-13T03:08:37.064Z] Max steps reached. Enemies killed: 4
+[2026-01-13T03:08:37.113Z] Screenshot saved: screenshot-iter-80.png
+[2026-01-13T03:08:37.113Z] 
+=== ITERATION 81 ===
+[2026-01-13T03:08:37.719Z] Entered room (4,5), type: normal
+[2026-01-13T03:08:41.872Z] Step 50: HP=3, Enemies=2
+[2026-01-13T03:08:47.066Z] Step 100: HP=3, Enemies=1
+[2026-01-13T03:08:52.257Z] Step 150: HP=3, Enemies=1
+[2026-01-13T03:08:52.257Z] Max steps reached. Enemies killed: 3
+[2026-01-13T03:08:52.259Z] 
+=== ITERATION 82 ===
+[2026-01-13T03:08:57.949Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:09:03.134Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:09:08.319Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:09:08.320Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:09:08.321Z] 
+=== ITERATION 83 ===
+[2026-01-13T03:09:07.960Z] Entered room (4,5), type: normal
+[2026-01-13T03:09:13.048Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:09:16.683Z] Entered room (4,6), type: normal
+[2026-01-13T03:09:18.245Z] Step 100: HP=3, Enemies=4
+[2026-01-13T03:09:23.446Z] Step 150: HP=2, Enemies=2
+[2026-01-13T03:09:23.446Z] Max steps reached. Enemies killed: 3
+[2026-01-13T03:09:23.448Z] 
+=== ITERATION 84 ===
+[2026-01-13T03:09:25.715Z] Entered room (3,4), type: normal
+[2026-01-13T03:09:29.139Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:09:34.332Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:09:38.567Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:09:38.567Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:09:38.569Z] 
+=== ITERATION 85 ===
+[2026-01-13T03:09:44.261Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:09:49.452Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:09:54.638Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:09:54.639Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:09:54.640Z] 
+=== ITERATION 86 ===
+[2026-01-13T03:09:56.911Z] Entered room (3,4), type: normal
+[2026-01-13T03:10:00.349Z] Step 50: HP=3, Enemies=3
+[2026-01-13T03:10:05.556Z] Step 100: HP=2.5, Enemies=1
+[2026-01-13T03:10:09.813Z] Step 150: HP=2.5, Enemies=1
+[2026-01-13T03:10:09.814Z] Max steps reached. Enemies killed: 2
+[2026-01-13T03:10:09.815Z] 
+=== ITERATION 87 ===
+[2026-01-13T03:10:15.510Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:10:19.973Z] Entered room (4,5), type: boss
+[2026-01-13T03:10:20.700Z] Step 100: HP=3, Enemies=1
+[2026-01-13T03:10:24.032Z] Died at step 132. Enemies killed: 0, Rooms cleared: 1
+[2026-01-13T03:10:24.034Z] 
+=== ITERATION 88 ===
+[2026-01-13T03:10:29.724Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:10:34.918Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:10:39.137Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:10:39.137Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:10:39.138Z] 
+=== ITERATION 89 ===
+[2026-01-13T03:10:44.823Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:10:45.136Z] Entered room (4,5), type: normal
+[2026-01-13T03:10:50.025Z] Step 100: HP=2, Enemies=2
+[2026-01-13T03:10:54.496Z] Entered room (3,5), type: normal
+[2026-01-13T03:10:55.221Z] Step 150: HP=2, Enemies=1
+[2026-01-13T03:10:55.221Z] Max steps reached. Enemies killed: 3
+[2026-01-13T03:10:55.223Z] 
+=== ITERATION 90 ===
+[2026-01-13T03:10:55.831Z] Entered room (4,5), type: normal
+[2026-01-13T03:11:00.932Z] Step 50: HP=3, Enemies=2
+[2026-01-13T03:11:05.177Z] Step 100: HP=3, Enemies=1
+[2026-01-13T03:11:10.370Z] Step 150: HP=3, Enemies=1
+[2026-01-13T03:11:10.370Z] Max steps reached. Enemies killed: 2
+[2026-01-13T03:11:10.412Z] Screenshot saved: screenshot-iter-90.png
+[2026-01-13T03:11:10.412Z] 
+=== ITERATION 91 ===
+[2026-01-13T03:11:16.104Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:11:16.105Z] Entered room (3,4), type: normal
+[2026-01-13T03:11:21.306Z] Step 100: HP=1, Enemies=1
+[2026-01-13T03:11:21.618Z] Died at step 103. Enemies killed: 3, Rooms cleared: 1
+[2026-01-13T03:11:21.619Z] 
+=== ITERATION 92 ===
+[2026-01-13T03:11:23.886Z] Entered room (3,4), type: normal
+[2026-01-13T03:11:27.315Z] Step 50: HP=2, Enemies=2
+[2026-01-13T03:11:30.953Z] Died at step 85. Enemies killed: 1, Rooms cleared: 1
+[2026-01-13T03:11:30.954Z] 
+=== ITERATION 93 ===
+[2026-01-13T03:11:31.563Z] Entered room (4,5), type: normal
+[2026-01-13T03:11:34.623Z] Entered room (3,5), type: normal
+[2026-01-13T03:11:35.664Z] Step 50: HP=3, Enemies=3
+[2026-01-13T03:11:40.869Z] Step 100: HP=2.5, Enemies=2
+[2026-01-13T03:11:46.073Z] Step 150: HP=2.5, Enemies=1
+[2026-01-13T03:11:46.073Z] Max steps reached. Enemies killed: 2
+[2026-01-13T03:11:46.075Z] 
+=== ITERATION 94 ===
+[2026-01-13T03:11:46.683Z] Entered room (4,5), type: normal
+[2026-01-13T03:11:48.139Z] Entered room (4,6), type: treasure
+[2026-01-13T03:11:51.778Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:11:56.968Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:12:02.158Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:12:02.158Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:12:02.159Z] 
+=== ITERATION 95 ===
+[2026-01-13T03:12:04.816Z] Entered room (3,4), type: normal
+[2026-01-13T03:12:06.901Z] Step 50: HP=3, Enemies=4
+[2026-01-13T03:12:12.104Z] Step 100: HP=3, Enemies=2
+[2026-01-13T03:12:17.314Z] Step 150: HP=3, Enemies=2
+[2026-01-13T03:12:17.314Z] Max steps reached. Enemies killed: 2
+[2026-01-13T03:12:17.316Z] 
+=== ITERATION 96 ===
+[2026-01-13T03:12:19.588Z] Entered room (3,4), type: normal
+[2026-01-13T03:12:23.013Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:12:28.207Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:12:29.660Z] Entered room (2,4), type: normal
+[2026-01-13T03:12:32.471Z] Step 150: HP=3, Enemies=1
+[2026-01-13T03:12:32.471Z] Max steps reached. Enemies killed: 5
+[2026-01-13T03:12:32.473Z] 
+=== ITERATION 97 ===
+[2026-01-13T03:12:33.081Z] Entered room (4,5), type: normal
+[2026-01-13T03:12:38.178Z] Step 50: HP=2, Enemies=0
+[2026-01-13T03:12:43.369Z] Step 100: HP=2, Enemies=0
+[2026-01-13T03:12:48.553Z] Step 150: HP=2, Enemies=0
+[2026-01-13T03:12:48.554Z] Max steps reached. Enemies killed: 3
+[2026-01-13T03:12:48.555Z] 
+=== ITERATION 98 ===
+[2026-01-13T03:12:54.241Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:12:59.423Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:13:03.650Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:13:03.651Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:13:03.653Z] 
+=== ITERATION 99 ===
+[2026-01-13T03:13:06.642Z] Entered room (3,4), type: boss
+[2026-01-13T03:13:09.342Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:13:14.225Z] Died at step 97. Enemies killed: 0, Rooms cleared: 1
+[2026-01-13T03:13:14.227Z] 
+=== ITERATION 100 ===
+[2026-01-13T03:13:19.919Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:13:25.122Z] Step 100: HP=1, Enemies=1
+[2026-01-13T03:13:25.227Z] Died at step 101. Enemies killed: 0, Rooms cleared: 0
+[2026-01-13T03:13:25.280Z] Screenshot saved: screenshot-iter-100.png
+[2026-01-13T03:13:25.280Z] 
+=== ITERATION 101 ===
+[2026-01-13T03:13:25.887Z] Entered room (4,5), type: normal
+[2026-01-13T03:13:30.033Z] Step 50: HP=2.5, Enemies=3
+[2026-01-13T03:13:35.227Z] Step 100: HP=2.5, Enemies=0
+[2026-01-13T03:13:39.803Z] Entered room (4,6), type: normal
+[2026-01-13T03:13:40.425Z] Step 150: HP=2.5, Enemies=3
+[2026-01-13T03:13:40.425Z] Max steps reached. Enemies killed: 4
+[2026-01-13T03:13:40.426Z] 
+=== ITERATION 102 ===
+[2026-01-13T03:13:41.035Z] Entered room (4,5), type: normal
+[2026-01-13T03:13:46.134Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:13:51.327Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:13:56.519Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:13:56.519Z] Max steps reached. Enemies killed: 3
+[2026-01-13T03:13:56.520Z] 
+=== ITERATION 103 ===
+[2026-01-13T03:14:01.262Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:14:03.446Z] Died at step 71. Enemies killed: 0, Rooms cleared: 0
+[2026-01-13T03:14:03.449Z] 
+=== ITERATION 104 ===
+[2026-01-13T03:14:05.721Z] Entered room (3,4), type: normal
+[2026-01-13T03:14:09.158Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:14:14.349Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:14:14.351Z] Entered room (2,4), type: normal
+[2026-01-13T03:14:19.557Z] Step 150: HP=3, Enemies=2
+[2026-01-13T03:14:19.558Z] Max steps reached. Enemies killed: 3
+[2026-01-13T03:14:19.559Z] 
+=== ITERATION 105 ===
+[2026-01-13T03:14:21.822Z] Entered room (3,4), type: normal
+[2026-01-13T03:14:25.247Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:14:29.479Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:14:34.664Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:14:34.664Z] Max steps reached. Enemies killed: 2
+[2026-01-13T03:14:34.665Z] 
+=== ITERATION 106 ===
+[2026-01-13T03:14:40.358Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:14:45.543Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:14:45.648Z] Entered room (3,4), type: normal
+[2026-01-13T03:14:50.742Z] Step 150: HP=1, Enemies=2
+[2026-01-13T03:14:50.742Z] Max steps reached. Enemies killed: 1
+[2026-01-13T03:14:50.743Z] 
+=== ITERATION 107 ===
+[2026-01-13T03:14:51.350Z] Entered room (4,5), type: normal
+[2026-01-13T03:14:56.439Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:15:00.672Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:15:05.865Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:15:05.865Z] Max steps reached. Enemies killed: 1
+[2026-01-13T03:15:05.867Z] 
+=== ITERATION 108 ===
+[2026-01-13T03:15:08.138Z] Entered room (3,4), type: normal
+[2026-01-13T03:15:11.557Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:15:16.745Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:15:19.133Z] Entered room (2,4), type: normal
+[2026-01-13T03:15:21.935Z] Step 150: HP=3, Enemies=1
+[2026-01-13T03:15:21.935Z] Max steps reached. Enemies killed: 1
+[2026-01-13T03:15:21.936Z] 
+=== ITERATION 109 ===
+[2026-01-13T03:15:26.654Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:15:31.847Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:15:37.047Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:15:37.048Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:15:37.049Z] 
+=== ITERATION 110 ===
+[2026-01-13T03:15:42.742Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:15:47.932Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:15:53.127Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:15:53.127Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:15:53.182Z] Screenshot saved: screenshot-iter-110.png
+[2026-01-13T03:15:53.182Z] 
+=== ITERATION 111 ===
+[2026-01-13T03:15:57.914Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:16:02.379Z] Entered room (4,5), type: boss
+[2026-01-13T03:16:03.106Z] Step 100: HP=3, Enemies=1
+[2026-01-13T03:16:08.310Z] Step 150: HP=2, Enemies=1
+[2026-01-13T03:16:08.310Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:16:08.312Z] 
+=== ITERATION 112 ===
+[2026-01-13T03:16:14.008Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:16:19.197Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:16:24.381Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:16:24.382Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:16:24.383Z] 
+=== ITERATION 113 ===
+[2026-01-13T03:16:27.661Z] Entered room (3,4), type: boss
+[2026-01-13T03:16:29.117Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:16:34.314Z] Step 100: HP=1, Enemies=1
+[2026-01-13T03:16:34.731Z] Died at step 104. Enemies killed: 0, Rooms cleared: 1
+[2026-01-13T03:16:34.733Z] 
+=== ITERATION 114 ===
+[2026-01-13T03:16:37.002Z] Entered room (3,4), type: treasure
+[2026-01-13T03:16:40.421Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:16:45.607Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:16:50.798Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:16:50.799Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:16:50.800Z] 
+=== ITERATION 115 ===
+[2026-01-13T03:16:53.063Z] Entered room (3,4), type: normal
+[2026-01-13T03:16:55.521Z] Step 50: HP=2, Enemies=0
+[2026-01-13T03:17:00.707Z] Step 100: HP=2, Enemies=0
+[2026-01-13T03:17:05.894Z] Step 150: HP=2, Enemies=0
+[2026-01-13T03:17:05.895Z] Max steps reached. Enemies killed: 1
+[2026-01-13T03:17:05.896Z] 
+=== ITERATION 116 ===
+[2026-01-13T03:17:07.125Z] Entered room (4,5), type: normal
+[2026-01-13T03:17:11.586Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:17:16.777Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:17:21.966Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:17:21.966Z] Max steps reached. Enemies killed: 1
+[2026-01-13T03:17:21.968Z] 
+=== ITERATION 117 ===
+[2026-01-13T03:17:26.705Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:17:31.075Z] Died at step 92. Enemies killed: 0, Rooms cleared: 0
+[2026-01-13T03:17:31.076Z] 
+=== ITERATION 118 ===
+[2026-01-13T03:17:31.683Z] Entered room (4,5), type: normal
+[2026-01-13T03:17:33.140Z] Entered room (4,6), type: normal
+[2026-01-13T03:17:36.782Z] Step 50: HP=2, Enemies=0
+[2026-01-13T03:17:40.730Z] Entered room (3,6), type: normal
+[2026-01-13T03:17:41.980Z] Step 100: HP=2, Enemies=3
+[2026-01-13T03:17:45.105Z] Died at step 130. Enemies killed: 4, Rooms cleared: 3
+[2026-01-13T03:17:45.107Z] 
+=== ITERATION 119 ===
+[2026-01-13T03:17:50.807Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:17:52.239Z] Died at step 73. Enemies killed: 0, Rooms cleared: 0
+[2026-01-13T03:17:52.240Z] 
+=== ITERATION 120 ===
+[2026-01-13T03:17:52.848Z] Entered room (4,5), type: treasure
+[2026-01-13T03:17:57.936Z] Step 50: HP=3, Enemies=0
+[2026-01-13T03:18:03.121Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:18:08.319Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:18:08.320Z] Max steps reached. Enemies killed: 0
+[2026-01-13T03:18:08.365Z] Screenshot saved: screenshot-iter-120.png
+[2026-01-13T03:18:08.365Z] 
+=== ITERATION 121 ===
+[2026-01-13T03:18:10.631Z] Entered room (3,4), type: normal
+[2026-01-13T03:18:14.059Z] Step 50: HP=3, Enemies=1
+[2026-01-13T03:18:19.253Z] Step 100: HP=3, Enemies=0
+[2026-01-13T03:18:23.473Z] Step 150: HP=3, Enemies=0
+[2026-01-13T03:18:23.473Z] Max steps reached. Enemies killed: 1
+[2026-01-13T03:18:23.475Z] 
+=== ITERATION 122 ===
+[2026-01-13T03:18:26.182Z] [BUG] Error executing action: page.evaluate: Target page, context or browser has been closed
+[2026-01-13T03:18:26.183Z] 
+=== ITERATION 123 ===
+[2026-01-13T03:18:26.186Z] [FATAL ERROR] page.evaluate: Target page, context or browser has been closed
+[2026-01-13T03:18:26.186Z] page.evaluate: Target page, context or browser has been closed
+    at playtest (/workspace/games/night-6/binding-of-isaac/canvas/playtest.js:237:24)
+[2026-01-13T03:18:26.194Z] Playtest complete

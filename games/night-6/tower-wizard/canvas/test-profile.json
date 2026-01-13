@@ -1,0 +1,79 @@
+{
+  "game_info": {
+    "name": "Tower Wizard Clone",
+    "type": "incremental_idle",
+    "description": "Incremental wizard tower game. Click orb to generate magic. Summon spirits. Assign spirits to rooms. Spirits generate resources automatically. Ascend tower to unlock new rooms."
+  },
+  "core_loop": {
+    "description": "Click orb for magic -> Summon spirits -> Assign to rooms -> Auto-generate resources -> Unlock upgrades -> Ascend tower -> Repeat",
+    "estimated_duration_sec": 60,
+    "loops_for_meaningful_test": 3
+  },
+  "recommended_test_duration_sec": 180,
+  "resolution": {
+    "width": 800,
+    "height": 600
+  },
+  "input_scheme": {
+    "movement": {
+      "type": "mouse_click",
+      "keys": [],
+      "description": "Click on orb to generate magic"
+    },
+    "primary_action": {
+      "type": "click",
+      "keys": ["Space"],
+      "description": "Space bar clicks orb, mouse also works"
+    },
+    "secondary_actions": [
+      { "name": "summon_spirit", "key": "s", "description": "Summon a spirit" },
+      { "name": "assign_cloudling", "key": "1", "description": "Assign spirit to cloudlings" },
+      { "name": "assign_tome", "key": "2", "description": "Assign spirit to tomes" },
+      { "name": "ascend", "key": "a", "description": "Ascend tower if possible" }
+    ]
+  },
+  "success_conditions": {
+    "minimum": {
+      "magic_earned": 100,
+      "spirits_summoned": 3,
+      "tower_level": 1
+    },
+    "good_run": {
+      "magic_earned": 10000,
+      "spirits_summoned": 20,
+      "tower_level": 3
+    }
+  },
+  "key_features": [
+    {
+      "name": "Orb Clicking",
+      "gdd_section": "Section 2 - Resource System",
+      "testable": true,
+      "test_method": "Click orb or press Space to generate magic"
+    },
+    {
+      "name": "Spirit Summoning",
+      "gdd_section": "Section 2 - Resource System",
+      "testable": true,
+      "test_method": "Press S to summon spirit when enough magic"
+    },
+    {
+      "name": "Spirit Assignment",
+      "gdd_section": "Section 4 - Rooms and Spirit Types",
+      "testable": true,
+      "test_method": "Press 1/2 to assign spirits to rooms"
+    },
+    {
+      "name": "Auto Resource Generation",
+      "gdd_section": "Section 4 - Rooms and Spirit Types",
+      "testable": true,
+      "test_method": "Assigned spirits generate resources over time"
+    },
+    {
+      "name": "Tower Ascension",
+      "gdd_section": "Section 3 - Tower Ascension",
+      "testable": true,
+      "test_method": "Press A to ascend when enough lifetime magic"
+    }
+  ]
+}

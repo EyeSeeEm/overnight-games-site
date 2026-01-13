@@ -1,0 +1,43 @@
+{
+  "game_info": {
+    "name": "Station Breach",
+    "type": "twin_stick_shooter",
+    "description": "Top-down twin-stick shooter with survival horror elements. Fight through a derelict space station overrun by aliens, collect keycards to progress, and escape before self-destruct."
+  },
+  "core_loop": {
+    "description": "Move through rooms, kill aliens, collect keycards and ammo, unlock doors, reach exit. Combat is twin-stick: WASD moves, mouse aims/shoots.",
+    "estimated_duration_sec": 60,
+    "loops_for_meaningful_test": 3
+  },
+  "recommended_test_duration_sec": 180,
+  "input_scheme": {
+    "movement": { "type": "wasd", "keys": ["w", "a", "s", "d"] },
+    "primary_action": { "type": "mouse_aim_click", "description": "Mouse aims, left click shoots" },
+    "secondary_actions": [
+      { "name": "reload", "key": "r" },
+      { "name": "interact", "key": "e" },
+      { "name": "sprint", "key": "Shift" },
+      { "name": "switch_weapon", "key": "q" },
+      { "name": "melee", "key": "f" }
+    ]
+  },
+  "combat_profile": {
+    "style": "twin_stick",
+    "how_to_attack": "Aim with mouse cursor at enemies, left-click to fire. Manage ammo by reloading with R. Use melee (F) when out of ammo."
+  },
+  "success_conditions": {
+    "minimum": {
+      "enemies_killed": 5,
+      "survival_sec": 30,
+      "rooms_cleared": 1
+    }
+  },
+  "key_features": [
+    { "name": "Twin-stick shooting", "gdd_section": "Section 11 - Controls", "testable": true },
+    { "name": "Keycard progression", "gdd_section": "Section 5", "testable": true },
+    { "name": "Multiple weapons", "gdd_section": "Section 3", "testable": true },
+    { "name": "Enemy variety", "gdd_section": "Section 4", "testable": true },
+    { "name": "Vision/raycasting", "gdd_section": "Feedback Section 4", "testable": true },
+    { "name": "Health pickups", "gdd_section": "Section 6", "testable": true }
+  ]
+}

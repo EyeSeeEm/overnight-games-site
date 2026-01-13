@@ -1,0 +1,46 @@
+{
+  "game_info": {
+    "name": "X-COM Classic Clone",
+    "type": "turn_based_tactical",
+    "description": "Turn-based tactical combat with Time Units, fog of war, reaction fire, and squad management"
+  },
+  "core_loop": {
+    "description": "Control soldiers using Time Units to move, shoot, and take cover. Kill all aliens to win the mission.",
+    "estimated_duration_sec": 180,
+    "loops_for_meaningful_test": 2
+  },
+  "recommended_test_duration_sec": 300,
+  "input_scheme": {
+    "movement": { "type": "click_to_move", "description": "Click tiles to move soldiers" },
+    "primary_action": { "type": "click_target", "description": "Click enemies to shoot" },
+    "secondary_actions": [
+      { "name": "end_turn", "key": "Enter" },
+      { "name": "next_soldier", "key": "Tab" },
+      { "name": "kneel", "key": "k" },
+      { "name": "snap_shot", "key": "1" },
+      { "name": "aimed_shot", "key": "2" },
+      { "name": "auto_shot", "key": "3" }
+    ]
+  },
+  "combat_profile": {
+    "style": "turn_based_tactical",
+    "how_to_attack": "Select soldier, select fire mode (snap/aimed/auto), click on enemy to shoot"
+  },
+  "success_conditions": {
+    "minimum": {
+      "enemies_killed": 2,
+      "soldiers_alive": 1
+    },
+    "victory": {
+      "description": "Kill all aliens"
+    }
+  },
+  "key_features": [
+    { "name": "Time Units System", "gdd_section": "1.1", "testable": true },
+    { "name": "Fog of War", "gdd_section": "1.7", "testable": true },
+    { "name": "Reaction Fire", "gdd_section": "1.3", "testable": true },
+    { "name": "Multiple Fire Modes", "gdd_section": "1.4", "testable": true },
+    { "name": "Kneeling Stance", "gdd_section": "1.1", "testable": true },
+    { "name": "Alien AI", "gdd_section": "1.8", "testable": true }
+  ]
+}

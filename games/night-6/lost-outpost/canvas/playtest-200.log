@@ -1,0 +1,17 @@
+Checkpoint 25: Kills=171, Deaths=0, MaxLevel=1
+Checkpoint 50: Kills=329, Deaths=0, MaxLevel=1
+Checkpoint 75: Kills=532, Deaths=0, MaxLevel=2
+Checkpoint 100: Kills=716, Deaths=0, MaxLevel=2
+Checkpoint 125: Kills=888, Deaths=0, MaxLevel=2
+Checkpoint 150: Kills=1055, Deaths=0, MaxLevel=2
+Checkpoint 175: Kills=1228, Deaths=0, MaxLevel=2
+Checkpoint 200: Kills=1404, Deaths=0, MaxLevel=2
+
+=== FINAL RESULTS ===
+Iterations: 200
+Total kills: 1404
+Total deaths: 0
+Total XP: 20865
+Total credits: 113139
+Max level reached: 2
+Avg kills/iter: 7.02

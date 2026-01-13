@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Shock 2D - Whispers of M.A.R.I.A.</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+        }
+        #gameCanvas {
+            display: block;
+            background: #0a0a0f;
+        }
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            pointer-events: none;
+        }
+        .bar-container {
+            margin-bottom: 5px;
+        }
+        .bar-label {
+            color: #666;
+            font-size: 10px;
+        }
+        .bar {
+            width: 150px;
+            height: 12px;
+            background: #222;
+            border: 1px solid #444;
+        }
+        .bar-fill {
+            height: 100%;
+            transition: width 0.2s;
+        }
+        #health-fill { background: linear-gradient(90deg, #c00, #f44); }
+        #energy-fill { background: linear-gradient(90deg, #00a, #44f); }
+        #ammo-display {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: #0af;
+            font-size: 14px;
+            pointer-events: none;
+        }
+        #weapon-display {
+            position: absolute;
+            bottom: 30px;
+            left: 10px;
+            color: #888;
+            font-size: 11px;
+            pointer-events: none;
+        }
+        #minimap {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 120px;
+            height: 120px;
+            background: rgba(0, 10, 20, 0.8);
+            border: 1px solid #0af;
+            pointer-events: none;
+        }
+        #deck-display {
+            position: absolute;
+            top: 135px;
+            right: 10px;
+            color: #0af;
+            font-size: 11px;
+            text-align: right;
+            pointer-events: none;
+        }
+        #interact-prompt {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff0;
+            font-size: 12px;
+            background: rgba(0,0,0,0.7);
+            padding: 5px 15px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        #maria-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #f00;
+            font-size: 16px;
+            text-align: center;
+            background: rgba(0,0,0,0.9);
+            padding: 20px 40px;
+            border: 2px solid #f00;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+            max-width: 400px;
+        }
+        #menu-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 5, 10, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+        #menu-overlay h1 {
+            font-size: 36px;
+            color: #0af;
+            text-shadow: 0 0 30px #0af;
+            margin-bottom: 5px;
+        }
+        #menu-overlay h2 {
+            font-size: 14px;
+            color: #f00;
+            text-shadow: 0 0 10px #f00;
+            margin-bottom: 30px;
+        }
+        #menu-overlay p {
+            color: #666;
+            margin-bottom: 15px;
+            max-width: 450px;
+            text-align: center;
+            line-height: 1.6;
+            font-size: 12px;
+        }
+        #start-btn {
+            padding: 15px 40px;
+            font-size: 16px;
+            background: #0a2030;
+            border: 2px solid #0af;
+            color: #0af;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 20px;
+        }
+        #start-btn:hover {
+            background: #1a4060;
+        }
+        .hidden { display: none !important; }
+        #gameover-overlay, #victory-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+        #gameover-overlay h1 { color: #f00; font-size: 32px; }
+        #victory-overlay h1 { color: #0f0; font-size: 32px; }
+        .result-stats {
+            color: #888;
+            margin: 20px 0;
+            text-align: center;
+            line-height: 1.8;
+        }
+        .restart-btn {
+            margin-top: 20px;
+            padding: 10px 30px;
+            background: #222;
+            border: 2px solid #666;
+            color: #fff;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        #skills-display {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: #888;
+            font-size: 10px;
+            text-align: right;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+        <div id="hud">
+            <div class="bar-container">
+                <span class="bar-label">HEALTH</span>
+                <div class="bar"><div id="health-fill" class="bar-fill" style="width: 100%"></div></div>
+            </div>
+            <div class="bar-container">
+                <span class="bar-label">ENERGY</span>
+                <div class="bar"><div id="energy-fill" class="bar-fill" style="width: 100%"></div></div>
+            </div>
+        </div>
+
+        <canvas id="minimap" width="120" height="120"></canvas>
+        <div id="deck-display">DECK 1<br>ENGINEERING</div>
+
+        <div id="weapon-display">PISTOL</div>
+        <div id="ammo-display">12 / 48</div>
+
+        <div id="interact-prompt">[E] Interact</div>
+        <div id="maria-message"></div>
+
+        <div id="skills-display">
+            FIREARMS: 1<br>
+            HACKING: 1<br>
+            STEALTH: 1
+        </div>
+
+        <div id="menu-overlay">
+            <h1>SYSTEM SHOCK 2D</h1>
+            <h2>WHISPERS OF M.A.R.I.A.</h2>
+            <p>You awaken on the Von Braun space station with no memory. The AI M.A.R.I.A. has gone rogue, converting the crew into cyborg servants.</p>
+            <p>Fight. Hack. Survive.</p>
+            <p style="color: #444; font-size: 10px;">WASD - Move | Mouse - Aim | LMB - Shoot | E - Interact | R - Reload | Space - Dodge</p>
+            <button id="start-btn">INITIATE</button>
+        </div>
+
+        <div id="gameover-overlay" class="hidden">
+            <h1>SYSTEM FAILURE</h1>
+            <div class="result-stats" id="fail-stats"></div>
+            <button class="restart-btn" id="restart-btn">REBOOT</button>
+        </div>
+
+        <div id="victory-overlay" class="hidden">
+            <h1>M.A.R.I.A. TERMINATED</h1>
+            <div class="result-stats" id="victory-stats"></div>
+            <button class="restart-btn" id="victory-restart-btn">CONTINUE</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

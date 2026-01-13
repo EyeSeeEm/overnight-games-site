@@ -1,0 +1,410 @@
+[2026-01-13T01:49:36.009Z] Starting Zero Sievert Clone Playtest
+[2026-01-13T01:49:36.011Z] Target: 200 iterations
+[2026-01-13T01:49:36.188Z] Loading game: file:///workspace/games/night-6/zero-sievert/canvas/index.html
+[2026-01-13T01:49:38.224Z] Harness detected
+[2026-01-13T01:49:38.225Z] 
+=== ITERATION 1 ===
+[2026-01-13T01:49:47.165Z] Step 100: HP=100, Ammo=30, Enemies=15, ExtractDist=837, Kills=0
+[2026-01-13T01:49:55.538Z] Step 200: HP=100, Ammo=30, Enemies=15, ExtractDist=837, Kills=0
+[2026-01-13T01:50:03.921Z] Step 300: HP=100, Ammo=13, Enemies=15, ExtractDist=837, Kills=0
+[2026-01-13T01:50:11.467Z] Step 400: HP=100, Ammo=10, Enemies=15, ExtractDist=837, Kills=0
+[2026-01-13T01:50:19.828Z] Step 500: HP=100, Ammo=10, Enemies=15, ExtractDist=837, Kills=0
+[2026-01-13T01:50:28.213Z] Step 600: HP=100, Ammo=5, Enemies=15, ExtractDist=837, Kills=0
+[2026-01-13T01:50:35.717Z] Step 700: HP=100, Ammo=0, Enemies=15, ExtractDist=837, Kills=0
+[2026-01-13T01:50:44.099Z] Step 800: HP=100, Ammo=16, Enemies=15, ExtractDist=837, Kills=0
+[2026-01-13T01:50:44.101Z] 
+=== ITERATION 2 ===
+[2026-01-13T01:50:52.986Z] Step 100: HP=100, Ammo=2, Enemies=14, ExtractDist=818, Kills=0
+[2026-01-13T01:51:01.354Z] Step 200: HP=100, Ammo=26, Enemies=14, ExtractDist=818, Kills=0
+[2026-01-13T01:51:08.885Z] Step 300: HP=100, Ammo=30, Enemies=14, ExtractDist=818, Kills=0
+[2026-01-13T01:51:17.222Z] Step 400: HP=100, Ammo=30, Enemies=14, ExtractDist=818, Kills=0
+[2026-01-13T01:51:25.573Z] Step 500: HP=100, Ammo=30, Enemies=14, ExtractDist=818, Kills=0
+[2026-01-13T01:51:33.099Z] Step 600: HP=100, Ammo=30, Enemies=14, ExtractDist=818, Kills=0
+[2026-01-13T01:51:41.448Z] Step 700: HP=100, Ammo=30, Enemies=14, ExtractDist=818, Kills=0
+[2026-01-13T01:51:49.796Z] Step 800: HP=100, Ammo=30, Enemies=14, ExtractDist=818, Kills=0
+[2026-01-13T01:51:49.798Z] 
+=== ITERATION 3 ===
+[2026-01-13T01:51:58.642Z] Step 100: HP=100, Ammo=24, Enemies=12, ExtractDist=676, Kills=0
+[2026-01-13T01:52:06.138Z] Step 200: HP=100, Ammo=9, Enemies=12, ExtractDist=661, Kills=0
+[2026-01-13T01:52:06.556Z] Kill! Total: 1
+[2026-01-13T01:52:10.636Z] Kill! Total: 2
+[2026-01-13T01:52:11.804Z] Kill! Total: 3
+[2026-01-13T01:52:14.219Z] Kill! Total: 4
+[2026-01-13T01:52:14.470Z] Step 300: HP=100, Ammo=7, Enemies=8, ExtractDist=359, Kills=4
+[2026-01-13T01:52:22.803Z] Step 400: HP=100, Ammo=7, Enemies=8, ExtractDist=359, Kills=4
+[2026-01-13T01:52:30.298Z] Step 500: HP=100, Ammo=7, Enemies=8, ExtractDist=359, Kills=4
+[2026-01-13T01:52:38.632Z] Step 600: HP=100, Ammo=20, Enemies=8, ExtractDist=359, Kills=4
+[2026-01-13T01:52:44.463Z] Kill! Total: 5
+[2026-01-13T01:52:46.964Z] Step 700: HP=100, Ammo=24, Enemies=7, ExtractDist=359, Kills=5
+[2026-01-13T01:52:55.297Z] Step 800: HP=100, Ammo=24, Enemies=7, ExtractDist=359, Kills=5
+[2026-01-13T01:52:55.299Z] 
+=== ITERATION 4 ===
+[2026-01-13T01:53:03.368Z] Step 100: HP=100, Ammo=20, Enemies=11, ExtractDist=869, Kills=0
+[2026-01-13T01:53:11.724Z] Step 200: HP=100, Ammo=6, Enemies=11, ExtractDist=869, Kills=0
+[2026-01-13T01:53:16.829Z] Took damage: 100 -> 88
+[2026-01-13T01:53:19.260Z] Took damage: 84 -> 72
+[2026-01-13T01:53:20.095Z] Step 300: HP=70, Ammo=0, Enemies=11, ExtractDist=869, Kills=0
+[2026-01-13T01:53:22.613Z] Took damage: 66 -> 54
+[2026-01-13T01:53:26.712Z] Took damage: 46 -> 34
+[2026-01-13T01:53:27.547Z] Took damage: 32 -> 20
+[2026-01-13T01:53:27.627Z] Step 400: HP=18, Ammo=22, Enemies=11, ExtractDist=738, Kills=0
+[2026-01-13T01:53:28.220Z] Took damage: 18 -> 6
+[2026-01-13T01:53:29.222Z] Died at step 419, HP was 6
+[2026-01-13T01:53:29.224Z] 
+=== ITERATION 5 ===
+[2026-01-13T01:53:38.074Z] Step 100: HP=100, Ammo=30, Enemies=10, ExtractDist=859, Kills=0
+[2026-01-13T01:53:46.420Z] Step 200: HP=100, Ammo=30, Enemies=10, ExtractDist=859, Kills=0
+[2026-01-13T01:53:54.758Z] Step 300: HP=100, Ammo=30, Enemies=10, ExtractDist=859, Kills=0
+[2026-01-13T01:54:02.261Z] Step 400: HP=100, Ammo=30, Enemies=10, ExtractDist=859, Kills=0
+[2026-01-13T01:54:10.595Z] Step 500: HP=100, Ammo=30, Enemies=10, ExtractDist=859, Kills=0
+[2026-01-13T01:54:18.927Z] Step 600: HP=100, Ammo=30, Enemies=10, ExtractDist=859, Kills=0
+[2026-01-13T01:54:26.415Z] Step 700: HP=100, Ammo=30, Enemies=10, ExtractDist=859, Kills=0
+[2026-01-13T01:54:34.768Z] Step 800: HP=100, Ammo=30, Enemies=10, ExtractDist=859, Kills=0
+[2026-01-13T01:54:34.865Z] 
+=== ITERATION 6 ===
+[2026-01-13T01:54:38.555Z] Kill! Total: 1
+[2026-01-13T01:54:43.755Z] Step 100: HP=100, Ammo=23, Enemies=11, ExtractDist=859, Kills=1
+[2026-01-13T01:54:52.138Z] Step 200: HP=100, Ammo=8, Enemies=11, ExtractDist=840, Kills=1
+[2026-01-13T01:54:56.245Z] Kill! Total: 2
+[2026-01-13T01:54:59.681Z] Step 300: HP=100, Ammo=0, Enemies=10, ExtractDist=887, Kills=2
+[2026-01-13T01:55:00.266Z] Kill! Total: 3
+[2026-01-13T01:55:01.600Z] Took damage: 100 -> 85
+[2026-01-13T01:55:02.018Z] Took damage: 85 -> 70
+[2026-01-13T01:55:03.020Z] Took damage: 68 -> 53
+[2026-01-13T01:55:03.520Z] Took damage: 53 -> 38
+[2026-01-13T01:55:04.019Z] Took damage: 38 -> 23
+[2026-01-13T01:55:05.354Z] Took damage: 21 -> 6
+[2026-01-13T01:55:06.030Z] Died at step 376, HP was 4
+[2026-01-13T01:55:06.031Z] 
+=== ITERATION 7 ===
+[2026-01-13T01:55:14.930Z] Step 100: HP=100, Ammo=19, Enemies=14, ExtractDist=843, Kills=0
+[2026-01-13T01:55:20.980Z] Kill! Total: 1
+[2026-01-13T01:55:23.335Z] Step 200: HP=100, Ammo=18, Enemies=13, ExtractDist=817, Kills=1
+[2026-01-13T01:55:30.836Z] Step 300: HP=100, Ammo=18, Enemies=13, ExtractDist=817, Kills=1
+[2026-01-13T01:55:39.219Z] Step 400: HP=100, Ammo=12, Enemies=13, ExtractDist=817, Kills=1
+[2026-01-13T01:55:47.596Z] Step 500: HP=100, Ammo=0, Enemies=13, ExtractDist=829, Kills=1
+[2026-01-13T01:55:55.126Z] Step 600: HP=100, Ammo=21, Enemies=13, ExtractDist=829, Kills=1
+[2026-01-13T01:56:03.492Z] Step 700: HP=100, Ammo=6, Enemies=13, ExtractDist=829, Kills=1
+[2026-01-13T01:56:11.859Z] Step 800: HP=100, Ammo=0, Enemies=13, ExtractDist=829, Kills=1
+[2026-01-13T01:56:11.861Z] 
+=== ITERATION 8 ===
+[2026-01-13T01:56:15.127Z] Kill! Total: 1
+[2026-01-13T01:56:20.723Z] Step 100: HP=100, Ammo=26, Enemies=13, ExtractDist=628, Kills=1
+[2026-01-13T01:56:28.232Z] Step 200: HP=100, Ammo=26, Enemies=13, ExtractDist=628, Kills=1
+[2026-01-13T01:56:32.319Z] Kill! Total: 2
+[2026-01-13T01:56:36.566Z] Step 300: HP=100, Ammo=22, Enemies=12, ExtractDist=628, Kills=2
+[2026-01-13T01:56:44.896Z] Step 400: HP=100, Ammo=22, Enemies=12, ExtractDist=628, Kills=2
+[2026-01-13T01:56:52.406Z] Step 500: HP=100, Ammo=22, Enemies=12, ExtractDist=628, Kills=2
+[2026-01-13T01:57:00.771Z] Step 600: HP=100, Ammo=22, Enemies=12, ExtractDist=628, Kills=2
+[2026-01-13T01:57:09.134Z] Step 700: HP=100, Ammo=22, Enemies=12, ExtractDist=628, Kills=2
+[2026-01-13T01:57:17.473Z] Step 800: HP=100, Ammo=22, Enemies=12, ExtractDist=628, Kills=2
+[2026-01-13T01:57:17.474Z] 
+=== ITERATION 9 ===
+[2026-01-13T01:57:25.472Z] Step 100: HP=100, Ammo=30, Enemies=12, ExtractDist=932, Kills=0
+[2026-01-13T01:57:33.823Z] Step 200: HP=100, Ammo=30, Enemies=12, ExtractDist=932, Kills=0
+[2026-01-13T01:57:42.186Z] Step 300: HP=100, Ammo=30, Enemies=12, ExtractDist=932, Kills=0
+[2026-01-13T01:57:50.523Z] Step 400: HP=100, Ammo=30, Enemies=12, ExtractDist=932, Kills=0
+[2026-01-13T01:57:58.044Z] Step 500: HP=100, Ammo=30, Enemies=12, ExtractDist=932, Kills=0
+[2026-01-13T01:58:06.409Z] Step 600: HP=100, Ammo=30, Enemies=12, ExtractDist=932, Kills=0
+[2026-01-13T01:58:14.761Z] Step 700: HP=100, Ammo=26, Enemies=12, ExtractDist=932, Kills=0
+[2026-01-13T01:58:21.501Z] Took damage: 100 -> 85
+[2026-01-13T01:58:22.253Z] Step 800: HP=85, Ammo=12, Enemies=12, ExtractDist=932, Kills=0
+[2026-01-13T01:58:22.255Z] 
+=== ITERATION 10 ===
+[2026-01-13T01:58:31.098Z] Step 100: HP=100, Ammo=30, Enemies=11, ExtractDist=960, Kills=0
+[2026-01-13T01:58:39.431Z] Step 200: HP=100, Ammo=30, Enemies=11, ExtractDist=960, Kills=0
+[2026-01-13T01:58:47.763Z] Step 300: HP=100, Ammo=23, Enemies=11, ExtractDist=960, Kills=0
+[2026-01-13T01:58:52.244Z] Took damage: 100 -> 85
+[2026-01-13T01:58:53.243Z] Took damage: 85 -> 70
+[2026-01-13T01:58:53.744Z] Took damage: 70 -> 55
+[2026-01-13T01:58:54.661Z] Took damage: 53 -> 38
+[2026-01-13T01:58:54.995Z] Kill! Total: 1
+[2026-01-13T01:58:55.245Z] Step 400: HP=36, Ammo=8, Enemies=10, ExtractDist=960, Kills=1
+[2026-01-13T01:58:55.829Z] Took damage: 36 -> 21
+[2026-01-13T01:58:56.250Z] Took damage: 21 -> 6
+[2026-01-13T01:58:56.666Z] Died at step 417, HP was 6
+[2026-01-13T01:58:56.752Z] 
+=== ITERATION 11 ===
+[2026-01-13T01:59:05.610Z] Step 100: HP=100, Ammo=30, Enemies=14, ExtractDist=835, Kills=0
+[2026-01-13T01:59:13.945Z] Step 200: HP=100, Ammo=30, Enemies=14, ExtractDist=835, Kills=0
+[2026-01-13T01:59:21.447Z] Step 300: HP=100, Ammo=30, Enemies=14, ExtractDist=835, Kills=0
+[2026-01-13T01:59:29.801Z] Step 400: HP=100, Ammo=2, Enemies=14, ExtractDist=835, Kills=0
+[2026-01-13T01:59:31.569Z] Took damage: 100 -> 88
+[2026-01-13T01:59:34.002Z] Took damage: 88 -> 76
+[2026-01-13T01:59:34.836Z] Took damage: 76 -> 64
+[2026-01-13T01:59:35.586Z] Took damage: 64 -> 52
+[2026-01-13T01:59:36.430Z] Took damage: 52 -> 40
+[2026-01-13T01:59:38.101Z] Took damage: 40 -> 28
+[2026-01-13T01:59:38.186Z] Step 500: HP=28, Ammo=26, Enemies=14, ExtractDist=823, Kills=0
+[2026-01-13T01:59:39.032Z] Took damage: 28 -> 16
+[2026-01-13T01:59:46.552Z] Step 600: HP=2, Ammo=26, Enemies=14, ExtractDist=299, Kills=0
+[2026-01-13T01:59:47.230Z] Died at step 608, HP was 2
+[2026-01-13T01:59:47.231Z] 
+=== ITERATION 12 ===
+[2026-01-13T01:59:49.067Z] Kill! Total: 1
+[2026-01-13T01:59:51.166Z] Kill! Total: 2
+[2026-01-13T01:59:55.279Z] Step 100: HP=100, Ammo=27, Enemies=13, ExtractDist=611, Kills=2
+[2026-01-13T02:00:03.660Z] Step 200: HP=100, Ammo=12, Enemies=13, ExtractDist=611, Kills=2
+[2026-01-13T02:00:07.264Z] Kill! Total: 3
+[2026-01-13T02:00:12.035Z] Step 300: HP=100, Ammo=0, Enemies=12, ExtractDist=600, Kills=3
+[2026-01-13T02:00:19.559Z] Step 400: HP=100, Ammo=21, Enemies=12, ExtractDist=600, Kills=3
+[2026-01-13T02:00:20.652Z] Took damage: 100 -> 85
+[2026-01-13T02:00:20.903Z] Kill! Total: 4
+[2026-01-13T02:00:27.925Z] Step 500: HP=71, Ammo=6, Enemies=11, ExtractDist=600, Kills=4
+[2026-01-13T02:00:35.302Z] Kill! Total: 5
+[2026-01-13T02:00:36.303Z] Step 600: HP=55, Ammo=5, Enemies=10, ExtractDist=456, Kills=5
+[2026-01-13T02:00:44.636Z] Step 700: HP=39, Ammo=5, Enemies=10, ExtractDist=456, Kills=5
+[2026-01-13T02:00:52.127Z] Step 800: HP=23, Ammo=30, Enemies=10, ExtractDist=5, Kills=5
+[2026-01-13T02:00:52.129Z] 
+=== ITERATION 13 ===
+[2026-01-13T02:00:56.313Z] Took damage: 100 -> 88
+[2026-01-13T02:00:57.065Z] Took damage: 88 -> 76
+[2026-01-13T02:00:57.910Z] Took damage: 76 -> 64
+[2026-01-13T02:01:00.995Z] Step 100: HP=58, Ammo=21, Enemies=14, ExtractDist=800, Kills=0
+[2026-01-13T02:01:01.165Z] Took damage: 58 -> 46
+[2026-01-13T02:01:02.010Z] Took damage: 46 -> 34
+[2026-01-13T02:01:02.846Z] Took damage: 32 -> 20
+[2026-01-13T02:01:07.097Z] Died at step 173, HP was 12
+[2026-01-13T02:01:07.099Z] 
+=== ITERATION 14 ===
+[2026-01-13T02:01:12.229Z] Kill! Total: 1
+[2026-01-13T02:01:14.908Z] Step 100: HP=100, Ammo=5, Enemies=14, ExtractDist=748, Kills=1
+[2026-01-13T02:01:22.935Z] Kill! Total: 2
+[2026-01-13T02:01:23.268Z] Step 200: HP=100, Ammo=1, Enemies=13, ExtractDist=748, Kills=2
+[2026-01-13T02:01:31.605Z] Step 300: HP=100, Ammo=1, Enemies=13, ExtractDist=748, Kills=2
+[2026-01-13T02:01:39.953Z] Step 400: HP=100, Ammo=1, Enemies=13, ExtractDist=748, Kills=2
+[2026-01-13T02:01:47.680Z] Step 500: HP=100, Ammo=1, Enemies=13, ExtractDist=748, Kills=2
+[2026-01-13T02:01:56.043Z] Step 600: HP=100, Ammo=1, Enemies=13, ExtractDist=748, Kills=2
+[2026-01-13T02:02:04.410Z] Step 700: HP=100, Ammo=1, Enemies=13, ExtractDist=748, Kills=2
+[2026-01-13T02:02:12.777Z] Step 800: HP=100, Ammo=17, Enemies=13, ExtractDist=748, Kills=2
+[2026-01-13T02:02:12.779Z] 
+=== ITERATION 15 ===
+[2026-01-13T02:02:15.069Z] Kill! Total: 1
+[2026-01-13T02:02:20.767Z] Step 100: HP=100, Ammo=20, Enemies=13, ExtractDist=798, Kills=1
+[2026-01-13T02:02:29.134Z] Step 200: HP=100, Ammo=5, Enemies=13, ExtractDist=798, Kills=1
+[2026-01-13T02:02:34.664Z] Took damage: 100 -> 85
+[2026-01-13T02:02:35.165Z] Took damage: 85 -> 70
+[2026-01-13T02:02:35.667Z] Took damage: 70 -> 55
+[2026-01-13T02:02:36.168Z] Took damage: 55 -> 40
+[2026-01-13T02:02:36.671Z] Took damage: 40 -> 25
+[2026-01-13T02:02:37.088Z] Took damage: 25 -> 10
+[2026-01-13T02:02:37.513Z] Step 300: HP=10, Ammo=0, Enemies=13, ExtractDist=676, Kills=1
+[2026-01-13T02:02:42.062Z] Died at step 365, HP was 10
+[2026-01-13T02:02:42.145Z] 
+=== ITERATION 16 ===
+[2026-01-13T02:02:50.986Z] Step 100: HP=100, Ammo=30, Enemies=11, ExtractDist=769, Kills=0
+[2026-01-13T02:02:59.319Z] Step 200: HP=100, Ammo=30, Enemies=11, ExtractDist=769, Kills=0
+[2026-01-13T02:03:07.653Z] Step 300: HP=100, Ammo=29, Enemies=11, ExtractDist=777, Kills=0
+[2026-01-13T02:03:15.131Z] Step 400: HP=100, Ammo=14, Enemies=11, ExtractDist=777, Kills=0
+[2026-01-13T02:03:23.466Z] Step 500: HP=100, Ammo=0, Enemies=11, ExtractDist=777, Kills=0
+[2026-01-13T02:03:24.132Z] Took damage: 100 -> 85
+[2026-01-13T02:03:24.632Z] Took damage: 85 -> 70
+[2026-01-13T02:03:25.132Z] Took damage: 70 -> 55
+[2026-01-13T02:03:25.382Z] Kill! Total: 1
+[2026-01-13T02:03:31.798Z] Step 600: HP=55, Ammo=17, Enemies=10, ExtractDist=769, Kills=1
+[2026-01-13T02:03:40.132Z] Step 700: HP=55, Ammo=25, Enemies=10, ExtractDist=769, Kills=1
+[2026-01-13T02:03:47.635Z] Step 800: HP=55, Ammo=9, Enemies=10, ExtractDist=769, Kills=1
+[2026-01-13T02:03:47.636Z] 
+=== ITERATION 17 ===
+[2026-01-13T02:03:56.506Z] Step 100: HP=100, Ammo=20, Enemies=14, ExtractDist=897, Kills=0
+[2026-01-13T02:04:04.124Z] Kill! Total: 1
+[2026-01-13T02:04:04.884Z] Step 200: HP=100, Ammo=5, Enemies=13, ExtractDist=897, Kills=1
+[2026-01-13T02:04:05.220Z] Kill! Total: 2
+[2026-01-13T02:04:07.302Z] Kill! Total: 3
+[2026-01-13T02:04:12.117Z] Step 300: HP=100, Ammo=12, Enemies=11, ExtractDist=739, Kills=3
+[2026-01-13T02:04:20.448Z] Step 400: HP=100, Ammo=26, Enemies=11, ExtractDist=739, Kills=3
+[2026-01-13T02:04:28.783Z] Step 500: HP=100, Ammo=18, Enemies=11, ExtractDist=739, Kills=3
+[2026-01-13T02:04:37.116Z] Step 600: HP=100, Ammo=3, Enemies=11, ExtractDist=739, Kills=3
+[2026-01-13T02:04:44.833Z] Step 700: HP=100, Ammo=30, Enemies=11, ExtractDist=739, Kills=3
+[2026-01-13T02:04:53.168Z] Step 800: HP=100, Ammo=30, Enemies=11, ExtractDist=739, Kills=3
+[2026-01-13T02:04:53.169Z] 
+=== ITERATION 18 ===
+[2026-01-13T02:05:02.018Z] Step 100: HP=100, Ammo=30, Enemies=14, ExtractDist=870, Kills=0
+[2026-01-13T02:05:09.493Z] Step 200: HP=100, Ammo=30, Enemies=14, ExtractDist=870, Kills=0
+[2026-01-13T02:05:17.838Z] Step 300: HP=100, Ammo=30, Enemies=14, ExtractDist=870, Kills=0
+[2026-01-13T02:05:26.193Z] Step 400: HP=100, Ammo=30, Enemies=14, ExtractDist=870, Kills=0
+[2026-01-13T02:05:34.543Z] Step 500: HP=100, Ammo=30, Enemies=14, ExtractDist=870, Kills=0
+[2026-01-13T02:05:42.028Z] Step 600: HP=100, Ammo=30, Enemies=14, ExtractDist=870, Kills=0
+[2026-01-13T02:05:47.794Z] Kill! Total: 1
+[2026-01-13T02:05:50.380Z] Step 700: HP=100, Ammo=0, Enemies=13, ExtractDist=870, Kills=1
+[2026-01-13T02:05:58.505Z] Kill! Total: 2
+[2026-01-13T02:05:58.755Z] Step 800: HP=100, Ammo=19, Enemies=12, ExtractDist=870, Kills=2
+[2026-01-13T02:05:58.758Z] 
+=== ITERATION 19 ===
+[2026-01-13T02:06:06.726Z] Step 100: HP=100, Ammo=20, Enemies=10, ExtractDist=799, Kills=0
+[2026-01-13T02:06:13.326Z] Took damage: 100 -> 88
+[2026-01-13T02:06:14.410Z] Kill! Total: 1
+[2026-01-13T02:06:15.077Z] Step 200: HP=88, Ammo=25, Enemies=9, ExtractDist=806, Kills=1
+[2026-01-13T02:06:23.420Z] Step 300: HP=88, Ammo=25, Enemies=9, ExtractDist=804, Kills=1
+[2026-01-13T02:06:31.752Z] Step 400: HP=88, Ammo=25, Enemies=9, ExtractDist=804, Kills=1
+[2026-01-13T02:06:39.225Z] Step 500: HP=88, Ammo=25, Enemies=9, ExtractDist=804, Kills=1
+[2026-01-13T02:06:47.560Z] Step 600: HP=88, Ammo=25, Enemies=9, ExtractDist=804, Kills=1
+[2026-01-13T02:06:55.891Z] Step 700: HP=88, Ammo=25, Enemies=9, ExtractDist=804, Kills=1
+[2026-01-13T02:07:04.225Z] Step 800: HP=88, Ammo=25, Enemies=9, ExtractDist=804, Kills=1
+[2026-01-13T02:07:04.226Z] 
+=== ITERATION 20 ===
+[2026-01-13T02:07:12.233Z] Step 100: HP=100, Ammo=23, Enemies=15, ExtractDist=770, Kills=0
+[2026-01-13T02:07:12.486Z] Kill! Total: 1
+[2026-01-13T02:07:13.320Z] Kill! Total: 2
+[2026-01-13T02:07:17.003Z] Kill! Total: 3
+[2026-01-13T02:07:17.254Z] Took damage: 100 -> 85
+[2026-01-13T02:07:20.598Z] Step 200: HP=79, Ammo=19, Enemies=12, ExtractDist=480, Kills=3
+[2026-01-13T02:07:23.098Z] Kill! Total: 4
+[2026-01-13T02:07:23.183Z] Took damage: 75 -> 60
+[2026-01-13T02:07:23.933Z] Kill! Total: 5
+[2026-01-13T02:07:28.929Z] Step 300: HP=50, Ammo=30, Enemies=10, ExtractDist=455, Kills=5
+[2026-01-13T02:07:36.392Z] Step 400: HP=34, Ammo=30, Enemies=10, ExtractDist=455, Kills=5
+[2026-01-13T02:07:42.475Z] Took damage: 22 -> 10
+[2026-01-13T02:07:43.307Z] Died at step 483, HP was 8
+[2026-01-13T02:07:43.390Z] 
+=== ITERATION 21 ===
+[2026-01-13T02:07:52.231Z] Step 100: HP=100, Ammo=23, Enemies=13, ExtractDist=724, Kills=0
+[2026-01-13T02:08:00.579Z] Step 200: HP=100, Ammo=9, Enemies=13, ExtractDist=724, Kills=0
+[2026-01-13T02:08:08.047Z] Step 300: HP=100, Ammo=0, Enemies=13, ExtractDist=724, Kills=0
+[2026-01-13T02:08:16.400Z] Step 400: HP=100, Ammo=21, Enemies=13, ExtractDist=724, Kills=0
+[2026-01-13T02:08:24.752Z] Step 500: HP=100, Ammo=7, Enemies=13, ExtractDist=724, Kills=0
+[2026-01-13T02:08:32.241Z] Step 600: HP=100, Ammo=0, Enemies=13, ExtractDist=724, Kills=0
+[2026-01-13T02:08:37.323Z] Took damage: 100 -> 88
+[2026-01-13T02:08:38.157Z] Took damage: 88 -> 76
+[2026-01-13T02:08:38.908Z] Took damage: 76 -> 64
+[2026-01-13T02:08:40.574Z] Step 700: HP=60, Ammo=17, Enemies=13, ExtractDist=737, Kills=0
+[2026-01-13T02:08:42.243Z] Took damage: 58 -> 46
+[2026-01-13T02:08:42.994Z] Took damage: 46 -> 34
+[2026-01-13T02:08:46.241Z] Took damage: 28 -> 16
+[2026-01-13T02:08:47.158Z] Took damage: 16 -> 4
+[2026-01-13T02:08:47.990Z] Died at step 789, HP was 4
+[2026-01-13T02:08:47.992Z] 
+=== ITERATION 22 ===
+[2026-01-13T02:08:56.873Z] Step 100: HP=100, Ammo=19, Enemies=15, ExtractDist=857, Kills=0
+[2026-01-13T02:09:04.398Z] Step 200: HP=100, Ammo=4, Enemies=15, ExtractDist=857, Kills=0
+[2026-01-13T02:09:09.082Z] Kill! Total: 1
+[2026-01-13T02:09:12.764Z] Step 300: HP=100, Ammo=29, Enemies=14, ExtractDist=827, Kills=1
+[2026-01-13T02:09:13.856Z] Kill! Total: 2
+[2026-01-13T02:09:21.128Z] Step 400: HP=100, Ammo=22, Enemies=13, ExtractDist=800, Kills=2
+[2026-01-13T02:09:29.473Z] Step 500: HP=100, Ammo=8, Enemies=13, ExtractDist=800, Kills=2
+[2026-01-13T02:09:36.947Z] Step 600: HP=100, Ammo=0, Enemies=13, ExtractDist=800, Kills=2
+[2026-01-13T02:09:45.283Z] Step 700: HP=100, Ammo=18, Enemies=13, ExtractDist=800, Kills=2
+[2026-01-13T02:09:53.615Z] Step 800: HP=100, Ammo=4, Enemies=13, ExtractDist=800, Kills=2
+[2026-01-13T02:09:53.616Z] 
+=== ITERATION 23 ===
+[2026-01-13T02:10:01.618Z] Step 100: HP=100, Ammo=21, Enemies=10, ExtractDist=824, Kills=0
+[2026-01-13T02:10:01.704Z] Kill! Total: 1
+[2026-01-13T02:10:03.870Z] Kill! Total: 2
+[2026-01-13T02:10:09.952Z] Step 200: HP=100, Ammo=16, Enemies=8, ExtractDist=824, Kills=2
+[2026-01-13T02:10:18.284Z] Step 300: HP=100, Ammo=16, Enemies=8, ExtractDist=824, Kills=2
+[2026-01-13T02:10:25.621Z] Took damage: 100 -> 88
+[2026-01-13T02:10:26.621Z] Step 400: HP=88, Ammo=27, Enemies=8, ExtractDist=824, Kills=2
+[2026-01-13T02:10:27.123Z] Took damage: 88 -> 76
+[2026-01-13T02:10:27.957Z] Took damage: 76 -> 64
+[2026-01-13T02:10:28.769Z] Took damage: 62 -> 50
+[2026-01-13T02:10:31.189Z] Took damage: 46 -> 34
+[2026-01-13T02:10:32.025Z] Took damage: 34 -> 22
+[2026-01-13T02:10:33.369Z] Took damage: 20 -> 8
+[2026-01-13T02:10:34.037Z] Died at step 499, HP was 8
+[2026-01-13T02:10:34.039Z] 
+=== ITERATION 24 ===
+[2026-01-13T02:10:42.887Z] Step 100: HP=100, Ammo=21, Enemies=10, ExtractDist=832, Kills=0
+[2026-01-13T02:10:51.237Z] Step 200: HP=100, Ammo=14, Enemies=10, ExtractDist=807, Kills=0
+[2026-01-13T02:10:58.738Z] Step 300: HP=100, Ammo=14, Enemies=10, ExtractDist=807, Kills=0
+[2026-01-13T02:11:07.072Z] Step 400: HP=100, Ammo=14, Enemies=10, ExtractDist=807, Kills=0
+[2026-01-13T02:11:15.420Z] Step 500: HP=100, Ammo=13, Enemies=10, ExtractDist=817, Kills=0
+[2026-01-13T02:11:23.754Z] Step 600: HP=100, Ammo=1, Enemies=10, ExtractDist=809, Kills=0
+[2026-01-13T02:11:31.117Z] Step 700: HP=100, Ammo=25, Enemies=10, ExtractDist=809, Kills=0
+[2026-01-13T02:11:32.379Z] Kill! Total: 1
+[2026-01-13T02:11:39.461Z] Step 800: HP=100, Ammo=18, Enemies=9, ExtractDist=820, Kills=1
+[2026-01-13T02:11:39.463Z] 
+=== ITERATION 25 ===
+[2026-01-13T02:11:48.299Z] Step 100: HP=100, Ammo=25, Enemies=13, ExtractDist=717, Kills=0
+[2026-01-13T02:11:55.881Z] Step 200: HP=100, Ammo=10, Enemies=13, ExtractDist=717, Kills=0
+[2026-01-13T02:12:04.216Z] Step 300: HP=100, Ammo=0, Enemies=13, ExtractDist=717, Kills=0
+[2026-01-13T02:12:12.550Z] Step 400: HP=100, Ammo=20, Enemies=13, ExtractDist=717, Kills=0
+[2026-01-13T02:12:19.635Z] Took damage: 100 -> 85
+[2026-01-13T02:12:20.136Z] Took damage: 85 -> 70
+[2026-01-13T02:12:20.884Z] Step 500: HP=70, Ammo=5, Enemies=13, ExtractDist=717, Kills=0
+[2026-01-13T02:12:21.635Z] Took damage: 68 -> 53
+[2026-01-13T02:12:23.719Z] Took damage: 49 -> 34
+[2026-01-13T02:12:24.718Z] Took damage: 32 -> 17
+[2026-01-13T02:12:25.939Z] Died at step 571, HP was 13
+[2026-01-13T02:12:26.021Z] 
+=== ITERATION 26 ===
+[2026-01-13T02:12:34.855Z] Step 100: HP=100, Ammo=21, Enemies=10, ExtractDist=818, Kills=0
+[2026-01-13T02:12:43.189Z] Step 200: HP=100, Ammo=11, Enemies=10, ExtractDist=736, Kills=0
+[2026-01-13T02:12:49.039Z] Kill! Total: 1
+[2026-01-13T02:12:51.541Z] Step 300: HP=100, Ammo=0, Enemies=9, ExtractDist=716, Kills=1
+[2026-01-13T02:12:54.422Z] Kill! Total: 2
+[2026-01-13T02:12:59.000Z] Step 400: HP=100, Ammo=12, Enemies=8, ExtractDist=620, Kills=2
+[2026-01-13T02:13:07.334Z] Step 500: HP=100, Ammo=12, Enemies=8, ExtractDist=620, Kills=2
+[2026-01-13T02:13:15.669Z] Step 600: HP=100, Ammo=12, Enemies=8, ExtractDist=620, Kills=2
+[2026-01-13T02:13:23.102Z] Step 700: HP=100, Ammo=12, Enemies=8, ExtractDist=620, Kills=2
+[2026-01-13T02:13:31.433Z] Step 800: HP=100, Ammo=12, Enemies=8, ExtractDist=620, Kills=2
+[2026-01-13T02:13:31.435Z] 
+=== ITERATION 27 ===
+[2026-01-13T02:13:34.369Z] Kill! Total: 1
+[2026-01-13T02:13:40.302Z] Step 100: HP=100, Ammo=29, Enemies=10, ExtractDist=606, Kills=1
+[2026-01-13T02:13:48.666Z] Step 200: HP=85, Ammo=16, Enemies=10, ExtractDist=579, Kills=1
+[2026-01-13T02:13:48.667Z] Took damage: 100 -> 85
+[2026-01-13T02:13:48.917Z] Kill! Total: 2
+[2026-01-13T02:13:49.084Z] Took damage: 85 -> 70
+[2026-01-13T02:13:56.125Z] Step 300: HP=54, Ammo=14, Enemies=9, ExtractDist=554, Kills=2
+[2026-01-13T02:14:04.457Z] Step 400: HP=38, Ammo=14, Enemies=9, ExtractDist=554, Kills=2
+[2026-01-13T02:14:12.792Z] Step 500: HP=22, Ammo=14, Enemies=9, ExtractDist=29, Kills=2
+[2026-01-13T02:14:13.793Z] Took damage: 20 -> 8
+[2026-01-13T02:14:14.624Z] Died at step 522, HP was 6
+[2026-01-13T02:14:14.626Z] 
+=== ITERATION 28 ===
+[2026-01-13T02:14:22.636Z] Step 100: HP=100, Ammo=30, Enemies=14, ExtractDist=809, Kills=0
+[2026-01-13T02:14:30.974Z] Step 200: HP=100, Ammo=30, Enemies=14, ExtractDist=809, Kills=0
+[2026-01-13T02:14:39.335Z] Step 300: HP=100, Ammo=30, Enemies=14, ExtractDist=809, Kills=0
+[2026-01-13T02:14:47.688Z] Step 400: HP=100, Ammo=30, Enemies=14, ExtractDist=809, Kills=0
+[2026-01-13T02:14:55.156Z] Step 500: HP=100, Ammo=27, Enemies=14, ExtractDist=809, Kills=0
+[2026-01-13T02:14:59.257Z] Kill! Total: 1
+[2026-01-13T02:15:03.538Z] Step 600: HP=100, Ammo=2, Enemies=13, ExtractDist=809, Kills=1
+[2026-01-13T02:15:11.898Z] Step 700: HP=100, Ammo=2, Enemies=13, ExtractDist=809, Kills=1
+[2026-01-13T02:15:19.862Z] Step 800: HP=100, Ammo=2, Enemies=13, ExtractDist=809, Kills=1
+[2026-01-13T02:15:19.867Z] 
+=== ITERATION 29 ===
+[2026-01-13T02:15:27.964Z] Step 100: HP=100, Ammo=7, Enemies=10, ExtractDist=874, Kills=0
+[2026-01-13T02:15:36.310Z] Step 200: HP=100, Ammo=4, Enemies=10, ExtractDist=874, Kills=0
+[2026-01-13T02:15:44.640Z] Step 300: HP=100, Ammo=4, Enemies=10, ExtractDist=874, Kills=0
+[2026-01-13T02:15:52.368Z] Step 400: HP=100, Ammo=4, Enemies=10, ExtractDist=874, Kills=0
+[2026-01-13T02:16:00.718Z] Step 500: HP=100, Ammo=27, Enemies=10, ExtractDist=874, Kills=0
+[2026-01-13T02:16:04.817Z] Kill! Total: 1
+[2026-01-13T02:16:09.069Z] Step 600: HP=100, Ammo=20, Enemies=9, ExtractDist=874, Kills=1
+[2026-01-13T02:16:09.830Z] Kill! Total: 2
+[2026-01-13T02:16:17.414Z] Step 700: HP=100, Ammo=15, Enemies=8, ExtractDist=874, Kills=2
+[2026-01-13T02:16:24.868Z] Step 800: HP=100, Ammo=15, Enemies=8, ExtractDist=874, Kills=2
+[2026-01-13T02:16:24.870Z] 
+=== ITERATION 30 ===
+[2026-01-13T02:16:33.703Z] Step 100: HP=100, Ammo=28, Enemies=10, ExtractDist=704, Kills=0
+[2026-01-13T02:16:42.034Z] Step 200: HP=100, Ammo=14, Enemies=9, ExtractDist=694, Kills=1
+[2026-01-13T02:16:42.037Z] Kill! Total: 1
+[2026-01-13T02:16:46.412Z] Kill! Total: 2
+[2026-01-13T02:16:46.413Z] Took damage: 100 -> 85
+[2026-01-13T02:16:49.495Z] Step 300: HP=79, Ammo=0, Enemies=8, ExtractDist=694, Kills=2
+[2026-01-13T02:16:57.827Z] Step 400: HP=63, Ammo=24, Enemies=8, ExtractDist=694, Kills=2
+[2026-01-13T02:17:06.160Z] Step 500: HP=47, Ammo=9, Enemies=8, ExtractDist=694, Kills=2
+[2026-01-13T02:17:14.496Z] Step 600: HP=31, Ammo=0, Enemies=8, ExtractDist=694, Kills=2
+[2026-01-13T02:17:15.869Z] Took damage: 27 -> 15
+[2026-01-13T02:17:16.703Z] Took damage: 15 -> 3
+[2026-01-13T02:17:17.452Z] Died at step 646, HP was 1
+[2026-01-13T02:17:17.533Z] 
+=== ITERATION 31 ===
+[2026-01-13T02:17:26.370Z] Step 100: HP=100, Ammo=15, Enemies=11, ExtractDist=655, Kills=0
+[2026-01-13T02:17:29.621Z] Took damage: 100 -> 88
+[2026-01-13T02:17:30.453Z] Kill! Total: 1
+[2026-01-13T02:17:34.700Z] Step 200: HP=88, Ammo=27, Enemies=10, ExtractDist=655, Kills=1
+[2026-01-13T02:17:43.034Z] Step 300: HP=88, Ammo=27, Enemies=10, ExtractDist=655, Kills=1
+[2026-01-13T02:17:50.507Z] Step 400: HP=88, Ammo=27, Enemies=10, ExtractDist=655, Kills=1
+[2026-01-13T02:17:58.852Z] Step 500: HP=88, Ammo=27, Enemies=10, ExtractDist=655, Kills=1
+[2026-01-13T02:18:07.186Z] Step 600: HP=88, Ammo=27, Enemies=10, ExtractDist=655, Kills=1
+[2026-01-13T02:18:14.638Z] Step 700: HP=88, Ammo=27, Enemies=10, ExtractDist=655, Kills=1
+[2026-01-13T02:18:22.972Z] Step 800: HP=88, Ammo=27, Enemies=10, ExtractDist=655, Kills=1
+[2026-01-13T02:18:22.974Z] 
+=== ITERATION 32 ===
+[2026-01-13T02:18:31.826Z] Step 100: HP=100, Ammo=19, Enemies=11, ExtractDist=838, Kills=0
+[2026-01-13T02:18:40.183Z] Step 200: HP=100, Ammo=5, Enemies=11, ExtractDist=838, Kills=0
+[2026-01-13T02:18:43.393Z] [ERROR] Execute: page.evaluate: Target page, context or browser has been closed
+[2026-01-13T02:18:43.399Z] 
+=== ITERATION 33 ===
+[2026-01-13T02:18:43.401Z] [FATAL] page.evaluate: Target page, context or browser has been closed
+[2026-01-13T02:18:43.416Z] Playtest complete

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DERELICT - Survival Horror</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        #gameContainer {
+            position: relative;
+            width: 1280px;
+            height: 720px;
+        }
+        #gameCanvas {
+            display: block;
+            background: #111;
+        }
+        #uiOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .ui-bar {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            color: #0f0;
+            font-size: 14px;
+        }
+        #topBar {
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #bottomBar {
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .resource-bar {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .bar-fill {
+            width: 150px;
+            height: 16px;
+            background: #222;
+            border: 1px solid #444;
+            position: relative;
+        }
+        .bar-fill-inner {
+            height: 100%;
+            transition: width 0.2s;
+        }
+        .o2-fill { background: linear-gradient(to right, #0af, #06f); }
+        .hp-fill { background: linear-gradient(to right, #f00, #a00); }
+        .integrity-fill { background: linear-gradient(to right, #fa0, #a60); }
+        .flashlight-fill { background: linear-gradient(to right, #ff0, #aa0); }
+        .quick-slots {
+            display: flex;
+            gap: 5px;
+        }
+        .slot {
+            width: 40px;
+            height: 40px;
+            background: #222;
+            border: 1px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        .slot.active {
+            border-color: #0f0;
+        }
+        #powerPanel {
+            position: absolute;
+            right: 10px;
+            top: 50px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 10px;
+            color: #0f0;
+            font-size: 12px;
+            display: none;
+        }
+        .power-system {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 5px 0;
+        }
+        .power-bars {
+            display: flex;
+            gap: 2px;
+        }
+        .power-bar {
+            width: 12px;
+            height: 16px;
+            background: #222;
+            border: 1px solid #444;
+        }
+        .power-bar.filled { background: #0f0; }
+        .power-bar.available { border-color: #0f0; }
+        #minimap {
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            width: 180px;
+            height: 180px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #0f0;
+            display: none;
+        }
+        #menuScreen, #gameoverScreen, #victoryScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #0f0;
+            pointer-events: auto;
+        }
+        #menuScreen h1 {
+            font-size: 72px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #0f0;
+        }
+        .menu-btn {
+            background: transparent;
+            border: 2px solid #0f0;
+            color: #0f0;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-family: inherit;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.2s;
+        }
+        .menu-btn:hover {
+            background: #0f0;
+            color: #000;
+        }
+        .subtitle {
+            font-size: 18px;
+            color: #0a0;
+            margin-bottom: 40px;
+        }
+        .hidden { display: none !important; }
+        #spaceshipPhase {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="1280" height="720"></canvas>
+        <div id="uiOverlay">
+            <div id="topBar" class="ui-bar">
+                <div class="resource-bar">
+                    <span>O2:</span>
+                    <div class="bar-fill"><div id="o2Bar" class="bar-fill-inner o2-fill" style="width:100%"></div></div>
+                    <span id="o2Text">100</span>
+                </div>
+                <div class="resource-bar">
+                    <span>HP:</span>
+                    <div class="bar-fill"><div id="hpBar" class="bar-fill-inner hp-fill" style="width:100%"></div></div>
+                    <span id="hpText">100</span>
+                </div>
+                <div id="sectorDisplay">SECTOR 1 - CREW QUARTERS</div>
+            </div>
+            <div id="bottomBar" class="ui-bar">
+                <div class="quick-slots" id="quickSlots"></div>
+                <div class="resource-bar">
+                    <span>INTEGRITY:</span>
+                    <div class="bar-fill"><div id="integrityBar" class="bar-fill-inner integrity-fill" style="width:100%"></div></div>
+                    <span id="integrityText">100%</span>
+                </div>
+                <div class="resource-bar">
+                    <span>FLASHLIGHT:</span>
+                    <div class="bar-fill"><div id="flashlightBar" class="bar-fill-inner flashlight-fill" style="width:100%"></div></div>
+                </div>
+            </div>
+            <div id="powerPanel"></div>
+            <canvas id="minimap"></canvas>
+        </div>
+        <div id="menuScreen">
+            <h1>DERELICT</h1>
+            <p class="subtitle">Alone on a dying ship. Every breath costs you.</p>
+            <button class="menu-btn" onclick="startGame()">START</button>
+            <p style="margin-top: 40px; color: #060; font-size: 12px;">WASD - Move | Mouse - Aim | Click - Attack | F - Flashlight | E - Interact | Shift - Run</p>
+        </div>
+        <div id="gameoverScreen" class="hidden">
+            <h1 style="color: #f00;">GAME OVER</h1>
+            <p id="deathMessage" class="subtitle"></p>
+            <button class="menu-btn" onclick="startGame()">TRY AGAIN</button>
+        </div>
+        <div id="victoryScreen" class="hidden">
+            <h1>ESCAPED!</h1>
+            <p class="subtitle">You made it off the derelict...</p>
+            <div id="victoryStats"></div>
+            <button class="menu-btn" onclick="enterSpaceshipPhase()">CONTINUE TO SPACE</button>
+            <button class="menu-btn" onclick="startGame()">PLAY AGAIN</button>
+        </div>
+        <canvas id="spaceshipPhase"></canvas>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>

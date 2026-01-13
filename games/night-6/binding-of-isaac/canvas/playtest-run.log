@@ -1,0 +1,17 @@
+[2026-01-13T02:19:33.060Z] Starting Binding of Isaac Clone Playtest
+[2026-01-13T02:19:33.062Z] Target: 200 iterations
+Error: ENOENT: no such file or directory, unlink '/workspace/games/night-6/binding-of-isaac/canvas/playtest-log.txt'
+    at Object.unlinkSync (node:fs:1886:11)
+    at playtest (/workspace/games/night-6/binding-of-isaac/canvas/playtest.js:191:12)
+    at Object.<anonymous> (/workspace/games/night-6/binding-of-isaac/canvas/playtest.js:363:1)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)
+    at node:internal/main/run_main_module:28:49 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'unlink',
+  path: '/workspace/games/night-6/binding-of-isaac/canvas/playtest-log.txt'
+}

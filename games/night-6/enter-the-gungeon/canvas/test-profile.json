@@ -1,0 +1,47 @@
+{
+  "game_info": {
+    "name": "Enter the Gungeon Clone",
+    "type": "bullet_hell_roguelike_dungeon_crawler",
+    "description": "Bullet-hell roguelike where players descend through procedural floors, dodge roll through projectiles, collect guns/items, and fight bosses"
+  },
+  "core_loop": {
+    "description": "Enter floor, explore rooms, clear enemies, find chests/shop, defeat boss, descend to next floor",
+    "estimated_duration_sec": 90,
+    "loops_for_meaningful_test": 2
+  },
+  "recommended_test_duration_sec": 180,
+  "input_scheme": {
+    "movement": { "type": "wasd", "keys": ["w", "a", "s", "d"] },
+    "primary_action": { "type": "click", "keys": ["mouse0"], "description": "Shoot" },
+    "secondary_actions": [
+      { "name": "dodge_roll", "key": "Space", "description": "Dodge roll with i-frames" },
+      { "name": "reload", "key": "r", "description": "Reload weapon" },
+      { "name": "blank", "key": "q", "description": "Clear bullets from screen" },
+      { "name": "interact", "key": "e", "description": "Interact with objects/chests" }
+    ]
+  },
+  "combat_profile": {
+    "style": "twin_stick_bullet_hell",
+    "how_to_attack": "Mouse to aim, left click to shoot. WASD to move. Space to dodge roll through bullets. Q to use blank (clears all bullets).",
+    "key_mechanics": ["Dodge roll i-frames", "Bullet patterns", "Cover system", "Multiple weapon types"]
+  },
+  "player": {
+    "hp": 6,
+    "dodge_roll_duration": 0.7,
+    "dodge_roll_iframes": 0.35,
+    "starting_blanks": 2,
+    "starting_keys": 1,
+    "movement_speed": 200
+  },
+  "success_conditions": {
+    "minimum": { "enemies_killed": 15, "rooms_cleared": 3, "survival_sec": 60 }
+  },
+  "key_features": [
+    { "name": "Dodge roll with i-frames", "gdd_section": "Movement & Combat System", "testable": true },
+    { "name": "Multiple bullet patterns", "gdd_section": "Enemy System", "testable": true },
+    { "name": "Procedural floor generation", "gdd_section": "Dungeon Structure", "testable": true },
+    { "name": "Boss fights", "gdd_section": "Boss System", "testable": true },
+    { "name": "Weapon variety", "gdd_section": "Weapon System", "testable": true },
+    { "name": "Chest/loot system", "gdd_section": "Chest & Loot System", "testable": true }
+  ]
+}

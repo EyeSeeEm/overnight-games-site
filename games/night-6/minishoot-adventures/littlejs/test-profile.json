@@ -1,0 +1,37 @@
+{
+  "game_info": {
+    "name": "Minishoot Adventures Clone",
+    "type": "twin_stick_adventure",
+    "description": "Twin-stick shooter adventure with Zelda-style exploration, dungeons, and bullet-hell combat."
+  },
+  "core_loop": {
+    "description": "Explore open world, fight enemies with twin-stick combat, collect XP/items, defeat bosses.",
+    "estimated_duration_sec": 120,
+    "loops_for_meaningful_test": 2
+  },
+  "recommended_test_duration_sec": 240,
+  "input_scheme": {
+    "movement": { "type": "wasd", "keys": ["w", "a", "s", "d"] },
+    "primary_action": { "type": "twin_stick", "description": "Arrow keys or click to shoot in direction" },
+    "secondary_actions": [
+      { "name": "dash", "key": "Shift" },
+      { "name": "supershot", "key": "Space" }
+    ]
+  },
+  "combat_profile": {
+    "style": "twin_stick",
+    "how_to_attack": "WASD to move, Arrow keys or mouse to shoot in direction. Shift to dash, Space for supershot."
+  },
+  "success_conditions": {
+    "minimum": {
+      "enemies_killed": 10,
+      "survival_sec": 60
+    }
+  },
+  "key_features": [
+    { "name": "Twin-stick combat", "gdd_section": "Combat System", "testable": true },
+    { "name": "Open world exploration", "gdd_section": "World Structure", "testable": true },
+    { "name": "XP and leveling", "gdd_section": "Progression Systems", "testable": true },
+    { "name": "Dash ability", "gdd_section": "Controls", "testable": true }
+  ]
+}
