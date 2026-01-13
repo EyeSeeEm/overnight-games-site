@@ -6,7 +6,8 @@ const SCREEN_HEIGHT = 768;
 
 // Game state
 let gamePaused = new URLSearchParams(location.search).has('test');
-let gameState = 'menu'; // menu, map, combat, event, gameover, victory
+let gameState = 'playing'; // AUTO-START: Skip menu
+        // menu, map, combat, event, gameover, victory
 let combatPaused = false;
 let stats = {
     jumpsCompleted: 0,

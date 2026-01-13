@@ -1201,6 +1201,9 @@ function gameLoop(timestamp) {
     render();
 
     requestAnimationFrame(gameLoop);
+
+        // AUTO-START: Skip menu and start game directly
+        setTimeout(() => startGame(), 100);
 }
 
 // Start game loop

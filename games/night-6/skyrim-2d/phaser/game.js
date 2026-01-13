@@ -2286,8 +2286,7 @@ class MenuScene extends Phaser.Scene {
     }
 
     create() {
-        gameState = 'menu';
-
+        gameState = 'playing'; // AUTO-START: Skip menu
         // Background
         this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x1a1a2e);
 

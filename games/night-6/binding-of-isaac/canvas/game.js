@@ -1646,6 +1646,9 @@
         // Start game loop
         requestAnimationFrame(gameLoop);
 
+        // AUTO-START: Skip menu and start game directly
+        setTimeout(() => startGame(), 100);
+
         console.log('[HARNESS] Test harness initialized, game paused');
     }
 

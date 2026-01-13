@@ -8,7 +8,7 @@ const GAME_WIDTH = 800;
 const GAME_HEIGHT = 700;
 
 let gamePaused = true;
-let gameState = 'menu';
+let gameState = 'playing'; // AUTO-START: Skip menu
 let currentTurn = 'player';
 let turnNumber = 1;
 let selectedSoldier = null;

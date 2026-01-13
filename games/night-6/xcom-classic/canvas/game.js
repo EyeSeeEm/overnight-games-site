@@ -16,7 +16,7 @@ const TU_STAND = 8;
 const TU_RELOAD = 15;
 
 // Game state
-let gameState = 'menu'; // menu, playing, gameover, victory
+let gameState = 'playing'; // AUTO-START: Skip menu // menu, playing, gameover, victory
 let gamePaused = true;
 let turnNumber = 1;
 let currentPhase = 'player'; // player, alien

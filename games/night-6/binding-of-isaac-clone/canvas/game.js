@@ -2506,6 +2506,9 @@ function gameLoop(timestamp) {
     draw();
 
     requestAnimationFrame(gameLoop);
+
+        // AUTO-START: Skip menu and start game directly
+        setTimeout(() => startGame(), 100);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

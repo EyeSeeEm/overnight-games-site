@@ -10,7 +10,7 @@ const SURFACE_Y = 3;
 
 // Game state
 let gamePaused = true;
-let gameState = 'menu';
+let gameState = 'playing'; // AUTO-START: Skip menu
 let stats = {
     mineralsCollected: 0,
     depthReached: 0,

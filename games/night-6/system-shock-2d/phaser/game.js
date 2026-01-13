@@ -4,8 +4,8 @@ const GAME_HEIGHT = 540;
 const TILE_SIZE = 32;
 
 // Game State
-let gameState = 'menu';
-let gamePaused = true;
+let gameState = 'playing'; // AUTO-START: Skip menu
+let gamePaused = new URLSearchParams(location.search).has('test');
 let currentDeck = 1;
 
 // Colors
@@ -1668,6 +1668,7 @@ class MenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         this.input.keyboard.on('keydown-SPACE', () => this.scene.start('GameScene'));
+        this.input.keyboard.on('keydown-ENTER', () => this.scene.start('GameScene'));
 
         // Menu harness
         window.harness = {

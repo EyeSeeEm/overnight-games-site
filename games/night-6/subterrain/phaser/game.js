@@ -7,7 +7,7 @@ const GAME_HEIGHT = 600;
 
 // Game state
 let gamePaused = true;
-let gameState = 'menu';
+let gameState = 'playing'; // AUTO-START: Skip menu
 let currentSector = 'hub';
 let gameTime = 0; // In game minutes
 let globalInfection = 0;

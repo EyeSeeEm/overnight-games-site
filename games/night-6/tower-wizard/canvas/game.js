@@ -693,6 +693,9 @@
 
         requestAnimationFrame(gameLoop);
 
+        // AUTO-START: Skip menu and start game directly
+        setTimeout(() => startGame(), 100);
+
         console.log('[HARNESS] Tower Wizard harness initialized, game paused');
     }
 

@@ -9,7 +9,7 @@ const TILE_SIZE = 16; // Smaller tiles per feedback
 
 // Game state
 let gameState = 'menu';
-let gamePaused = true;
+let gamePaused = new URLSearchParams(location.search).has('test');
 let lastTime = 0;
 
 // Player
@@ -1370,6 +1370,9 @@ function gameLoop(timestamp) {
     draw();
 
     requestAnimationFrame(gameLoop);
+
+        // AUTO-START: Skip menu and start game directly
+        setTimeout(() => startGame(), 100);
 }
 
 // Input handlers

@@ -3,7 +3,7 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 // Game state
-let gameState = 'menu';
+let gameState = 'playing'; // AUTO-START: Skip menu
 let gamePaused = true;
 let gameSpeed = 1;
 

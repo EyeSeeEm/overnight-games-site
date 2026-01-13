@@ -7,7 +7,7 @@ const WIDTH = 800;
 const HEIGHT = 600;
 
 // Game state
-let gameState = 'menu'; // menu, characterSelect, playing, shop, levelUp, gameover, victory
+let gameState = 'playing'; // AUTO-START: Skip menu // menu, characterSelect, playing, shop, levelUp, gameover, victory
 let gamePaused = true;
 let lastTime = 0;
 

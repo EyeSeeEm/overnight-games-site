@@ -7,7 +7,7 @@ const TILE_SIZE = 48;
 const ROOM_OFFSET_X = (GAME_WIDTH - ROOM_WIDTH * TILE_SIZE) / 2;
 const ROOM_OFFSET_Y = 80;
 
-let gameState = 'menu';
+let gameState = 'playing'; // AUTO-START: Skip menu
 let gamePaused = new URLSearchParams(location.search).has('test');
 let currentFloor = 1;
 

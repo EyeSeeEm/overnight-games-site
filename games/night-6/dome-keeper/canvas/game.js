@@ -1035,6 +1035,9 @@
         // Start game loop
         requestAnimationFrame(gameLoop);
 
+        // AUTO-START: Skip menu and start game directly
+        setTimeout(() => startGame(), 100);
+
         console.log('[HARNESS] Dome Keeper harness initialized, game paused');
     }
 

@@ -8,7 +8,8 @@ const ZONE_HEIGHT = 1600;
 
 // Game state
 let gamePaused = true;
-let gameState = 'menu'; // menu, bunker, raid, dead, extracted
+let gameState = 'playing'; // AUTO-START: Skip menu
+        // menu, bunker, raid, dead, extracted
 let stats = {
     enemiesKilled: 0,
     containersLooted: 0,

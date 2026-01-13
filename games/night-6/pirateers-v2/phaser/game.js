@@ -35,7 +35,10 @@ const COLORS = {
 };
 
 // Game State
-let gameState = 'menu'; // 'menu', 'base', 'sailing', 'treasure', 'kraken', 'gameover'
+let gameState = 'playing';
+        // AUTO-START: Skip menu
+        startGame();
+        // // 'menu', 'base', 'sailing', 'treasure', 'kraken', 'gameover'
 let currentDay = 1;
 let dayTimeRemaining = DAY_DURATION;
 let gold = 500;
