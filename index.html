@@ -1234,7 +1234,13 @@
         renderGames();
         restorePlayingGame(); // Reopen game if ?playing= in URL
       } catch (e) {
-        document.getElementById('gamesGrid').innerHTML = '<p style="color:#c00;padding:20px;">Error loading games</p>';
+        console.error('Error loading games:', e);
+        document.getElementById('gamesGrid').innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #8f98a0;">
+          <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+          <div style="font-size: 18px; margin-bottom: 10px; color: #ff6b6b;">Error loading games</div>
+          <div style="font-size: 13px; margin-bottom: 15px;">Try clearing filters or refreshing the page.</div>
+          <button onclick="localStorage.removeItem('gameFilters'); location.reload();" style="background: #2a475e; border: 1px solid #3d6c8a; color: #c6d4df; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Clear Filters & Reload</button>
+        </div>`;
       }
     }
 
@@ -2091,7 +2097,13 @@
     }
 
     function renderGames() {
-      const games = getFilteredGames();
+      let games;
+      try {
+        games = getFilteredGames();
+      } catch (e) {
+        console.error('Error filtering games:', e);
+        games = [];
+      }
       const sortBy = document.getElementById('sortBy').value;
       document.getElementById('totalGames').textContent = allGames.length + ' Games';
       document.getElementById('playedGames').textContent = allGames.filter(g => g.played).length + ' Played';
