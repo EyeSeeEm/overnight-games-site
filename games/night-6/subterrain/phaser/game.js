@@ -6,7 +6,7 @@ const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
 
 // Game state
-let gamePaused = true;
+let gamePaused = new URLSearchParams(location.search).has('test');
 let gameState = 'playing'; // AUTO-START: Skip menu
 let currentSector = 'hub';
 let gameTime = 0; // In game minutes
@@ -1309,7 +1309,7 @@ const config = {
             debug: false
         }
     },
-    scene: [BootScene, MenuScene, GameScene]
+    scene: [BootScene, GameScene] // AUTO-START: Skip MenuScene
 };
 
 const game = new Phaser.Game(config);

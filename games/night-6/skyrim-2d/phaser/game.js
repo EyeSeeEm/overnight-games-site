@@ -2314,6 +2314,14 @@ class MenuScene extends Phaser.Scene {
             this.scene.start('GameScene');
         });
 
+        // Keyboard support for starting
+        this.input.keyboard.on('keydown-ENTER', () => {
+            this.scene.start('GameScene');
+        });
+        this.input.keyboard.on('keydown-SPACE', () => {
+            this.scene.start('GameScene');
+        });
+
         // Instructions
         this.add.text(GAME_WIDTH / 2, 420, 'WASD - Move | Left Click - Attack | E - Interact | Tab - Inventory', {
             fontSize: '14px',
@@ -2373,7 +2381,7 @@ const config = {
     height: GAME_HEIGHT,
     parent: 'game-container',
     backgroundColor: '#1a1a2e',
-    scene: [MenuScene, GameScene],
+    scene: [GameScene] // AUTO-START: Skip MenuScene,
     physics: {
         default: 'arcade',
         arcade: {

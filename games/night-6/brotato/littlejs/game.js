@@ -8,7 +8,7 @@ const WAVE_DURATION = 30;
 const MAX_WAVES = 20;
 
 // Game state
-let gamePaused = true;
+let gamePaused = new URLSearchParams(location.search).has('test');
 let gamePhase = 'menu'; // menu, playing, shop, gameover, victory
 let player = null;
 let enemies = [];

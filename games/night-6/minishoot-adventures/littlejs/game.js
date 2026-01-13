@@ -10,7 +10,7 @@ const DASH_COOLDOWN = 0.8;
 const IFRAMES = 1.0;
 
 // Game state
-let gamePaused = true;
+let gamePaused = new URLSearchParams(location.search).has('test');
 let gamePhase = 'menu'; // menu, playing, gameover
 let player = null;
 let enemies = [];

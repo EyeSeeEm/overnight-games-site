@@ -9,7 +9,7 @@ const TILE_SIZE = 32;
 
 // Game state
 let gameState = 'menu'; // menu, playing, gameover, victory, paused
-let gamePaused = true;
+let gamePaused = new URLSearchParams(location.search).has('test');
 let lastTime = 0;
 
 // Player

@@ -15,7 +15,7 @@ const VISION_ANGLE = Math.PI / 2; // 90 degrees
 
 // Game state
 let gameState = 'playing'; // AUTO-START: Skip menu
-let gamePaused = true;
+let gamePaused = new URLSearchParams(location.search).has('test');
 let currentDeck = 1;
 
 // Player

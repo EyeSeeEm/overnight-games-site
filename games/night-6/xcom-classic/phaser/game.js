@@ -7,7 +7,7 @@ const MAP_HEIGHT = 15;
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 700;
 
-let gamePaused = true;
+let gamePaused = new URLSearchParams(location.search).has('test');
 let gameState = 'playing'; // AUTO-START: Skip menu
 let currentTurn = 'player';
 let turnNumber = 1;
@@ -1405,7 +1405,7 @@ const config = {
     height: GAME_HEIGHT,
     parent: 'game-container',
     backgroundColor: '#0a0a14',
-    scene: [BootScene, MenuScene, GameScene]
+    scene: [BootScene, GameScene] // AUTO-START: Skip MenuScene
 };
 
 const game = new Phaser.Game(config);

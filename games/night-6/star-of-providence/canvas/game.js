@@ -14,7 +14,7 @@
     // GAME STATE
     // ========================================================================
     let gameState = 'menu'; // menu, playing, gameover, victory
-    let gamePaused = true;
+    let gamePaused = new URLSearchParams(location.search).has('test');
     let floor = 1;
     let roomsCleared = 0;
     let score = 0;

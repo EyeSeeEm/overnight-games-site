@@ -7,7 +7,7 @@ const ZONE_WIDTH = 1600;
 const ZONE_HEIGHT = 1600;
 
 // Game state
-let gamePaused = true;
+let gamePaused = new URLSearchParams(location.search).has('test');
 let gameState = 'playing'; // AUTO-START: Skip menu
         // menu, bunker, raid, dead, extracted
 let stats = {
@@ -1432,7 +1432,7 @@ const config = {
     height: SCREEN_HEIGHT,
     parent: 'game-container',
     backgroundColor: '#0a0a0a',
-    scene: [BootScene, MenuScene, RaidScene, ExtractScene, DeathScene]
+    scene: [BootScene, RaidScene, ExtractScene, DeathScene] // AUTO-START: Skip MenuScene
 };
 
 const game = new Phaser.Game(config);

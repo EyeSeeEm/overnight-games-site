@@ -70,7 +70,7 @@
     // GAME STATE
     // ═══════════════════════════════════════════════════════════════════════════
     let canvas, ctx;
-    let gamePaused = true;
+    let gamePaused = new URLSearchParams(location.search).has('test');
     let gameState = 'menu'; // 'menu', 'playing', 'gameover', 'victory', 'roomTransition'
     let lastTime = 0;
     let deltaTime = 0;

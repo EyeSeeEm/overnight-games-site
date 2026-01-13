@@ -51,7 +51,7 @@
     // GAME STATE
     // ========================================================================
     let gameState = 'menu'; // menu, playing, paused, gameover, victory, shop
-    let gamePaused = true; // For harness
+    let gamePaused = new URLSearchParams(location.search).has('test');
     let currentDeck = 1;
     let selfDestructTimer = 600; // 10 minutes in seconds
     let selfDestructActive = false;

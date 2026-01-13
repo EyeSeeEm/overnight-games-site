@@ -4,7 +4,7 @@ const ctx = canvas.getContext('2d');
 
 // Game state
 let gameState = 'playing'; // AUTO-START: Skip menu
-let gamePaused = true;
+let gamePaused = new URLSearchParams(location.search).has('test');
 let gameSpeed = 1;
 
 // Resources

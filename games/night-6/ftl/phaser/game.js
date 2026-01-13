@@ -1527,7 +1527,7 @@ const config = {
     height: SCREEN_HEIGHT,
     parent: 'game-container',
     backgroundColor: '#0a0a1a',
-    scene: [BootScene, MenuScene, GameScene]
+    scene: [BootScene, GameScene] // AUTO-START: Skip MenuScene
 };
 
 const game = new Phaser.Game(config);

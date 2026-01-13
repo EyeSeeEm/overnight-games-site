@@ -24,7 +24,7 @@ const COLOR_BOMB = new Color(0.5, 0.5, 1);
 
 // ==================== GAME STATE ====================
 let gameState = 'playing';
-let gamePaused = true;
+let gamePaused = new URLSearchParams(location.search).has('test');
 let player = null;
 let enemies = [];
 let playerBullets = [];

@@ -46,7 +46,7 @@ const ENEMY_SHIPS = {
 
 // Game state
 let gameState = 'menu'; // menu, sectorMap, combat, store, gameover, victory
-let gamePaused = true;
+let gamePaused = new URLSearchParams(location.search).has('test');
 let combatPaused = true;
 
 // Player ship

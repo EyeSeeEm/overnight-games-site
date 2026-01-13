@@ -29,7 +29,7 @@ const COLOR_DOOR_BLUE = new Color(0, 0.3, 0.8);
 
 // ==================== GAME STATE ====================
 let gameState = 'playing'; // Start directly in playing state for LittleJS
-let gamePaused = true; // Start paused for harness
+let gamePaused = new URLSearchParams(location.search).has('test');
 let player = null;
 let enemies = [];
 let bullets = [];

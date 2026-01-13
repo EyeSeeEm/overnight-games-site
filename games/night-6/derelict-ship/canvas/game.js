@@ -51,7 +51,7 @@ const ENEMY_STATS = {
 // GAME STATE
 // ═══════════════════════════════════════════════════════════
 let gameState = 'menu'; // menu, playing, gameover, victory, spaceship
-let gamePaused = true;
+let gamePaused = new URLSearchParams(location.search).has('test');
 let lastTime = 0;
 let deltaTime = 0;
 

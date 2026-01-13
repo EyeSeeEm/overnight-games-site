@@ -52,7 +52,7 @@ const ENEMY_TYPES = {
 // GAME STATE
 // ═══════════════════════════════════════════════════════════
 let gameState = 'menu';
-let gamePaused = true;
+let gamePaused = new URLSearchParams(location.search).has('test');
 let currentPhase = 'player'; // player, enemy, animation
 
 let map = [];
