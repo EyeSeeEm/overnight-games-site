@@ -2176,18 +2176,19 @@
 
       // Show empty state if no games match filters
       if (games.length === 0) {
-        const night = document.getElementById('filterNight').value;
-        const framework = document.getElementById('filterFramework').value;
-        const status = document.getElementById('filterStatus').value;
+        const nights = getSelectedNights();
+        const frameworks = getSelectedFrameworks();
         const search = document.getElementById('search').value;
 
         let msg = 'No games found';
         const parts = [];
-        if (framework) parts.push(framework);
-        if (night) parts.push(night.replace('night-', 'Night '));
-        if (status) parts.push(status);
+        // Night filters
+        nights.forEach(n => parts.push(n.replace('night-', 'Night ')));
+        // Framework filters
+        frameworks.forEach(f => parts.push(f));
+        // Search
         if (search) parts.push(`matching "${search}"`);
-        // Include active chip filters in message
+        // Active chip filters
         if (activeChips.unplayed) parts.push('Unplayed');
         if (activeChips.hasNotes) parts.push('Has Notes');
         if (activeChips.rating5) parts.push('5★');
