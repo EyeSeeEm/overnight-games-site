@@ -2187,6 +2187,13 @@
         if (night) parts.push(night.replace('night-', 'Night '));
         if (status) parts.push(status);
         if (search) parts.push(`matching "${search}"`);
+        // Include active chip filters in message
+        if (activeChips.unplayed) parts.push('Unplayed');
+        if (activeChips.hasNotes) parts.push('Has Notes');
+        if (activeChips.rating5) parts.push('5★');
+        if (activeChips.rating4) parts.push('4+★');
+        if (activeChips.updated) parts.push('Updated');
+        if (activeChips.showBroken) parts.push('Broken');
         if (parts.length) msg += ': ' + parts.join(' + ');
 
         html = `<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #8f98a0;">
