@@ -31,6 +31,13 @@ let gameState = 'menu';
 let gamePaused = true;
 let currentMap = 'riverwood';
 
+// V2 Harness - time-accelerated testing
+let gameTime = 0;
+let debugLogs = [];
+function logEvent(msg) {
+    debugLogs.push(`[${gameTime}ms] ${msg}`);
+}
+
 // Color Palette
 const COLORS = {
     grass: 0x4a7c4e,
@@ -1070,6 +1077,7 @@ class GameScene extends Phaser.Scene {
 
     damageEnemy(enemy, damage) {
         enemy.health -= damage;
+        logEvent(`Enemy ${enemy.type} damaged for ${damage}, HP: ${enemy.health}/${enemy.maxHealth}`);
 
         // Damage number
         this.showDamageNumber(enemy.x, enemy.y - 20, damage, 0xff4444);
@@ -1135,6 +1143,8 @@ class GameScene extends Phaser.Scene {
     }
 
     killEnemy(enemy) {
+        logEvent(`Enemy killed: ${enemy.type}, XP: +${enemy.xp}`);
+
         // Grant XP
         this.gainXP(enemy.xp);
 
@@ -1178,6 +1188,7 @@ class GameScene extends Phaser.Scene {
         if (this.invincibleTime > 0) return;
 
         this.playerData.health -= amount;
+        logEvent(`Player damaged: ${amount}, HP: ${this.playerData.health}/${this.playerData.maxHealth}`);
 
         // Screen flash red
         this.cameras.main.flash(200, 255, 0, 0, true);
@@ -1199,6 +1210,7 @@ class GameScene extends Phaser.Scene {
     }
 
     playerDeath() {
+        logEvent(`Player died! Level: ${this.playerData.level}, Gold: ${this.playerData.gold}`);
         gameState = 'gameover';
         this.showGameOver();
     }
@@ -1257,6 +1269,7 @@ class GameScene extends Phaser.Scene {
 
     levelUp() {
         this.playerData.level++;
+        logEvent(`Level up! Now level ${this.playerData.level}`);
         this.playerData.maxHealth += 10;
         this.playerData.health = this.playerData.maxHealth;
         this.playerData.maxMagicka += 5;
@@ -1685,8 +1698,10 @@ class GameScene extends Phaser.Scene {
 
         if (item.type === 'gold') {
             this.playerData.gold += item.value;
+            logEvent(`Gold collected: +${item.value}, total: ${this.playerData.gold}`);
         } else {
             this.playerData.inventory.push(pickup.item);
+            logEvent(`Item collected: ${pickup.item}`);
         }
 
         pickup.sprite.destroy();
@@ -2058,9 +2073,42 @@ class GameScene extends Phaser.Scene {
         });
     }
 
-    // Harness Implementation
+    // V2 Harness Implementation - time-accelerated
     initHarness() {
         const scene = this;
+
+        // Synchronous tick function for time-accelerated testing
+        function runTick(dt) {
+            if (gamePaused || gameState !== 'playing') return;
+
+            // Update game time
+            gameTime += dt;
+
+            // Update cooldowns
+            if (scene.attackCooldown > 0) scene.attackCooldown -= dt;
+            if (scene.dodgeCooldown > 0) scene.dodgeCooldown -= dt;
+            if (scene.invincibleTime > 0) scene.invincibleTime -= dt;
+            if (scene.staminaRegenDelay > 0) scene.staminaRegenDelay -= dt;
+
+            // Stamina regeneration
+            if (scene.staminaRegenDelay <= 0 && !scene.isSprinting) {
+                scene.playerData.stamina = Math.min(scene.playerData.maxStamina, scene.playerData.stamina + 10 * (dt / 1000));
+            }
+
+            // Magicka regeneration
+            scene.playerData.magicka = Math.min(scene.playerData.maxMagicka, scene.playerData.magicka + 5 * (dt / 1000));
+
+            // Handle player movement
+            if (!scene.dialogueActive && !scene.shopActive && !scene.inventoryOpen) {
+                scene.handleMovement(dt);
+            }
+
+            // Update enemies
+            scene.updateEnemies(dt);
+
+            // Check map exits
+            scene.checkExits();
+        }
 
         window.harness = {
             pause: () => {
@@ -2073,43 +2121,55 @@ class GameScene extends Phaser.Scene {
 
             isPaused: () => gamePaused,
 
-            execute: (action, durationMs) => {
-                return new Promise((resolve) => {
-                    // Apply inputs
-                    if (action.keys) {
-                        action.keys.forEach(key => {
-                            const keyCode = scene.getKeyCode(key);
-                            if (keyCode && scene.cursors[keyCode]) {
-                                scene.cursors[keyCode].isDown = true;
-                            }
-                        });
-                    }
+            execute: async ({ keys: inputKeys = [], duration = 1000, screenshot = false, click }) => {
+                const startTime = Date.now();
+                debugLogs = [];
 
-                    if (action.click) {
-                        scene.input.activePointer.x = action.click.x;
-                        scene.input.activePointer.y = action.click.y;
-                        scene.input.activePointer.worldX = action.click.x;
-                        scene.input.activePointer.worldY = action.click.y;
-                        scene.playerAttack();
-                    }
-
-                    // Resume game
-                    gamePaused = false;
-
-                    // After duration, pause and release inputs
-                    setTimeout(() => {
-                        if (action.keys) {
-                            action.keys.forEach(key => {
-                                const keyCode = scene.getKeyCode(key);
-                                if (keyCode && scene.cursors[keyCode]) {
-                                    scene.cursors[keyCode].isDown = false;
-                                }
-                            });
+                // Apply inputs
+                if (inputKeys.length > 0) {
+                    inputKeys.forEach(key => {
+                        const keyCode = scene.getKeyCode(key);
+                        if (keyCode && scene.cursors[keyCode]) {
+                            scene.cursors[keyCode].isDown = true;
                         }
-                        gamePaused = true;
-                        resolve();
-                    }, durationMs);
-                });
+                    });
+                }
+
+                // Handle click attack
+                if (click) {
+                    scene.input.activePointer.x = click.x;
+                    scene.input.activePointer.y = click.y;
+                    scene.input.activePointer.worldX = click.x;
+                    scene.input.activePointer.worldY = click.y;
+                    scene.playerAttack();
+                }
+
+                // Run physics ticks
+                const tickMs = 16; // ~60fps
+                let elapsed = 0;
+                gamePaused = false;
+                while (elapsed < duration) {
+                    runTick(tickMs);
+                    elapsed += tickMs;
+                }
+                gamePaused = true;
+
+                // Clear inputs
+                if (inputKeys.length > 0) {
+                    inputKeys.forEach(key => {
+                        const keyCode = scene.getKeyCode(key);
+                        if (keyCode && scene.cursors[keyCode]) {
+                            scene.cursors[keyCode].isDown = false;
+                        }
+                    });
+                }
+
+                return {
+                    screenshot: screenshot ? (scene.game.canvas ? scene.game.canvas.toDataURL() : null) : null,
+                    logs: [...debugLogs],
+                    state: window.harness.getState(),
+                    realTime: Date.now() - startTime
+                };
             },
 
             getState: () => {
@@ -2117,6 +2177,7 @@ class GameScene extends Phaser.Scene {
                     gameState: gameState,
                     currentMap: currentMap,
                     mapInfo: WORLD_MAPS[currentMap],
+                    gameTime: gameTime,
                     player: {
                         x: scene.player ? scene.player.x : 0,
                         y: scene.player ? scene.player.y : 0,
@@ -2222,12 +2283,20 @@ class GameScene extends Phaser.Scene {
                 forceGameOver: () => {
                     scene.playerDeath();
                 },
+                restart: () => {
+                    gameState = 'playing';
+                    gameTime = 0;
+                    debugLogs = [];
+                    scene.playerData.health = scene.playerData.maxHealth;
+                    scene.playerData.magicka = scene.playerData.maxMagicka;
+                    scene.playerData.stamina = scene.playerData.maxStamina;
+                },
                 log: (msg) => {
                     console.log('[HARNESS]', msg);
                 }
             },
 
-            version: '1.0',
+            version: '2.0',
 
             gameInfo: {
                 name: 'Frostfall: A 2D Skyrim Demake',
@@ -2248,7 +2317,7 @@ class GameScene extends Phaser.Scene {
             }
         };
 
-        console.log('[HARNESS] Frostfall harness initialized, game paused');
+        console.log('[HARNESS] Frostfall v2 harness initialized (time-accelerated), game paused');
     }
 
     getKeyCode(key) {

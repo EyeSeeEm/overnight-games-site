@@ -21,6 +21,13 @@ let stats = {
     enemiesKilled: 0
 };
 
+let gameTime = 0;
+let debugLogs = [];
+
+function logEvent(msg) {
+    debugLogs.push(`[${gameTime}ms] ${msg}`);
+}
+
 // Rock types with depth-based spawning
 const ROCK_TYPES = {
     air: { hp: 0, color: 0x1a0a0a, drops: [] },
@@ -588,10 +595,12 @@ class GameScene extends Phaser.Scene {
 
         // Auto-deposit at dome
         if (this.isNearDome() && this.carriedResources.length > 0) {
+            const deposited = this.carriedResources.length;
             for (const res of this.carriedResources) {
                 this.resources[res]++;
                 stats.resourcesCollected++;
             }
+            logEvent(`Deposited ${deposited} resources at dome`);
             this.carriedResources = [];
         }
 
@@ -634,6 +643,7 @@ class GameScene extends Phaser.Scene {
         if (tile.hp <= 0) {
             // Tile destroyed
             stats.tilesMined++;
+            logEvent(`Tile mined: ${tile.type} at (${newX}, ${newY})`);
 
             // Handle relic nodes
             const rockType = ROCK_TYPES[tile.type];
@@ -685,6 +695,7 @@ class GameScene extends Phaser.Scene {
     startDefensePhase() {
         phase = 'defense';
         currentWave++;
+        logEvent(`Defense phase started: Wave ${currentWave}`);
 
         // Spawn enemies
         this.spawnWave();
@@ -791,6 +802,7 @@ class GameScene extends Phaser.Scene {
 
             // Remove dead enemies
             if (enemy.hp <= 0) {
+                logEvent(`Enemy killed: ${enemy.enemyType}`);
                 enemy.destroy();
                 this.enemies.splice(i, 1);
                 stats.enemiesKilled++;
@@ -984,63 +996,186 @@ class GameScene extends Phaser.Scene {
 
     setupHarness() {
         const scene = this;
+        let activeKeys = new Set();
+        let mouseState = { x: 200, y: 150, isDown: false };
+
+        // Manual tick function for time-accelerated execution
+        const runTick = (dt) => {
+            gameTime += dt;
+            const dtSec = dt / 1000;
+
+            if (phase === 'mining') {
+                // Mining phase logic
+                phaseTimer -= dtSec;
+                if (phaseTimer <= 0) {
+                    scene.startDefensePhase();
+                    return;
+                }
+
+                // Drilling cooldown
+                if (scene.drillCooldown > 0) {
+                    scene.drillCooldown -= dtSec;
+                }
+
+                // Movement/drilling
+                if (scene.drillCooldown <= 0) {
+                    let dx = 0, dy = 0;
+                    if (activeKeys.has('w')) dy = -1;
+                    else if (activeKeys.has('s')) dy = 1;
+                    else if (activeKeys.has('a')) dx = -1;
+                    else if (activeKeys.has('d')) dx = 1;
+
+                    if (dx !== 0 || dy !== 0) {
+                        scene.tryMoveOrDig(dx, dy);
+                    }
+                }
+
+                // Auto-deposit at dome
+                if (scene.isNearDome() && scene.carriedResources.length > 0) {
+                    const deposited = scene.carriedResources.length;
+                    for (const res of scene.carriedResources) {
+                        scene.resources[res]++;
+                        stats.resourcesCollected++;
+                    }
+                    logEvent(`Deposited ${deposited} resources at dome`);
+                    scene.carriedResources = [];
+                }
+
+                // Update player position
+                scene.player.x = scene.playerX * TILE_SIZE + TILE_SIZE / 2;
+                scene.player.y = scene.playerY * TILE_SIZE + TILE_SIZE / 2;
+
+            } else {
+                // Defense phase logic
+                // Update laser angle toward mouse
+                const worldPoint = scene.cameras.main.getWorldPoint(mouseState.x, mouseState.y);
+                const targetAngle = Phaser.Math.Angle.Between(scene.domeX, scene.domeY, worldPoint.x, worldPoint.y);
+                const angleDiff = Phaser.Math.Angle.Wrap(targetAngle - scene.domeStats.laserAngle);
+                const rotateAmount = Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), scene.domeStats.laserSpeed);
+                scene.domeStats.laserAngle += rotateAmount;
+
+                // Fire laser if mouse down
+                if (mouseState.isDown) {
+                    scene.fireLaserTick(dtSec);
+                }
+
+                // Update enemies
+                for (let i = scene.enemies.length - 1; i >= 0; i--) {
+                    const enemy = scene.enemies[i];
+
+                    // Check death FIRST (before any continue)
+                    if (enemy.hp <= 0) {
+                        logEvent(`Enemy killed: ${enemy.enemyType}`);
+                        enemy.destroy();
+                        scene.enemies.splice(i, 1);
+                        stats.enemiesKilled++;
+                        continue;
+                    }
+
+                    if (enemy.stunTimer > 0) {
+                        enemy.stunTimer -= dtSec;
+                        continue;
+                    }
+
+                    // Move toward dome
+                    const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, scene.domeX, scene.domeY);
+                    enemy.x += Math.cos(angle) * enemy.speed * dtSec;
+                    enemy.y += Math.sin(angle) * enemy.speed * dtSec;
+
+                    // Attack dome
+                    const dist = Phaser.Math.Distance.Between(enemy.x, enemy.y, scene.domeX, scene.domeY);
+                    if (dist < 40) {
+                        scene.domeStats.hp -= enemy.damage * dtSec;
+                        if (scene.domeStats.hp <= 0) {
+                            logEvent('Dome destroyed!');
+                            scene.gameOver();
+                            return;
+                        }
+                    }
+                }
+
+                // Check wave complete
+                if (scene.enemies.length === 0) {
+                    stats.wavesSurvived++;
+                    logEvent(`Wave ${currentWave} survived!`);
+                    scene.endDefensePhase();
+                }
+            }
+        };
+
+        // Laser firing for tick-based execution
+        scene.fireLaserTick = (dtSec) => {
+            const beamLength = 400;
+            const endX = scene.domeX + Math.cos(scene.domeStats.laserAngle) * beamLength;
+            const endY = scene.domeY + Math.sin(scene.domeStats.laserAngle) * beamLength;
+
+            // Check enemy hits
+            for (const enemy of scene.enemies) {
+                const dist = Phaser.Math.Distance.BetweenPoints(
+                    { x: enemy.x, y: enemy.y },
+                    Phaser.Geom.Line.GetNearestPoint(
+                        new Phaser.Geom.Line(scene.domeX, scene.domeY, endX, endY),
+                        { x: enemy.x, y: enemy.y }
+                    )
+                );
+
+                if (dist < 20) {
+                    enemy.hp -= scene.domeStats.laserDamage * dtSec;
+                    enemy.stunTimer = 0.2;
+                }
+            }
+        };
 
         window.harness = {
-            pause: () => { gamePaused = true; },
-            resume: () => { gamePaused = false; },
-            isPaused: () => gamePaused,
+            execute: async ({ keys = [], mouseX, mouseY, mouseDown = false, duration = 500, screenshot = false }) => {
+                const startReal = performance.now();
+                debugLogs = [];
 
-            execute: async (action, durationMs) => {
-                return new Promise((resolve) => {
-                    gamePaused = false;
+                // Set active keys
+                activeKeys = new Set(keys.map(k => k.toLowerCase()));
 
-                    // Set up key simulation
-                    if (action.keys) {
-                        action.keys.forEach(key => {
-                            const keyCode = key.toLowerCase();
-                            if (scene.cursors[keyCode]) {
-                                scene.cursors[keyCode].isDown = true;
-                            }
-                        });
-                    }
+                // Set mouse state
+                if (mouseX !== undefined) mouseState.x = mouseX;
+                if (mouseY !== undefined) mouseState.y = mouseY;
+                mouseState.isDown = mouseDown;
 
-                    // Mouse position for laser aiming
-                    if (action.mouseX !== undefined && action.mouseY !== undefined) {
-                        scene.input.activePointer.x = action.mouseX;
-                        scene.input.activePointer.y = action.mouseY;
-                    }
+                // Run physics ticks (TIME-ACCELERATED)
+                const dt = 16;
+                const ticks = Math.ceil(duration / dt);
 
-                    // Mouse click for firing
-                    if (action.mouseDown) {
-                        scene.input.activePointer.isDown = true;
-                    }
+                for (let i = 0; i < ticks; i++) {
+                    if (gameState === 'gameover' || gameState === 'victory') break;
+                    runTick(dt);
+                }
 
-                    setTimeout(() => {
-                        // Reset keys
-                        if (action.keys) {
-                            action.keys.forEach(key => {
-                                const keyCode = key.toLowerCase();
-                                if (scene.cursors[keyCode]) {
-                                    scene.cursors[keyCode].isDown = false;
-                                }
-                            });
-                        }
+                // Clear keys
+                activeKeys.clear();
+                mouseState.isDown = false;
 
-                        if (action.mouseDown) {
-                            scene.input.activePointer.isDown = false;
-                        }
+                // Render final frame
+                scene.renderTiles();
+                scene.updateUI();
 
-                        gamePaused = true;
-                        resolve();
-                    }, durationMs);
-                });
+                // Screenshot
+                let screenshotData = null;
+                if (screenshot) {
+                    screenshotData = scene.game.canvas.toDataURL('image/png');
+                }
+
+                return {
+                    screenshot: screenshotData,
+                    logs: [...debugLogs],
+                    state: window.harness.getState(),
+                    realTime: performance.now() - startReal
+                };
             },
 
             getState: () => ({
-                gameState: gameState,
-                phase: phase,
-                phaseTimer: phaseTimer,
-                currentWave: currentWave,
+                gameState,
+                phase,
+                phaseTimer,
+                currentWave,
+                gameTime,
                 player: {
                     x: scene.player?.x || 0,
                     y: scene.player?.y || 0,
@@ -1052,8 +1187,7 @@ class GameScene extends Phaser.Scene {
                 dome: {
                     hp: scene.domeStats?.hp || 0,
                     maxHP: scene.domeStats?.maxHP || 800,
-                    laserAngle: scene.domeStats?.laserAngle || 0,
-                    laserSight: scene.domeStats?.laserSight || false
+                    laserAngle: scene.domeStats?.laserAngle || 0
                 },
                 resources: scene.resources || { iron: 0, water: 0, cobalt: 0 },
                 enemies: (scene.enemies || []).map(e => ({
@@ -1062,9 +1196,8 @@ class GameScene extends Phaser.Scene {
                     type: e.enemyType,
                     hp: e.hp
                 })),
-                stats: stats,
+                stats,
                 isNearDome: scene.isNearDome?.() || false,
-                upgradeMenuOpen: scene.upgradeMenuOpen || false,
                 relic: {
                     nodesFound: scene.relicNodesFound || 0,
                     nodesTotal: scene.relicNodesTotal || 3,
@@ -1088,7 +1221,9 @@ class GameScene extends Phaser.Scene {
                     phase = 'mining';
                     phaseTimer = 75;
                     currentWave = 0;
-                    gamePaused = false;
+                    gamePaused = true; // Keep paused for harness control
+                    gameTime = 0;
+                    debugLogs = [];
                     scene.menuContainer?.setVisible(false);
                 },
                 clearEnemies: () => {
@@ -1108,9 +1243,32 @@ class GameScene extends Phaser.Scene {
                 teleportPlayer: (x, y) => {
                     scene.playerX = x;
                     scene.playerY = y;
+                },
+                restart: () => {
+                    gameState = 'menu';
+                    phase = 'mining';
+                    phaseTimer = 75;
+                    currentWave = 0;
+                    gameTime = 0;
+                    debugLogs = [];
+                    stats = { resourcesCollected: 0, tilesMined: 0, wavesSurvived: 0, upgradesPurchased: 0, enemiesKilled: 0 };
+                    scene.scene.restart();
+                }
+            },
+
+            version: '2.0',
+            gameInfo: {
+                name: 'Dome Keeper Clone',
+                type: 'mining_tower_defense',
+                controls: {
+                    movement: ['w', 'a', 's', 'd'],
+                    actions: { deposit: 'q', upgrades: 'e' },
+                    laser: { mouseAim: true, mouseClick: 'fire' }
                 }
             }
         };
+
+        console.log('[HARNESS v2] Dome Keeper harness initialized');
     }
 }
 

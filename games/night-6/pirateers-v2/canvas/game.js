@@ -306,6 +306,9 @@
                 const loot = lootItems[i];
                 if (distance(this.x, this.y, loot.x, loot.y) < 40) {
                     gold += loot.value;
+                    if (typeof logEvent === 'function') {
+                        logEvent(`Collected +${loot.value} gold (total: ${gold})`);
+                    }
                     floatingTexts.push({
                         x: loot.x,
                         y: loot.y,
@@ -324,6 +327,10 @@
             this.armor -= amount;
             this.iframes = 0.3;
 
+            if (typeof logEvent === 'function') {
+                logEvent(`Player took ${amount} damage (armor: ${this.armor}/${this.maxArmor})`);
+            }
+
             floatingTexts.push({
                 x: this.x,
                 y: this.y - 30,
@@ -334,6 +341,9 @@
 
             if (this.armor <= 0) {
                 this.armor = 0;
+                if (typeof logEvent === 'function') {
+                    logEvent('Player destroyed - GAME OVER');
+                }
                 gameState = 'gameover';
             }
         }
@@ -608,6 +618,9 @@
         die() {
             const idx = enemies.indexOf(this);
             if (idx !== -1) {
+                if (typeof logEvent === 'function') {
+                    logEvent(`Enemy ${this.type} destroyed, dropped ${this.goldDrop} gold`);
+                }
                 enemies.splice(idx, 1);
 
                 // Drop loot
@@ -1126,8 +1139,15 @@
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // HARNESS INTERFACE
+    // HARNESS INTERFACE (v2 - Time-Accelerated)
     // ═══════════════════════════════════════════════════════════════════════════
+    let debugLogs = [];
+    let gameTime = 0;
+
+    function logEvent(msg) {
+        debugLogs.push(`[${Math.floor(gameTime)}ms] ${msg}`);
+    }
+
     function releaseAllKeys() {
         activeKeys.clear();
         for (const key in keysDown) {
@@ -1136,34 +1156,53 @@
     }
 
     window.harness = {
-        pause: () => {
-            gamePaused = true;
-            releaseAllKeys();
-        },
+        execute: async ({ keys = [], duration = 500, screenshot = false }) => {
+            const startReal = performance.now();
+            debugLogs = [];  // Clear logs for this execution
 
-        resume: () => {
-            gamePaused = false;
-        },
+            // Set active keys
+            activeKeys = new Set(keys);
+            for (const key of keys) {
+                keysDown[key] = true;
+            }
 
-        isPaused: () => gamePaused,
+            // Run physics for duration (TIME-ACCELERATED)
+            const dt = 16 / 1000;  // 16ms per tick as seconds
+            const ticks = Math.ceil(duration / 16);
 
-        execute: (action, durationMs) => {
-            return new Promise((resolve) => {
-                if (action.keys) {
-                    for (const key of action.keys) {
-                        activeKeys.add(key);
-                        keysDown[key] = true;
-                    }
+            for (let i = 0; i < ticks; i++) {
+                // Check if game ended
+                if (gameState === 'gameover' || gameState === 'victory') {
+                    logEvent(`Game ended: ${gameState}`);
+                    break;
                 }
 
-                gamePaused = false;
+                // Run one physics tick
+                gameTime += 16;
+                update(dt);
+            }
 
-                setTimeout(() => {
-                    releaseAllKeys();
-                    gamePaused = true;
-                    resolve();
-                }, durationMs);
-            });
+            // Release keys
+            releaseAllKeys();
+
+            // Update camera for final render
+            updateCamera();
+
+            // Render final frame (for screenshot)
+            render();
+
+            // Capture screenshot if requested
+            let screenshotData = null;
+            if (screenshot) {
+                screenshotData = canvas.toDataURL('image/png');
+            }
+
+            return {
+                screenshot: screenshotData,
+                logs: [...debugLogs],
+                state: window.harness.getState(),
+                realTime: performance.now() - startReal
+            };
         },
 
         getState: () => {
@@ -1172,6 +1211,7 @@
                 dayTimer: dayTimer,
                 dayNumber: dayNumber,
                 gold: gold,
+                gameTime: gameTime,
                 player: player ? {
                     x: player.x,
                     y: player.y,
@@ -1196,22 +1236,29 @@
 
         debug: {
             setArmor: (hp) => { if (player) player.armor = hp; },
+            setHealth: (hp) => { if (player) player.armor = hp; },
             addGold: (amount) => { gold += amount; },
             spawnEnemy: (type) => {
                 enemies.push(new EnemyShip(player.x + 200, player.y, type || 'pirate'));
+                logEvent(`Spawned enemy: ${type || 'pirate'}`);
             },
-            clearEnemies: () => { enemies = []; },
+            clearEnemies: () => { enemies = []; logEvent('Cleared all enemies'); },
+            giveAmmo: (n) => { /* Ships have infinite ammo */ },
             forceStart: () => {
                 gold = 0;
                 dayNumber = 1;
+                gameTime = 0;
                 startGame();
+                logEvent('Game started');
             },
             nextDay: () => {
                 gameState = 'dayend';
-            }
+                logEvent('Day ended');
+            },
+            log: (msg) => { debugLogs.push(`[DEBUG] ${msg}`); }
         },
 
-        version: '1.0',
+        version: '2.0',
 
         gameInfo: {
             name: 'Pirateers Clone',
@@ -1222,6 +1269,11 @@
             }
         }
     };
+
+    // Global helper for checking key state
+    window.isKeyActive = (key) => activeKeys.has(key);
+
+    console.log('[HARNESS v2] Time-accelerated harness ready');
 
     window.addEventListener('load', init);
 })();

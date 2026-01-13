@@ -7,6 +7,17 @@
     'use strict';
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // HARNESS v2 - Time tracking and debug logs
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    let gameTime = 0;
+    let debugLogs = [];
+
+    function logEvent(msg) {
+        debugLogs.push(`[${Math.floor(gameTime)}ms] ${msg}`);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // CONSTANTS
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -808,6 +819,7 @@
                 this.invulnTimer = 0.5;
                 triggerScreenShake(4, 0.15);
                 damageFlash = 0.4;  // Lighter flash for armor hit
+                logEvent(`Player armor absorbed ${amount} damage`);
                 return true;
             }
 
@@ -817,9 +829,11 @@
 
             triggerScreenShake(8, 0.2);
             damageFlash = 0.6;  // Red screen flash
+            logEvent(`Player took ${amount} damage (HP: ${this.health}/${this.maxHealth})`);
 
             if (this.health <= 0) {
                 this.health = 0;
+                logEvent('Player died');
                 gameState = 'dead';
             }
 
@@ -2205,6 +2219,7 @@
                     spawnHitMarker(enemy.x, enemy.y, killed);
 
                     if (killed) {
+                        logEvent(`Enemy killed: ${enemy.type || 'unknown'} at (${Math.round(enemy.x)},${Math.round(enemy.y)})`);
                         runStats.kills++;
                         const idx = enemies.indexOf(enemy);
                         if (idx > -1) enemies.splice(idx, 1);
@@ -3431,6 +3446,147 @@
     window.ITEMS = ITEMS;
     window.BOSS_DATA = BOSS_DATA;
     window.spawnHitMarker = spawnHitMarker;
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // HARNESS v2 - Time-Accelerated Test Interface
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    window.harness = {
+        execute: async function({ keys: inputKeys = [], duration = 500, screenshot = false, mouse: mouseInput = null }) {
+            const startReal = performance.now();
+            debugLogs = [];
+
+            // Set active keys
+            for (const k of inputKeys) {
+                keys[k.toLowerCase()] = true;
+                keys[k] = true;
+                // Handle special keys
+                if (k.toLowerCase() === ' ' && player) {
+                    player.startRoll();
+                }
+                if (k.toLowerCase() === 'q' && player) {
+                    player.useBlank();
+                }
+            }
+
+            // Handle mouse input
+            if (mouseInput) {
+                mouse.x = mouseInput.x !== undefined ? mouseInput.x : mouse.x;
+                mouse.y = mouseInput.y !== undefined ? mouseInput.y : mouse.y;
+                mouse.down = mouseInput.down !== undefined ? mouseInput.down : mouse.down;
+            }
+
+            // Run physics for duration (TIME-ACCELERATED)
+            const dt = 16;  // 16ms per tick
+            const ticks = Math.ceil(duration / dt);
+
+            for (let i = 0; i < ticks; i++) {
+                if (gameState === 'dead' || gameState === 'victory') break;
+
+                if (gameState === 'playing') {
+                    gameTime += dt;
+                    update(dt / 1000);
+                }
+            }
+
+            // Clear keys
+            for (const k of inputKeys) {
+                keys[k.toLowerCase()] = false;
+                keys[k] = false;
+            }
+            if (mouseInput) {
+                mouse.down = false;
+            }
+
+            // Render final frame
+            draw();
+
+            // Capture screenshot
+            let screenshotData = null;
+            if (screenshot) {
+                screenshotData = canvas.toDataURL('image/png');
+            }
+
+            return {
+                screenshot: screenshotData,
+                logs: [...debugLogs],
+                state: window.harness.getState(),
+                realTime: performance.now() - startReal,
+            };
+        },
+
+        getState: function() {
+            return {
+                gameState,
+                gameTime,
+                floor: currentFloor,
+                room: currentRoom ? currentRoom.type : null,
+                roomCleared,
+                player: player ? {
+                    x: player.x,
+                    y: player.y,
+                    hp: player.health,
+                    maxHp: player.maxHealth,
+                    blanks: player.blanks,
+                    keys: player.keys,
+                    shells: player.shells,
+                    armor: player.armor,
+                    rolling: player.isRolling,
+                    weapon: player.currentWeapon ? player.currentWeapon.name : null,
+                    ammo: player.currentWeapon ? player.currentWeapon.currentAmmo : 0
+                } : null,
+                enemies: enemies.map(e => ({
+                    x: e.x,
+                    y: e.y,
+                    type: e.type || 'boss',
+                    hp: e.health
+                })),
+                enemyBullets: enemyBullets.length,
+                pickups: pickups.length,
+                runStats: { ...runStats }
+            };
+        },
+
+        getPhase: function() {
+            if (gameState === 'menu') return 'menu';
+            if (gameState === 'dead') return 'gameover';
+            if (gameState === 'victory') return 'victory';
+            if (gameState === 'paused') return 'paused';
+            return 'playing';
+        },
+
+        debug: {
+            setHealth: (hp) => { if (player) player.health = hp; },
+            addBlanks: (n) => { if (player) player.blanks += n; },
+            addKeys: (n) => { if (player) player.keys += n; },
+            clearEnemies: () => { enemies = []; },
+            clearBullets: () => { enemyBullets = []; },
+            forceStart: () => {
+                gameTime = 0;
+                debugLogs = [];
+                startGame();
+            },
+            nextFloor: () => {
+                currentFloor++;
+                generateFloor(currentFloor);
+            }
+        },
+
+        version: '2.0',
+
+        gameInfo: {
+            name: 'Bullet Dungeon',
+            type: 'bullet_hell_roguelike',
+            controls: {
+                movement: ['w', 'a', 's', 'd'],
+                dodge: [' '],
+                blank: ['q'],
+                shoot: ['click']
+            }
+        }
+    };
+
+    console.log('[HARNESS v2] Bullet Dungeon time-accelerated harness ready');
 
     // Start when DOM is ready
     if (document.readyState === 'loading') {

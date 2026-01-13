@@ -3237,7 +3237,8 @@
     "path": "games/night-6/alien-breed-mix/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 1
   },
   {
     "id": "night-6/alien-breed-mix/littlejs",
@@ -3255,7 +3256,8 @@
     "path": "games/night-6/alien-breed-mix/littlejs/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 5
   },
   {
     "id": "night-6/binding-of-isaac/canvas",
@@ -3273,7 +3275,8 @@
     "path": "games/night-6/binding-of-isaac/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 2
   },
   {
     "id": "night-6/binding-of-isaac/phaser",
@@ -3291,7 +3294,8 @@
     "path": "games/night-6/binding-of-isaac/phaser/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 4
   },
   {
     "id": "night-6/binding-of-isaac-clone/canvas",
@@ -3309,7 +3313,8 @@
     "path": "games/night-6/binding-of-isaac-clone/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 1
   },
   {
     "id": "night-6/brotato/canvas",
@@ -3327,7 +3332,8 @@
     "path": "games/night-6/brotato/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 1
   },
   {
     "id": "night-6/brotato/littlejs",
@@ -3345,7 +3351,8 @@
     "path": "games/night-6/brotato/littlejs/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 5
   },
   {
     "id": "night-6/brotato-clone/littlejs",
@@ -3363,7 +3370,8 @@
     "path": "games/night-6/brotato-clone/littlejs/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 5
   },
   {
     "id": "night-6/derelict-ship/canvas",
@@ -3381,7 +3389,8 @@
     "path": "games/night-6/derelict-ship/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 3
   },
   {
     "id": "night-6/dome-keeper/canvas",
@@ -3399,7 +3408,8 @@
     "path": "games/night-6/dome-keeper/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 2
   },
   {
     "id": "night-6/dome-keeper/phaser",
@@ -3417,7 +3427,8 @@
     "path": "games/night-6/dome-keeper/phaser/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 4
   },
   {
     "id": "night-6/dome-keeper-clone/canvas",
@@ -3435,7 +3446,8 @@
     "path": "games/night-6/dome-keeper-clone/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 1
   },
   {
     "id": "night-6/enter-the-gungeon/canvas",
@@ -3453,7 +3465,8 @@
     "path": "games/night-6/enter-the-gungeon/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 1
   },
   {
     "id": "night-6/enter-the-gungeon/littlejs",
@@ -3471,7 +3484,8 @@
     "path": "games/night-6/enter-the-gungeon/littlejs/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 5
   },
   {
     "id": "night-6/enter-the-gungeon-clone/canvas",
@@ -3489,7 +3503,8 @@
     "path": "games/night-6/enter-the-gungeon-clone/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 1
   },
   {
     "id": "night-6/ftl/canvas",
@@ -3507,7 +3522,8 @@
     "path": "games/night-6/ftl/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 1
   },
   {
     "id": "night-6/ftl/phaser",
@@ -3525,7 +3541,8 @@
     "path": "games/night-6/ftl/phaser/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 4
   },
   {
     "id": "night-6/high-tea/canvas",
@@ -3543,7 +3560,8 @@
     "path": "games/night-6/high-tea/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 3
   },
   {
     "id": "night-6/high-tea-v2/littlejs",
@@ -3561,7 +3579,8 @@
     "path": "games/night-6/high-tea-v2/littlejs/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 5
   },
   {
     "id": "night-6/lost-outpost/canvas",
@@ -3579,7 +3598,8 @@
     "path": "games/night-6/lost-outpost/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 1
   },
   {
     "id": "night-6/lost-outpost/littlejs",
@@ -3597,7 +3617,8 @@
     "path": "games/night-6/lost-outpost/littlejs/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 5
   },
   {
     "id": "night-6/minishoot-adventures/littlejs",
@@ -3615,7 +3636,8 @@
     "path": "games/night-6/minishoot-adventures/littlejs/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 5
   },
   {
     "id": "night-6/minishoot-adventures-clone/littlejs",
@@ -3633,7 +3655,8 @@
     "path": "games/night-6/minishoot-adventures-clone/littlejs/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 5
   },
   {
     "id": "night-6/motherload/canvas",
@@ -3651,7 +3674,8 @@
     "path": "games/night-6/motherload/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 2
   },
   {
     "id": "night-6/motherload/phaser",
@@ -3669,7 +3693,8 @@
     "path": "games/night-6/motherload/phaser/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 4
   },
   {
     "id": "night-6/pirateers-v2/canvas",
@@ -3687,7 +3712,8 @@
     "path": "games/night-6/pirateers-v2/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 2
   },
   {
     "id": "night-6/pirateers-v2/phaser",
@@ -3705,7 +3731,8 @@
     "path": "games/night-6/pirateers-v2/phaser/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 4
   },
   {
     "id": "night-6/quasimorph/canvas",
@@ -3723,7 +3750,8 @@
     "path": "games/night-6/quasimorph/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 3
   },
   {
     "id": "night-6/quasimorph-clone/canvas",
@@ -3741,7 +3769,8 @@
     "path": "games/night-6/quasimorph-clone/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 2
   },
   {
     "id": "night-6/skyrim-2d/phaser",
@@ -3759,7 +3788,8 @@
     "path": "games/night-6/skyrim-2d/phaser/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 4
   },
   {
     "id": "night-6/star-of-providence/canvas",
@@ -3777,7 +3807,8 @@
     "path": "games/night-6/star-of-providence/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 1
   },
   {
     "id": "night-6/star-of-providence/littlejs",
@@ -3795,7 +3826,8 @@
     "path": "games/night-6/star-of-providence/littlejs/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 5
   },
   {
     "id": "night-6/star-of-providence-clone/canvas",
@@ -3813,7 +3845,8 @@
     "path": "games/night-6/star-of-providence-clone/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 3
   },
   {
     "id": "night-6/subterrain/canvas",
@@ -3831,7 +3864,8 @@
     "path": "games/night-6/subterrain/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 2
   },
   {
     "id": "night-6/subterrain/phaser",
@@ -3849,7 +3883,8 @@
     "path": "games/night-6/subterrain/phaser/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 4
   },
   {
     "id": "night-6/system-shock-2d/canvas",
@@ -3867,7 +3902,8 @@
     "path": "games/night-6/system-shock-2d/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 3
   },
   {
     "id": "night-6/system-shock-2d/phaser",
@@ -3885,7 +3921,8 @@
     "path": "games/night-6/system-shock-2d/phaser/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 4
   },
   {
     "id": "night-6/tower-wizard/canvas",
@@ -3903,7 +3940,8 @@
     "path": "games/night-6/tower-wizard/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 2
   },
   {
     "id": "night-6/tower-wizard-clone/littlejs",
@@ -3921,7 +3959,8 @@
     "path": "games/night-6/tower-wizard-clone/littlejs/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 5
   },
   {
     "id": "night-6/xcom-classic/canvas",
@@ -3939,7 +3978,8 @@
     "path": "games/night-6/xcom-classic/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 3
   },
   {
     "id": "night-6/xcom-classic/phaser",
@@ -3957,7 +3997,8 @@
     "path": "games/night-6/xcom-classic/phaser/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 4
   },
   {
     "id": "night-6/xcom-classic-clone/canvas",
@@ -3975,7 +4016,8 @@
     "path": "games/night-6/xcom-classic-clone/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 2
   },
   {
     "id": "night-6/zero-sievert/canvas",
@@ -3993,7 +4035,8 @@
     "path": "games/night-6/zero-sievert/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 2
   },
   {
     "id": "night-6/zero-sievert/phaser",
@@ -4011,7 +4054,8 @@
     "path": "games/night-6/zero-sievert/phaser/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 4
   },
   {
     "id": "night-6/zero-sievert-clone/canvas",
@@ -4029,6 +4073,7 @@
     "path": "games/night-6/zero-sievert-clone/canvas/",
     "createdDate": "2026-01-13",
     "played": false,
-    "playedDate": null
+    "playedDate": null,
+    "agent": 1
   }
 ]

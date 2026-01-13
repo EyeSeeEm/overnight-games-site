@@ -249,8 +249,14 @@ function initGame() {
     showMessage('Mission started. Eliminate all alien hostiles.');
 }
 
+// Debug flag to disable fog of war
+let debugNoFog = false;
+
 // Update fog of war
 function updateVisibility() {
+    // Skip if fog is disabled for testing
+    if (debugNoFog) return;
+
     // Reset visibility
     for (let y = 0; y < MAP_HEIGHT; y++) {
         for (let x = 0; x < MAP_WIDTH; x++) {
@@ -1039,18 +1045,26 @@ function gameLoop() {
 
 requestAnimationFrame(gameLoop);
 
-// Harness interface for playtesting
+// V2 Harness - Turn-based game (no continuous time)
+let debugLogs = [];
+
 window.harness = {
     pause: () => { gamePaused = true; },
     resume: () => { gamePaused = false; },
     isPaused: () => gamePaused,
 
-    execute: async (action, durationMs) => {
+    execute: async function({ keys: keyList = [], duration = 500, screenshot = false, click = null }) {
+        const startReal = performance.now();
+        debugLogs = [];
         gamePaused = false;
 
-        if (action.click) {
-            const tileX = Math.floor(action.click.x / TILE_SIZE);
-            const tileY = Math.floor(action.click.y / TILE_SIZE);
+        const startSoldiers = soldiers.filter(s => s.alive).length;
+        const startAliens = aliens.filter(a => a.alive).length;
+
+        // Handle click (tile-based actions)
+        if (click) {
+            const tileX = Math.floor(click.x / TILE_SIZE);
+            const tileY = Math.floor(click.y / TILE_SIZE);
 
             if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
                 hoveredTile = { x: tileX, y: tileY };
@@ -1059,23 +1073,29 @@ window.harness = {
                 if (tile.unit && tile.unit.type === 'alien' && tile.visible && selectedSoldier) {
                     fireWeapon(selectedSoldier, tile.unit, selectedFireMode);
                     checkWinConditions();
+                    debugLogs.push(`Attacked alien at (${tileX}, ${tileY})`);
                 } else if (tile.unit && tile.unit.type === 'soldier') {
                     selectedSoldier = tile.unit;
+                    debugLogs.push(`Selected ${tile.unit.name}`);
                 } else if (selectedSoldier && !tile.unit && tile.terrain !== 'wall') {
                     moveUnit(selectedSoldier, tileX, tileY);
+                    debugLogs.push(`Moved to (${tileX}, ${tileY})`);
                 }
             }
         }
 
-        if (action.keys) {
-            for (const key of action.keys) {
+        // Handle keys
+        if (keyList) {
+            for (const key of keyList) {
                 switch (key.toLowerCase()) {
                     case 'tab':
                         selectNextSoldier();
+                        debugLogs.push('Selected next soldier');
                         break;
                     case 'enter':
                         if (currentPhase === 'player') {
                             await runAlienTurn();
+                            debugLogs.push('Alien turn executed');
                         }
                         break;
                     case 'k':
@@ -1088,8 +1108,32 @@ window.harness = {
             }
         }
 
-        await new Promise(r => setTimeout(r, durationMs));
+        // Track casualties
+        const endSoldiers = soldiers.filter(s => s.alive).length;
+        const endAliens = aliens.filter(a => a.alive).length;
+        if (endAliens < startAliens) {
+            debugLogs.push(`Killed ${startAliens - endAliens} aliens`);
+        }
+        if (endSoldiers < startSoldiers) {
+            debugLogs.push(`Lost ${startSoldiers - endSoldiers} soldiers`);
+        }
+
+        // Render
+        render();
+
+        let screenshotData = null;
+        if (screenshot) {
+            screenshotData = canvas.toDataURL('image/png');
+        }
+
         gamePaused = true;
+
+        return {
+            screenshot: screenshotData,
+            logs: [...debugLogs],
+            state: window.harness.getState(),
+            realTime: performance.now() - startReal
+        };
     },
 
     getState: () => ({
@@ -1141,6 +1185,18 @@ window.harness = {
         },
         endTurn: async () => {
             if (currentPhase === 'player') await runAlienTurn();
+        },
+        revealAll: () => {
+            // Make all tiles visible for testing combat
+            for (let y = 0; y < MAP_HEIGHT; y++) {
+                for (let x = 0; x < MAP_WIDTH; x++) {
+                    map[y][x].visible = true;
+                }
+            }
+        },
+        disableFog: () => {
+            debugNoFog = true;
         }
-    }
+    },
+    version: '2.0'
 };

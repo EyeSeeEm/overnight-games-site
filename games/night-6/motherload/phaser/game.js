@@ -8,6 +8,13 @@ const WORLD_WIDTH = 40;
 const WORLD_HEIGHT = 300;
 const SURFACE_Y = 3;
 
+// V2 Harness - time tracking and debug logging
+let gameTime = 0;
+let debugLogs = [];
+function logEvent(msg) {
+    debugLogs.push(`[${gameTime}ms] ${msg}`);
+}
+
 // Game state
 let gamePaused = true;
 let gameState = 'menu';
@@ -705,6 +712,7 @@ class GameScene extends Phaser.Scene {
             if (mineral && this.getCargoWeight() + mineral.weight <= this.player.cargoCapacity * 10) {
                 this.player.cargo.push(tile.mineralType);
                 stats.mineralsCollected++;
+                logEvent(`Collected ${mineral.name} ($${mineral.value})`);
             }
         }
 
@@ -714,6 +722,7 @@ class GameScene extends Phaser.Scene {
             this.player.hull -= actualDamage;
             this.cameras.main.shake(200, 0.01);
             this.showMessage(`-${actualDamage} HP!`, '#ff4400');
+            logEvent(`Lava damage: -${actualDamage} HP (hull: ${this.player.hull})`);
         }
 
         if (tile.type === 'gas') {
@@ -724,6 +733,7 @@ class GameScene extends Phaser.Scene {
             this.player.hull -= actualDamage;
             this.cameras.main.shake(500, 0.03);
             this.showMessage(`GAS EXPLOSION! -${actualDamage} HP!`, '#88ff00');
+            logEvent(`Gas explosion: -${actualDamage} HP (hull: ${this.player.hull})`);
         }
 
         tile.type = 'empty';
@@ -876,6 +886,7 @@ class GameScene extends Phaser.Scene {
                 this.player.cash += value;
                 stats.cashEarned += value;
                 this.player.score += value;
+                logEvent(`Sold ${this.player.cargo.length} minerals for $${value}`);
                 this.player.cargo = [];
                 stats.trips++;
                 this.closeShop();
@@ -1072,6 +1083,7 @@ class GameScene extends Phaser.Scene {
 
     gameOver() {
         gameState = 'gameover';
+        logEvent(`Game over! Max depth: ${stats.depthReached}ft, Cash earned: $${stats.cashEarned}`);
 
         const overlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.8);
         overlay.setScrollFactor(0);
@@ -1106,34 +1118,133 @@ class GameScene extends Phaser.Scene {
     setupHarness() {
         const scene = this;
 
+        // V2 Harness - synchronous time-accelerated execution
+        const activeKeys = new Set();
+
+        const runTick = (dt) => {
+            gameTime += dt;
+            const dtSec = dt / 1000;
+
+            if (gameState !== 'playing' || scene.shopOpen) return;
+
+            // Update cooldowns
+            if (scene.moveCooldown > 0) scene.moveCooldown -= dtSec;
+
+            // Handle movement based on active keys
+            const up = activeKeys.has('w');
+            const down = activeKeys.has('s');
+            const left = activeKeys.has('a');
+            const right = activeKeys.has('d');
+
+            // Flying up (costs fuel)
+            if (up && scene.player.fuel > 0) {
+                scene.velocityY = -3;
+                scene.player.fuel -= dtSec * 0.5;
+
+                // Actually move up if tile above is empty
+                const aboveY = scene.player.y - 1;
+                if (aboveY >= 0) {
+                    const tileAbove = scene.tiles[aboveY][scene.player.x];
+                    if (!tileAbove || !tileAbove.solid) {
+                        scene.player.y = aboveY;
+                    }
+                }
+            }
+
+            // Horizontal movement
+            if (scene.moveCooldown <= 0) {
+                if (left) {
+                    scene.tryMove(-1, 0);
+                } else if (right) {
+                    scene.tryMove(1, 0);
+                }
+            }
+
+            // Drilling down
+            if (down && scene.moveCooldown <= 0) {
+                scene.tryDrill(0, 1);
+            }
+
+            // Diagonal drilling
+            if (down && left && scene.moveCooldown <= 0) {
+                scene.tryDrill(-1, 1);
+            } else if (down && right && scene.moveCooldown <= 0) {
+                scene.tryDrill(1, 1);
+            }
+
+            // Apply gravity
+            const belowY = scene.player.y + 1;
+            if (belowY < WORLD_HEIGHT) {
+                const tileBelow = scene.tiles[belowY][scene.player.x];
+                if (tileBelow && tileBelow.solid) {
+                    scene.isGrounded = true;
+                    scene.velocityY = 0;
+                } else {
+                    scene.isGrounded = false;
+                    scene.velocityY += dtSec * 5;
+                    scene.velocityY = Math.min(scene.velocityY, 5);
+
+                    if (scene.velocityY > 0) {
+                        const fallDist = Math.floor(scene.velocityY * dtSec * 10);
+                        for (let i = 0; i < Math.max(1, fallDist); i++) {
+                            const checkY = scene.player.y + 1;
+                            if (checkY >= WORLD_HEIGHT) break;
+                            const checkTile = scene.tiles[checkY][scene.player.x];
+                            if (checkTile && checkTile.solid) break;
+                            scene.player.y++;
+                        }
+                    }
+                }
+            }
+
+            // Consume fuel
+            if (scene.player.fuel > 0) {
+                scene.player.fuel -= dtSec * 0.1;
+            }
+
+            // Update depth stat
+            const currentDepth = Math.max(0, (scene.player.y - SURFACE_Y) * 10);
+            stats.depthReached = Math.max(stats.depthReached, currentDepth);
+
+            // Check death
+            if (scene.player.hull <= 0) {
+                scene.gameOver();
+            }
+        };
+
         window.harness = {
+            version: '2.0',
             pause: () => { gamePaused = true; },
             resume: () => { gamePaused = false; },
             isPaused: () => gamePaused,
 
-            execute: async (action, durationMs) => {
-                return new Promise((resolve) => {
-                    gamePaused = false;
+            execute: async ({ keys = [], duration = 500, screenshot = false }) => {
+                const startReal = performance.now();
+                debugLogs = [];
 
-                    // Simulate key presses
-                    if (action.keys) {
-                        action.keys.forEach(key => {
-                            if (key === 'ArrowUp' || key === 'w') scene.wasd.w.isDown = true;
-                            if (key === 'ArrowDown' || key === 's') scene.wasd.s.isDown = true;
-                            if (key === 'ArrowLeft' || key === 'a') scene.wasd.a.isDown = true;
-                            if (key === 'ArrowRight' || key === 'd') scene.wasd.d.isDown = true;
-                        });
-                    }
+                // Set active keys
+                activeKeys.clear();
+                for (const key of keys) {
+                    activeKeys.add(key.toLowerCase());
+                }
 
-                    setTimeout(() => {
-                        scene.wasd.w.isDown = false;
-                        scene.wasd.s.isDown = false;
-                        scene.wasd.a.isDown = false;
-                        scene.wasd.d.isDown = false;
-                        gamePaused = true;
-                        resolve();
-                    }, durationMs);
-                });
+                // Run ticks synchronously
+                const dt = 16;
+                const ticks = Math.ceil(duration / dt);
+                for (let i = 0; i < ticks; i++) {
+                    if (gameState === 'gameover') break;
+                    runTick(dt);
+                }
+
+                const realTime = performance.now() - startReal;
+
+                return {
+                    screenshot: screenshot ? 'base64_screenshot_placeholder' : null,
+                    logs: debugLogs,
+                    state: window.harness.getState(),
+                    realTime: Math.round(realTime),
+                    gameTime: gameTime
+                };
             },
 
             getState: () => ({
@@ -1147,12 +1258,14 @@ class GameScene extends Phaser.Scene {
                     maxHull: scene.player?.maxHull || 0,
                     cash: scene.player?.cash || 0,
                     cargo: scene.player?.cargo?.length || 0,
-                    cargoValue: scene.getCargoValue?.() || 0
+                    cargoValue: scene.getCargoValue?.() || 0,
+                    cargoCapacity: scene.player?.cargoCapacity || 7
                 },
                 depth: scene.player ? Math.max(0, (scene.player.y - SURFACE_Y) * 10) : 0,
                 shopOpen: scene.shopOpen,
                 currentShop: scene.currentShop,
-                stats: stats
+                stats: stats,
+                gameTime: gameTime
             }),
 
             getPhase: () => {
@@ -1166,6 +1279,13 @@ class GameScene extends Phaser.Scene {
                 },
                 forceStart: () => {
                     gamePaused = false;
+                    gameState = 'playing';
+                },
+                restart: () => {
+                    gameTime = 0;
+                    debugLogs = [];
+                    stats = { mineralsCollected: 0, depthReached: 0, cashEarned: 0, upgradesPurchased: 0, trips: 0 };
+                    scene.scene.restart();
                 },
                 addCash: (amount) => {
                     if (scene.player) scene.player.cash += amount;
@@ -1177,6 +1297,29 @@ class GameScene extends Phaser.Scene {
                     if (scene.player) {
                         scene.player.x = 15;
                         scene.player.y = SURFACE_Y - 1;
+                        scene.velocityY = 0;
+                    }
+                },
+                openShop: (shopType) => {
+                    scene.openShop(shopType);
+                },
+                closeShop: () => {
+                    scene.closeShop();
+                },
+                sellMinerals: () => {
+                    if (scene.player && scene.player.cargo.length > 0) {
+                        const value = scene.getCargoValue();
+                        scene.player.cash += value;
+                        stats.cashEarned += value;
+                        scene.player.score += value;
+                        logEvent(`Sold ${scene.player.cargo.length} minerals for $${value}`);
+                        scene.player.cargo = [];
+                        stats.trips++;
+                    }
+                },
+                refuel: () => {
+                    if (scene.player) {
+                        scene.player.fuel = scene.player.maxFuel;
                     }
                 }
             }

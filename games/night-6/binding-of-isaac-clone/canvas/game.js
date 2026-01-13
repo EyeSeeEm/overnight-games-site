@@ -133,6 +133,15 @@ let deltaTime = 0;
 let roomTransitionTimer = 0;
 let roomEntryPauseTimer = 0;
 
+// Harness v2 - time tracking and debug logs
+let gameTime = 0;
+let debugLogs = [];
+let activeHarnessKeys = new Set();
+
+function logEvent(msg) {
+    debugLogs.push(`[${Math.floor(gameTime)}ms] ${msg}`);
+}
+
 // Screen shake
 let screenShake = { x: 0, y: 0, intensity: 0, duration: 0 };
 
@@ -418,15 +427,18 @@ class Player {
 
         // Screen shake on damage
         triggerScreenShake(8, 0.2);
+        logEvent(`Player took ${amount} damage, HP: ${this.health}/${this.maxHealth}`);
 
         if (this.health <= 0 && this.soulHearts <= 0) {
             if (this.lives > 0) {
                 this.lives--;
                 this.health = 2;
                 this.invulnTimer = 2.0;
+                logEvent(`Player revived (${this.lives} lives left)`);
             } else {
                 gameState = 'gameover';
                 triggerScreenShake(15, 0.5);
+                logEvent('Player died - GAME OVER');
             }
         }
 
@@ -1605,6 +1617,7 @@ function updateBombs(dt) {
                 const dist = Math.sqrt(Math.pow(enemy.x - bomb.x, 2) + Math.pow(enemy.y - bomb.y, 2));
                 if (dist < radius + enemy.width / 2) {
                     if (enemy.takeDamage(60)) {
+                        logEvent(`Enemy killed: ${enemy.type} by bomb`);
                         enemies.splice(j, 1);
                         totalKills++;
                         spawnPickupDrop(enemy.x, enemy.y);
@@ -1650,6 +1663,7 @@ function checkCollisions() {
                 spawnTearSplash(tear.x, tear.y);
 
                 if (enemy.takeDamage(tear.damage)) {
+                    logEvent(`Enemy killed: ${enemy.type} by tear`);
                     enemies.splice(j, 1);
                     totalKills++;
                     spawnBloodSplash(enemy.x, enemy.y);
@@ -2605,6 +2619,142 @@ window.ROOM_WIDTH = ROOM_TILES_X;
 window.ROOM_HEIGHT = ROOM_TILES_Y;
 window.TILE_SIZE = TILE_SIZE;
 window.ENEMY_DATA = ENEMY_DATA;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HARNESS v2 - Time-Accelerated Test Interface
+// ═══════════════════════════════════════════════════════════════════════════
+
+window.harness = {
+    execute: async ({ keys: inputKeys = [], duration = 500, screenshot = false }) => {
+        const startReal = performance.now();
+        debugLogs = [];
+
+        // Set active keys
+        activeHarnessKeys = new Set(inputKeys);
+        for (const key of inputKeys) {
+            keys[key.toLowerCase()] = true;
+            keys[key] = true;
+        }
+
+        // Run physics for duration (TIME-ACCELERATED)
+        const dt = 16;  // 16ms per tick
+        const ticks = Math.ceil(duration / dt);
+
+        for (let i = 0; i < ticks; i++) {
+            const phase = window.harness.getPhase();
+            if (phase === 'gameover' || phase === 'win') break;
+
+            if (gameState === 'playing') {
+                gameTime += dt;
+                update(dt / 1000);
+            }
+        }
+
+        // Clear keys
+        activeHarnessKeys.clear();
+        for (const key of inputKeys) {
+            keys[key.toLowerCase()] = false;
+            keys[key] = false;
+        }
+
+        // Render final frame
+        draw();
+
+        // Capture screenshot if requested
+        let screenshotData = null;
+        if (screenshot && canvas) {
+            screenshotData = canvas.toDataURL('image/png');
+        }
+
+        return {
+            screenshot: screenshotData,
+            logs: [...debugLogs],
+            state: window.harness.getState(),
+            realTime: performance.now() - startReal,
+        };
+    },
+
+    getState: () => ({
+        gameState: gameState,
+        gameTime: gameTime,
+        floorNum: floorNum,
+        currentRoom: { ...currentRoom },
+        bossDefeated: bossDefeated,
+        totalKills: totalKills,
+        player: player ? {
+            x: player.x,
+            y: player.y,
+            health: player.health,
+            maxHealth: player.maxHealth,
+            soulHearts: player.soulHearts,
+            damage: player.damage,
+            tears: player.tears,
+            speed: player.speed,
+            coins: player.coins,
+            bombs: player.bombs,
+            keys: player.keys,
+            items: player.collectedItems ? [...player.collectedItems] : []
+        } : null,
+        enemies: enemies.map(e => ({
+            x: e.x,
+            y: e.y,
+            type: e.type,
+            health: e.health,
+            state: e.state
+        })),
+        pickups: pickups.map(p => ({
+            x: p.x,
+            y: p.y,
+            type: p.type
+        })),
+        doors: doors.map(d => ({
+            dir: d.dir,
+            x: d.x,
+            y: d.y,
+            open: d.open,
+            locked: d.locked,
+            type: d.type,
+            targetX: d.targetX,
+            targetY: d.targetY
+        }))
+    }),
+
+    getPhase: () => {
+        if (gameState === 'title') return 'menu';
+        if (gameState === 'playing') return 'playing';
+        if (gameState === 'paused') return 'paused';
+        if (gameState === 'gameover') return 'gameover';
+        if (gameState === 'win') return 'victory';
+        return gameState;
+    },
+
+    debug: {
+        forceStart: () => {
+            startGame();
+            gameTime = 0;
+            debugLogs = [];
+        },
+        setHealth: (hp) => { if (player) player.health = hp; },
+        clearEnemies: () => { enemies = []; },
+        giveItem: (itemId) => { if (player && ITEM_DATA[itemId]) player.addItem(itemId); },
+        skipToLevel: (level) => { debugCommands.skipToLevel(level); },
+        log: (msg) => { logEvent(`[DEBUG] ${msg}`); },
+    },
+
+    version: '2.0',
+
+    gameInfo: {
+        name: 'Basement Tears',
+        type: 'roguelike_shooter',
+        controls: {
+            movement: ['w', 'a', 's', 'd'],
+            attack: ['arrowup', 'arrowdown', 'arrowleft', 'arrowright'],
+            actions: { bomb: 'e', pause: 'p' }
+        }
+    }
+};
+
+console.log('[HARNESS v2] Basement Tears time-accelerated harness ready');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INITIALIZATION

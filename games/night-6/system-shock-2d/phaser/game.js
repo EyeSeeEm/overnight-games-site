@@ -8,6 +8,13 @@ let gameState = 'menu';
 let gamePaused = true;
 let currentDeck = 1;
 
+// V2 Harness - time-accelerated testing
+let harnessTime = 0;
+let debugLogs = [];
+function logEvent(msg) {
+    debugLogs.push(`[${harnessTime}ms] ${msg}`);
+}
+
 // Colors
 const COLORS = {
     floor: 0x1a1a2a,
@@ -857,6 +864,7 @@ class GameScene extends Phaser.Scene {
 
     damageEnemy(enemy, damage, fromPlayer = true) {
         enemy.health -= damage;
+        logEvent(`Enemy ${enemy.type} damaged for ${damage}, HP: ${enemy.health}/${enemy.maxHealth}`);
 
         // Knockback
         if (fromPlayer && !enemy.isBoss) {
@@ -891,6 +899,7 @@ class GameScene extends Phaser.Scene {
     }
 
     killEnemy(enemy) {
+        logEvent(`Enemy killed: ${enemy.type}${enemy.isBoss ? ' (BOSS)' : ''}, +${enemy.xp} cyber modules`);
         // Grant XP (cyber modules)
         this.playerData.cyberModules += enemy.xp;
 
@@ -921,6 +930,7 @@ class GameScene extends Phaser.Scene {
 
         this.playerData.health -= amount;
         this.invincibleTime = 500;
+        logEvent(`Player damaged: ${amount}${enemyType ? ` by ${enemyType}` : ''}, HP: ${this.playerData.health}/${this.playerData.maxHealth}`);
 
         // Screen effects
         this.cameras.main.flash(200, 255, 0, 0, true);
@@ -1019,6 +1029,7 @@ class GameScene extends Phaser.Scene {
     }
 
     playerDeath() {
+        logEvent(`Player died! Deck: ${currentDeck}, cyber modules: ${this.playerData.cyberModules}`);
         gameState = 'gameover';
 
         const overlay = this.add.graphics().setScrollFactor(0).setDepth(300);
@@ -1486,43 +1497,98 @@ class GameScene extends Phaser.Scene {
     initHarness() {
         const scene = this;
 
+        // Synchronous tick function for time-accelerated testing
+        function runTick(dt) {
+            if (gamePaused || gameState !== 'playing') return;
+
+            harnessTime += dt;
+
+            // Cooldowns
+            if (scene.attackCooldown > 0) scene.attackCooldown -= dt;
+            if (scene.invincibleTime > 0) scene.invincibleTime -= dt;
+            if (scene.dodgeCooldown > 0) scene.dodgeCooldown -= dt;
+
+            // Energy regen
+            if (scene.playerData.energy < scene.playerData.maxEnergy) {
+                scene.playerData.energy = Math.min(scene.playerData.maxEnergy, scene.playerData.energy + 2 * (dt / 1000));
+            }
+
+            // Handle movement and update player position
+            if (!scene.hackingActive) {
+                scene.handleMovement(dt);
+
+                // Manual physics update
+                const dtSec = dt / 1000;
+                if (scene.player && scene.player.body) {
+                    scene.player.x += scene.player.body.velocity.x * dtSec;
+                    scene.player.y += scene.player.body.velocity.y * dtSec;
+                }
+            }
+
+            // Update enemies
+            scene.updateEnemies(Date.now());
+
+            // Update status effects
+            scene.updateStatusEffects(dt);
+        }
+
         window.harness = {
             pause: () => { gamePaused = true; },
             resume: () => { gamePaused = false; },
             isPaused: () => gamePaused,
 
-            execute: (action, durationMs) => {
-                return new Promise(resolve => {
-                    if (action.keys) {
-                        action.keys.forEach(key => {
-                            const k = scene.getKeyCode(key);
-                            if (k && scene.cursors[k]) scene.cursors[k].isDown = true;
-                        });
-                    }
-                    if (action.click) {
-                        scene.input.activePointer.worldX = action.click.x;
-                        scene.input.activePointer.worldY = action.click.y;
-                        scene.playerRotation = Phaser.Math.Angle.Between(scene.player.x, scene.player.y, action.click.x, action.click.y);
-                        scene.playerAttack();
-                    }
-                    gamePaused = false;
+            execute: async ({ keys: inputKeys = [], duration = 1000, screenshot = false, click }) => {
+                const startTime = Date.now();
+                debugLogs = [];
 
-                    setTimeout(() => {
-                        if (action.keys) {
-                            action.keys.forEach(key => {
-                                const k = scene.getKeyCode(key);
-                                if (k && scene.cursors[k]) scene.cursors[k].isDown = false;
-                            });
-                        }
-                        gamePaused = true;
-                        resolve();
-                    }, durationMs);
-                });
+                // Apply key states
+                if (inputKeys.length > 0) {
+                    inputKeys.forEach(key => {
+                        const k = scene.getKeyCode(key);
+                        if (k && scene.cursors[k]) scene.cursors[k].isDown = true;
+                    });
+                }
+
+                // Handle click attack
+                if (click) {
+                    scene.input.activePointer.worldX = click.x;
+                    scene.input.activePointer.worldY = click.y;
+                    scene.playerRotation = Phaser.Math.Angle.Between(scene.player.x, scene.player.y, click.x, click.y);
+                    scene.playerAttack();
+                }
+
+                // Run physics ticks
+                const tickMs = 16;
+                let elapsed = 0;
+                gamePaused = false;
+
+                while (elapsed < duration) {
+                    runTick(tickMs);
+                    elapsed += tickMs;
+                }
+
+                gamePaused = true;
+
+                // Clear keys
+                if (inputKeys.length > 0) {
+                    inputKeys.forEach(key => {
+                        const k = scene.getKeyCode(key);
+                        if (k && scene.cursors[k]) scene.cursors[k].isDown = false;
+                    });
+                }
+
+                return {
+                    screenshot: screenshot ? (scene.game.canvas ? scene.game.canvas.toDataURL() : null) : null,
+                    logs: [...debugLogs],
+                    state: window.harness.getState(),
+                    realTime: Date.now() - startTime
+                };
             },
 
             getState: () => ({
                 gameState,
                 currentDeck,
+                harnessTime,
                 player: {
                     x: scene.player?.x || 0,
                     y: scene.player?.y || 0,
@@ -1581,10 +1647,17 @@ class GameScene extends Phaser.Scene {
                 giveAmmo: (type, amount) => { scene.playerData.ammo[type] = (scene.playerData.ammo[type] || 0) + amount; },
                 forceStart: () => { gameState = 'playing'; gamePaused = false; },
                 forceGameOver: () => { scene.playerDeath(); },
+                restart: () => {
+                    gameState = 'playing';
+                    harnessTime = 0;
+                    debugLogs = [];
+                    scene.playerData.health = scene.playerData.maxHealth;
+                    scene.playerData.energy = scene.playerData.maxEnergy;
+                },
                 log: msg => console.log('[HARNESS]', msg)
             },
 
-            version: '1.0',
+            version: '2.0',
             gameInfo: {
                 name: 'System Shock 2D',
                 type: 'immersive_sim',

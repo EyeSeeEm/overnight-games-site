@@ -142,6 +142,14 @@
     let damageFlash = 0;
     let floatingTexts = [];
 
+    // Harness v2 - time tracking and debug logs
+    let gameTime = 0;
+    let debugLogs = [];
+
+    function logEvent(msg) {
+        debugLogs.push(`[${Math.floor(gameTime)}ms] ${msg}`);
+    }
+
     // Run statistics
     let runStats = {
         ironCollected: 0,
@@ -502,10 +510,12 @@
             this.hp -= amount;
             triggerScreenShake(5, 0.15);
             damageFlash = 0.5;  // Red flash on dome damage
+            logEvent(`Dome took ${amount} damage, HP: ${this.hp}/${this.maxHP}`);
 
             if (this.hp <= 0) {
                 this.hp = 0;
                 gameState = 'dead';
+                logEvent('Dome destroyed - GAME OVER');
             }
         }
 
@@ -714,6 +724,7 @@
 
         die() {
             runStats.enemiesKilled++;
+            logEvent(`Enemy killed: ${this.type} at (${Math.floor(this.x)}, ${Math.floor(this.y)})`);
             spawnDeathParticles(this.x, this.y, this.color);
         }
 
@@ -2082,7 +2093,126 @@
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // TEST HARNESS GETTERS
+    // HARNESS v2 - Time-Accelerated Test Interface
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    window.harness = {
+        execute: async function({ keys: inputKeys = [], duration = 500, screenshot = false }) {
+            const startReal = performance.now();
+            debugLogs = [];
+
+            // Set active keys
+            for (const k of inputKeys) {
+                keys[k.toLowerCase()] = true;
+                keys[k] = true;
+            }
+
+            // Run physics for duration (TIME-ACCELERATED)
+            const dt = 16;  // 16ms per tick
+            const ticks = Math.ceil(duration / dt);
+
+            for (let i = 0; i < ticks; i++) {
+                if (gameState === 'dead' || gameState === 'victory') break;
+
+                if (gameState === 'mining' || gameState === 'defense') {
+                    gameTime += dt;
+                    update(dt / 1000);
+                }
+            }
+
+            // Clear keys
+            for (const k of inputKeys) {
+                keys[k.toLowerCase()] = false;
+                keys[k] = false;
+            }
+
+            // Render final frame
+            draw();
+
+            // Capture screenshot
+            let screenshotData = null;
+            if (screenshot) {
+                screenshotData = canvas.toDataURL('image/png');
+            }
+
+            return {
+                screenshot: screenshotData,
+                logs: [...debugLogs],
+                state: window.harness.getState(),
+                realTime: performance.now() - startReal,
+            };
+        },
+
+        getState: function() {
+            return {
+                gameState,
+                gameTime,
+                wave: currentWave,
+                phaseTimer: Math.ceil(phaseTimer),
+                player: player ? {
+                    x: player.x,
+                    y: player.y,
+                    laserCooldown: player.laserCooldown
+                } : null,
+                dome: dome ? {
+                    hp: dome.hp,
+                    maxHP: dome.maxHP,
+                    iron: dome.iron,
+                    water: dome.water,
+                    cobalt: dome.cobalt
+                } : null,
+                enemies: enemies.map(e => ({
+                    x: e.x,
+                    y: e.y,
+                    type: e.type,
+                    hp: e.hp
+                })),
+                runStats: { ...runStats }
+            };
+        },
+
+        getPhase: function() {
+            if (gameState === 'menu') return 'menu';
+            if (gameState === 'mining' || gameState === 'defense') return 'playing';
+            if (gameState === 'upgradeMenu') return 'shop';
+            if (gameState === 'dead') return 'gameover';
+            if (gameState === 'victory') return 'victory';
+            return gameState;
+        },
+
+        debug: {
+            forceStart: function() {
+                gameTime = 0;
+                debugLogs = [];
+                startGame();  // This generates map and starts mining phase
+            },
+            setDomeHP: function(hp) { if (dome) dome.hp = hp; },
+            clearEnemies: function() { enemies = []; },
+            skipToDefense: function() {
+                if (gameState === 'mining') {
+                    gameState = 'defense';
+                    phaseTimer = 0;
+                    spawnWave();
+                }
+            }
+        },
+
+        version: '2.0',
+
+        gameInfo: {
+            name: 'Underground Keeper',
+            type: 'base_defense_mining',
+            controls: {
+                movement: ['w', 'a', 's', 'd'],
+                laser: ['space', 'click']
+            }
+        }
+    };
+
+    console.log('[HARNESS v2] Underground Keeper time-accelerated harness ready');
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TEST HARNESS GETTERS (Legacy)
     // ═══════════════════════════════════════════════════════════════════════════
 
     window.getPlayer = function() { return player; };
@@ -2104,7 +2234,7 @@
     window.isShopOpen = function() { return gameState === 'upgradeMenu'; };
     window.startWave = function() {
         if (gameState === 'mining') {
-            gameState = 'defending';
+            gameState = 'defense';
             waveTimer = 0;
             spawnWave();
         }

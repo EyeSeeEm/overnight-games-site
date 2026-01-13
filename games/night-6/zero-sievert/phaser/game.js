@@ -9,6 +9,14 @@ const ZONE_HEIGHT = 1600;
 // Game state
 let gamePaused = true;
 let gameState = 'menu'; // menu, bunker, raid, dead, extracted
+
+// V2 Harness - debug logging for extraction shooter
+let harnessTime = 0;
+let debugLogs = [];
+function logEvent(msg) {
+    debugLogs.push(`[${harnessTime}ms] ${msg}`);
+}
+
 let stats = {
     enemiesKilled: 0,
     containersLooted: 0,
@@ -159,30 +167,46 @@ class MenuScene extends Phaser.Scene {
         const scene = this;
 
         window.harness = {
+            version: '2.0',
             pause: () => { gamePaused = true; },
             resume: () => { gamePaused = false; },
             isPaused: () => gamePaused,
 
-            execute: async (action, durationMs) => {
-                return new Promise((resolve) => {
-                    gamePaused = false;
-                    setTimeout(() => {
-                        gamePaused = true;
-                        resolve();
-                    }, durationMs);
-                });
+            execute: async ({ keys: inputKeys = [], duration = 0, screenshot = false }) => {
+                const startTime = Date.now();
+                debugLogs = [];
+                gamePaused = false;
+
+                if (duration > 0) {
+                    await new Promise(r => setTimeout(r, duration));
+                }
+
+                gamePaused = true;
+                return {
+                    screenshot: null,
+                    logs: debugLogs.slice(),
+                    state: window.harness.getState(),
+                    realTime: Date.now() - startTime
+                };
             },
 
             getState: () => ({
                 gameState: gameState,
-                stats: stats
+                stats: stats,
+                harnessTime,
+                debugLogs: debugLogs.slice()
             }),
 
             getPhase: () => gameState,
 
             debug: {
-                setHealth: () => {},
+                restart: () => {
+                    harnessTime = 0;
+                    debugLogs = [];
+                },
                 forceStart: () => {
+                    harnessTime = 0;
+                    debugLogs = [];
                     scene.scene.start('RaidScene');
                 },
                 clearEnemies: () => {},
@@ -758,6 +782,7 @@ class RaidScene extends Phaser.Scene {
                 if (enemy.hp <= 0) {
                     stats.enemiesKilled++;
                     this.raidRubles += Phaser.Math.Between(50, 200);
+                    logEvent(`Enemy ${enemy.enemyType} killed by grenade`);
                     enemy.destroy();
                     this.enemies.splice(i, 1);
                 }
@@ -768,7 +793,9 @@ class RaidScene extends Phaser.Scene {
         const playerDist = Phaser.Math.Distance.Between(grenade.x, grenade.y, this.player.x, this.player.y);
         if (playerDist < GRENADE_CONFIG.radius && !this.isDodging) {
             const damageMultiplier = 1 - (playerDist / GRENADE_CONFIG.radius) * 0.5;
-            this.playerHP -= GRENADE_CONFIG.damage * damageMultiplier * 0.5; // Self damage reduced
+            const selfDmg = GRENADE_CONFIG.damage * damageMultiplier * 0.5;
+            this.playerHP -= selfDmg;
+            logEvent(`Player hit by own grenade for ${Math.floor(selfDmg)} damage, HP: ${Math.ceil(this.playerHP)}`);
             this.addDamageIndicator(Phaser.Math.Angle.Between(this.player.x, this.player.y, grenade.x, grenade.y));
         }
     }
@@ -901,6 +928,7 @@ class RaidScene extends Phaser.Scene {
                             const lootValue = Phaser.Math.Between(50, 200);
                             this.raidRubles += lootValue;
                             stats.enemiesKilled++;
+                            logEvent(`Enemy ${enemy.enemyType} killed by gunfire`);
 
                             enemy.destroy();
                             this.enemies.splice(j, 1);
@@ -913,6 +941,7 @@ class RaidScene extends Phaser.Scene {
                 const dist = Phaser.Math.Distance.Between(bullet.x, bullet.y, this.player.x, this.player.y);
                 if (dist < 15 && !this.isDodging) {
                     this.playerHP -= bullet.damage;
+                    logEvent(`Player hit by enemy bullet for ${bullet.damage} damage, HP: ${Math.ceil(this.playerHP)}`);
 
                     // Screen shake on damage
                     this.cameras.main.shake(150, 0.01);
@@ -927,6 +956,7 @@ class RaidScene extends Phaser.Scene {
                     if (Math.random() < 0.3) {
                         this.isBleeding = true;
                         this.bleedTimer = 5;
+                        logEvent('Player is now bleeding');
                     }
                 }
             }
@@ -970,6 +1000,7 @@ class RaidScene extends Phaser.Scene {
                             if (time - enemy.lastFire > enemy.fireRate) {
                                 if (!this.isDodging) {
                                     this.playerHP -= enemy.damage;
+                                    logEvent(`Player hit by ${enemy.enemyType} melee for ${enemy.damage} damage, HP: ${Math.ceil(this.playerHP)}`);
 
                                     // Screen shake on melee damage
                                     this.cameras.main.shake(200, 0.015);
@@ -981,6 +1012,7 @@ class RaidScene extends Phaser.Scene {
                                     if (Math.random() < 0.2) {
                                         this.isBleeding = true;
                                         this.bleedTimer = 5;
+                                        logEvent('Player is now bleeding');
                                     }
                                 }
                                 enemy.lastFire = time;
@@ -1111,6 +1143,7 @@ class RaidScene extends Phaser.Scene {
         stats.extractions++;
         stats.rubles += this.raidRubles;
         stats.totalRubles += this.raidRubles;
+        logEvent(`EXTRACTION - ${this.raidRubles} rubles secured, kills: ${stats.enemiesKilled}`);
 
         // Show extraction screen
         this.cameras.main.fade(500, 0, 0, 0);
@@ -1126,6 +1159,7 @@ class RaidScene extends Phaser.Scene {
     handleDeath() {
         gameState = 'dead';
         stats.deaths++;
+        logEvent(`DEATH - Lost ${this.raidRubles} rubles, kills: ${stats.enemiesKilled}`);
         // Lose raid loot
         this.raidRubles = 0;
         this.raidLoot = [];
@@ -1171,52 +1205,149 @@ class RaidScene extends Phaser.Scene {
     setupHarness() {
         const scene = this;
 
+        // V2 Harness - time-accelerated execution
+        function runTick(dt) {
+            harnessTime += dt;
+            const dtSec = dt / 1000;
+            const time = harnessTime;
+
+            // Manual physics for player movement
+            let dx = 0, dy = 0;
+            let speed = 150;
+
+            if (scene.cursors.shift.isDown && scene.playerStamina > 0) {
+                speed *= 1.6;
+                scene.playerStamina -= 15 * dtSec;
+            }
+
+            if (scene.isDodging) {
+                scene.dodgeTimer -= dtSec;
+                if (scene.dodgeTimer <= 0) {
+                    scene.isDodging = false;
+                }
+                speed *= 3;
+            }
+
+            if (scene.dodgeCooldown > 0) {
+                scene.dodgeCooldown -= dtSec;
+            }
+
+            if (scene.cursors.w.isDown) dy = -1;
+            if (scene.cursors.s.isDown) dy = 1;
+            if (scene.cursors.a.isDown) dx = -1;
+            if (scene.cursors.d.isDown) dx = 1;
+
+            if (dx !== 0 && dy !== 0) {
+                dx *= 0.707;
+                dy *= 0.707;
+            }
+
+            scene.player.x = Phaser.Math.Clamp(scene.player.x + dx * speed * dtSec, 20, ZONE_WIDTH - 20);
+            scene.player.y = Phaser.Math.Clamp(scene.player.y + dy * speed * dtSec, 20, ZONE_HEIGHT - 20);
+
+            // Update bleeding
+            if (scene.isBleeding) {
+                scene.bleedTimer -= dtSec;
+                scene.playerHP -= 2 * dtSec;
+                if (scene.bleedTimer <= 0) {
+                    scene.isBleeding = false;
+                }
+            }
+
+            // Stamina regen
+            if (!scene.cursors.shift.isDown) {
+                scene.playerStamina = Math.min(scene.playerMaxStamina, scene.playerStamina + 8 * dtSec);
+            }
+
+            // Update radiation
+            scene.updateRadiation(dtSec);
+
+            // Update grenades
+            scene.updateGrenades(dtSec);
+
+            // Update enemies
+            scene.updateEnemies(dtSec, time);
+
+            // Update bullets
+            scene.updateBullets(dtSec);
+
+            // Check death
+            if (scene.playerHP <= 0) {
+                scene.handleDeath();
+            }
+
+            // Check interactions
+            scene.checkInteractions();
+
+            // Update UI
+            scene.updateUI();
+        }
+
         window.harness = {
+            version: '2.0',
             pause: () => { gamePaused = true; },
             resume: () => { gamePaused = false; },
             isPaused: () => gamePaused,
 
-            execute: async (action, durationMs) => {
-                return new Promise((resolve) => {
-                    gamePaused = false;
+            // V2 execute with time-accelerated physics
+            execute: async ({ keys: inputKeys = [], mouseX, mouseY, mouseDown, click, duration = 0, screenshot = false }) => {
+                const startTime = Date.now();
+                debugLogs = []; // Clear logs for this execution
+                gamePaused = false;
 
-                    // Simulate keys
-                    if (action.keys) {
-                        action.keys.forEach(key => {
-                            const keyCode = key.toLowerCase();
-                            if (scene.cursors[keyCode]) {
-                                scene.cursors[keyCode].isDown = true;
-                            }
-                        });
-                    }
-
-                    // Mouse position
-                    if (action.mouseX !== undefined) {
-                        scene.input.activePointer.x = action.mouseX;
-                        scene.input.activePointer.y = action.mouseY;
-                    }
-
-                    // Mouse click
-                    if (action.mouseDown) {
-                        scene.input.activePointer.isDown = true;
-                    }
-
-                    setTimeout(() => {
-                        if (action.keys) {
-                            action.keys.forEach(key => {
-                                const keyCode = key.toLowerCase();
-                                if (scene.cursors[keyCode]) {
-                                    scene.cursors[keyCode].isDown = false;
-                                }
-                            });
+                // Set up key states
+                if (inputKeys) {
+                    inputKeys.forEach(key => {
+                        const keyCode = key.toLowerCase();
+                        if (scene.cursors[keyCode]) {
+                            scene.cursors[keyCode].isDown = true;
                         }
-                        if (action.mouseDown) {
-                            scene.input.activePointer.isDown = false;
+                    });
+                }
+
+                // Mouse position
+                if (mouseX !== undefined) {
+                    scene.input.activePointer.x = mouseX;
+                    scene.input.activePointer.y = mouseY || 300;
+                }
+                if (click) {
+                    scene.input.activePointer.x = click.x;
+                    scene.input.activePointer.y = click.y;
+                }
+
+                // Mouse click
+                if (mouseDown) {
+                    scene.input.activePointer.isDown = true;
+                }
+
+                // Run time-accelerated ticks
+                const dt = 16; // 16ms per tick (~60fps)
+                const ticks = Math.floor(duration / dt);
+                for (let i = 0; i < ticks && gameState === 'raid'; i++) {
+                    runTick(dt);
+                }
+
+                // Clear keys
+                if (inputKeys) {
+                    inputKeys.forEach(key => {
+                        const keyCode = key.toLowerCase();
+                        if (scene.cursors[keyCode]) {
+                            scene.cursors[keyCode].isDown = false;
                         }
-                        gamePaused = true;
-                        resolve();
-                    }, durationMs);
-                });
+                    });
+                }
+                if (mouseDown) {
+                    scene.input.activePointer.isDown = false;
+                }
+
+                gamePaused = true;
+
+                return {
+                    screenshot: null,
+                    logs: debugLogs.slice(),
+                    state: window.harness.getState(),
+                    realTime: Date.now() - startTime
+                };
             },
 
             getState: () => ({
@@ -1224,12 +1355,12 @@ class RaidScene extends Phaser.Scene {
                 player: {
                     x: scene.player?.x || 0,
                     y: scene.player?.y || 0,
-                    hp: scene.playerHP,
+                    hp: Math.ceil(scene.playerHP),
                     maxHp: scene.playerMaxHP,
-                    stamina: scene.playerStamina,
+                    stamina: Math.ceil(scene.playerStamina),
                     isBleeding: scene.isBleeding,
                     isDodging: scene.isDodging,
-                    radiation: scene.radiation || 0,
+                    radiation: Math.floor(scene.radiation || 0),
                     isADS: scene.isADS || false,
                     flashlightOn: scene.flashlightOn || false,
                     grenadeCount: scene.grenadeCount || 0
@@ -1246,23 +1377,39 @@ class RaidScene extends Phaser.Scene {
                     hp: e.hp,
                     state: e.state
                 })),
+                enemyCount: (scene.enemies || []).length,
                 containers: (scene.containers || []).filter(c => !c.looted).length,
                 extractionPoints: (scene.extractionPoints || []).map(ep => ({ x: ep.x, y: ep.y })),
                 raidLoot: scene.raidRubles || 0,
                 stats: stats,
-                nearbyInteractable: scene.nearbyInteractable?.type || null
+                nearbyInteractable: scene.nearbyInteractable?.type || null,
+                harnessTime,
+                debugLogs: debugLogs.slice()
             }),
 
-            getPhase: () => gameState,
+            getPhase: () => {
+                if (gameState === 'dead') return 'gameover';
+                if (gameState === 'extracted') return 'victory';
+                if (gameState === 'menu') return 'menu';
+                return 'playing';
+            },
 
             debug: {
-                setHealth: (hp) => { scene.playerHP = hp; },
+                restart: () => {
+                    harnessTime = 0;
+                    debugLogs = [];
+                    scene.scene.start('MenuScene');
+                },
                 forceStart: () => {
                     gamePaused = false;
+                    harnessTime = 0;
+                    debugLogs = [];
                 },
+                setHealth: (hp) => { scene.playerHP = hp; },
                 clearEnemies: () => {
                     scene.enemies?.forEach(e => e.destroy());
                     scene.enemies = [];
+                    logEvent('Debug: All enemies cleared');
                 },
                 teleportPlayer: (x, y) => {
                     if (scene.player) {
