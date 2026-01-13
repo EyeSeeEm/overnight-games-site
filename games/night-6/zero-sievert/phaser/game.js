@@ -130,6 +130,14 @@ class MenuScene extends Phaser.Scene {
             this.scene.start('RaidScene');
         });
 
+        // Keyboard support for starting
+        this.input.keyboard.on('keydown-ENTER', () => {
+            this.scene.start('GameScene');
+        });
+        this.input.keyboard.on('keydown-SPACE', () => {
+            this.scene.start('GameScene');
+        });
+
         // Controls
         this.add.text(400, 400, 'WASD: Move | Mouse: Aim | LMB: Shoot | RMB: ADS', {
             fontSize: '13px',

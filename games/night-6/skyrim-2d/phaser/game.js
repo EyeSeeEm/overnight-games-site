@@ -28,7 +28,7 @@ const ENEMY_ATTACK_RANGE = 40;
 
 // Game State
 let gameState = 'menu';
-let gamePaused = true;
+let gamePaused = new URLSearchParams(location.search).has('test');
 let currentMap = 'riverwood';
 
 // Color Palette
@@ -555,7 +555,7 @@ class GameScene extends Phaser.Scene {
 
         // Start game paused for harness
         gameState = 'playing';
-        gamePaused = true;
+        // gamePaused stays as set by URL param
 
         // Initialize harness
         this.initHarness();

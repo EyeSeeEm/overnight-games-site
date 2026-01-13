@@ -131,6 +131,14 @@ class MenuScene extends Phaser.Scene {
             this.scene.start('GameScene');
         });
 
+        // Keyboard support for starting
+        this.input.keyboard.on('keydown-ENTER', () => {
+            this.scene.start('GameScene');
+        });
+        this.input.keyboard.on('keydown-SPACE', () => {
+            this.scene.start('GameScene');
+        });
+
         this.add.text(400, 450, 'WASD - Move | Space - Attack | E - Interact', {
             fontSize: '14px',
             fill: '#1a5a1a',

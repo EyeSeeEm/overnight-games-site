@@ -8,7 +8,7 @@ const ROOM_OFFSET_X = (GAME_WIDTH - ROOM_WIDTH * TILE_SIZE) / 2;
 const ROOM_OFFSET_Y = 80;
 
 let gameState = 'menu';
-let gamePaused = true;
+let gamePaused = new URLSearchParams(location.search).has('test');
 let currentFloor = 1;
 
 // Colors
@@ -313,7 +313,7 @@ class GameScene extends Phaser.Scene {
 
         // Start paused
         gameState = 'playing';
-        gamePaused = true;
+        // gamePaused stays as set by URL param
 
         this.initHarness();
     }

@@ -5,7 +5,7 @@ const SCREEN_WIDTH = 1024;
 const SCREEN_HEIGHT = 768;
 
 // Game state
-let gamePaused = true;
+let gamePaused = new URLSearchParams(location.search).has('test');
 let gameState = 'menu'; // menu, map, combat, event, gameover, victory
 let combatPaused = false;
 let stats = {
@@ -139,6 +139,14 @@ class MenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         startBtn.on('pointerdown', () => {
+            this.scene.start('GameScene');
+        });
+
+        // Keyboard support for starting
+        this.input.keyboard.on('keydown-ENTER', () => {
+            this.scene.start('GameScene');
+        });
+        this.input.keyboard.on('keydown-SPACE', () => {
             this.scene.start('GameScene');
         });
 

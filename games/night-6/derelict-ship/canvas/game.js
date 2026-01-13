@@ -934,7 +934,7 @@ function generateSector(sectorIdx) {
 
 function startGame() {
     gameState = 'playing';
-    gamePaused = true;
+        // gamePaused stays as set by URL param
 
     // Hide menus
     document.getElementById('menuScreen').classList.add('hidden');
