@@ -42,8 +42,8 @@ let bloodDecals = [];
 
 // Player stats
 let playerStats = {
-    health: 300,
-    maxHealth: 300,
+    health: 100,
+    maxHealth: 100,
     stamina: 100,
     maxStamina: 100,
     credits: 0,
@@ -199,8 +199,19 @@ function createCorridor(x1, y1, x2, y2) {
 }
 
 function addRoomContents(rooms) {
-    // Simplified - no crates for easier navigation
-    // Crates removed to allow AI pathfinding to work better
+    for (const room of rooms) {
+        if (room.type === 'start') continue; // Keep start room clean
+
+        // Add some crates/obstacles
+        const numCrates = Math.floor(rand(2, 5));
+        for (let i = 0; i < numCrates; i++) {
+            const cx = Math.floor(room.x + 1 + rand() * (room.w - 2));
+            const cy = Math.floor(room.y + 1 + rand() * (room.h - 2));
+            if (levelData[cy] && levelData[cy][cx] === 0) {
+                levelData[cy][cx] = 2; // crate/obstacle
+            }
+        }
+    }
 }
 
 function spawnRoomEnemies(room) {
@@ -211,25 +222,25 @@ function spawnRoomEnemies(room) {
 
     switch (room.type) {
         case 'combat':
-            numEnemies = randInt(2, 3);  // Reduced from 3-5
+            numEnemies = randInt(3, 5);
             types = ['drone', 'drone', 'spitter'];
             break;
         case 'combat_hard':
-            numEnemies = randInt(3, 4);  // Reduced from 4-7
-            types = ['drone', 'spitter', 'lurker'];
+            numEnemies = randInt(4, 7);
+            types = ['drone', 'spitter', 'lurker', 'brute'];
             break;
         case 'keycard_green':
         case 'keycard_blue':
-            numEnemies = randInt(2, 4);  // Reduced from 4-6
-            types = ['drone', 'spitter'];  // Removed lurkers from keycard rooms
+            numEnemies = randInt(4, 6);
+            types = ['drone', 'spitter', 'lurker'];
             break;
         case 'boss':
-            numEnemies = randInt(4, 6);  // Reduced from 6-10
-            types = ['drone', 'spitter', 'lurker', 'brute'];
+            numEnemies = randInt(6, 10);
+            types = ['drone', 'spitter', 'lurker', 'brute', 'brute'];
             break;
         case 'exit':
-            numEnemies = 0;  // No enemies in exit room - just reach it to win
-            types = ['drone'];
+            numEnemies = randInt(2, 4);
+            types = ['drone', 'spitter'];
             break;
     }
 
@@ -418,8 +429,8 @@ class Player extends EngineObject {
             this.cycleWeapon();
         }
 
-        // Interact (doors, pickups) - use isKeyHeld for harness compatibility
-        if (isKeyHeld('e')) {
+        // Interact (doors, pickups)
+        if (isKeyPressed('e') || isKeyPressed(' ')) {
             this.interact();
         }
 
@@ -507,10 +518,10 @@ class Player extends EngineObject {
     }
 
     interact() {
-        // Check doors - interaction range must be >= blocking range
+        // Check doors
         for (const door of doors) {
             const dist = Math.sqrt((this.pos.x - door.x) ** 2 + (this.pos.y - door.y) ** 2);
-            if (dist < 3) {  // Larger than blocking range (2.5)
+            if (dist < 2) {
                 this.tryOpenDoor(door);
             }
         }
@@ -522,12 +533,10 @@ class Player extends EngineObject {
         if (door.type === 'normal') {
             door.open = true;
             addFloatingText(door.x, door.y + 1, 'Door Opened', new Color(0.8, 0.8, 0.8));
-            logEvent('Opened normal door');
         } else if (door.type === 'green') {
             if (playerStats.keycards.green) {
                 door.open = true;
                 addFloatingText(door.x, door.y + 1, 'Green Door Opened!', COLOR_KEYCARD_GREEN);
-                logEvent('Opened GREEN door');
             } else {
                 addFloatingText(door.x, door.y + 1, 'Need Green Keycard', COLOR_KEYCARD_GREEN);
             }
@@ -535,7 +544,6 @@ class Player extends EngineObject {
             if (playerStats.keycards.blue) {
                 door.open = true;
                 addFloatingText(door.x, door.y + 1, 'Blue Door Opened!', COLOR_KEYCARD_BLUE);
-                logEvent('Opened BLUE door');
             } else {
                 addFloatingText(door.x, door.y + 1, 'Need Blue Keycard', COLOR_KEYCARD_BLUE);
             }
@@ -546,11 +554,11 @@ class Player extends EngineObject {
         for (const door of doors) {
             if (door.open) continue;
             const dist = Math.sqrt((this.pos.x - door.x) ** 2 + (this.pos.y - door.y) ** 2);
-            if (dist < 2.5) {  // Larger blocking radius to cover corridor width
+            if (dist < 1.5) {
                 // Block player
                 const dx = this.pos.x - door.x;
                 const dy = this.pos.y - door.y;
-                const pushDist = 2.5 - dist;
+                const pushDist = 1.5 - dist;
                 if (dist > 0) {
                     this.pos.x += (dx / dist) * pushDist;
                     this.pos.y += (dy / dist) * pushDist;
@@ -563,7 +571,7 @@ class Player extends EngineObject {
         for (let i = pickups.length - 1; i >= 0; i--) {
             const p = pickups[i];
             const dist = Math.sqrt((this.pos.x - p.x) ** 2 + (this.pos.y - p.y) ** 2);
-            if (dist < 2.0) {  // Increased pickup radius for easier collection
+            if (dist < 1) {
                 this.collectPickup(p, i);
             }
         }
@@ -594,7 +602,6 @@ class Player extends EngineObject {
                 collected = true;
                 text = `${p.keyType.toUpperCase()} KEYCARD`;
                 color = p.keyType === 'green' ? COLOR_KEYCARD_GREEN : COLOR_KEYCARD_BLUE;
-                logEvent(`Picked up ${p.keyType} keycard!`);
                 break;
             case 'weapon':
                 if (!weaponInventory.includes(p.weaponType)) {
@@ -631,13 +638,12 @@ class Player extends EngineObject {
         if (this.invincibleTimer > 0) return;
 
         playerStats.health -= amount;
-        this.invincibleTimer = 1.5; // 1.5 second i-frames
+        this.invincibleTimer = 1.0; // 1 second i-frames
+        // Screen shake on damage
         addFloatingText(this.pos.x, this.pos.y + 1, `-${amount}`, COLOR_HEALTH);
-        logEvent(`Player took ${amount} damage (HP: ${playerStats.health}/${playerStats.maxHealth})`);
 
         if (playerStats.health <= 0) {
             gameState = 'gameover';
-            logEvent('GAME OVER - Player died');
         }
     }
 
@@ -747,7 +753,7 @@ class Enemy extends EngineObject {
                 this.health = 30;
                 this.maxHealth = 30;
                 this.speed = 1.3;
-                this.damage = 10; // Reduced from 15
+                this.damage = 15;
                 this.color = COLOR_SPITTER;
                 this.radius = 0.5;
                 this.attackRange = 10;
@@ -756,10 +762,10 @@ class Enemy extends EngineObject {
                 this.preferredDist = 6;
                 break;
             case 'lurker':
-                this.health = 25;  // Reduced from 40 - now 2 pistol shots
-                this.maxHealth = 25;
+                this.health = 40;
+                this.maxHealth = 40;
                 this.speed = 3.5;
-                this.damage = 15; // Reduced from 20
+                this.damage = 20;
                 this.color = COLOR_LURKER;
                 this.radius = 0.4;
                 this.attackRange = 1;
@@ -770,7 +776,7 @@ class Enemy extends EngineObject {
                 this.health = 100;
                 this.maxHealth = 100;
                 this.speed = 1;
-                this.damage = 25; // Reduced from 30
+                this.damage = 30;
                 this.color = COLOR_BRUTE;
                 this.radius = 0.7;
                 this.attackRange = 1.5;
@@ -950,7 +956,6 @@ class Enemy extends EngineObject {
         const idx = enemies.indexOf(this);
         if (idx >= 0) {
             enemies.splice(idx, 1);
-            logEvent(`Enemy killed: ${this.type} at (${this.pos.x.toFixed(1)}, ${this.pos.y.toFixed(1)})`);
         }
 
         // Drop loot
@@ -1236,63 +1241,7 @@ function gameInit() {
 }
 
 function gameUpdate() {
-    // When using harness, keep gamePaused=true to prevent double updates
-    // The harness calls runGameTick() directly for time-accelerated execution
     if (gamePaused) return;
-
-    // Only run if not in harness mode (normal gameplay)
-    runGameTick();
-
-    // Restart input (only in normal mode)
-    if (keyWasPressed('KeyR') && (gameState === 'gameover' || gameState === 'victory')) {
-        restartGame();
-    }
-}
-
-function gameRender() {
-    renderGame();
-}
-
-function gameRenderPost() {
-    renderHUD();
-}
-
-function restartGame() {
-    playerStats = {
-        health: 200,
-        maxHealth: 200,
-        stamina: 100,
-        maxStamina: 100,
-        credits: 0,
-        keycards: { green: false, blue: false, yellow: false }
-    };
-    currentWeapon = 'pistol';
-    weaponInventory = ['pistol'];
-    ammo = { '9mm': 999, 'shells': 24, 'rifle': 0 };
-    currentMag = 12;
-    isReloading = false;
-    floatingTexts = [];
-    bloodDecals = [];
-
-    generateLevel();
-    gameState = 'playing';
-}
-
-// ==================== HARNESS INTERFACE (V2 TIME-ACCELERATED) ====================
-let debugLogs = [];
-let gameTime = 0;
-
-function logEvent(msg) {
-    debugLogs.push(`[${gameTime}ms] ${msg}`);
-}
-
-function runGameTick() {
-    // Run one frame of game logic (16ms of game time)
-    gameTime += 16;
-
-    // Temporarily unpause so entity updates work
-    const wasPaused = gamePaused;
-    gamePaused = false;
 
     // Update vision
     updateVision();
@@ -1316,23 +1265,52 @@ function runGameTick() {
         bullet.update();
     }
 
-    // Restore pause state
-    gamePaused = wasPaused;
-
-    // Check victory condition (blue keycard + reach exit room + exit room clear)
+    // Check victory condition (all keycards and reach exit area)
     if (player && playerStats.keycards.blue) {
+        // Check if in exit room area
         if (player.pos.x >= 16 && player.pos.x <= 24 && player.pos.y >= 28 && player.pos.y <= 36) {
-            const exitRoomEnemies = enemies.filter(e =>
-                e.pos.x >= 16 && e.pos.x <= 24 && e.pos.y >= 28 && e.pos.y <= 36
-            );
-            if (exitRoomEnemies.length === 0) {
+            if (enemies.length === 0) {
                 gameState = 'victory';
-                logEvent('VICTORY! Reached exit with blue keycard');
             }
         }
     }
+
+    // Restart
+    if (keyWasPressed('KeyR') && (gameState === 'gameover' || gameState === 'victory')) {
+        restartGame();
+    }
 }
 
+function gameRender() {
+    renderGame();
+}
+
+function gameRenderPost() {
+    renderHUD();
+}
+
+function restartGame() {
+    playerStats = {
+        health: 100,
+        maxHealth: 100,
+        stamina: 100,
+        maxStamina: 100,
+        credits: 0,
+        keycards: { green: false, blue: false, yellow: false }
+    };
+    currentWeapon = 'pistol';
+    weaponInventory = ['pistol'];
+    ammo = { '9mm': 999, 'shells': 24, 'rifle': 0 };
+    currentMag = 12;
+    isReloading = false;
+    floatingTexts = [];
+    bloodDecals = [];
+
+    generateLevel();
+    gameState = 'playing';
+}
+
+// ==================== HARNESS INTERFACE ====================
 (function() {
     window.harness = {
         pause: () => {
@@ -1346,47 +1324,31 @@ function runGameTick() {
 
         isPaused: () => gamePaused,
 
-        // V2 TIME-ACCELERATED EXECUTE
-        execute: async ({ keys = [], duration = 500, screenshot = false }) => {
-            const startReal = performance.now();
-            debugLogs = [];
-
-            // Apply inputs - normalize key names
-            for (const key of keys) {
-                simulatedKeys.add(key);
-                simulatedKeys.add(key.toLowerCase());
-            }
-
-            // Calculate number of ticks (16ms per tick for ~60fps)
-            const dt = 16;
-            const numTicks = Math.ceil(duration / dt);
-
-            // Run physics ticks synchronously (TIME-ACCELERATED)
-            for (let i = 0; i < numTicks; i++) {
-                // Check if game ended
-                if (gameState === 'gameover' || gameState === 'victory') {
-                    break;
+        execute: (action, durationMs) => {
+            return new Promise((resolve) => {
+                // Apply inputs - normalize key names
+                if (action.keys) {
+                    for (const key of action.keys) {
+                        // Add both original and lowercase
+                        simulatedKeys.add(key);
+                        simulatedKeys.add(key.toLowerCase());
+                    }
                 }
-                // Run one game tick
-                runGameTick();
-            }
+                if (action.click) {
+                    simulatedClick = action.click;
+                }
 
-            // Clear inputs
-            simulatedKeys.clear();
+                // Resume game
+                gamePaused = false;
 
-            // Get screenshot if requested
-            let screenshotData = null;
-            if (screenshot && typeof mainCanvas !== 'undefined') {
-                screenshotData = mainCanvas.toDataURL('image/png');
-            }
-
-            return {
-                screenshot: screenshotData,
-                logs: [...debugLogs],
-                state: window.harness.getState(),
-                realTime: performance.now() - startReal,
-                gameTime: gameTime
-            };
+                // After duration, pause and release inputs
+                setTimeout(() => {
+                    simulatedKeys.clear();
+                    simulatedClick = null;
+                    gamePaused = true;
+                    resolve();
+                }, durationMs);
+            });
         },
 
         getState: () => {
@@ -1445,12 +1407,10 @@ function runGameTick() {
                 playerStats.keycards[type] = true;
             },
             forceStart: () => {
-                // Always restart to ensure fresh state
-                restartGame();
-                gameTime = 0;
-                debugLogs = [];
-                // Keep paused - harness calls runGameTick directly
-                gamePaused = true;
+                if (gameState !== 'playing') {
+                    restartGame();
+                }
+                gamePaused = false;
             },
             forceGameOver: () => {
                 gameState = 'gameover';
@@ -1477,7 +1437,7 @@ function runGameTick() {
             }
         },
 
-        version: '2.0',  // Time-accelerated harness
+        version: '1.0',
 
         gameInfo: {
             name: 'Station Breach',

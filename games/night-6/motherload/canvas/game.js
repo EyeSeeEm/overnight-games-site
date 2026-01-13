@@ -148,27 +148,16 @@
     function generateWorld() {
         world = [];
 
-        // Calculate landing pad position (center of world)
-        const landingPadX = Math.floor(WORLD_WIDTH / 2);
-
         for (let y = 0; y < WORLD_HEIGHT; y++) {
             const row = [];
             const depth = (y - 2) * 13; // ft
 
             for (let x = 0; x < WORLD_WIDTH; x++) {
-                // Surface area (sky)
+                // Surface area (sky + ground level)
                 if (y < 2) {
                     row.push(TILE.EMPTY);
                 }
-                // Landing pad - rows 2-3 empty at center for entry/exit
-                else if (y < 4 && x >= landingPadX - 2 && x <= landingPadX + 2) {
-                    row.push(TILE.EMPTY);  // Landing pad - fly through area
-                }
-                // Row 2 - solid ground for walking (outside landing pad)
-                else if (y === 2 && !isBuilding(x)) {
-                    row.push(TILE.DIRT);  // Walkable surface
-                }
-                // Building foundations (rows 2-3)
+                // Building foundations (can't drill)
                 else if (y < 4 && isBuilding(x)) {
                     row.push(TILE.ROCK);
                 }
@@ -411,10 +400,6 @@
                         this.cargo.push({ ...mineral });
                         stats.mineralsCollected++;
 
-                        if (typeof logEvent === 'function') {
-                            logEvent(`Collected ${mineral.name} (+$${mineral.value})`);
-                        }
-
                         floatingTexts.push({
                             x: this.x,
                             y: this.y - 20,
@@ -423,9 +408,6 @@
                             life: 1.0
                         });
                     } else {
-                        if (typeof logEvent === 'function') {
-                            logEvent('Cargo full - mineral lost');
-                        }
                         floatingTexts.push({
                             x: this.x,
                             y: this.y - 20,
@@ -433,10 +415,6 @@
                             color: '#FF0000',
                             life: 1.0
                         });
-                    }
-                } else {
-                    if (typeof logEvent === 'function') {
-                        logEvent(`Drilled ${tile === TILE.ROCK ? 'rock' : 'dirt'}`);
                     }
                 }
 
@@ -476,9 +454,6 @@
                 if (this.vy > 400) {
                     const damage = Math.floor((this.vy - 400) / 100);
                     this.hull -= damage;
-                    if (typeof logEvent === 'function') {
-                        logEvent(`Fall damage: -${damage} HP (hull: ${this.hull}/${this.maxHull})`);
-                    }
                     floatingTexts.push({
                         x: this.x,
                         y: this.y - 30,
@@ -518,9 +493,6 @@
 
             // Death check
             if (this.hull <= 0) {
-                if (typeof logEvent === 'function') {
-                    logEvent('Player destroyed - GAME OVER');
-                }
                 gameState = 'gameover';
             }
         }
@@ -627,9 +599,6 @@
         if (player.cash >= cost && needed > 0) {
             player.cash -= cost;
             player.fuel = player.maxFuel;
-            if (typeof logEvent === 'function') {
-                logEvent(`Bought fuel: +${needed.toFixed(1)}L for $${cost}`);
-            }
             floatingTexts.push({
                 x: player.x,
                 y: player.y - 30,
@@ -644,17 +613,12 @@
         if (player.cargo.length === 0) return;
 
         let total = 0;
-        const mineralCount = player.cargo.length;
         for (const mineral of player.cargo) {
             total += mineral.value;
         }
 
         player.cash += total;
         stats.goldEarned += total;
-
-        if (typeof logEvent === 'function') {
-            logEvent(`Sold ${mineralCount} minerals for $${total} (total earned: $${stats.goldEarned})`);
-        }
 
         floatingTexts.push({
             x: player.x,
@@ -1141,15 +1105,8 @@
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // HARNESS INTERFACE (v2 - Time-Accelerated)
+    // HARNESS INTERFACE
     // ═══════════════════════════════════════════════════════════════════════════
-    let debugLogs = [];
-    let gameTime = 0;
-
-    function logEvent(msg) {
-        debugLogs.push(`[${Math.floor(gameTime)}ms] ${msg}`);
-    }
-
     function releaseAllKeys() {
         activeKeys.clear();
         for (const key in keysDown) {
@@ -1157,63 +1114,35 @@
         }
     }
 
-    // Hook into game events for logging
-    const originalFloatingTextPush = Array.prototype.push;
-    const floatingTextsProxy = {
-        push: function(item) {
-            logEvent(item.text);
-            return originalFloatingTextPush.call(floatingTexts, item);
-        }
-    };
-
     window.harness = {
-        execute: async ({ keys = [], duration = 500, screenshot = false }) => {
-            const startReal = performance.now();
-            debugLogs = [];  // Clear logs for this execution
+        pause: () => {
+            gamePaused = true;
+            releaseAllKeys();
+        },
 
-            // Set active keys
-            activeKeys = new Set(keys);
-            for (const key of keys) {
-                keysDown[key] = true;
-            }
+        resume: () => {
+            gamePaused = false;
+        },
 
-            // Run physics for duration (TIME-ACCELERATED)
-            const dt = 16 / 1000;  // 16ms per tick as seconds
-            const ticks = Math.ceil(duration / 16);
+        isPaused: () => gamePaused,
 
-            for (let i = 0; i < ticks; i++) {
-                // Check if game ended
-                if (gameState === 'gameover' || gameState === 'victory') {
-                    logEvent(`Game ended: ${gameState}`);
-                    break;
+        execute: (action, durationMs) => {
+            return new Promise((resolve) => {
+                if (action.keys) {
+                    for (const key of action.keys) {
+                        activeKeys.add(key);
+                        keysDown[key] = true;
+                    }
                 }
 
-                // Run one physics tick
-                gameTime += 16;
-                update(dt);
-            }
+                gamePaused = false;
 
-            // Release keys
-            releaseAllKeys();
-
-            // Update camera for final render
-            updateCamera();
-
-            // Render final frame (for screenshot)
-            render();
-
-            // Capture screenshot if requested
-            let screenshotData = null;
-            if (screenshot) {
-                screenshotData = canvas.toDataURL('image/png');
-            }
-
-            return {
-                screenshot: screenshotData,
-                logs: [...debugLogs],
-                state: window.harness.getState(),
-                realTime: performance.now() - startReal
-            };
+                setTimeout(() => {
+                    releaseAllKeys();
+                    gamePaused = true;
+                    resolve();
+                }, durationMs);
+            });
         },
 
         getState: () => {
@@ -1221,7 +1150,6 @@
                 gameState: gameState,
                 currentShop: currentShop,
                 stats: { ...stats },
-                gameTime: gameTime,
                 player: player ? {
                     x: player.x,
                     y: player.y,
@@ -1234,7 +1162,6 @@
                     cargoWeight: player.cargoWeight,
                     cargoCapacity: player.cargoCapacity,
                     cargoCount: player.cargo.length,
-                    cargoItems: player.cargo.map(m => m.name),
                     drilling: player.drilling,
                     grounded: player.grounded,
                     upgrades: { ...player.upgrades }
@@ -1246,24 +1173,19 @@
 
         debug: {
             setFuel: (amount) => { if (player) player.fuel = amount; },
-            setHealth: (amount) => { if (player) player.hull = amount; },
             setHull: (amount) => { if (player) player.hull = amount; },
             addCash: (amount) => { if (player) player.cash += amount; },
-            forceStart: () => { startGame(); gameTime = 0; },
-            clearEnemies: () => { /* No enemies in this game */ },
-            giveAmmo: (n) => { /* No ammo in this game */ },
-            log: (msg) => { debugLogs.push(`[DEBUG] ${msg}`); },
+            forceStart: () => { startGame(); },
             teleportSurface: () => {
                 if (player) {
                     player.x = WORLD_WIDTH * TILE_SIZE / 2;
                     player.y = 1.5 * TILE_SIZE;
                     player.vy = 0;
-                    logEvent('Teleported to surface');
                 }
             }
         },
 
-        version: '2.0',
+        version: '1.0',
 
         gameInfo: {
             name: 'Motherload Clone',
@@ -1274,11 +1196,6 @@
             }
         }
     };
-
-    // Global helper for checking key state
-    window.isKeyActive = (key) => activeKeys.has(key);
-
-    console.log('[HARNESS v2] Time-accelerated harness ready');
 
     window.addEventListener('load', init);
 })();

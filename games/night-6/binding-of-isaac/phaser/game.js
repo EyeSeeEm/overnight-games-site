@@ -10,12 +10,6 @@ const ROOM_OFFSET_Y = 80;
 let gameState = 'menu';
 let gamePaused = true;
 let currentFloor = 1;
-let gameTime = 0;
-let debugLogs = [];
-
-function logEvent(msg) {
-    debugLogs.push(`[${gameTime}ms] ${msg}`);
-}
 
 // Colors
 const COLORS = {
@@ -656,8 +650,6 @@ class GameScene extends Phaser.Scene {
             if (item.effect.hp) this.playerStats.maxHearts += item.effect.hp;
         }
 
-        logEvent(`Item collected: ${item.name}`);
-
         // Add to inventory
         if (item.type === 'passive') {
             this.inventory.passive.push(pedestal.itemKey);
@@ -677,8 +669,6 @@ class GameScene extends Phaser.Scene {
 
     damagePlayer(amount) {
         if (this.invincibleTime > 0) return;
-
-        logEvent(`Player took ${amount} damage`);
 
         // Remove soul hearts first
         if (this.playerStats.soulHearts > 0) {
@@ -938,8 +928,6 @@ class GameScene extends Phaser.Scene {
     }
 
     killEnemy(enemy) {
-        logEvent(`Enemy killed: ${enemy.type} at (${Math.round(enemy.x)}, ${Math.round(enemy.y)})`);
-
         // Drop pickups
         if (Math.random() < 0.2) {
             const drops = ['heart', 'coin', 'coin', 'bomb', 'key'];
@@ -1078,7 +1066,6 @@ class GameScene extends Phaser.Scene {
             const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, pickup.x, pickup.y);
 
             if (dist < 30) {
-                logEvent(`Picked up ${pickup.type}`);
                 switch (pickup.type) {
                     case 'heart':
                         if (this.playerStats.hearts < this.playerStats.maxHearts) {
@@ -1175,9 +1162,7 @@ class GameScene extends Phaser.Scene {
             }
 
             if (inDoor) {
-                const oldRoom = this.currentRoomKey;
                 this.currentRoomKey = neighborKey;
-                logEvent(`Room transition: ${oldRoom} -> ${neighborKey}`);
                 this.loadRoom(neighborKey);
 
                 // Position player at entry point
@@ -1197,7 +1182,6 @@ class GameScene extends Phaser.Scene {
             this.doorsOpen = true;
             const room = this.floor.get(this.currentRoomKey);
             room.cleared = true;
-            logEvent(`Room cleared: ${this.currentRoomKey} (${room.type})`);
 
             // Award room clear bonus
             if (Math.random() < 0.3) {
@@ -1216,114 +1200,33 @@ class GameScene extends Phaser.Scene {
 
     initHarness() {
         const scene = this;
-        let activeKeys = new Set();
-
-        // Manual update function for time-accelerated execution
-        const runTick = (dt) => {
-            gameTime += dt;
-
-            // Cooldowns
-            if (scene.fireCooldown > 0) scene.fireCooldown -= dt;
-            if (scene.invincibleTime > 0) scene.invincibleTime -= dt;
-
-            // Player movement
-            let dx = 0, dy = 0;
-            if (activeKeys.has('w') || activeKeys.has('W')) dy = -1;
-            if (activeKeys.has('s') || activeKeys.has('S')) dy = 1;
-            if (activeKeys.has('a') || activeKeys.has('A')) dx = -1;
-            if (activeKeys.has('d') || activeKeys.has('D')) dx = 1;
-
-            if (dx !== 0 && dy !== 0) {
-                dx *= 0.707;
-                dy *= 0.707;
-            }
-
-            const moveX = dx * scene.playerStats.speed * (dt / 1000);
-            const moveY = dy * scene.playerStats.speed * (dt / 1000);
-
-            const newX = scene.player.x + moveX;
-            const newY = scene.player.y + moveY;
-
-            const minX = ROOM_OFFSET_X + 24;
-            const maxX = ROOM_OFFSET_X + ROOM_WIDTH * TILE_SIZE - 24;
-            const minY = ROOM_OFFSET_Y + 24;
-            const maxY = ROOM_OFFSET_Y + ROOM_HEIGHT * TILE_SIZE - 24;
-
-            if (newX > minX && newX < maxX) scene.player.x = newX;
-            if (newY > minY && newY < maxY) scene.player.y = newY;
-
-            // Firing
-            if (activeKeys.has('ArrowUp')) scene.fireTear(0, -1);
-            else if (activeKeys.has('ArrowDown')) scene.fireTear(0, 1);
-            else if (activeKeys.has('ArrowLeft')) scene.fireTear(-1, 0);
-            else if (activeKeys.has('ArrowRight')) scene.fireTear(1, 0);
-
-            // Update tears
-            scene.updateTears(dt);
-
-            // Update enemies
-            scene.updateEnemies(dt);
-
-            // Check pickups
-            scene.checkPickups();
-
-            // Check items (need to handle differently - no JustDown in harness mode)
-            if (activeKeys.has('Space') || activeKeys.has(' ')) {
-                for (const pedestal of scene.itemPedestals) {
-                    const dist = Phaser.Math.Distance.Between(scene.player.x, scene.player.y, pedestal.x, pedestal.y);
-                    if (dist < 40) {
-                        scene.collectItem(pedestal);
-                        break;
-                    }
-                }
-            }
-
-            // Check room doors
-            scene.checkDoors();
-
-            // Check room clear
-            scene.checkRoomClear();
-        };
 
         window.harness = {
-            execute: async ({ keys = [], duration = 500, screenshot = false }) => {
-                const startReal = performance.now();
-                debugLogs = []; // Clear logs for this execution
+            pause: () => { gamePaused = true; },
+            resume: () => { gamePaused = false; },
+            isPaused: () => gamePaused,
 
-                // Set active keys
-                activeKeys = new Set(keys);
+            execute: (action, durationMs) => {
+                return new Promise(resolve => {
+                    if (action.keys) {
+                        action.keys.forEach(key => {
+                            const k = scene.getKeyCode(key);
+                            if (k && scene.cursors[k]) scene.cursors[k].isDown = true;
+                        });
+                    }
+                    gamePaused = false;
 
-                // Run physics for duration (TIME-ACCELERATED)
-                const dt = 16; // 16ms per tick (~60fps equivalent)
-                const ticks = Math.ceil(duration / dt);
-
-                for (let i = 0; i < ticks; i++) {
-                    // Check if game ended
-                    if (gameState === 'gameover' || gameState === 'victory') break;
-
-                    // Run one physics tick
-                    runTick(dt);
-                }
-
-                // Clear keys
-                activeKeys.clear();
-
-                // Render final frame
-                scene.drawPlayer();
-                scene.enemies.forEach(e => scene.drawEnemy(e));
-
-                // Capture screenshot if requested
-                let screenshotData = null;
-                if (screenshot) {
-                    screenshotData = scene.game.canvas.toDataURL('image/png');
-                }
-
-                return {
-                    screenshot: screenshotData,
-                    logs: [...debugLogs],
-                    state: window.harness.getState(),
-                    realTime: performance.now() - startReal
-                };
+                    setTimeout(() => {
+                        if (action.keys) {
+                            action.keys.forEach(key => {
+                                const k = scene.getKeyCode(key);
+                                if (k && scene.cursors[k]) scene.cursors[k].isDown = false;
+                            });
+                        }
+                        gamePaused = true;
+                        resolve();
+                    }, durationMs);
+                });
             },
 
             getState: () => ({
@@ -1331,12 +1234,9 @@ class GameScene extends Phaser.Scene {
                 currentFloor,
                 currentRoom: scene.currentRoomKey,
                 roomCleared: scene.doorsOpen,
-                gameTime,
                 player: {
                     x: scene.player?.x || 0,
                     y: scene.player?.y || 0,
-                    health: scene.playerStats.hearts,
-                    maxHealth: scene.playerStats.maxHearts,
                     hearts: scene.playerStats.hearts,
                     maxHearts: scene.playerStats.maxHearts,
                     soulHearts: scene.playerStats.soulHearts,
@@ -1382,27 +1282,16 @@ class GameScene extends Phaser.Scene {
                         }
                     }
                 },
-                forceStart: () => {
-                    gameState = 'playing';
-                    gamePaused = true; // Keep paused - harness controls execution
-                    gameTime = 0;
-                    debugLogs = [];
-                },
+                forceStart: () => { gameState = 'playing'; gamePaused = false; },
                 forceGameOver: () => { scene.playerDeath(); },
                 nextFloor: () => {
                     currentFloor++;
                     scene.generateNewFloor();
                 },
-                restart: () => {
-                    currentFloor = 1;
-                    gameTime = 0;
-                    debugLogs = [];
-                    scene.scene.restart();
-                },
-                log: msg => { debugLogs.push(`[DEBUG] ${msg}`); }
+                log: msg => console.log('[HARNESS]', msg)
             },
 
-            version: '2.0',
+            version: '1.0',
             gameInfo: {
                 name: 'Binding of Isaac Clone',
                 type: 'twin_stick_roguelike',
@@ -1414,7 +1303,7 @@ class GameScene extends Phaser.Scene {
             }
         };
 
-        console.log('[HARNESS v2] Binding of Isaac Clone harness initialized');
+        console.log('[HARNESS] Binding of Isaac Clone harness initialized');
     }
 
     getKeyCode(key) {
@@ -1478,36 +1367,27 @@ class MenuScene extends Phaser.Scene {
             this.scene.start('GameScene');
         });
 
-        // Menu harness (v2)
-        const menuScene = this;
+        // Menu harness
         window.harness = {
-            execute: async ({ keys = [], duration = 500, screenshot = false }) => {
-                const startReal = performance.now();
-                if (keys.includes('Space') || keys.includes(' ')) {
-                    currentFloor = 1;
-                    gameTime = 0;
-                    debugLogs = [];
-                    menuScene.scene.start('GameScene');
-                }
-                return {
-                    screenshot: null,
-                    logs: [],
-                    state: { gameState: 'menu' },
-                    realTime: performance.now() - startReal
-                };
+            pause: () => { gamePaused = true; },
+            resume: () => { gamePaused = false; },
+            isPaused: () => gamePaused,
+            execute: (action, duration) => {
+                return new Promise(resolve => {
+                    if (action.keys?.includes('Space')) {
+                        currentFloor = 1;
+                        this.scene.start('GameScene');
+                    }
+                    setTimeout(resolve, duration);
+                });
             },
-            getState: () => ({ gameState: 'menu', gameTime: 0 }),
+            getState: () => ({ gameState: 'menu' }),
             getPhase: () => 'menu',
             debug: {
-                forceStart: () => {
-                    currentFloor = 1;
-                    gameTime = 0;
-                    debugLogs = [];
-                    menuScene.scene.start('GameScene');
-                },
+                forceStart: () => { currentFloor = 1; this.scene.start('GameScene'); },
                 log: msg => console.log('[HARNESS]', msg)
             },
-            version: '2.0',
+            version: '1.0',
             gameInfo: { name: 'Binding of Isaac Clone', type: 'twin_stick_roguelike' }
         };
     }

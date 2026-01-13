@@ -4,13 +4,6 @@
 const SCREEN_WIDTH = 1024;
 const SCREEN_HEIGHT = 768;
 
-// V2 Harness - time tracking and debug logging
-let gameTime = 0;
-let debugLogs = [];
-function logEvent(msg) {
-    debugLogs.push(`[${gameTime}ms] ${msg}`);
-}
-
 // Game state
 let gamePaused = true;
 let gameState = 'menu'; // menu, map, combat, event, gameover, victory
@@ -486,7 +479,6 @@ class GameScene extends Phaser.Scene {
         this.beacons[beaconIndex].visited = true;
         stats.beaconsVisited++;
         stats.jumpsCompleted++;
-        logEvent(`Jump to beacon ${beaconIndex} (${this.beacons[beaconIndex].type})`);
 
         // Advance rebel fleet
         this.rebelProgress += 10;
@@ -930,7 +922,6 @@ class GameScene extends Phaser.Scene {
                     if (crewMember.health <= 0) {
                         crewMember.health = 0;
                         this.showCombatText(`${crewMember.name} DIED!`, 150, 250, '#ff0000');
-                        logEvent(`Crew member ${crewMember.name} died in fire`);
                     }
                 }
             }
@@ -1049,7 +1040,6 @@ class GameScene extends Phaser.Scene {
 
         // Apply hull damage
         this.enemyShip.hull -= weapon.damage;
-        logEvent(`Player hit enemy hull for ${weapon.damage} damage (${this.enemyShip.hull}/${this.enemyShip.maxHull})`);
 
         // Screen shake on hit
         this.cameras.main.shake(200, 0.005);
@@ -1076,7 +1066,6 @@ class GameScene extends Phaser.Scene {
         if (weapon.fireChance && Math.random() < weapon.fireChance) {
             this.enemyShip.fires.push({ room: this.selectedTarget || 'hull', duration: 10 });
             this.showCombatText('FIRE!', 780, 350, '#ff4400');
-            logEvent(`Fire started on enemy ship in ${this.selectedTarget || 'hull'}`);
         }
 
         this.showCombatText(`-${weapon.damage}`, 750, 350, '#ff4444');
@@ -1115,7 +1104,6 @@ class GameScene extends Phaser.Scene {
 
         // Apply hull damage
         this.playerShip.hull -= weapon.damage;
-        logEvent(`Player took ${weapon.damage} hull damage (${this.playerShip.hull}/${this.playerShip.maxHull})`);
 
         // Screen shake on damage
         this.cameras.main.shake(300, 0.008);
@@ -1134,7 +1122,6 @@ class GameScene extends Phaser.Scene {
             const fireRoom = rooms[Phaser.Math.Between(0, rooms.length - 1)];
             this.playerShip.fires.push({ room: fireRoom, duration: 15 });
             this.showCombatText('FIRE IN ' + fireRoom.toUpperCase() + '!', 150, 280, '#ff4400');
-            logEvent(`Fire started on player ship in ${fireRoom}`);
         }
 
         this.showCombatText(`-${weapon.damage}`, 150, 350, '#ff4444');
@@ -1253,14 +1240,10 @@ class GameScene extends Phaser.Scene {
     }
 
     combatVictory() {
-        if (gameState !== 'combat') return; // Prevent multiple calls
-        gameState = 'combatVictory'; // Immediately change state to prevent re-entry
-
         stats.shipsDestroyed++;
         const scrapReward = Phaser.Math.Between(15, 40);
         this.playerShip.scrap += scrapReward;
         stats.scrapEarned += scrapReward;
-        logEvent(`Combat victory! Enemy ${this.enemyShip.type} destroyed, +${scrapReward} scrap`);
 
         // Show victory and return to map
         const victoryText = this.add.text(512, 300, `VICTORY!\n+${scrapReward} Scrap`, {
@@ -1278,10 +1261,8 @@ class GameScene extends Phaser.Scene {
     nextSector() {
         this.currentSector++;
         stats.sectorsCompleted++;
-        logEvent(`Sector ${this.currentSector-1} completed, entering sector ${this.currentSector}`);
 
         if (this.currentSector > this.maxSectors) {
-            logEvent(`All 8 sectors completed - VICTORY!`);
             this.victory();
             return;
         }
@@ -1352,7 +1333,6 @@ class GameScene extends Phaser.Scene {
 
     gameOver() {
         gameState = 'gameover';
-        logEvent(`Game over! Ship destroyed at sector ${this.currentSector}, hull ${this.playerShip.hull}`);
 
         this.add.rectangle(512, 384, 400, 200, COLORS.UI_DARK, 0.9).setDepth(200);
         this.add.text(512, 350, 'SHIP DESTROYED', {
@@ -1419,183 +1399,39 @@ class GameScene extends Phaser.Scene {
     setupHarness() {
         const scene = this;
 
-        // V2 Harness - synchronous time-accelerated execution
-        const runCombatTick = (dt) => {
-            gameTime += dt;
-            const dtSec = dt / 1000;
-
-            if (gameState !== 'combat' || combatPaused || gameState === 'combatVictory') return;
-
-            // Update shield recharge (only if shields system not destroyed)
-            const shieldSys = scene.playerShip.systems.shields;
-            const effectiveShieldPower = Math.max(0, shieldSys.power - shieldSys.damage);
-            if (scene.playerShip.shields < scene.playerShip.maxShields && effectiveShieldPower > 0) {
-                scene.playerShip.shieldRecharge += dtSec;
-                if (scene.playerShip.shieldRecharge >= 2) {
-                    scene.playerShip.shields++;
-                    scene.playerShip.shieldRecharge = 0;
-                }
-            }
-
-            // Enemy shield recharge (only if shields system not destroyed)
-            if (scene.enemyShip) {
-                const enemyShieldSys = scene.enemyShip.systems.shields;
-                if (scene.enemyShip.shields < scene.enemyShip.maxShields && enemyShieldSys.health > 0) {
-                    scene.enemyShip.shieldRecharge += dtSec;
-                    if (scene.enemyShip.shieldRecharge >= 2) {
-                        scene.enemyShip.shields++;
-                        scene.enemyShip.shieldRecharge = 0;
-                    }
-                }
-            }
-
-            // Charge weapons (account for system damage)
-            const weaponSys = scene.playerShip.systems.weapons;
-            const effectiveWeaponPower = Math.max(0, weaponSys.power - weaponSys.damage);
-            for (let i = 0; i < scene.playerShip.weapons.length; i++) {
-                const weapon = scene.playerShip.weapons[i];
-                if (i < effectiveWeaponPower && weapon.charge < weapon.chargeTime) {
-                    weapon.charge += dtSec;
-                }
-            }
-
-            // Enemy weapons charge and fire (skip disabled weapons)
-            if (scene.enemyShip) {
-                for (const weapon of scene.enemyShip.weapons) {
-                    if (!weapon.active) continue;
-                    weapon.charge += dtSec;
-                    if (weapon.charge >= weapon.chargeTime) {
-                        scene.enemyFireWeapon(weapon);
-                        weapon.charge = 0;
-                    }
-                }
-            }
-
-            // Update fires on player ship
-            for (let i = scene.playerShip.fires.length - 1; i >= 0; i--) {
-                const fire = scene.playerShip.fires[i];
-                fire.duration -= dtSec;
-
-                // Fire damages crew in that room
-                for (const crewMember of scene.crew) {
-                    if (crewMember.room === fire.room && crewMember.health > 0) {
-                        crewMember.health -= dtSec * 5;
-                        if (crewMember.health <= 0) {
-                            crewMember.health = 0;
-                            logEvent(`Crew member ${crewMember.name} died in fire`);
-                        }
-                    }
-                }
-
-                // Crew fights fires
-                const crewInRoom = scene.crew.filter(c => c.room === fire.room && c.health > 0).length;
-                if (crewInRoom > 0) {
-                    fire.duration -= dtSec * crewInRoom * 2;
-                }
-
-                if (fire.duration <= 0) {
-                    scene.playerShip.fires.splice(i, 1);
-                }
-            }
-
-            // Update fires on enemy ship
-            if (scene.enemyShip) {
-                for (let i = scene.enemyShip.fires.length - 1; i >= 0; i--) {
-                    const fire = scene.enemyShip.fires[i];
-                    fire.duration -= dtSec;
-
-                    // Fire does hull damage
-                    if (Math.random() < dtSec * 0.1) {
-                        scene.enemyShip.hull--;
-                    }
-
-                    if (fire.duration <= 0) {
-                        scene.enemyShip.fires.splice(i, 1);
-                    }
-                }
-            }
-
-            // Heal crew in medbay
-            const medbaySys = scene.playerShip.systems.medbay;
-            const effectiveMedbayPower = Math.max(0, medbaySys.power - medbaySys.damage);
-            if (effectiveMedbayPower > 0) {
-                const healRate = effectiveMedbayPower * 6;
-                for (const crewMember of scene.crew) {
-                    if (crewMember.room === 'medbay' && crewMember.health > 0 && crewMember.health < crewMember.maxHealth) {
-                        crewMember.health = Math.min(crewMember.maxHealth, crewMember.health + healRate * dtSec);
-                    }
-                }
-            }
-
-            // Check for victory/defeat
-            if (scene.enemyShip && scene.enemyShip.hull <= 0) {
-                scene.combatVictory();
-            } else if (scene.playerShip.hull <= 0) {
-                scene.gameOver();
-            }
-        };
-
         window.harness = {
-            version: '2.0',
             pause: () => { gamePaused = true; },
             resume: () => { gamePaused = false; },
             isPaused: () => gamePaused,
 
-            execute: async ({ keys = [], key = null, duration = 500, screenshot = false, targetRoom = null, clickBeacon = null }) => {
-                const startReal = performance.now();
-                debugLogs = [];
+            execute: async (action, durationMs) => {
+                return new Promise((resolve) => {
+                    gamePaused = false;
 
-                // Handle single key for backwards compat
-                const activeKeys = key ? [key] : keys;
-
-                // Handle key actions (only once at start)
-                for (const k of activeKeys) {
-                    if (k === 'space') {
+                    // Handle actions
+                    if (action.key === 'space') {
                         combatPaused = !combatPaused;
-                    } else if (k === 'f') {
+                    } else if (action.key === 'f') {
                         scene.fireWeapons();
-                    } else if (k === 'j') {
+                    } else if (action.key === 'j') {
                         scene.attemptJump();
-                    } else if (k === '1') {
+                    } else if (action.key === '1') {
                         scene.adjustPower('shields', 1);
-                    } else if (k === '2') {
+                    } else if (action.key === '2') {
                         scene.adjustPower('weapons', 1);
-                    } else if (k === '3') {
+                    } else if (action.key === '3') {
                         scene.adjustPower('engines', 1);
-                    } else if (k === 'c') {
+                    } else if (action.key === 'c') {
                         scene.cycleCrewSelection();
-                    } else if (k === 'r') {
+                    } else if (action.key === 'r') {
                         scene.repairSystem();
                     }
-                }
 
-                // Handle target room selection
-                if (targetRoom && scene.enemyShip) {
-                    scene.selectedTarget = targetRoom;
-                }
-
-                // Handle beacon click (for map navigation)
-                if (clickBeacon !== null && gameState === 'map') {
-                    scene.jumpToBeacon(clickBeacon);
-                }
-
-                // Run combat ticks synchronously
-                const dt = 16; // 16ms per tick
-                const ticks = Math.ceil(duration / dt);
-                for (let i = 0; i < ticks; i++) {
-                    if (gameState === 'gameover' || gameState === 'victory') break;
-                    runCombatTick(dt);
-                }
-
-                const realTime = performance.now() - startReal;
-
-                return {
-                    screenshot: screenshot ? 'base64_screenshot_placeholder' : null,
-                    logs: debugLogs,
-                    state: window.harness.getState(),
-                    realTime: Math.round(realTime),
-                    gameTime: gameTime
-                };
+                    setTimeout(() => {
+                        gamePaused = true;
+                        resolve();
+                    }, durationMs);
+                });
             },
 
             getState: () => ({
@@ -1633,14 +1469,9 @@ class GameScene extends Phaser.Scene {
                     systems: scene.enemyShip.systems,
                     fires: scene.enemyShip.fires
                 } : null,
-                beacons: scene.beacons?.map(b => ({
-                    type: b.type,
-                    visited: b.visited,
-                    connections: b.connections
-                })) || [],
+                beacons: scene.beacons?.length || 0,
                 rebelProgress: scene.rebelProgress,
-                stats: stats,
-                gameTime: gameTime
+                stats: stats
             }),
 
             getPhase: () => {
@@ -1660,12 +1491,6 @@ class GameScene extends Phaser.Scene {
                         scene.scene.start('GameScene');
                     }
                 },
-                restart: () => {
-                    gameTime = 0;
-                    debugLogs = [];
-                    stats = { jumpsCompleted: 0, shipsDestroyed: 0, scrapEarned: 0, sectorsCompleted: 0, beaconsVisited: 0 };
-                    scene.scene.restart();
-                },
                 clearEnemies: () => {
                     if (scene.enemyShip) scene.enemyShip.hull = 0;
                 },
@@ -1680,26 +1505,6 @@ class GameScene extends Phaser.Scene {
                 },
                 winCombat: () => {
                     if (scene.enemyShip) scene.enemyShip.hull = 0;
-                },
-                startCombat: () => {
-                    scene.startCombat();
-                },
-                skipVictoryAnimation: () => {
-                    if (gameState === 'combatVictory') {
-                        scene.showSectorMap();
-                    }
-                },
-                selectEventChoice: (choiceIndex = 0) => {
-                    if (gameState === 'event') {
-                        // Auto-select first affordable choice
-                        scene.showSectorMap();
-                        logEvent(`Event choice selected (auto)`);
-                    }
-                },
-                skipEvent: () => {
-                    if (gameState === 'event') {
-                        scene.showSectorMap();
-                    }
                 }
             }
         };

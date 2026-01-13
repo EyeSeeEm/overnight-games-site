@@ -15,13 +15,6 @@ let selectedSoldier = null;
 let targetedEnemy = null;
 let shotType = 'snap';
 
-// V2 Harness - debug logging for turn-based combat
-let harnessTime = 0;
-let debugLogs = [];
-function logEvent(msg) {
-    debugLogs.push(`[turn ${turnNumber}] ${msg}`);
-}
-
 // Soldier stats
 const SOLDIER_TEMPLATES = [
     { name: 'Sgt. Williams', tu: 58, health: 40, reactions: 55, firingAccuracy: 62, bravery: 50 },
@@ -659,7 +652,6 @@ class GameScene extends Phaser.Scene {
                     if (soldier.alive && soldier.x === x && soldier.y === y) {
                         soldier.currentHealth -= actualDamage;
                         this.screenShake(5, 100);
-                        logEvent(`${soldier.name} hit by explosion for ${Math.floor(actualDamage)} damage, HP: ${Math.ceil(soldier.currentHealth)}`);
 
                         if (soldier.currentHealth <= 0) {
                             soldier.alive = false;
@@ -670,7 +662,6 @@ class GameScene extends Phaser.Scene {
                             ss.tuBg.setVisible(false);
                             ss.tuBar.setVisible(false);
                             this.showMessage(soldier.name + ' KIA!');
-                            logEvent(`${soldier.name} KIA by explosion`);
                             this.moraleCheckTeam();
                         }
                     }
@@ -681,14 +672,12 @@ class GameScene extends Phaser.Scene {
                     if (alien.alive && alien.x === x && alien.y === y) {
                         const dmg = Math.max(0, actualDamage - alien.armor);
                         alien.currentHealth -= dmg;
-                        logEvent(`${alien.name} hit by explosion for ${Math.floor(dmg)} damage, HP: ${Math.ceil(alien.currentHealth)}`);
 
                         if (alien.currentHealth <= 0) {
                             alien.alive = false;
                             this.alienSprites[i].sprite.setVisible(false);
                             this.alienSprites[i].hpBg.setVisible(false);
                             this.alienSprites[i].hpBar.setVisible(false);
-                            logEvent(`${alien.name} killed by explosion`);
                         }
                     }
                 });
@@ -917,7 +906,6 @@ class GameScene extends Phaser.Scene {
                 const damage = weapon.damage * (0.5 + Math.random() * 1.5);
                 const actualDamage = Math.max(0, damage - alien.armor);
                 alien.currentHealth -= actualDamage;
-                logEvent(`${soldier.name} hit ${alien.name} for ${Math.floor(actualDamage)} damage, HP: ${Math.ceil(alien.currentHealth)}`);
 
                 // Screen shake on hit
                 this.screenShake(3, 50);
@@ -928,7 +916,6 @@ class GameScene extends Phaser.Scene {
                     this.alienSprites[alienIndex].hpBg.setVisible(false);
                     this.alienSprites[alienIndex].hpBar.setVisible(false);
                     this.showMessage(alien.name + ' eliminated!');
-                    logEvent(`${alien.name} killed by ${soldier.name}`);
                     this.screenShake(5, 100);
                     break;
                 }
@@ -1015,7 +1002,6 @@ class GameScene extends Phaser.Scene {
                         const damage = alien.damage * (0.5 + Math.random() * 1.5);
                         movingSoldier.currentHealth -= damage;
                         this.showMessage('Reaction fire! ' + movingSoldier.name + ' hit for ' + Math.floor(damage));
-                        logEvent(`${movingSoldier.name} hit by reaction fire from ${alien.name} for ${Math.floor(damage)} damage, HP: ${Math.ceil(movingSoldier.currentHealth)}`);
 
                         // Flash soldier
                         const ss = this.soldierSprites[soldiers.indexOf(movingSoldier)];
@@ -1032,7 +1018,6 @@ class GameScene extends Phaser.Scene {
                             ss.tuBg.setVisible(false);
                             ss.tuBar.setVisible(false);
                             this.showMessage(movingSoldier.name + ' KIA!');
-                            logEvent(`${movingSoldier.name} KIA by reaction fire from ${alien.name}`);
                             this.selectNextSoldier();
                             this.checkDefeat();
                         }
@@ -1124,7 +1109,6 @@ class GameScene extends Phaser.Scene {
                     const damage = alien.damage * (0.5 + Math.random() * 1.5);
                     nearestSoldier.currentHealth -= damage;
                     this.showMessage(alien.name + ' shoots ' + nearestSoldier.name + ' for ' + Math.floor(damage));
-                    logEvent(`${alien.name} shot ${nearestSoldier.name} for ${Math.floor(damage)} damage, HP: ${Math.ceil(nearestSoldier.currentHealth)}`);
 
                     // Flash
                     const si = soldiers.indexOf(nearestSoldier);
@@ -1142,7 +1126,6 @@ class GameScene extends Phaser.Scene {
                         ss.tuBg.setVisible(false);
                         ss.tuBar.setVisible(false);
                         this.showMessage(nearestSoldier.name + ' KIA!');
-                        logEvent(`${nearestSoldier.name} KIA by ${alien.name}`);
                     }
 
                     this.updateSoldierSprites();
@@ -1352,8 +1335,6 @@ class GameScene extends Phaser.Scene {
     victory() {
         gameState = 'victory';
         gamePaused = true;
-        const survived = soldiers.filter(s => s.alive).length;
-        logEvent(`VICTORY - ${survived}/${soldiers.length} soldiers survived`);
 
         this.add.rectangle(400, 350, 400, 200, 0x000000, 0.9).setDepth(300);
         this.add.text(400, 300, 'MISSION COMPLETE', {
@@ -1362,6 +1343,7 @@ class GameScene extends Phaser.Scene {
             fontFamily: 'monospace'
         }).setOrigin(0.5).setDepth(301);
 
+        const survived = soldiers.filter(s => s.alive).length;
         this.add.text(400, 350, 'Soldiers survived: ' + survived + '/' + soldiers.length, {
             fontSize: '16px',
             fill: '#ffffff',
@@ -1380,7 +1362,6 @@ class GameScene extends Phaser.Scene {
     defeat() {
         gameState = 'gameover';
         gamePaused = true;
-        logEvent(`DEFEAT - All soldiers eliminated on turn ${turnNumber}`);
 
         this.add.rectangle(400, 350, 400, 200, 0x000000, 0.9).setDepth(300);
         this.add.text(400, 300, 'MISSION FAILED', {
@@ -1421,10 +1402,8 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-// V2 Harness interface - turn-based tactical combat
+// Harness interface
 window.harness = {
-    version: '2.0',
-
     pause: () => {
         gamePaused = true;
     },
@@ -1435,62 +1414,34 @@ window.harness = {
 
     isPaused: () => gamePaused,
 
-    // V2 execute - handles actions and returns full result
-    execute: async ({ keys: inputKeys = [], click, duration = 0, screenshot = false }) => {
-        const startTime = Date.now();
-        debugLogs = []; // Clear logs for this execution
+    execute: async (action, durationMs) => {
         gamePaused = false;
 
         const scene = game.scene.getScene('GameScene');
         if (!scene) {
-            // Not in game scene, wait and return
-            if (duration > 0) await new Promise(r => setTimeout(r, duration));
+            await new Promise(r => setTimeout(r, durationMs));
             gamePaused = true;
-            return {
-                screenshot: null,
-                logs: debugLogs.slice(),
-                state: window.harness.getState(),
-                realTime: Date.now() - startTime
-            };
+            return;
         }
 
-        // Handle key inputs
-        inputKeys.forEach(key => {
-            switch (key.toLowerCase()) {
-                case '1': shotType = 'snap'; scene.grenadeMode = false; break;
-                case '2': shotType = 'aimed'; scene.grenadeMode = false; break;
-                case '3': shotType = 'auto'; scene.grenadeMode = false; break;
-                case 'g': scene.enterGrenadeMode(); break;
-                case 'r': scene.reloadWeapon(); break;
-                case 'c': scene.toggleCrouch(); break;
-                case 'tab': scene.selectNextSoldier(); break;
-                case 'enter': scene.endPlayerTurn(); break;
-                case 'space': scene.endPlayerTurn(); break;
-            }
-        });
-
-        // Handle click
-        if (click && click.x !== undefined && click.y !== undefined) {
-            const pointer = { x: click.x, y: click.y };
+        // Handle actions
+        if (action.type === 'click') {
+            const pointer = { x: action.x, y: action.y };
             scene.handleClick(pointer);
+        } else if (action.type === 'key') {
+            switch (action.key) {
+                case '1': shotType = 'snap'; break;
+                case '2': shotType = 'aimed'; break;
+                case '3': shotType = 'auto'; break;
+                case 'c': scene.toggleCrouch(); break;
+                case 'Tab': scene.selectNextSoldier(); break;
+                case 'Enter': scene.endPlayerTurn(); break;
+            }
+            scene.updateUI();
         }
 
-        scene.updateUI();
-
-        // Wait for animations/delays (alien turn processing, etc.)
-        if (duration > 0) {
-            await new Promise(r => setTimeout(r, duration));
-        }
-
-        harnessTime += duration;
+        await new Promise(r => setTimeout(r, durationMs));
         gamePaused = true;
-
-        return {
-            screenshot: null, // Screenshots handled externally
-            logs: debugLogs.slice(),
-            state: window.harness.getState(),
-            realTime: Date.now() - startTime
-        };
     },
 
     getState: () => {
@@ -1498,45 +1449,35 @@ window.harness = {
             name: s.name,
             x: s.x,
             y: s.y,
-            health: Math.ceil(s.currentHealth),
+            health: s.currentHealth,
             maxHealth: s.maxHealth,
             tu: s.currentTu,
             maxTu: s.maxTu,
-            stance: s.stance,
-            ammo: s.weapon?.ammo || 0,
-            maxAmmo: s.weapon?.maxAmmo || 0,
-            grenades: s.grenades,
-            morale: s.morale,
-            panicked: s.panicked
+            stance: s.stance
         }));
 
         const visibleAliens = aliens.filter(a => a.alive && a.visible).map(a => ({
             type: a.type,
-            name: a.name,
             x: a.x,
             y: a.y,
-            health: Math.ceil(a.currentHealth),
+            health: a.currentHealth,
             maxHealth: a.maxHealth
         }));
 
         const selected = selectedSoldier !== null && soldiers[selectedSoldier]?.alive ?
-            soldiers[selectedSoldier] : null;
+            soldiers[selectedSoldier].name : null;
 
         return {
             gameState,
             currentTurn,
             turnNumber,
             shotType,
-            grenadeMode: gameScene?.grenadeMode || false,
-            selectedSoldier: selected ? selected.name : null,
-            selectedSoldierIndex: selectedSoldier,
+            selectedSoldier: selected,
             soldiers: aliveSoldiers,
             soldiersAlive: aliveSoldiers.length,
             soldiersTotal: soldiers.length,
             visibleAliens,
-            aliensRemaining: aliens.filter(a => a.alive).length,
-            harnessTime,
-            debugLogs: debugLogs.slice()
+            aliensRemaining: aliens.filter(a => a.alive).length
         };
     },
 
@@ -1548,24 +1489,6 @@ window.harness = {
     },
 
     debug: {
-        restart: () => {
-            harnessTime = 0;
-            debugLogs = [];
-            const scene = game.scene.getScene('GameScene');
-            if (scene) {
-                scene.scene.start('MenuScene');
-            }
-        },
-        forceStart: () => {
-            gameState = 'playing';
-            gamePaused = false;
-            harnessTime = 0;
-            debugLogs = [];
-            const menuScene = game.scene.getScene('MenuScene');
-            if (menuScene && menuScene.scene.isActive()) {
-                menuScene.scene.start('GameScene');
-            }
-        },
         setHealth: (soldierIndex, hp) => {
             if (soldiers[soldierIndex]) {
                 soldiers[soldierIndex].currentHealth = hp;
@@ -1580,7 +1503,14 @@ window.harness = {
             if (aliens[alienIndex]) {
                 aliens[alienIndex].alive = false;
                 aliens[alienIndex].visible = false;
-                logEvent(`Debug: Alien ${alienIndex} killed`);
+            }
+        },
+        forceStart: () => {
+            gameState = 'playing';
+            gamePaused = false;
+            const menuScene = game.scene.getScene('MenuScene');
+            if (menuScene && menuScene.scene.isActive()) {
+                menuScene.scene.start('GameScene');
             }
         },
         clearAliens: () => {
@@ -1593,7 +1523,6 @@ window.harness = {
                     gameScene.alienSprites[i].hpBar.setVisible(false);
                 }
             });
-            logEvent('Debug: All aliens cleared');
         },
         revealAllAliens: () => {
             aliens.forEach(a => {

@@ -12,14 +12,6 @@ let gameState = 'menu';
 let gamePaused = true;
 let lastTime = 0;
 
-// Harness v2 - time tracking and debug logs
-let gameTime = 0;
-let debugLogs = [];
-
-function logEvent(msg) {
-    debugLogs.push(`[${Math.floor(gameTime)}ms] ${msg}`);
-}
-
 // Player
 let player = null;
 let bullets = [];
@@ -304,14 +296,12 @@ class Player {
             this.armor--;
             this.invincible = true;
             this.invincibleTime = Date.now();
-            logEvent(`Player armor absorbed ${amount} damage`);
             return;
         }
 
         this.hp -= amount;
         this.invincible = true;
         this.invincibleTime = Date.now();
-        logEvent(`Player took ${amount} damage (HP: ${this.hp}/${this.maxHp})`);
 
         // Blood particles
         for (let i = 0; i < 8; i++) {
@@ -326,7 +316,6 @@ class Player {
         }
 
         if (this.hp <= 0) {
-            logEvent('Player died');
             gameState = 'gameover';
         }
     }
@@ -862,7 +851,6 @@ function update(dt) {
             if (dist < e.size) {
                 if (e.takeDamage(b.damage)) {
                     // Enemy died
-                    logEvent(`Enemy killed: ${e.type || 'unknown'} at (${Math.round(e.x)},${Math.round(e.y)})`);
                     player.shells += 5 + Math.floor(Math.random() * 5);
                     showFloatingText(e.x, e.y, `+${5}`, '#ff0');
 
@@ -1450,72 +1438,53 @@ function startGame() {
 lastTime = performance.now();
 requestAnimationFrame(gameLoop);
 
-// Harness v2 interface - time-accelerated
+// Harness interface
 window.harness = {
-    execute: async function({ keys: inputKeys = [], duration = 500, screenshot = false, mouse: mouseInput = null }) {
-        const startReal = performance.now();
-        debugLogs = [];
+    pause: () => { gamePaused = true; },
+    resume: () => { gamePaused = false; },
+    isPaused: () => gamePaused,
 
-        // Set active keys
-        for (const k of inputKeys) {
-            keys[k.toLowerCase()] = true;
-            keys[k] = true;
-            // Handle special keys
-            if (k.toLowerCase() === ' ' && player) {
-                player.dodgeRoll();
+    execute: async (action, durationMs) => {
+        return new Promise((resolve) => {
+            if (action.keys) {
+                for (const k of action.keys) {
+                    keys[k.toLowerCase()] = true;
+                    keys[k] = true;
+                    // Handle dodge roll
+                    if (k.toLowerCase() === ' ' && player) {
+                        player.dodgeRoll();
+                    }
+                    if (k.toLowerCase() === 'q' && player) {
+                        player.useBlank();
+                    }
+                }
             }
-            if (k.toLowerCase() === 'q' && player) {
-                player.useBlank();
+
+            if (action.mouse) {
+                mouse.x = action.mouse.x || mouse.x;
+                mouse.y = action.mouse.y || mouse.y;
+                mouse.down = action.mouse.down !== undefined ? action.mouse.down : mouse.down;
             }
-        }
 
-        // Handle mouse input
-        if (mouseInput) {
-            mouse.x = mouseInput.x !== undefined ? mouseInput.x : mouse.x;
-            mouse.y = mouseInput.y !== undefined ? mouseInput.y : mouse.y;
-            mouse.down = mouseInput.down !== undefined ? mouseInput.down : mouse.down;
-        }
+            gamePaused = false;
 
-        // Run physics for duration (TIME-ACCELERATED)
-        const dt = 16;  // 16ms per tick
-        const ticks = Math.ceil(duration / dt);
-
-        for (let i = 0; i < ticks; i++) {
-            if (gameState === 'gameover' || gameState === 'victory') break;
-
-            if (gameState === 'playing') {
-                gameTime += dt;
-                update(dt / 1000);
-            }
-        }
-
-        // Clear keys
-        for (const k of inputKeys) {
-            keys[k.toLowerCase()] = false;
-            keys[k] = false;
-        }
-        if (mouseInput) {
-            mouse.down = false;
-        }
-
-        // Render final frame
-        draw();
-
-        // Capture screenshot
-        let screenshotData = null;
-        if (screenshot) {
-            screenshotData = canvas.toDataURL('image/png');
-        }
-
-        return {
-            screenshot: screenshotData,
-            logs: [...debugLogs],
-            state: window.harness.getState(),
-            realTime: performance.now() - startReal,
-        };
+            setTimeout(() => {
+                if (action.keys) {
+                    for (const k of action.keys) {
+                        keys[k.toLowerCase()] = false;
+                        keys[k] = false;
+                    }
+                }
+                if (action.mouse) {
+                    mouse.down = false;
+                }
+                gamePaused = true;
+                resolve();
+            }, durationMs);
+        });
     },
 
-    getState: function() {
+    getState: () => {
         // Calculate door positions for navigation
         const doors = [];
         if (currentRoom && currentRoom.cleared) {
@@ -1544,7 +1513,6 @@ window.harness = {
 
         return {
             gameState,
-            gameTime,
             floor: currentFloor,
             room: currentRoom ? currentRoom.type : null,
             roomCleared: currentRoom ? currentRoom.cleared : false,
@@ -1570,7 +1538,7 @@ window.harness = {
         };
     },
 
-    getPhase: function() {
+    getPhase: () => {
         if (gameState === 'menu') return 'menu';
         if (gameState === 'gameover') return 'gameover';
         if (gameState === 'victory') return 'victory';
@@ -1584,8 +1552,6 @@ window.harness = {
         clearEnemies: () => { enemies = []; },
         clearBullets: () => { enemyBullets = []; },
         forceStart: () => {
-            gameTime = 0;
-            debugLogs = [];
             currentFloor = 1;
             player = new Player(400, 300);
             generateFloor(currentFloor);
@@ -1596,20 +1562,5 @@ window.harness = {
             currentFloor++;
             generateFloor(currentFloor);
         }
-    },
-
-    version: '2.0',
-
-    gameInfo: {
-        name: 'Enter the Gungeon Clone',
-        type: 'bullet_hell_roguelike',
-        controls: {
-            movement: ['w', 'a', 's', 'd'],
-            dodge: [' '],
-            blank: ['q'],
-            shoot: ['click']
-        }
     }
 };
-
-console.log('[HARNESS v2] Enter the Gungeon Clone time-accelerated harness ready');

@@ -1206,84 +1206,35 @@ function gameLoop(timestamp) {
 // Start game loop
 requestAnimationFrame(gameLoop);
 
-// V2 Harness interface for time-accelerated playtesting
-let totalGameTime = 0;
-let debugLogs = [];
-
+// Harness interface for playtesting
 window.harness = {
     pause: () => { gamePaused = true; },
     resume: () => { gamePaused = false; },
     isPaused: () => gamePaused,
 
-    // V2 execute: time-accelerated synchronous execution
-    execute: async function({ keys: keyList = [], duration = 500, screenshot = false, click = null }) {
-        const startReal = performance.now();
-        debugLogs = [];
+    execute: async (action, durationMs) => {
+        gamePaused = false;
 
-        // Set keys
-        if (keyList) {
-            for (const key of keyList) {
+        if (action.keys) {
+            for (const key of action.keys) {
                 keys[key.toLowerCase()] = true;
             }
         }
-
-        // Handle mouse click (click coordinates are in WORLD space)
-        if (click) {
-            // Convert world coords to screen coords
-            mouseX = (click.x || player.x) - cameraX;
-            mouseY = (click.y || player.y) - cameraY;
+        if (action.click) {
+            mouseX = action.click.x;
+            mouseY = action.click.y;
             mouseDown = true;
         }
 
-        // Run physics ticks synchronously (TIME-ACCELERATED)
-        const dt = 16; // 16ms per tick (~60fps)
-        const ticks = Math.ceil(duration / dt);
-        const startHP = player ? player.health : 0;
-        const startEnemies = enemies.filter(e => e.hp > 0).length;
+        await new Promise(r => setTimeout(r, durationMs));
 
-        for (let i = 0; i < ticks; i++) {
-            if (gameState === 'gameover' || gameState === 'victory') {
-                debugLogs.push(`[${totalGameTime}ms] Game ended: ${gameState}`);
-                break;
-            }
-
-            if (gameState === 'playing') {
-                update(dt);
-                totalGameTime += dt;
-            }
-        }
-
-        // Track events
-        if (player && player.health < startHP) {
-            debugLogs.push(`[${totalGameTime}ms] Took damage: ${startHP} -> ${player.health}`);
-        }
-        const endEnemies = enemies.filter(e => e.hp > 0).length;
-        if (endEnemies < startEnemies) {
-            debugLogs.push(`[${totalGameTime}ms] Killed ${startEnemies - endEnemies} enemies`);
-        }
-
-        // Clear keys
-        if (keyList) {
-            for (const key of keyList) {
+        if (action.keys) {
+            for (const key of action.keys) {
                 keys[key.toLowerCase()] = false;
             }
         }
         mouseDown = false;
-
-        // Render for screenshot
-        render();
-
-        let screenshotData = null;
-        if (screenshot) {
-            screenshotData = canvas.toDataURL('image/png');
-        }
-
-        return {
-            screenshot: screenshotData,
-            logs: [...debugLogs],
-            state: window.harness.getState(),
-            realTime: performance.now() - startReal
-        };
+        gamePaused = true;
     },
 
     getState: () => ({
@@ -1344,7 +1295,5 @@ window.harness = {
                 SECTORS[key].powered = true;
             }
         }
-    },
-
-    version: '2.0'
+    }
 };

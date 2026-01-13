@@ -31,14 +31,6 @@ let levelUpChoices = [];
 // Input
 let keys = {};
 
-// Harness v2 - time tracking and debug logs
-let gameTime = 0;
-let debugLogs = [];
-
-function logEvent(msg) {
-    debugLogs.push(`[${Math.floor(gameTime)}ms] ${msg}`);
-}
-
 // Characters
 const CHARACTERS = {
     well_rounded: { name: 'Well Rounded', hp: 15, speed: 5, damage: 0, harvesting: 8, weapon: 'pistol' },
@@ -249,7 +241,6 @@ class Player {
 
     onEnemyKill(enemy) {
         const type = ENEMY_TYPES[enemy.type];
-        logEvent(`Enemy killed: ${enemy.type} at (${Math.floor(enemy.x)}, ${Math.floor(enemy.y)})`);
 
         // XP
         const xpGain = type.xp + this.stats.harvesting;
@@ -296,13 +287,8 @@ class Player {
         this.hp -= damage;
         this.invincible = true;
         this.invincibleTime = Date.now();
-        logEvent(`Player took ${damage} damage, HP: ${this.hp}/${this.maxHp}`);
 
         showFloatingText(this.x, this.y, `-${damage}`, '#f00');
-
-        if (this.hp <= 0) {
-            logEvent('Player died - GAME OVER');
-        }
 
         // Pain particles
         for (let i = 0; i < 5; i++) {
@@ -1064,123 +1050,95 @@ window.harness = {
     resume: () => { gamePaused = false; },
     isPaused: () => gamePaused,
 
-    execute: async ({ keys: inputKeys = [], duration = 500, screenshot = false }) => {
-        const startReal = performance.now();
-        debugLogs = [];
+    execute: async (action, durationMs) => {
+        return new Promise((resolve) => {
+            if (action.keys) {
+                for (const k of action.keys) {
+                    keys[k.toLowerCase()] = true;
+                    keys[k] = true;
 
-        // Set active keys
-        for (const k of inputKeys) {
-            keys[k.toLowerCase()] = true;
-            keys[k] = true;
+                    // Handle special key presses
+                    if (gameState === 'characterSelect') {
+                        const chars = Object.keys(CHARACTERS);
+                        const num = parseInt(k);
+                        if (num >= 1 && num <= chars.length) {
+                            const charKey = chars[num - 1];
+                            player = new Player(CHARACTERS[charKey]);
+                            currentWave = 1;
+                            waveTimer = getWaveDuration(currentWave);
+                            enemies = [];
+                            projectiles = [];
+                            pickups = [];
+                            particles = [];
+                            gameState = 'playing';
+                        }
+                    }
 
-            // Handle immediate state transitions
-            if (gameState === 'characterSelect') {
-                const chars = Object.keys(CHARACTERS);
-                const num = parseInt(k);
-                if (num >= 1 && num <= chars.length) {
-                    const charKey = chars[num - 1];
-                    player = new Player(CHARACTERS[charKey]);
-                    currentWave = 1;
-                    waveTimer = getWaveDuration(currentWave);
-                    enemies = [];
-                    projectiles = [];
-                    pickups = [];
-                    particles = [];
-                    gameState = 'playing';
-                    logEvent(`Character selected: ${charKey}`);
-                }
-            }
-
-            if (gameState === 'shop') {
-                if (k === ' ') {
-                    currentWave++;
-                    waveTimer = getWaveDuration(currentWave);
-                    gameState = 'playing';
-                    logEvent(`Wave ${currentWave} started`);
-                } else {
-                    const num = parseInt(k);
-                    if (num >= 1 && num <= shopItems.length) {
-                        const item = shopItems[num - 1];
-                        if (player && player.gold >= item.cost) {
-                            player.gold -= item.cost;
-                            if (item.type === 'weapon') {
-                                if (player.weapons.length < 6) {
-                                    player.weapons.push({ ...item.data, cooldown: 0 });
-                                    logEvent(`Weapon purchased: ${item.data.name}`);
-                                }
-                            } else {
-                                for (const [stat, value] of Object.entries(item.data.stats)) {
-                                    if (stat === 'maxHp') {
-                                        player.maxHp += value;
-                                        player.hp += value;
+                    if (gameState === 'shop') {
+                        if (k === ' ') {
+                            currentWave++;
+                            waveTimer = getWaveDuration(currentWave);
+                            gameState = 'playing';
+                        } else {
+                            const num = parseInt(k);
+                            if (num >= 1 && num <= shopItems.length) {
+                                const item = shopItems[num - 1];
+                                if (player && player.gold >= item.cost) {
+                                    player.gold -= item.cost;
+                                    if (item.type === 'weapon') {
+                                        if (player.weapons.length < 6) {
+                                            player.weapons.push({ ...item.data, cooldown: 0 });
+                                        }
                                     } else {
-                                        player.stats[stat] = (player.stats[stat] || 0) + value;
+                                        for (const [stat, value] of Object.entries(item.data.stats)) {
+                                            if (stat === 'maxHp') {
+                                                player.maxHp += value;
+                                                player.hp += value;
+                                            } else {
+                                                player.stats[stat] = (player.stats[stat] || 0) + value;
+                                            }
+                                        }
                                     }
+                                    shopItems.splice(num - 1, 1);
                                 }
-                                logEvent(`Item purchased: ${item.data.name}`);
                             }
-                            shopItems.splice(num - 1, 1);
+                        }
+                    }
+
+                    if (gameState === 'levelUp') {
+                        const num = parseInt(k);
+                        if (num >= 1 && num <= levelUpChoices.length) {
+                            const choice = levelUpChoices[num - 1];
+                            if (choice.stat === 'maxHp') {
+                                player.maxHp += choice.value;
+                                player.hp += choice.value;
+                            } else {
+                                player.stats[choice.stat] = (player.stats[choice.stat] || 0) + choice.value;
+                            }
+                            generateShop();
+                            gameState = 'shop';
                         }
                     }
                 }
             }
 
-            if (gameState === 'levelUp') {
-                const num = parseInt(k);
-                if (num >= 1 && num <= levelUpChoices.length) {
-                    const choice = levelUpChoices[num - 1];
-                    if (choice.stat === 'maxHp') {
-                        player.maxHp += choice.value;
-                        player.hp += choice.value;
-                    } else {
-                        player.stats[choice.stat] = (player.stats[choice.stat] || 0) + choice.value;
+            gamePaused = false;
+
+            setTimeout(() => {
+                if (action.keys) {
+                    for (const k of action.keys) {
+                        keys[k.toLowerCase()] = false;
+                        keys[k] = false;
                     }
-                    logEvent(`Level up: ${choice.stat} +${choice.value}`);
-                    generateShop();
-                    gameState = 'shop';
                 }
-            }
-        }
-
-        // Run physics for duration (TIME-ACCELERATED)
-        const dt = 16;  // 16ms per tick
-        const ticks = Math.ceil(duration / dt);
-
-        for (let i = 0; i < ticks; i++) {
-            const phase = window.harness.getPhase();
-            if (phase === 'gameover' || phase === 'victory') break;
-            if (phase !== 'playing') break;  // Don't run physics in menus
-
-            gameTime += dt;
-            update(dt / 1000);
-        }
-
-        // Clear keys
-        for (const k of inputKeys) {
-            keys[k.toLowerCase()] = false;
-            keys[k] = false;
-        }
-
-        // Render final frame
-        draw();
-
-        // Capture screenshot
-        let screenshotData = null;
-        if (screenshot) {
-            screenshotData = canvas.toDataURL('image/png');
-        }
-
-        return {
-            screenshot: screenshotData,
-            logs: [...debugLogs],
-            state: window.harness.getState(),
-            realTime: performance.now() - startReal,
-        };
+                gamePaused = true;
+                resolve();
+            }, durationMs);
+        });
     },
 
     getState: () => ({
         gameState,
-        gameTime,
         wave: currentWave,
         waveTimer: Math.ceil(waveTimer),
         player: player ? {
@@ -1221,8 +1179,6 @@ window.harness = {
             particles = [];
             gameState = 'playing';
             gamePaused = true;
-            gameTime = 0;
-            debugLogs = [];
         },
         skipWave: () => {
             waveTimer = 0;
@@ -1242,18 +1198,5 @@ window.harness = {
                 gamePaused = true;
             }
         }
-    },
-
-    version: '2.0',
-
-    gameInfo: {
-        name: 'Brotato Clone',
-        type: 'arena_survivor',
-        controls: {
-            movement: ['w', 'a', 's', 'd'],
-            shop: ['1', '2', '3', '4', ' ']
-        }
     }
 };
-
-console.log('[HARNESS v2] Brotato time-accelerated harness ready');

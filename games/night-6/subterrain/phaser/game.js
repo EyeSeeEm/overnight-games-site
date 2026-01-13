@@ -12,13 +12,6 @@ let currentSector = 'hub';
 let gameTime = 0; // In game minutes
 let globalInfection = 0;
 
-// V2 Harness - time-accelerated testing
-let harnessTime = 0; // Harness ms counter
-let debugLogs = [];
-function logEvent(msg) {
-    debugLogs.push(`[${harnessTime}ms] ${msg}`);
-}
-
 // Player state
 let player = {
     x: 400, y: 300,
@@ -892,7 +885,6 @@ class GameScene extends Phaser.Scene {
     }
 
     killEnemy(enemy) {
-        logEvent(`Enemy killed: ${enemy.enemyType} in ${currentSector}`);
         // Update world state
         const sectorState = worldState.sectorStates[currentSector];
         const enemyData = sectorState.enemies.find(e =>
@@ -1079,7 +1071,6 @@ class GameScene extends Phaser.Scene {
             player.health = Math.max(0, player.health - enemy.damage);
             player.infection = Math.min(100, player.infection + enemy.infection);
             enemy.lastAttack = now;
-            logEvent(`Player damaged by ${enemy.enemyType}: HP ${player.health}/100, infection ${player.infection}%`);
 
             // Knockback
             const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, playerSprite.x, playerSprite.y);
@@ -1249,7 +1240,6 @@ class GameScene extends Phaser.Scene {
     }
 
     gameOver(reason) {
-        logEvent(`Game over: ${reason}, HP: ${player.health}, infection: ${player.infection}%, global: ${globalInfection}%`);
         gameState = 'gameover';
         gamePaused = true;
 
@@ -1316,7 +1306,7 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-// V2 Harness interface - time-accelerated
+// Harness interface
 window.harness = {
     pause: () => {
         gamePaused = true;
@@ -1328,79 +1318,36 @@ window.harness = {
 
     isPaused: () => gamePaused,
 
-    execute: async ({ keys: inputKeys = [], duration = 1000, screenshot = false }) => {
-        const startTime = Date.now();
-        debugLogs = [];
+    execute: async (action, durationMs) => {
+        gamePaused = false;
 
         const scene = game.scene.getScene('GameScene');
         if (!scene || !scene.keys) {
-            return {
-                screenshot: null,
-                logs: [],
-                state: window.harness.getState(),
-                realTime: Date.now() - startTime
-            };
+            await new Promise(r => setTimeout(r, durationMs));
+            gamePaused = true;
+            return;
         }
 
-        // Apply key states
-        inputKeys.forEach(key => {
+        // Simulate key presses
+        const keys = action.keys || [];
+        keys.forEach(key => {
             const keyLower = key.toLowerCase();
             if (scene.keys[keyLower]) {
                 scene.keys[keyLower].isDown = true;
             }
             // Arrow keys
-            if (key === 'ArrowUp' || key === 'up') scene.keys.up.isDown = true;
-            if (key === 'ArrowDown' || key === 'down') scene.keys.down.isDown = true;
-            if (key === 'ArrowLeft' || key === 'left') scene.keys.left.isDown = true;
-            if (key === 'ArrowRight' || key === 'right') scene.keys.right.isDown = true;
+            if (key === 'ArrowUp') scene.keys.up.isDown = true;
+            if (key === 'ArrowDown') scene.keys.down.isDown = true;
+            if (key === 'ArrowLeft') scene.keys.left.isDown = true;
+            if (key === 'ArrowRight') scene.keys.right.isDown = true;
         });
 
-        // Run physics ticks synchronously
-        const tickMs = 16;
-        let elapsed = 0;
-        gamePaused = false;
-
-        while (elapsed < duration) {
-            harnessTime += tickMs;
-            const dtSec = tickMs / 1000;
-
-            // Run update logic manually
-            if (gameState === 'playing') {
-                scene.handleMovement();
-
-                // Manually apply physics movement
-                if (scene.playerSprite && scene.playerSprite.body) {
-                    scene.playerSprite.x += scene.playerSprite.body.velocity.x * dtSec;
-                    scene.playerSprite.y += scene.playerSprite.body.velocity.y * dtSec;
-                    player.x = scene.playerSprite.x;
-                    player.y = scene.playerSprite.y;
-                }
-
-                scene.updateEnemies(scene.time.now);
-
-                // Stamina regen
-                player.stamina = Math.min(100, player.stamina + tickMs * 0.005);
-
-                // Update cooldowns
-                if (scene.attackCooldown > 0) scene.attackCooldown -= tickMs;
-                if (scene.dodgeCooldown > 0) scene.dodgeCooldown -= tickMs;
-                if (scene.interactCooldown > 0) scene.interactCooldown -= tickMs;
-            }
-
-            elapsed += tickMs;
-        }
-
-        gamePaused = true;
+        await new Promise(r => setTimeout(r, durationMs));
 
         // Release keys
         Object.values(scene.keys).forEach(k => k.isDown = false);
 
-        return {
-            screenshot: screenshot ? (game.canvas ? game.canvas.toDataURL() : null) : null,
-            logs: [...debugLogs],
-            state: window.harness.getState(),
-            realTime: Date.now() - startTime
-        };
+        gamePaused = true;
     },
 
     getState: () => {
@@ -1426,7 +1373,6 @@ window.harness = {
             gameState,
             currentSector,
             gameTime,
-            harnessTime,
             globalInfection,
             player: {
                 x: player.x,
@@ -1476,18 +1422,6 @@ window.harness = {
             if (SECTORS[sector]) {
                 SECTORS[sector].powered = true;
             }
-        },
-        restart: () => {
-            gameState = 'playing';
-            harnessTime = 0;
-            debugLogs = [];
-            player.health = 100;
-            player.hunger = 0;
-            player.thirst = 0;
-            player.fatigue = 0;
-            player.infection = 0;
-            player.stamina = 100;
-            globalInfection = 0;
         },
         forceStart: () => {
             gameState = 'playing';

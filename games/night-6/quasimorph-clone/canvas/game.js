@@ -548,10 +548,6 @@ class Player {
         this.hp -= finalDamage;
         this.damageTaken += finalDamage;
 
-        if (typeof logEvent === 'function') {
-            logEvent(`Player took ${finalDamage} damage (HP: ${this.hp}/${this.maxHp})`);
-        }
-
         showFloatingText(this.x * TILE_SIZE + TILE_SIZE/2, this.y * TILE_SIZE - 20, `-${finalDamage}`, COLORS.damage);
 
         // Screen shake on hit
@@ -562,9 +558,6 @@ class Player {
 
         if (this.hp <= 0) {
             this.hp = 0;
-            if (typeof logEvent === 'function') {
-                logEvent('Player killed - GAME OVER');
-            }
             gameState = GameState.GAME_OVER;
         }
     }
@@ -871,9 +864,6 @@ class Enemy {
     }
 
     die() {
-        if (typeof logEvent === 'function') {
-            logEvent(`Enemy ${this.type} killed (total kills: ${player.kills + 1})`);
-        }
         const idx = enemies.indexOf(this);
         if (idx !== -1) {
             enemies.splice(idx, 1);
@@ -2973,147 +2963,6 @@ window.debugCommands = {
         addCorruption(amount);
     }
 };
-
-// ============================================================================
-// HARNESS INTERFACE (v2 - Time-Accelerated)
-// ============================================================================
-
-let debugLogs = [];
-
-function logEvent(msg) {
-    debugLogs.push(`[${Math.floor(gameTime)}ms] ${msg}`);
-}
-
-window.harness = {
-    execute: async ({ keys = [], duration = 500, screenshot = false }) => {
-        const startReal = performance.now();
-        debugLogs = [];  // Clear logs for this execution
-
-        // For turn-based game, process key inputs immediately
-        for (const key of keys) {
-            // Simulate keydown event
-            const event = { key: key.toLowerCase(), preventDefault: () => {} };
-            handleKeyDown(event);
-        }
-
-        // Run physics/animations for duration
-        const dt = 16 / 1000;
-        const ticks = Math.ceil(duration / 16);
-
-        for (let i = 0; i < ticks; i++) {
-            gameTime += 16;
-            update(dt);
-
-            // Check for game end
-            if (gameState === GameState.GAME_OVER || gameState === GameState.VICTORY) {
-                logEvent(`Game ended: ${gameState === GameState.VICTORY ? 'victory' : 'game over'}`);
-                break;
-            }
-        }
-
-        // Render final frame
-        render();
-
-        // Capture screenshot if requested
-        let screenshotData = null;
-        if (screenshot) {
-            screenshotData = canvas.toDataURL('image/png');
-        }
-
-        return {
-            screenshot: screenshotData,
-            logs: [...debugLogs],
-            state: window.harness.getState(),
-            realTime: performance.now() - startReal
-        };
-    },
-
-    getState: () => {
-        return {
-            gameState: Object.keys(GameState).find(k => GameState[k] === gameState) || gameState,
-            turn: turn,
-            corruption: corruption,
-            gameTime: gameTime,
-            player: player ? {
-                x: player.x,
-                y: player.y,
-                hp: player.hp,
-                maxHp: player.maxHp,
-                ap: player.ap,
-                maxAp: player.maxAp,
-                currentMag: player.currentWeapon.currentMag,
-                magSize: player.currentWeapon.magSize,
-                weaponRange: player.currentWeapon.range,
-                medkits: player.medkits || 0,
-                grenades: player.grenades || 0,
-                kills: player.kills
-            } : null,
-            enemies: enemies.map(e => ({
-                x: e.x,
-                y: e.y,
-                hp: e.hp,
-                type: e.type,
-                alerted: e.alerted
-            })),
-            itemCount: items.length
-        };
-    },
-
-    getPhase: () => {
-        if (gameState === GameState.PLAYER_TURN) return 'playing';
-        if (gameState === GameState.ENEMY_TURN) return 'playing';
-        if (gameState === GameState.GAME_OVER) return 'gameover';
-        if (gameState === GameState.VICTORY) return 'victory';
-        return 'menu';
-    },
-
-    // Click on a tile (for attacking enemies)
-    clickTile: (tileX, tileY) => {
-        if (gameState !== GameState.PLAYER_TURN) {
-            logEvent(`Click ignored - not player turn`);
-            return false;
-        }
-
-        // Check if clicking on enemy
-        const enemy = enemies.find(e => e.x === tileX && e.y === tileY);
-        if (enemy && visibilityMap[tileY] && visibilityMap[tileY][tileX]) {
-            const result = player.shoot(enemy);
-            if (result) {
-                logEvent(`Attacked enemy at (${tileX}, ${tileY})`);
-                endPlayerTurn();
-            }
-            return result;
-        }
-        return false;
-    },
-
-    debug: {
-        setHealth: (hp) => { if (player) player.hp = hp; },
-        addAmmo: (n) => { if (player) player.ammo = Math.min(player.ammo + n, player.maxAmmo); },
-        giveAmmo: (n) => { if (player) player.ammo = Math.min(player.ammo + n, player.maxAmmo); },
-        clearEnemies: () => { enemies = []; logEvent('Cleared all enemies'); },
-        forceStart: () => {
-            gameTime = 0;
-            startGame();
-            logEvent('Game started');
-        },
-        log: (msg) => { debugLogs.push(`[DEBUG] ${msg}`); }
-    },
-
-    version: '2.0',
-
-    gameInfo: {
-        name: 'Quasimorph Clone',
-        type: 'tactical_roguelike',
-        controls: {
-            movement: ['w', 'a', 's', 'd', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'],
-            actions: ['r', 'h', 'g'],  // reload, heal, grenade
-            combat: 'click'  // click on enemy to shoot
-        }
-    }
-};
-
-console.log('[HARNESS v2] Time-accelerated harness ready');
 
 // ============================================================================
 // INITIALIZATION

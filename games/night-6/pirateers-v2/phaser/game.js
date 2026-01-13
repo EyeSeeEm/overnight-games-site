@@ -74,13 +74,6 @@ let sessionHighScores = {
     mostShipsSunk: 0
 };
 
-// V2 Harness - time-accelerated testing
-let gameTime = 0;
-let debugLogs = [];
-function logEvent(msg) {
-    debugLogs.push(`[${gameTime}ms] ${msg}`);
-}
-
 // Achievement system
 const ACHIEVEMENTS = {
     first_blood: { name: 'First Blood', desc: 'Sink your first ship', condition: () => shipsDestroyed >= 1 },
@@ -2185,7 +2178,10 @@ function fireCannons() {
     // Screen shake effect
     shakeScreen(100, 0.003);
 
-    logEvent(`Cannons fired: ${ballsPerSide * 2} balls, base damage: ${baseDamage}`);
+    // Log event for harness
+    if (window.testHarness) {
+        window.testHarness.logEvent('cannons_fired', { damage: baseDamage, balls: ballsPerSide * 2 });
+    }
 }
 
 // Screen shake utility function
@@ -3260,7 +3256,9 @@ function damageEnemy(enemy, damage, type) {
         destroyEnemy(enemy);
     }
 
-    logEvent(`Enemy ${data.type} damaged for ${finalDamage}${isCritical ? ' (CRIT!)' : ''}, HP: ${data.hp}/${data.maxHp}`);
+    if (window.testHarness) {
+        window.testHarness.logEvent('enemy_damaged', { enemyId: data.id, damage, remainingHp: data.hp });
+    }
 }
 
 function destroyEnemy(enemy) {
@@ -3399,7 +3397,13 @@ function destroyEnemy(enemy) {
     const typeConfig = ENEMY_TYPES[data.type] || {};
     showNotification(`${typeConfig.name || 'Ship'} destroyed! +${goldAmount} gold`, 'success', 2000);
 
-    logEvent(`Ship destroyed: ${data.type}, gold: +${goldAmount}, streak: ${killStreak}`);
+    if (window.testHarness) {
+        window.testHarness.logEvent('enemy_killed', {
+            enemyId: data.id,
+            type: data.type,
+            goldDropped: goldAmount
+        });
+    }
 
     // Respawn enemy after delay
     scene.time.delayedCall(10000, () => {
@@ -3445,7 +3449,9 @@ function damagePlayer(damage) {
     player.shipData.invulnerable = true;
     player.shipData.invulnTimer = 500;
 
-    logEvent(`Player damaged: ${finalDamage}, armor: ${playerStats.currentArmor}/${playerStats.maxArmor}`);
+    if (window.testHarness) {
+        window.testHarness.logEvent('player_damaged', { damage, remainingArmor: playerStats.currentArmor });
+    }
 
     // Low armor warning (iteration 74)
     const armorPercent = playerStats.currentArmor / playerStats.maxArmor;
@@ -3499,7 +3505,9 @@ function playerDied() {
         endDay();
     });
 
-    logEvent(`Player died! Cargo lost: ${lossCount}, deaths: ${gameStats.deathCount}`);
+    if (window.testHarness) {
+        window.testHarness.logEvent('player_died', { cargoLost: lossCount });
+    }
 }
 
 // Death notification screen with comprehensive statistics
@@ -3676,7 +3684,9 @@ function collectPickup(pickup) {
         // Gold collection sparkles
         createCollectParticles(pickup.x, pickup.y, 0xFFD700, '+$' + totalGold);
 
-        logEvent(`Gold collected: +${totalGold}, total: ${gold}`);
+        if (window.testHarness) {
+            window.testHarness.logEvent('gold_collected', { amount: data.value, total: gold });
+        }
     } else if (data.type === 'cargo') {
         if (cargo.length < cargoCapacity) {
             cargo.push({ type: data.value, collected: Date.now() });
@@ -3685,7 +3695,9 @@ function collectPickup(pickup) {
             // Cargo collection effect
             createCollectParticles(pickup.x, pickup.y, 0x8B4513, '+' + data.value);
 
-            logEvent(`Cargo collected: ${data.value}, cargo: ${cargo.length}/${cargoCapacity}`);
+            if (window.testHarness) {
+                window.testHarness.logEvent('cargo_collected', { cargoType: data.value, cargoCount: cargo.length });
+            }
         } else if (lootBox.length < 20) {
             lootBox.push({ type: data.value, collected: Date.now() });
         }
@@ -4702,7 +4714,9 @@ function endDay() {
     // Resume sailing
     gameState = 'sailing';
 
-    logEvent(`Day ${currentDay} ended, gold: ${gold}, ships destroyed: ${shipsDestroyed}`);
+    if (window.testHarness) {
+        window.testHarness.logEvent('day_ended', { day: currentDay, gold: gold });
+    }
 }
 
 function startGame() {
@@ -4849,226 +4863,6 @@ window.debugCommands = {
         dayTimeRemaining += seconds * 1000;
     }
 };
-
-// ============================================================================
-// V2 HARNESS - Time-accelerated testing
-// ============================================================================
-
-function setupHarness() {
-    // Synchronous tick function for time-accelerated testing
-    function runTick(dt) {
-        if (isPaused) return;
-        if (gameState !== 'sailing' && gameState !== 'base') return;
-
-        // Update game time
-        gameTime += dt;
-
-        if (gameState === 'sailing') {
-            // Manually tick all systems instead of relying on Phaser's update
-            updateDayTimer(dt);
-            updatePlayer(dt);
-
-            // Manual physics update - move sprites based on velocity
-            const dtSec = dt / 1000;
-            if (player && player.body) {
-                player.x += player.body.velocity.x * dtSec;
-                player.y += player.body.velocity.y * dtSec;
-                // Keep in bounds
-                player.x = Phaser.Math.Clamp(player.x, 50, WORLD_WIDTH - 50);
-                player.y = Phaser.Math.Clamp(player.y, 50, WORLD_HEIGHT - 50);
-            }
-
-            // Update enemy positions
-            enemies.forEach(enemy => {
-                if (enemy && enemy.body && enemy.active) {
-                    enemy.x += enemy.body.velocity.x * dtSec;
-                    enemy.y += enemy.body.velocity.y * dtSec;
-                    // Update HP bar positions
-                    if (enemy.hpBg) {
-                        enemy.hpBg.x = enemy.x;
-                        enemy.hpBg.y = enemy.y - 30;
-                    }
-                    if (enemy.hpBar) {
-                        enemy.hpBar.x = enemy.x - 20;
-                        enemy.hpBar.y = enemy.y - 30;
-                    }
-                }
-            });
-
-            // Update projectile positions
-            projectiles.forEach(proj => {
-                if (proj && proj.body && proj.active) {
-                    proj.x += proj.body.velocity.x * dtSec;
-                    proj.y += proj.body.velocity.y * dtSec;
-                }
-            });
-
-            updateEnemies(dt);
-            updateForts(dt);
-            updateWhirlpools(dt);
-            updateProjectiles(dt);
-            updatePickups(dt);
-            updateOilSlicks(dt);
-            updateOceanWaves(dt);
-            updateWind(dt);
-            checkTreasureLocations();
-            checkPortProximity();
-            checkAchievements();
-            checkCollisions();
-            updateMinimap();
-            updateUI();
-            updateQuestUI();
-        }
-    }
-
-    window.harness = {
-        execute: async ({ keys: inputKeys = [], duration = 1000, screenshot = false, mouseX, mouseY, mouseDown }) => {
-            const startTime = Date.now();
-            debugLogs = [];
-            if (keys && keys.W) {
-                keys.W.isDown = inputKeys.includes('w') || inputKeys.includes('up');
-                keys.S.isDown = inputKeys.includes('s') || inputKeys.includes('down');
-                keys.A.isDown = inputKeys.includes('a') || inputKeys.includes('left');
-                keys.D.isDown = inputKeys.includes('d') || inputKeys.includes('right');
-                keys.SPACE.isDown = inputKeys.includes('space');
-                keys.E.isDown = inputKeys.includes('e');
-                keys.Q.isDown = inputKeys.includes('q');
-                keys.R.isDown = inputKeys.includes('r');
-                keys.B.isDown = inputKeys.includes('b');
-            }
-
-            // Run physics ticks
-            const tickMs = 16; // ~60fps
-            let elapsed = 0;
-            while (elapsed < duration) {
-                runTick(tickMs);
-                elapsed += tickMs;
-            }
-
-            // Clear keys
-            if (keys && keys.W) {
-                keys.W.isDown = false;
-                keys.S.isDown = false;
-                keys.A.isDown = false;
-                keys.D.isDown = false;
-                keys.SPACE.isDown = false;
-                keys.E.isDown = false;
-                keys.Q.isDown = false;
-                keys.R.isDown = false;
-                keys.B.isDown = false;
-            }
-
-            // Render for screenshot
-            if (screenshot && game && game.renderer) {
-                game.renderer.snapshot(canvas => {});
-            }
-
-            return {
-                screenshot: screenshot ? (game.canvas ? game.canvas.toDataURL() : null) : null,
-                logs: [...debugLogs],
-                state: window.harness.getState(),
-                realTime: Date.now() - startTime
-            };
-        },
-
-        getState: () => {
-            return {
-                player: player ? {
-                    x: player.x,
-                    y: player.y,
-                    angle: player.angle,
-                    armor: playerStats.currentArmor,
-                    maxArmor: playerStats.maxArmor,
-                    speed: player.shipData?.speed || 0
-                } : null,
-                enemies: enemies.map(e => ({
-                    x: e.x,
-                    y: e.y,
-                    type: e.enemyData?.type,
-                    hp: e.enemyData?.hp,
-                    maxHp: e.enemyData?.maxHp,
-                    state: e.enemyData?.state
-                })),
-                gold: gold,
-                cargo: cargo.length,
-                cargoCapacity: cargoCapacity,
-                day: currentDay,
-                dayTimeRemaining: Math.floor(dayTimeRemaining / 1000),
-                shipsDestroyed: shipsDestroyed,
-                gameTime: gameTime,
-                phase: gameState,
-                quests: activeQuests.length,
-                stats: { ...gameStats }
-            };
-        },
-
-        getPhase: () => {
-            if (gameState === 'death') return 'gameover';
-            if (gameState === 'sailing' || gameState === 'base') return 'playing';
-            if (gameState === 'menu') return 'menu';
-            return gameState;
-        },
-
-        debug: {
-            forceStart: () => {
-                // Skip ship selection and start immediately
-                selectedShipType = 'sloop';
-                selectedDifficulty = 'normal';
-                startGame();
-            },
-            restart: () => {
-                // Reset game state
-                gameState = 'menu';
-                currentDay = 1;
-                gold = 500;
-                totalGoldEarned = 0;
-                shipsDestroyed = 0;
-                cargo = [];
-                gameTime = 0;
-                debugLogs = [];
-                playerStats.currentArmor = playerStats.maxArmor;
-                gameStats = {
-                    shotsFired: 0, cargoCollected: 0, timePlayed: 0,
-                    deathCount: 0, merchantsSunk: 0, piratesSunk: 0,
-                    navySunk: 0, ghostsSunk: 0, damageTaken: 0, damageDealt: 0
-                };
-                // Respawn enemies
-                enemies.forEach(e => {
-                    e.hpBg?.destroy();
-                    e.hpBar?.destroy();
-                    e.destroy();
-                });
-                enemies = [];
-                if (scene) spawnInitialEnemies(scene);
-            },
-            setHealth: (hp) => {
-                playerStats.currentArmor = Math.min(hp, playerStats.maxArmor);
-            },
-            godMode: (enabled) => {
-                if (player) {
-                    player.shipData.invulnerable = enabled;
-                    if (enabled) player.shipData.invulnTimer = Infinity;
-                }
-            },
-            giveGold: (amount) => {
-                gold += amount;
-                totalGoldEarned += amount;
-            },
-            teleportToPort: () => {
-                if (player && ports.length > 0) {
-                    const port = ports[0];
-                    player.setPosition(port.x, port.y - 100);
-                }
-            },
-            skipDay: () => {
-                dayTimeRemaining = 1000;
-            }
-        }
-    };
-}
-
-// Set up harness after game loads
-setTimeout(setupHarness, 500);
 
 // ============================================================================
 // INITIALIZE GAME

@@ -990,86 +990,39 @@ function gameLoop(timestamp) {
 
 requestAnimationFrame(gameLoop);
 
-// V2 Harness - Time-Accelerated Execution
-let totalGameTime = 0;
-let debugLogs = [];
-
+// Harness interface
 window.harness = {
     pause: () => { gamePaused = true; },
     resume: () => { gamePaused = false; },
     isPaused: () => gamePaused,
 
-    execute: async function({ keys: keyList = [], duration = 500, screenshot = false, click = null, mouse = null }) {
-        const startReal = performance.now();
-        debugLogs = [];
+    execute: async (action, durationMs) => {
+        gamePaused = false;
 
-        // Set keys
-        if (keyList) {
-            for (const key of keyList) {
+        if (action.keys) {
+            for (const key of action.keys) {
                 keys[key.toLowerCase()] = true;
             }
         }
-
-        // Handle mouse/click (in screen coords)
-        if (click) {
-            mouseX = click.x;
-            mouseY = click.y;
+        if (action.click) {
+            mouseX = action.click.x;
+            mouseY = action.click.y;
             mouseDown = true;
         }
-        if (mouse) {
-            mouseX = mouse.x;
-            mouseY = mouse.y;
+        if (action.mouse) {
+            mouseX = action.mouse.x;
+            mouseY = action.mouse.y;
         }
 
-        // Run physics ticks (TIME-ACCELERATED)
-        const dt = 16;
-        const ticks = Math.ceil(duration / dt);
-        const startHP = player ? player.health : 0;
-        const startEnemies = enemies.length;
+        await new Promise(r => setTimeout(r, durationMs));
 
-        for (let i = 0; i < ticks; i++) {
-            if (gameState === 'gameover' || gameState === 'victory') {
-                debugLogs.push(`[${totalGameTime}ms] Game ended: ${gameState}`);
-                break;
-            }
-
-            if (gameState === 'playing') {
-                update(dt);
-                totalGameTime += dt;
-            }
-        }
-
-        // Track events
-        if (player && player.health < startHP) {
-            debugLogs.push(`[${totalGameTime}ms] Took damage: ${startHP} -> ${player.health}`);
-        }
-        const endEnemies = enemies.length;
-        if (endEnemies < startEnemies) {
-            debugLogs.push(`[${totalGameTime}ms] Killed ${startEnemies - endEnemies} enemies`);
-        }
-
-        // Clear inputs
-        if (keyList) {
-            for (const key of keyList) {
+        if (action.keys) {
+            for (const key of action.keys) {
                 keys[key.toLowerCase()] = false;
             }
         }
         mouseDown = false;
-
-        // Render
-        render();
-
-        let screenshotData = null;
-        if (screenshot) {
-            screenshotData = canvas.toDataURL('image/png');
-        }
-
-        return {
-            screenshot: screenshotData,
-            logs: [...debugLogs],
-            state: window.harness.getState(),
-            realTime: performance.now() - startReal
-        };
+        gamePaused = true;
     },
 
     getState: () => ({
@@ -1111,7 +1064,5 @@ window.harness = {
         },
         clearEnemies: () => { enemies = []; },
         giveAmmo: (amount) => { player.ammo += amount; }
-    },
-
-    version: '2.0'
+    }
 };
