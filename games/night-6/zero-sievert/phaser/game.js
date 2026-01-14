@@ -7,9 +7,8 @@ const ZONE_WIDTH = 1600;
 const ZONE_HEIGHT = 1600;
 
 // Game state
-let gamePaused = new URLSearchParams(location.search).has('test');
-let gameState = 'playing'; // AUTO-START: Skip menu
-        // menu, bunker, raid, dead, extracted
+let gamePaused = true;
+let gameState = 'menu'; // menu, bunker, raid, dead, extracted
 let stats = {
     enemiesKilled: 0,
     containersLooted: 0,
@@ -129,14 +128,6 @@ class MenuScene extends Phaser.Scene {
 
         startBtn.on('pointerdown', () => {
             this.scene.start('RaidScene');
-        });
-
-        // Keyboard support for starting
-        this.input.keyboard.on('keydown-ENTER', () => {
-            this.scene.start('GameScene');
-        });
-        this.input.keyboard.on('keydown-SPACE', () => {
-            this.scene.start('GameScene');
         });
 
         // Controls
@@ -1432,7 +1423,7 @@ const config = {
     height: SCREEN_HEIGHT,
     parent: 'game-container',
     backgroundColor: '#0a0a0a',
-    scene: [BootScene, RaidScene, ExtractScene, DeathScene] // AUTO-START: Skip MenuScene
+    scene: [BootScene, MenuScene, RaidScene, ExtractScene, DeathScene]
 };
 
 const game = new Phaser.Game(config);

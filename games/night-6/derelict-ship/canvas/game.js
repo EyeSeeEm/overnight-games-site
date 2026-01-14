@@ -51,7 +51,7 @@ const ENEMY_STATS = {
 // GAME STATE
 // ═══════════════════════════════════════════════════════════
 let gameState = 'menu'; // menu, playing, gameover, victory, spaceship
-let gamePaused = new URLSearchParams(location.search).has('test');
+let gamePaused = true;
 let lastTime = 0;
 let deltaTime = 0;
 
@@ -934,7 +934,7 @@ function generateSector(sectorIdx) {
 
 function startGame() {
     gameState = 'playing';
-        // gamePaused stays as set by URL param
+    gamePaused = true;
 
     // Hide menus
     document.getElementById('menuScreen').classList.add('hidden');
@@ -1389,9 +1389,6 @@ function gameLoop(timestamp) {
     }
 
     requestAnimationFrame(gameLoop);
-
-        // AUTO-START: Skip menu and start game directly
-        setTimeout(() => startGame(), 100);
 }
 
 // ═══════════════════════════════════════════════════════════

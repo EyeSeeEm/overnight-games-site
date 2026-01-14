@@ -52,7 +52,7 @@ const ENEMY_TYPES = {
 // GAME STATE
 // ═══════════════════════════════════════════════════════════
 let gameState = 'menu';
-let gamePaused = new URLSearchParams(location.search).has('test');
+let gamePaused = true;
 let currentPhase = 'player'; // player, enemy, animation
 
 let map = [];
@@ -817,7 +817,7 @@ function spawnCorruptedEnemy(type) {
 // ═══════════════════════════════════════════════════════════
 function startGame() {
     gameState = 'playing';
-        // gamePaused stays as set by URL param
+    gamePaused = true;
     currentPhase = 'player';
 
     document.getElementById('menuScreen').classList.add('hidden');
@@ -1199,9 +1199,6 @@ function gameLoop(timestamp) {
 
     render();
     requestAnimationFrame(gameLoop);
-
-        // AUTO-START: Skip menu and start game directly
-        setTimeout(() => startGame(), 100);
 }
 
 // ═══════════════════════════════════════════════════════════

@@ -10,7 +10,7 @@ const BULLET_SPEED = 0.4;
 const ENEMY_BULLET_SPEED = 0.15;
 
 // Game state
-let gamePaused = new URLSearchParams(location.search).has('test');
+let gamePaused = true;
 let gamePhase = 'menu'; // menu, playing, gameover, victory
 let player = null;
 let enemies = [];

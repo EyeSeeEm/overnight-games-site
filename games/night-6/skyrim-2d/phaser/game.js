@@ -28,7 +28,7 @@ const ENEMY_ATTACK_RANGE = 40;
 
 // Game State
 let gameState = 'menu';
-let gamePaused = new URLSearchParams(location.search).has('test');
+let gamePaused = true;
 let currentMap = 'riverwood';
 
 // Color Palette
@@ -555,7 +555,7 @@ class GameScene extends Phaser.Scene {
 
         // Start game paused for harness
         gameState = 'playing';
-        // gamePaused stays as set by URL param
+        gamePaused = true;
 
         // Initialize harness
         this.initHarness();
@@ -2286,7 +2286,8 @@ class MenuScene extends Phaser.Scene {
     }
 
     create() {
-        gameState = 'playing'; // AUTO-START: Skip menu
+        gameState = 'menu';
+
         // Background
         this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x1a1a2e);
 
@@ -2311,14 +2312,6 @@ class MenuScene extends Phaser.Scene {
         startBtn.on('pointerover', () => startBtn.setFill('#ffff00'));
         startBtn.on('pointerout', () => startBtn.setFill('#ffffff'));
         startBtn.on('pointerdown', () => {
-            this.scene.start('GameScene');
-        });
-
-        // Keyboard support for starting
-        this.input.keyboard.on('keydown-ENTER', () => {
-            this.scene.start('GameScene');
-        });
-        this.input.keyboard.on('keydown-SPACE', () => {
             this.scene.start('GameScene');
         });
 
@@ -2381,7 +2374,7 @@ const config = {
     height: GAME_HEIGHT,
     parent: 'game-container',
     backgroundColor: '#1a1a2e',
-    scene: [GameScene] // AUTO-START: Skip MenuScene,
+    scene: [MenuScene, GameScene],
     physics: {
         default: 'arcade',
         arcade: {

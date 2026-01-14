@@ -7,8 +7,8 @@ const MAP_HEIGHT = 15;
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 700;
 
-let gamePaused = new URLSearchParams(location.search).has('test');
-let gameState = 'playing'; // AUTO-START: Skip menu
+let gamePaused = true;
+let gameState = 'menu';
 let currentTurn = 'player';
 let turnNumber = 1;
 let selectedSoldier = null;
@@ -183,14 +183,6 @@ class MenuScene extends Phaser.Scene {
         startBtn.on('pointerover', () => startBtn.setFill('#88ff88'));
         startBtn.on('pointerout', () => startBtn.setFill('#44ff44'));
         startBtn.on('pointerdown', () => {
-            this.scene.start('GameScene');
-        });
-
-        // Keyboard support for starting
-        this.input.keyboard.on('keydown-ENTER', () => {
-            this.scene.start('GameScene');
-        });
-        this.input.keyboard.on('keydown-SPACE', () => {
             this.scene.start('GameScene');
         });
 
@@ -1405,7 +1397,7 @@ const config = {
     height: GAME_HEIGHT,
     parent: 'game-container',
     backgroundColor: '#0a0a14',
-    scene: [BootScene, GameScene] // AUTO-START: Skip MenuScene
+    scene: [BootScene, MenuScene, GameScene]
 };
 
 const game = new Phaser.Game(config);

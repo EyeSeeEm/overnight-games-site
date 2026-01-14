@@ -3,8 +3,8 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 // Game state
-let gameState = 'playing'; // AUTO-START: Skip menu
-let gamePaused = new URLSearchParams(location.search).has('test');
+let gameState = 'menu';
+let gamePaused = true;
 let gameSpeed = 1;
 
 // Resources

@@ -17,7 +17,7 @@ const GLOBAL_INFECTION_RATE = 0.1;
 
 // Game state
 let gameState = 'menu'; // menu, playing, gameover, victory
-let gamePaused = new URLSearchParams(location.search).has('test');
+let gamePaused = true;
 let gameTime = 0; // in game minutes
 let realTime = 0;
 let globalInfection = 0;
@@ -1201,9 +1201,6 @@ function gameLoop(timestamp) {
     render();
 
     requestAnimationFrame(gameLoop);
-
-        // AUTO-START: Skip menu and start game directly
-        setTimeout(() => startGame(), 100);
 }
 
 // Start game loop

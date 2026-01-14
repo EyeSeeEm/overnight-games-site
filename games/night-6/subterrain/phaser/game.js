@@ -6,8 +6,8 @@ const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
 
 // Game state
-let gamePaused = new URLSearchParams(location.search).has('test');
-let gameState = 'playing'; // AUTO-START: Skip menu
+let gamePaused = true;
+let gameState = 'menu';
 let currentSector = 'hub';
 let gameTime = 0; // In game minutes
 let globalInfection = 0;
@@ -128,14 +128,6 @@ class MenuScene extends Phaser.Scene {
         startBtn.on('pointerover', () => startBtn.setFill('#4afa4a'));
         startBtn.on('pointerout', () => startBtn.setFill('#2a9a2a'));
         startBtn.on('pointerdown', () => {
-            this.scene.start('GameScene');
-        });
-
-        // Keyboard support for starting
-        this.input.keyboard.on('keydown-ENTER', () => {
-            this.scene.start('GameScene');
-        });
-        this.input.keyboard.on('keydown-SPACE', () => {
             this.scene.start('GameScene');
         });
 
@@ -1309,7 +1301,7 @@ const config = {
             debug: false
         }
     },
-    scene: [BootScene, GameScene] // AUTO-START: Skip MenuScene
+    scene: [BootScene, MenuScene, GameScene]
 };
 
 const game = new Phaser.Game(config);

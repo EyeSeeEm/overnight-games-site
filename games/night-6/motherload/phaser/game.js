@@ -9,8 +9,8 @@ const WORLD_HEIGHT = 300;
 const SURFACE_Y = 3;
 
 // Game state
-let gamePaused = new URLSearchParams(location.search).has('test');
-let gameState = 'playing'; // AUTO-START: Skip menu
+let gamePaused = true;
+let gameState = 'menu';
 let stats = {
     mineralsCollected: 0,
     depthReached: 0,

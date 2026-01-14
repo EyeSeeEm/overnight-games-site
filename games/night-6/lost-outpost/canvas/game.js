@@ -9,7 +9,7 @@ const TILE_SIZE = 32;
 
 // Game state
 let gameState = 'menu'; // menu, playing, gameover, victory, paused
-let gamePaused = new URLSearchParams(location.search).has('test');
+let gamePaused = true;
 let lastTime = 0;
 
 // Player
@@ -953,9 +953,6 @@ function gameLoop(timestamp) {
     draw();
 
     requestAnimationFrame(gameLoop);
-
-        // AUTO-START: Skip menu and start game directly
-        setTimeout(() => startGame(), 100);
 }
 
 // Input handlers

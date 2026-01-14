@@ -51,7 +51,7 @@
     // GAME STATE
     // ========================================================================
     let gameState = 'menu'; // menu, playing, paused, gameover, victory, shop
-    let gamePaused = new URLSearchParams(location.search).has('test');
+    let gamePaused = true; // For harness
     let currentDeck = 1;
     let selfDestructTimer = 600; // 10 minutes in seconds
     let selfDestructActive = false;
@@ -1852,9 +1852,6 @@
         keysJustPressed = {};
 
         requestAnimationFrame(gameLoop);
-
-        // AUTO-START: Skip menu and start game directly
-        setTimeout(() => startGame(), 100);
     }
 
     function update(dt) {

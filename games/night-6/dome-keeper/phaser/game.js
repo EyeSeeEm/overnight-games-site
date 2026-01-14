@@ -8,7 +8,7 @@ const SCREEN_WIDTH = 800;
 const SCREEN_HEIGHT = 600;
 
 // Game state
-let gamePaused = new URLSearchParams(location.search).has('test');
+let gamePaused = true;
 let gameState = 'menu';
 let phase = 'mining'; // 'mining' or 'defense'
 let phaseTimer = 75;
@@ -168,10 +168,8 @@ class GameScene extends Phaser.Scene {
         this.setupHarness();
 
         // Start in menu
-        gameState = 'playing';
-        // AUTO-START: Skip menu
-        this.startGame();
-        // this.showMenu();
+        gameState = 'menu';
+        this.showMenu();
     }
 
     generateMap() {

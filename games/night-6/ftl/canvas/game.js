@@ -46,7 +46,7 @@ const ENEMY_SHIPS = {
 
 // Game state
 let gameState = 'menu'; // menu, sectorMap, combat, store, gameover, victory
-let gamePaused = new URLSearchParams(location.search).has('test');
+let gamePaused = true;
 let combatPaused = true;
 
 // Player ship
@@ -1422,9 +1422,6 @@ function gameLoop(timestamp) {
     }
 
     requestAnimationFrame(gameLoop);
-
-        // AUTO-START: Skip menu and start game directly
-        setTimeout(() => startGame(), 100);
 }
 
 // ===================

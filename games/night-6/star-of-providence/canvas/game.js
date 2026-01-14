@@ -14,7 +14,7 @@
     // GAME STATE
     // ========================================================================
     let gameState = 'menu'; // menu, playing, gameover, victory
-    let gamePaused = new URLSearchParams(location.search).has('test');
+    let gamePaused = true;
     let floor = 1;
     let roomsCleared = 0;
     let score = 0;
@@ -906,9 +906,6 @@
         render();
         keysJustPressed = {};
         requestAnimationFrame(gameLoop);
-
-        // AUTO-START: Skip menu and start game directly
-        setTimeout(() => startGame(), 100);
     }
 
     function update(dt) {

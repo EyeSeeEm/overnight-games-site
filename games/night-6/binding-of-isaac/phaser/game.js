@@ -7,8 +7,8 @@ const TILE_SIZE = 48;
 const ROOM_OFFSET_X = (GAME_WIDTH - ROOM_WIDTH * TILE_SIZE) / 2;
 const ROOM_OFFSET_Y = 80;
 
-let gameState = 'playing'; // AUTO-START: Skip menu
-let gamePaused = new URLSearchParams(location.search).has('test');
+let gameState = 'menu';
+let gamePaused = true;
 let currentFloor = 1;
 
 // Colors
@@ -313,7 +313,7 @@ class GameScene extends Phaser.Scene {
 
         // Start paused
         gameState = 'playing';
-        // gamePaused stays as set by URL param
+        gamePaused = true;
 
         this.initHarness();
     }
@@ -1400,7 +1400,7 @@ const config = {
     height: GAME_HEIGHT,
     parent: 'game-container',
     backgroundColor: '#1a0a0a',
-    scene: [GameScene] // AUTO-START: Skip MenuScene
+    scene: [MenuScene, GameScene]
 };
 
 const game = new Phaser.Game(config);

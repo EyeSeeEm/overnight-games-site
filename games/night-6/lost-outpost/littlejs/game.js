@@ -23,7 +23,7 @@ const COLOR_FLASHLIGHT = new Color(1, 0.95, 0.8, 0.3);
 
 // ==================== GAME STATE ====================
 let gameState = 'playing';
-let gamePaused = new URLSearchParams(location.search).has('test');
+let gamePaused = true;
 let player = null;
 let enemies = [];
 let bullets = [];

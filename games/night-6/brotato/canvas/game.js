@@ -7,8 +7,8 @@ const WIDTH = 800;
 const HEIGHT = 600;
 
 // Game state
-let gameState = 'playing'; // AUTO-START: Skip menu // menu, characterSelect, playing, shop, levelUp, gameover, victory
-let gamePaused = new URLSearchParams(location.search).has('test');
+let gameState = 'menu'; // menu, characterSelect, playing, shop, levelUp, gameover, victory
+let gamePaused = true;
 let lastTime = 0;
 
 // Wave system

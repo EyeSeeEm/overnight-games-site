@@ -49,7 +49,7 @@
     // GAME STATE
     // ═══════════════════════════════════════════════════════════════════════════
     let canvas, ctx;
-    let gamePaused = new URLSearchParams(location.search).has('test');
+    let gamePaused = true;
     let gameState = 'menu'; // 'menu', 'playing', 'gameover', 'dayend'
     let lastTime = 0;
     let deltaTime = 0;
@@ -767,9 +767,6 @@
         });
 
         requestAnimationFrame(gameLoop);
-
-        // AUTO-START: Skip menu and start game directly
-        setTimeout(() => startGame(), 100);
 
         console.log('[HARNESS] Pirateers harness initialized, game paused');
     }

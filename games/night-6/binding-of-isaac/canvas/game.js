@@ -70,7 +70,7 @@
     // GAME STATE
     // ═══════════════════════════════════════════════════════════════════════════
     let canvas, ctx;
-    let gamePaused = new URLSearchParams(location.search).has('test');
+    let gamePaused = true;
     let gameState = 'menu'; // 'menu', 'playing', 'gameover', 'victory', 'roomTransition'
     let lastTime = 0;
     let deltaTime = 0;
@@ -1645,9 +1645,6 @@
 
         // Start game loop
         requestAnimationFrame(gameLoop);
-
-        // AUTO-START: Skip menu and start game directly
-        setTimeout(() => startGame(), 100);
 
         console.log('[HARNESS] Test harness initialized, game paused');
     }
