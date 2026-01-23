@@ -2059,11 +2059,13 @@ function renderTitle() {
     ctx.fillStyle = '#0a0a15';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    // Animated stars
+    // Animated stars - use deterministic twinkle based on index and time
     for (let i = 0; i < 50; i++) {
         const x = (i * 73 + gameTime * 0.01) % CANVAS_WIDTH;
         const y = (i * 47 + gameTime * 0.005) % CANVAS_HEIGHT;
-        ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + Math.random() * 0.4})`;
+        // Deterministic twinkle using sine wave with per-star phase offset
+        const twinkle = 0.3 + 0.4 * (0.5 + 0.5 * Math.sin(gameTime * 0.003 + i * 0.7));
+        ctx.fillStyle = `rgba(255, 255, 255, ${twinkle})`;
         ctx.fillRect(x, y, 2, 2);
     }
 
@@ -2493,6 +2495,10 @@ function update(dt) {
     if (keys['a'] || keys['arrowleft']) camera.x = Math.max(0, camera.x - 10 * dt);
     if (keys['d'] || keys['arrowright']) camera.x = Math.min(MAP_WIDTH - VIEW_WIDTH, camera.x + 10 * dt);
 
+    // Round camera position to prevent sub-pixel tile jitter
+    camera.x = Math.round(camera.x);
+    camera.y = Math.round(camera.y);
+
     // Update screen shake
     if (screenShake.duration > 0) {
         screenShake.duration -= dt * 1000;
@@ -2573,5 +2579,6 @@ window.testHarness = {
     }
 };
 
-// Start
+// Initialize and start game loop (runs once at load)
+lastTime = performance.now();
 requestAnimationFrame(gameLoop);

@@ -1958,6 +1958,10 @@
         // Apply screen shake
         camera.x += screenShake.x;
         camera.y += screenShake.y;
+
+        // Round to prevent sub-pixel jitter on tile rendering
+        camera.x = Math.round(camera.x);
+        camera.y = Math.round(camera.y);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

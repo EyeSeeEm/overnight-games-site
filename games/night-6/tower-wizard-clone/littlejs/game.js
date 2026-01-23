@@ -584,7 +584,7 @@ function gameUpdate() {
     const dt = 1 / 60;
 
     if (currentGameState === GameState.MENU) {
-        if (mouseWasPressed(0)) {
+        if (keyWasPressed('Space') || keyWasPressed(' ')) {
             currentGameState = GameState.PLAYING;
             if (window.testHarness) {
                 window.testHarness.logEvent('game_start', {});
@@ -703,7 +703,7 @@ function renderMenu(ctx) {
     // Start prompt
     ctx.font = '20px "Segoe UI", sans-serif';
     ctx.fillStyle = '#aaa';
-    ctx.fillText('Click anywhere to start', 400, 350);
+    ctx.fillText('Press SPACE to start', 400, 350);
 
     // Controls info
     ctx.font = '14px "Segoe UI", sans-serif';

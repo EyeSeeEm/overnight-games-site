@@ -1771,8 +1771,8 @@
 
             const obstacle = {
                 type: type,
-                x: x,
-                y: y,
+                x: Math.round(x),  // Round to prevent sub-pixel rendering jitter
+                y: Math.round(y),
                 width: type === 'pillar' ? 20 : 24,
                 height: type === 'pillar' ? 20 : 24,
                 health: type === 'pillar' ? Infinity : 20,
@@ -1798,8 +1798,9 @@
 
             for (let i = 0; i < enemyCount; i++) {
                 const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
-                const x = ROOM_OFFSET_X + TILE_SIZE * 3 + Math.random() * (ROOM_WIDTH - 6) * TILE_SIZE;
-                const y = ROOM_OFFSET_Y + TILE_SIZE * 3 + Math.random() * (ROOM_HEIGHT - 6) * TILE_SIZE;
+                // Round spawn positions to prevent sub-pixel rendering jitter
+                const x = Math.round(ROOM_OFFSET_X + TILE_SIZE * 3 + Math.random() * (ROOM_WIDTH - 6) * TILE_SIZE);
+                const y = Math.round(ROOM_OFFSET_Y + TILE_SIZE * 3 + Math.random() * (ROOM_HEIGHT - 6) * TILE_SIZE);
 
                 enemies.push(new Enemy(type, x, y));
             }

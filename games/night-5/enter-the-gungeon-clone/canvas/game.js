@@ -3432,6 +3432,242 @@
     window.BOSS_DATA = BOSS_DATA;
     window.spawnHitMarker = spawnHitMarker;
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // DEBUG COMMANDS (for test harness)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    window.debug = {
+        // Get complete game state snapshot
+        getState: function() {
+            return {
+                gameState: gameState,
+                roomCleared: roomCleared,
+                currentFloor: currentFloor,
+                currentRoomIndex: floorRooms.indexOf(currentRoom),
+                currentRoomType: currentRoom ? currentRoom.type : null,
+                player: player ? {
+                    x: player.x,
+                    y: player.y,
+                    health: player.health,
+                    maxHealth: player.maxHealth,
+                    armor: player.armor,
+                    blanks: player.blanks,
+                    keys: player.keys,
+                    shells: player.shells,
+                    isRolling: player.isRolling,
+                    isInvulnerable: player.invulnTimer > 0,
+                    currentWeapon: player.weapons[player.currentWeaponIndex] ? player.weapons[player.currentWeaponIndex].name : null,
+                    weaponCount: player.weapons.length,
+                    passiveItems: player.passiveItems.map(i => i.name),
+                    activeItem: player.activeItem ? player.activeItem.name : null
+                } : null,
+                enemies: enemies.map(e => ({
+                    type: e.type,
+                    x: e.x,
+                    y: e.y,
+                    health: e.health,
+                    isBoss: e.isBoss || false
+                })),
+                enemyCount: enemies.length,
+                playerBulletCount: playerBullets.length,
+                enemyBulletCount: enemyBullets.length,
+                pickupCount: pickups.length,
+                chestCount: chests.length,
+                runStats: { ...runStats }
+            };
+        },
+
+        // Navigate to specific room by index
+        gotoRoom: function(roomIndex) {
+            if (roomIndex < 0 || roomIndex >= floorRooms.length) {
+                console.warn('[Debug] Invalid room index:', roomIndex, '(max:', floorRooms.length - 1, ')');
+                return false;
+            }
+            const room = floorRooms[roomIndex];
+            loadRoom(room);
+            console.log('[Debug] Jumped to room', roomIndex, '- type:', room.type);
+            return true;
+        },
+
+        // Navigate to specific floor
+        gotoFloor: function(floorNum) {
+            if (floorNum < 1 || floorNum > 5) {
+                console.warn('[Debug] Invalid floor number:', floorNum, '(1-5 allowed)');
+                return false;
+            }
+            currentFloor = floorNum;
+            generateFloor(currentFloor);
+            gameState = 'playing';
+            console.log('[Debug] Jumped to floor', floorNum);
+            return true;
+        },
+
+        // Set player health
+        setHealth: function(hp) {
+            if (!player) return false;
+            player.health = Math.max(0, Math.min(hp, player.maxHealth));
+            console.log('[Debug] Set health to', player.health);
+            return true;
+        },
+
+        // Set player position
+        setPosition: function(x, y) {
+            if (!player) return false;
+            player.x = x;
+            player.y = y;
+            console.log('[Debug] Moved player to', x, y);
+            return true;
+        },
+
+        // Spawn enemy at player location
+        spawnEnemy: function(type) {
+            if (!player) return false;
+            if (!ENEMY_DATA[type]) {
+                console.warn('[Debug] Unknown enemy type:', type);
+                console.log('[Debug] Available types:', Object.keys(ENEMY_DATA).join(', '));
+                return false;
+            }
+            const enemy = new Enemy(type, player.x + 50, player.y);
+            enemies.push(enemy);
+            console.log('[Debug] Spawned', type, 'at player location');
+            return true;
+        },
+
+        // Clear all enemies
+        clearEnemies: function() {
+            const count = enemies.length;
+            enemies.length = 0;
+            enemyBullets.length = 0;
+            console.log('[Debug] Cleared', count, 'enemies');
+            return count;
+        },
+
+        // Get player state
+        getPlayerState: function() {
+            if (!player) return null;
+            return {
+                x: player.x,
+                y: player.y,
+                health: player.health,
+                maxHealth: player.maxHealth,
+                armor: player.armor,
+                blanks: player.blanks,
+                keys: player.keys,
+                shells: player.shells,
+                isRolling: player.isRolling,
+                weapons: player.weapons.map(w => ({
+                    name: w.name,
+                    ammo: w.ammo,
+                    maxAmmo: w.maxAmmo,
+                    magazine: w.magazine,
+                    magazineSize: w.magazineSize
+                })),
+                currentWeaponIndex: player.currentWeaponIndex,
+                passiveItems: player.passiveItems.map(i => i.name),
+                activeItem: player.activeItem ? {
+                    name: player.activeItem.name,
+                    cooldown: player.activeItemCooldown
+                } : null
+            };
+        },
+
+        // Pause game
+        pause: function() {
+            if (gameState === 'playing' || gameState === 'bossFight') {
+                gameState = 'paused';
+                console.log('[Debug] Game paused');
+                return true;
+            }
+            return false;
+        },
+
+        // Resume game
+        resume: function() {
+            if (gameState === 'paused') {
+                gameState = 'playing';
+                console.log('[Debug] Game resumed');
+                return true;
+            }
+            return false;
+        },
+
+        // Give weapon to player
+        giveWeapon: function(weaponKey) {
+            if (!player) return false;
+            if (!WEAPONS[weaponKey]) {
+                console.warn('[Debug] Unknown weapon:', weaponKey);
+                console.log('[Debug] Available weapons:', Object.keys(WEAPONS).join(', '));
+                return false;
+            }
+            const weapon = player.createWeapon(weaponKey);
+            player.weapons.push(weapon);
+            console.log('[Debug] Gave weapon:', weapon.name);
+            return true;
+        },
+
+        // Give item to player
+        giveItem: function(itemKey) {
+            if (!player) return false;
+            if (!ITEMS[itemKey]) {
+                console.warn('[Debug] Unknown item:', itemKey);
+                console.log('[Debug] Available items:', Object.keys(ITEMS).join(', '));
+                return false;
+            }
+            const item = ITEMS[itemKey];
+            player.addItem(item);
+            console.log('[Debug] Gave item:', item.name);
+            return true;
+        },
+
+        // Set blanks count
+        setBlanks: function(count) {
+            if (!player) return false;
+            player.blanks = Math.max(0, Math.min(count, 9));
+            console.log('[Debug] Set blanks to', player.blanks);
+            return true;
+        },
+
+        // Set keys count
+        setKeys: function(count) {
+            if (!player) return false;
+            player.keys = Math.max(0, count);
+            console.log('[Debug] Set keys to', player.keys);
+            return true;
+        },
+
+        // Set shells (currency)
+        setShells: function(count) {
+            if (!player) return false;
+            player.shells = Math.max(0, count);
+            console.log('[Debug] Set shells to', player.shells);
+            return true;
+        },
+
+        // List available enemy types
+        listEnemyTypes: function() {
+            return Object.keys(ENEMY_DATA);
+        },
+
+        // List available weapon types
+        listWeaponTypes: function() {
+            return Object.keys(WEAPONS);
+        },
+
+        // List available item types
+        listItemTypes: function() {
+            return Object.keys(ITEMS);
+        },
+
+        // Force start game (skip menu)
+        forceStart: function() {
+            startGame();
+            console.log('[Debug] Force started game');
+            return true;
+        }
+    };
+
+    console.log('[Debug] Debug commands loaded. Use window.debug.getState() to inspect game state.');
+
     // Start when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);

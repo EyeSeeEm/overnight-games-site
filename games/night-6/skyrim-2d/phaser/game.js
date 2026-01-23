@@ -553,9 +553,9 @@ class GameScene extends Phaser.Scene {
         // Create navigation markers
         this.markerGraphics = this.add.graphics().setScrollFactor(0).setDepth(90);
 
-        // Start game paused for harness
+        // Start game running
         gameState = 'playing';
-        gamePaused = true;
+        gamePaused = false;
 
         // Initialize harness
         this.initHarness();
@@ -584,7 +584,9 @@ class GameScene extends Phaser.Scene {
 
         // Create map graphics
         this.mapGraphics = this.add.graphics();
+        this.mapGraphics.setDepth(0);
         this.wallGraphics = this.add.graphics();
+        this.wallGraphics.setDepth(1);
 
         // Draw terrain
         this.drawTerrain(mapData);
@@ -594,6 +596,10 @@ class GameScene extends Phaser.Scene {
             this.player = this.add.graphics();
             this.player.x = 100;
             this.player.y = 300;
+            this.player.setDepth(10);
+
+            // Set up camera to follow player
+            this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
         }
 
         // Create enemies
@@ -619,6 +625,9 @@ class GameScene extends Phaser.Scene {
         // Update map bounds
         this.mapWidth = mapData.width * TILE_SIZE;
         this.mapHeight = mapData.height * TILE_SIZE;
+
+        // Set camera bounds
+        this.cameras.main.setBounds(0, 0, this.mapWidth, this.mapHeight);
 
         // Draw player
         this.drawPlayer();

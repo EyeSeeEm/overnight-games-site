@@ -1,0 +1,2325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Derelict Ship - Survival Horror</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+        }
+        canvas {
+            border: 2px solid #333;
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<script>
+// ============================================
+// DERELICT SHIP - Survival Horror
+// Agent 2 - Night 8 - Canvas
+// Two Modes: In-Ship + Space
+// ============================================
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// === GAME CONFIG ===
+const CONFIG = {
+    TILE_SIZE: 32,
+    PLAYER_WALK_SPEED: 120,
+    PLAYER_RUN_SPEED: 200,
+    VISION_ANGLE: Math.PI / 2, // 90 degrees
+    VISION_RANGE: 350,
+    O2_MAX: 100,
+    O2_IDLE_DRAIN: 0.5, // per second
+    O2_WALK_DRAIN: 0.67, // per second
+    O2_RUN_DRAIN: 1.33, // per second
+    O2_COMBAT_DRAIN: 2 // per attack
+};
+
+// === COLORS ===
+const COLORS = {
+    FLOOR: '#2a2a2a',
+    FLOOR_DARK: '#1f1f1f',
+    WALL: '#0f0f0f',
+    WALL_DETAIL: '#181818',
+    FLOOR_DETAIL: '#333333',
+    FLOOR_GRID: '#252525',
+    HAZARD_STRIPE: '#5a5a00',
+    HAZARD_DARK: '#3a3a00',
+    BLOOD: '#551111',
+    BLOOD_DARK: '#330808',
+    PLAYER: '#5599bb',
+    PLAYER_SUIT: '#446688',
+    VISION_CONE: 'rgba(255, 220, 180, 0.08)',
+    VISION_EDGE: 'rgba(255, 180, 100, 0.15)',
+    O2_BAR: '#00aaff',
+    HP_BAR: '#ff4444',
+    SPACE_BG: '#0a0505',
+    NEBULA_ORANGE: '#ff6600',
+    NEBULA_BROWN: '#442200',
+    SUN_GLOW: '#ffaa00',
+    ASTEROID: '#3a3535',
+    ASTEROID_DARK: '#252020',
+    SHIP: '#1a1a1a',
+    SHIP_DETAIL: '#252525'
+};
+
+// === GAME STATE ===
+const game = {
+    state: 'menu', // menu, ship, space, gameover, victory
+    mode: 'ship', // ship, space
+    currentShip: 0, // 0 = tutorial, 1, 2
+    time: 0,
+    deltaTime: 0,
+    lastTime: 0,
+    debugMode: false,
+    screenShake: 0,
+    particles: [],
+    messages: []
+};
+
+// === PLAYER ===
+const player = {
+    x: 200,
+    y: 200,
+    width: 24,
+    height: 24,
+    vx: 0,
+    vy: 0,
+    facing: 0, // angle in radians
+    hp: 100,
+    maxHp: 100,
+    o2: 100,
+    maxO2: 100,
+    isRunning: false,
+    flashlightOn: true,
+    flashlightBattery: 60,
+    weapons: [],
+    currentWeapon: 0,
+    inventory: [],
+    attackCooldown: 0,
+    iframes: 0
+};
+
+// === SPACE PLAYER (Escape Pod) ===
+const spaceship = {
+    x: 400,
+    y: 300,
+    vx: 0,
+    vy: 0,
+    angle: 0,
+    speed: 0,
+    maxSpeed: 150,
+    acceleration: 80,
+    hull: 100
+};
+
+// === INPUT ===
+const input = {
+    keys: {},
+    mouse: { x: 400, y: 300, down: false },
+    lastMouse: { down: false }
+};
+
+// === WEAPON DEFINITIONS ===
+const WEAPONS = {
+    PIPE: { name: 'Pipe', damage: 20, range: 40, speed: 1.0, type: 'melee', durability: 15 },
+    PISTOL: { name: 'Pistol', damage: 25, range: 300, speed: 2, type: 'ranged', ammoType: '9mm', magSize: 12 },
+    SHOTGUN: { name: 'Shotgun', damage: 40, range: 150, speed: 1, type: 'ranged', ammoType: 'shells', magSize: 6, spread: 5 },
+    SMG: { name: 'SMG', damage: 15, range: 250, speed: 5, type: 'ranged', ammoType: '9mm', magSize: 30 }
+};
+
+// === ENEMY DEFINITIONS ===
+const ENEMY_TYPES = {
+    CRAWLER: {
+        name: 'Crawler',
+        hp: 30, damage: 15, speed: 80,
+        attackRate: 1.2, sightRange: 250, soundRange: 150,
+        color: '#554433', width: 24, height: 16,
+        behavior: 'charge'
+    },
+    SHAMBLER: {
+        name: 'Shambler',
+        hp: 60, damage: 25, speed: 50,
+        attackRate: 2, sightRange: 200, soundRange: 300,
+        color: '#445544', width: 28, height: 28,
+        behavior: 'slow_follow'
+    },
+    STALKER: {
+        name: 'Stalker',
+        hp: 45, damage: 20, speed: 150,
+        attackRate: 0.8, sightRange: 350, soundRange: 100,
+        color: '#333344', width: 20, height: 32,
+        behavior: 'ambush'
+    },
+    SHIP_BOSS: {
+        name: 'Ship Boss',
+        hp: 150, damage: 35, speed: 80,
+        attackRate: 1.5, sightRange: 500, soundRange: 500,
+        color: '#664444', width: 64, height: 64,
+        behavior: 'boss'
+    }
+};
+
+// === ENTITY ARRAYS ===
+let enemies = [];
+let bullets = [];
+let items = [];
+let doors = [];
+let currentRoom = null;
+let rooms = [];
+
+// === SPACE ENTITIES ===
+let asteroids = [];
+let derelictShips = [];
+
+// === SHIP GENERATION ===
+const SHIP_LAYOUTS = [
+    // Ship 0: Tutorial (4-6 rooms)
+    {
+        name: 'Tutorial Ship',
+        roomCount: 5,
+        enemies: [{ type: 'CRAWLER', count: 2 }],
+        items: ['PIPE', 'PISTOL', 'O2_SMALL', 'O2_SMALL', 'O2_SMALL', 'MEDKIT_SMALL']
+    },
+    // Ship 1: Derelict (6-8 rooms)
+    {
+        name: 'Derelict Alpha',
+        roomCount: 7,
+        enemies: [{ type: 'SHAMBLER', count: 3 }, { type: 'CRAWLER', count: 2 }],
+        items: ['SHOTGUN', 'MEDKIT_LARGE', 'O2_LARGE', 'O2_SMALL', 'O2_SMALL', 'AMMO_9MM', 'AMMO_SHELLS']
+    },
+    // Ship 2: Final (8-10 rooms, boss)
+    {
+        name: 'Final Derelict',
+        roomCount: 9,
+        enemies: [{ type: 'STALKER', count: 3 }, { type: 'SHAMBLER', count: 3 }],
+        items: ['SMG', 'MEDKIT_LARGE', 'O2_LARGE', 'O2_LARGE', 'AMMO_9MM', 'AMMO_9MM', 'AMMO_SHELLS'],
+        boss: true
+    }
+];
+
+// === ITEM DEFINITIONS ===
+const ITEMS = {
+    O2_SMALL: { name: 'O2 Canister (S)', type: 'consumable', effect: 'o2', value: 25, color: '#4488ff' },
+    O2_LARGE: { name: 'O2 Canister (L)', type: 'consumable', effect: 'o2', value: 50, color: '#44aaff' },
+    MEDKIT_SMALL: { name: 'Medkit (S)', type: 'consumable', effect: 'hp', value: 30, color: '#ff4444' },
+    MEDKIT_LARGE: { name: 'Medkit (L)', type: 'consumable', effect: 'hp', value: 60, color: '#ff6666' },
+    AMMO_9MM: { name: '9mm Ammo', type: 'ammo', ammoType: '9mm', value: 12, color: '#aaaa44' },
+    AMMO_SHELLS: { name: 'Shells', type: 'ammo', ammoType: 'shells', value: 6, color: '#aa8844' },
+    PIPE: { name: 'Pipe', type: 'weapon', weapon: 'PIPE', color: '#888888' },
+    PISTOL: { name: 'Pistol', type: 'weapon', weapon: 'PISTOL', color: '#666666' },
+    SHOTGUN: { name: 'Shotgun', type: 'weapon', weapon: 'SHOTGUN', color: '#555555' },
+    SMG: { name: 'SMG', type: 'weapon', weapon: 'SMG', color: '#444444' },
+    ESCAPE_KEY: { name: 'Escape Pod Key', type: 'key', color: '#ffcc00' }
+};
+
+// === ROOM GENERATION ===
+function generateShip(shipIndex) {
+    const layout = SHIP_LAYOUTS[shipIndex];
+    rooms = [];
+    enemies = [];
+    items = [];
+    doors = [];
+    bullets = [];
+
+    const roomCount = layout.roomCount;
+    const gridSize = 5;
+    const roomGrid = [];
+
+    // Initialize grid
+    for (let y = 0; y < gridSize; y++) {
+        roomGrid[y] = [];
+        for (let x = 0; x < gridSize; x++) {
+            roomGrid[y][x] = null;
+        }
+    }
+
+    // Place starting room
+    const startX = Math.floor(gridSize / 2);
+    const startY = Math.floor(gridSize / 2);
+
+    // Generate connected rooms
+    let placedRooms = 0;
+    const queue = [{ x: startX, y: startY }];
+
+    while (placedRooms < roomCount && queue.length > 0) {
+        const pos = queue.shift();
+
+        if (roomGrid[pos.y] && roomGrid[pos.y][pos.x] === null) {
+            const room = createRoom(pos.x, pos.y, placedRooms === 0 ? 'start' :
+                                   placedRooms === roomCount - 1 ? 'exit' : 'normal');
+            roomGrid[pos.y][pos.x] = room;
+            rooms.push(room);
+            placedRooms++;
+
+            // Add neighbors to queue
+            const dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]].sort(() => Math.random() - 0.5);
+            for (const [dx, dy] of dirs) {
+                const nx = pos.x + dx;
+                const ny = pos.y + dy;
+                if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && !roomGrid[ny][nx]) {
+                    queue.push({ x: nx, y: ny });
+                }
+            }
+        }
+    }
+
+    // Connect rooms with doors
+    for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+            const room = roomGrid[y][x];
+            if (!room) continue;
+
+            // Check right neighbor
+            if (x < gridSize - 1 && roomGrid[y][x + 1]) {
+                connectRooms(room, roomGrid[y][x + 1], 'east');
+            }
+            // Check bottom neighbor
+            if (y < gridSize - 1 && roomGrid[y + 1][x]) {
+                connectRooms(room, roomGrid[y + 1][x], 'south');
+            }
+        }
+    }
+
+    // Spawn enemies
+    for (const enemyDef of layout.enemies) {
+        for (let i = 0; i < enemyDef.count; i++) {
+            const validRooms = rooms.filter(r => r.type === 'normal');
+            if (validRooms.length > 0) {
+                const room = validRooms[Math.floor(Math.random() * validRooms.length)];
+                spawnEnemy(enemyDef.type, room);
+            }
+        }
+    }
+
+    // Spawn boss on final ship
+    if (layout.boss) {
+        const exitRoom = rooms.find(r => r.type === 'exit');
+        if (exitRoom) {
+            spawnEnemy('SHIP_BOSS', exitRoom);
+        }
+    }
+
+    // Spawn items
+    for (const itemKey of layout.items) {
+        const validRooms = rooms.filter(r => r.type !== 'start');
+        if (validRooms.length > 0) {
+            const room = validRooms[Math.floor(Math.random() * validRooms.length)];
+            spawnItem(itemKey, room);
+        }
+    }
+
+    // Set player position in start room
+    const startRoom = rooms.find(r => r.type === 'start');
+    if (startRoom) {
+        player.x = startRoom.worldX + startRoom.width * CONFIG.TILE_SIZE / 2;
+        player.y = startRoom.worldY + startRoom.height * CONFIG.TILE_SIZE / 2;
+        currentRoom = startRoom;
+    }
+
+    addMessage(`Entered: ${layout.name}`);
+}
+
+function createRoom(gridX, gridY, type) {
+    const sizes = {
+        'start': { w: 7, h: 7 },
+        'exit': { w: 9, h: 9 },
+        'normal': { w: 5 + Math.floor(Math.random() * 4), h: 5 + Math.floor(Math.random() * 4) }
+    };
+
+    const size = sizes[type] || sizes.normal;
+    const worldX = gridX * 12 * CONFIG.TILE_SIZE;
+    const worldY = gridY * 12 * CONFIG.TILE_SIZE;
+
+    const room = {
+        gridX, gridY,
+        worldX, worldY,
+        width: size.w,
+        height: size.h,
+        type,
+        tiles: [],
+        doors: { north: null, south: null, east: null, west: null },
+        explored: false,
+        hasLifeSupport: type === 'start' || Math.random() < 0.15,
+        props: [],
+        flickeringLights: Math.random() < 0.3,
+        lightPhase: Math.random() * Math.PI * 2
+    };
+
+    // Generate tiles
+    for (let y = 0; y < size.h; y++) {
+        room.tiles[y] = [];
+        for (let x = 0; x < size.w; x++) {
+            const isWall = x === 0 || x === size.w - 1 || y === 0 || y === size.h - 1;
+            room.tiles[y][x] = isWall ? 1 : 0;
+        }
+    }
+
+    // Add some debris/blood
+    if (type !== 'start') {
+        const debrisCount = Math.floor(Math.random() * 5);
+        for (let i = 0; i < debrisCount; i++) {
+            const dx = 1 + Math.floor(Math.random() * (size.w - 2));
+            const dy = 1 + Math.floor(Math.random() * (size.h - 2));
+            room.tiles[dy][dx] = Math.random() < 0.3 ? 2 : 0; // 2 = blood
+        }
+    }
+
+    // Add room props (crates, corpses, consoles, debris)
+    const propCount = type === 'start' ? 1 : Math.floor(Math.random() * 4) + 1;
+    const propTypes = ['crate', 'corpse', 'console', 'debris', 'barrel'];
+    for (let i = 0; i < propCount; i++) {
+        const px = worldX + CONFIG.TILE_SIZE * 1.5 + Math.random() * (size.w - 3) * CONFIG.TILE_SIZE;
+        const py = worldY + CONFIG.TILE_SIZE * 1.5 + Math.random() * (size.h - 3) * CONFIG.TILE_SIZE;
+        const propType = propTypes[Math.floor(Math.random() * propTypes.length)];
+        room.props.push({
+            type: propType,
+            x: px,
+            y: py,
+            rotation: Math.random() * Math.PI * 2
+        });
+    }
+
+    return room;
+}
+
+function connectRooms(room1, room2, direction) {
+    const door = {
+        room1, room2,
+        isOpen: true,
+        x: 0, y: 0,
+        width: CONFIG.TILE_SIZE,
+        height: CONFIG.TILE_SIZE * 2
+    };
+
+    if (direction === 'east') {
+        door.x = room1.worldX + room1.width * CONFIG.TILE_SIZE;
+        door.y = room1.worldY + Math.floor(room1.height / 2) * CONFIG.TILE_SIZE;
+        room1.doors.east = door;
+        room2.doors.west = door;
+    } else if (direction === 'south') {
+        door.x = room1.worldX + Math.floor(room1.width / 2) * CONFIG.TILE_SIZE;
+        door.y = room1.worldY + room1.height * CONFIG.TILE_SIZE;
+        door.width = CONFIG.TILE_SIZE * 2;
+        door.height = CONFIG.TILE_SIZE;
+        room1.doors.south = door;
+        room2.doors.north = door;
+    }
+
+    doors.push(door);
+}
+
+function spawnEnemy(typeKey, room) {
+    const type = ENEMY_TYPES[typeKey];
+    enemies.push({
+        ...type,
+        typeKey,
+        x: room.worldX + CONFIG.TILE_SIZE + Math.random() * (room.width - 2) * CONFIG.TILE_SIZE,
+        y: room.worldY + CONFIG.TILE_SIZE + Math.random() * (room.height - 2) * CONFIG.TILE_SIZE,
+        currentHp: type.hp,
+        room,
+        attackTimer: Math.random() * 2,
+        state: 'idle',
+        stateTimer: 0,
+        visible: false,
+        lastKnownPlayerPos: null,
+        spawnedCrawlers: false
+    });
+}
+
+function spawnItem(itemKey, room) {
+    const itemDef = ITEMS[itemKey];
+    items.push({
+        ...itemDef,
+        key: itemKey,
+        x: room.worldX + CONFIG.TILE_SIZE + Math.random() * (room.width - 2) * CONFIG.TILE_SIZE,
+        y: room.worldY + CONFIG.TILE_SIZE + Math.random() * (room.height - 2) * CONFIG.TILE_SIZE,
+        collected: false
+    });
+}
+
+// === SPACE MODE GENERATION ===
+function generateSpace() {
+    asteroids = [];
+    derelictShips = [];
+
+    // Create asteroids
+    for (let i = 0; i < 50; i++) {
+        asteroids.push({
+            x: Math.random() * 2000 - 500,
+            y: Math.random() * 1500 - 250,
+            radius: 10 + Math.random() * 40,
+            vx: (Math.random() - 0.5) * 10,
+            vy: (Math.random() - 0.5) * 10
+        });
+    }
+
+    // Create derelict ships to dock with
+    const shipPositions = [
+        { x: 600, y: 400, explored: true }, // Ship 0 (start)
+        { x: 1200, y: 300, explored: false }, // Ship 1
+        { x: 1600, y: 600, explored: false }  // Ship 2 (final)
+    ];
+
+    for (let i = 0; i < 3; i++) {
+        derelictShips.push({
+            ...shipPositions[i],
+            index: i,
+            width: 120 + i * 40,
+            height: 80 + i * 20,
+            name: SHIP_LAYOUTS[i].name,
+            dockable: i <= game.currentShip + 1
+        });
+    }
+
+    // Position player ship near current ship
+    const currentShipData = derelictShips[game.currentShip];
+    spaceship.x = currentShipData.x + currentShipData.width + 50;
+    spaceship.y = currentShipData.y;
+}
+
+// === UPDATE FUNCTIONS ===
+function update(dt) {
+    game.deltaTime = dt;
+    game.time += dt;
+
+    if (game.state === 'menu') return;
+    if (game.state === 'gameover' || game.state === 'victory') return;
+
+    if (game.mode === 'ship') {
+        updateShipMode(dt);
+    } else {
+        updateSpaceMode(dt);
+    }
+
+    updateParticles(dt);
+
+    if (game.screenShake > 0) game.screenShake -= dt * 10;
+}
+
+function updateShipMode(dt) {
+    updatePlayer(dt);
+    updateO2(dt);
+    updateEnemies(dt);
+    updateBullets(dt);
+    checkItemPickup();
+    checkDoorTransitions();
+    checkDeathConditions();
+    spawnAmbientParticles();
+}
+
+function updateSpaceMode(dt) {
+    updateSpaceship(dt);
+    updateAsteroids(dt);
+    checkShipDocking();
+}
+
+function updatePlayer(dt) {
+    if (player.iframes > 0) player.iframes -= dt;
+    if (player.attackCooldown > 0) player.attackCooldown -= dt;
+
+    // Movement
+    let dx = 0, dy = 0;
+    if (input.keys['KeyW'] || input.keys['ArrowUp']) dy = -1;
+    if (input.keys['KeyS'] || input.keys['ArrowDown']) dy = 1;
+    if (input.keys['KeyA'] || input.keys['ArrowLeft']) dx = -1;
+    if (input.keys['KeyD'] || input.keys['ArrowRight']) dx = 1;
+
+    if (dx !== 0 && dy !== 0) {
+        dx *= 0.707;
+        dy *= 0.707;
+    }
+
+    player.isRunning = input.keys['ShiftLeft'] || input.keys['ShiftRight'];
+    const speed = player.isRunning ? CONFIG.PLAYER_RUN_SPEED : CONFIG.PLAYER_WALK_SPEED;
+
+    player.vx = dx * speed;
+    player.vy = dy * speed;
+
+    const newX = player.x + player.vx * dt;
+    const newY = player.y + player.vy * dt;
+
+    // Wall collision
+    if (!checkWallCollision(newX, player.y, player.width, player.height)) {
+        player.x = newX;
+    }
+    if (!checkWallCollision(player.x, newY, player.width, player.height)) {
+        player.y = newY;
+    }
+
+    // Face mouse cursor
+    player.facing = Math.atan2(input.mouse.y - player.y, input.mouse.x - player.x);
+
+    // Flashlight toggle
+    if (input.keys['KeyF']) {
+        player.flashlightOn = !player.flashlightOn;
+        input.keys['KeyF'] = false;
+    }
+
+    // Attack
+    if (input.mouse.down && player.attackCooldown <= 0) {
+        attack();
+    }
+
+    // Use item hotkeys
+    for (let i = 1; i <= 6; i++) {
+        if (input.keys[`Digit${i}`]) {
+            useInventoryItem(i - 1);
+            input.keys[`Digit${i}`] = false;
+        }
+    }
+}
+
+function updateO2(dt) {
+    let drainRate = CONFIG.O2_IDLE_DRAIN;
+
+    if (player.vx !== 0 || player.vy !== 0) {
+        drainRate = player.isRunning ? CONFIG.O2_RUN_DRAIN : CONFIG.O2_WALK_DRAIN;
+    }
+
+    // Check if in life support room
+    if (currentRoom && currentRoom.hasLifeSupport) {
+        player.o2 = Math.min(player.o2 + 5 * dt, player.maxO2);
+    } else {
+        player.o2 -= drainRate * dt;
+    }
+
+    player.o2 = Math.max(0, player.o2);
+}
+
+function attack() {
+    const weapon = player.weapons[player.currentWeapon];
+    if (!weapon) return;
+
+    const weaponDef = WEAPONS[weapon.type];
+    player.attackCooldown = 1 / weaponDef.speed;
+
+    // O2 cost for combat
+    player.o2 -= CONFIG.O2_COMBAT_DRAIN;
+
+    if (weaponDef.type === 'melee') {
+        // Melee attack
+        for (const enemy of enemies) {
+            const dist = Math.sqrt((enemy.x - player.x) ** 2 + (enemy.y - player.y) ** 2);
+            if (dist < weaponDef.range) {
+                const angleToEnemy = Math.atan2(enemy.y - player.y, enemy.x - player.x);
+                let angleDiff = Math.abs(angleToEnemy - player.facing);
+                if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff;
+
+                if (angleDiff < Math.PI / 4) {
+                    damageEnemy(enemy, weaponDef.damage);
+                }
+            }
+        }
+
+        // Spawn melee swing particle
+        spawnParticle(player.x + Math.cos(player.facing) * 30, player.y + Math.sin(player.facing) * 30, 'melee');
+
+    } else {
+        // Ranged attack
+        if (weapon.currentAmmo > 0) {
+            weapon.currentAmmo--;
+
+            const pellets = weaponDef.spread || 1;
+            for (let i = 0; i < pellets; i++) {
+                const spread = pellets > 1 ? (i - (pellets - 1) / 2) * 0.15 : 0;
+                const angle = player.facing + spread + (Math.random() - 0.5) * 0.05;
+
+                bullets.push({
+                    x: player.x,
+                    y: player.y,
+                    vx: Math.cos(angle) * 500,
+                    vy: Math.sin(angle) * 500,
+                    damage: weaponDef.damage,
+                    isPlayer: true,
+                    life: 1
+                });
+            }
+
+            spawnParticle(player.x + Math.cos(player.facing) * 20, player.y + Math.sin(player.facing) * 20, 'muzzle');
+            game.screenShake = 2;
+        }
+    }
+}
+
+function damageEnemy(enemy, damage) {
+    enemy.currentHp -= damage;
+    spawnParticle(enemy.x, enemy.y, 'hit');
+
+    if (enemy.currentHp <= 0) {
+        // Death
+        for (let i = 0; i < 8; i++) {
+            spawnParticle(enemy.x, enemy.y, 'death');
+        }
+
+        // Boss spawns crawlers at 50%
+        if (enemy.typeKey === 'SHIP_BOSS' && !enemy.spawnedCrawlers && enemy.currentHp <= enemy.hp * 0.5) {
+            enemy.spawnedCrawlers = true;
+            for (let i = 0; i < 2; i++) {
+                const crawler = {
+                    ...ENEMY_TYPES.CRAWLER,
+                    typeKey: 'CRAWLER',
+                    x: enemy.x + (Math.random() - 0.5) * 50,
+                    y: enemy.y + (Math.random() - 0.5) * 50,
+                    currentHp: ENEMY_TYPES.CRAWLER.hp,
+                    room: enemy.room,
+                    attackTimer: 1,
+                    state: 'chase',
+                    visible: false
+                };
+                enemies.push(crawler);
+            }
+        }
+
+        // Remove enemy
+        const index = enemies.indexOf(enemy);
+        if (index !== -1) enemies.splice(index, 1);
+
+        // Boss death drops escape key
+        if (enemy.typeKey === 'SHIP_BOSS') {
+            items.push({
+                ...ITEMS.ESCAPE_KEY,
+                key: 'ESCAPE_KEY',
+                x: enemy.x,
+                y: enemy.y,
+                collected: false
+            });
+            addMessage('The boss dropped the Escape Pod Key!');
+        }
+    }
+}
+
+function updateEnemies(dt) {
+    for (const enemy of enemies) {
+        // Check if enemy is visible (in player's vision cone)
+        const dx = enemy.x - player.x;
+        const dy = enemy.y - player.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const angleToEnemy = Math.atan2(dy, dx);
+
+        let angleDiff = Math.abs(angleToEnemy - player.facing);
+        if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff;
+
+        enemy.visible = dist < CONFIG.VISION_RANGE && angleDiff < CONFIG.VISION_ANGLE / 2;
+
+        // Also check line of sight
+        if (enemy.visible) {
+            enemy.visible = !lineOfSightBlocked(player.x, player.y, enemy.x, enemy.y);
+        }
+
+        // AI behavior
+        const canSeePlayer = dist < enemy.sightRange && enemy.visible;
+        const canHearPlayer = dist < enemy.soundRange && (player.isRunning || player.vx !== 0 || player.vy !== 0);
+
+        if (canSeePlayer || canHearPlayer) {
+            enemy.state = 'chase';
+            enemy.lastKnownPlayerPos = { x: player.x, y: player.y };
+        }
+
+        // State machine
+        switch (enemy.state) {
+            case 'idle':
+                // Patrol slowly
+                if (Math.random() < 0.01) {
+                    enemy.patrolAngle = Math.random() * Math.PI * 2;
+                    enemy.stateTimer = 2 + Math.random() * 3;
+                }
+                if (enemy.patrolAngle !== undefined && enemy.stateTimer > 0) {
+                    enemy.x += Math.cos(enemy.patrolAngle) * enemy.speed * 0.3 * dt;
+                    enemy.y += Math.sin(enemy.patrolAngle) * enemy.speed * 0.3 * dt;
+                    enemy.stateTimer -= dt;
+                }
+                break;
+
+            case 'chase':
+                if (enemy.lastKnownPlayerPos) {
+                    const tdx = enemy.lastKnownPlayerPos.x - enemy.x;
+                    const tdy = enemy.lastKnownPlayerPos.y - enemy.y;
+                    const tdist = Math.sqrt(tdx * tdx + tdy * tdy);
+
+                    if (tdist > 30) {
+                        enemy.x += (tdx / tdist) * enemy.speed * dt;
+                        enemy.y += (tdy / tdist) * enemy.speed * dt;
+                    }
+
+                    // Attack if close enough
+                    if (dist < 40) {
+                        enemy.attackTimer -= dt;
+                        if (enemy.attackTimer <= 0) {
+                            enemy.attackTimer = enemy.attackRate;
+                            damagePlayer(enemy.damage);
+                        }
+                    }
+
+                    // Lose interest if reached last known position and can't see player
+                    if (tdist < 20 && !canSeePlayer) {
+                        enemy.state = 'idle';
+                        enemy.lastKnownPlayerPos = null;
+                    }
+                }
+                break;
+        }
+
+        // Keep enemy in bounds
+        const room = enemy.room;
+        if (room) {
+            enemy.x = Math.max(room.worldX + 20, Math.min(room.worldX + room.width * CONFIG.TILE_SIZE - 20, enemy.x));
+            enemy.y = Math.max(room.worldY + 20, Math.min(room.worldY + room.height * CONFIG.TILE_SIZE - 20, enemy.y));
+        }
+    }
+}
+
+function updateBullets(dt) {
+    for (let i = bullets.length - 1; i >= 0; i--) {
+        const b = bullets[i];
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+        b.life -= dt;
+
+        // Wall collision
+        if (checkWallCollision(b.x, b.y, 4, 4)) {
+            bullets.splice(i, 1);
+            continue;
+        }
+
+        // Enemy collision (player bullets)
+        if (b.isPlayer) {
+            for (const enemy of enemies) {
+                const dist = Math.sqrt((b.x - enemy.x) ** 2 + (b.y - enemy.y) ** 2);
+                if (dist < enemy.width / 2 + 5) {
+                    damageEnemy(enemy, b.damage);
+                    bullets.splice(i, 1);
+                    break;
+                }
+            }
+        }
+
+        if (b.life <= 0) bullets.splice(i, 1);
+    }
+}
+
+function damagePlayer(damage) {
+    if (player.iframes > 0) return;
+
+    player.hp -= damage;
+    player.iframes = 1;
+    game.screenShake = 4;
+    spawnParticle(player.x, player.y, 'playerHit');
+}
+
+function checkItemPickup() {
+    for (const item of items) {
+        if (item.collected) continue;
+
+        const dist = Math.sqrt((item.x - player.x) ** 2 + (item.y - player.y) ** 2);
+        if (dist < 30) {
+            // Press E to pick up
+            if (input.keys['KeyE']) {
+                collectItem(item);
+                input.keys['KeyE'] = false;
+            }
+        }
+    }
+}
+
+function collectItem(item) {
+    item.collected = true;
+    addMessage(`Picked up: ${item.name}`);
+
+    if (item.type === 'weapon') {
+        player.weapons.push({
+            type: item.weapon,
+            currentAmmo: WEAPONS[item.weapon].magSize,
+            totalAmmo: 0
+        });
+    } else if (item.type === 'consumable') {
+        player.inventory.push(item);
+    } else if (item.type === 'ammo') {
+        // Add to current weapon if matching
+        for (const weapon of player.weapons) {
+            if (WEAPONS[weapon.type].ammoType === item.ammoType) {
+                weapon.totalAmmo += item.value;
+            }
+        }
+    } else if (item.type === 'key' && item.key === 'ESCAPE_KEY') {
+        // Check if on final ship exit room
+        if (game.currentShip === 2) {
+            game.state = 'victory';
+        }
+    }
+}
+
+function useInventoryItem(index) {
+    if (index >= player.inventory.length) return;
+
+    const item = player.inventory[index];
+    if (item.effect === 'o2') {
+        player.o2 = Math.min(player.o2 + item.value, player.maxO2);
+        addMessage(`Used ${item.name}: +${item.value} O2`);
+    } else if (item.effect === 'hp') {
+        player.hp = Math.min(player.hp + item.value, player.maxHp);
+        addMessage(`Used ${item.name}: +${item.value} HP`);
+    }
+
+    player.inventory.splice(index, 1);
+}
+
+function checkDoorTransitions() {
+    for (const room of rooms) {
+        if (player.x > room.worldX && player.x < room.worldX + room.width * CONFIG.TILE_SIZE &&
+            player.y > room.worldY && player.y < room.worldY + room.height * CONFIG.TILE_SIZE) {
+            if (currentRoom !== room) {
+                currentRoom = room;
+                room.explored = true;
+            }
+        }
+    }
+
+    // Check for exit to space mode
+    const exitRoom = rooms.find(r => r.type === 'exit');
+    if (exitRoom && currentRoom === exitRoom) {
+        // Check if at exit point
+        const exitX = exitRoom.worldX + exitRoom.width * CONFIG.TILE_SIZE / 2;
+        const exitY = exitRoom.worldY + exitRoom.height * CONFIG.TILE_SIZE - 20;
+
+        if (Math.abs(player.x - exitX) < 30 && Math.abs(player.y - exitY) < 30) {
+            if (enemies.filter(e => e.room === exitRoom).length === 0) {
+                // Can exit to space
+                if (input.keys['KeyE']) {
+                    transitionToSpace();
+                    input.keys['KeyE'] = false;
+                }
+            }
+        }
+    }
+}
+
+function transitionToSpace() {
+    game.mode = 'space';
+    generateSpace();
+    addMessage('Escaped to your ship. Find the next derelict.');
+}
+
+function checkDeathConditions() {
+    if (player.o2 <= 0) {
+        game.state = 'gameover';
+        game.deathMessage = 'Your lungs burned for oxygen that never came.';
+    }
+    if (player.hp <= 0) {
+        game.state = 'gameover';
+        game.deathMessage = 'Your body joins the ship\'s other victims.';
+    }
+}
+
+// === SPACE MODE UPDATES ===
+function updateSpaceship(dt) {
+    // Rotation
+    const targetAngle = Math.atan2(input.mouse.y - spaceship.y, input.mouse.x - spaceship.x);
+    spaceship.angle = targetAngle;
+
+    // Thrust
+    if (input.keys['KeyW'] || input.keys['ArrowUp']) {
+        spaceship.vx += Math.cos(spaceship.angle) * spaceship.acceleration * dt;
+        spaceship.vy += Math.sin(spaceship.angle) * spaceship.acceleration * dt;
+    }
+
+    // Brake
+    if (input.keys['KeyS'] || input.keys['ArrowDown']) {
+        spaceship.vx *= 0.95;
+        spaceship.vy *= 0.95;
+    }
+
+    // Clamp speed
+    const speed = Math.sqrt(spaceship.vx ** 2 + spaceship.vy ** 2);
+    if (speed > spaceship.maxSpeed) {
+        spaceship.vx = (spaceship.vx / speed) * spaceship.maxSpeed;
+        spaceship.vy = (spaceship.vy / speed) * spaceship.maxSpeed;
+    }
+
+    spaceship.x += spaceship.vx * dt;
+    spaceship.y += spaceship.vy * dt;
+
+    // Friction
+    spaceship.vx *= 0.995;
+    spaceship.vy *= 0.995;
+}
+
+function updateAsteroids(dt) {
+    for (const asteroid of asteroids) {
+        asteroid.x += asteroid.vx * dt;
+        asteroid.y += asteroid.vy * dt;
+
+        // Check collision with spaceship
+        const dist = Math.sqrt((asteroid.x - spaceship.x) ** 2 + (asteroid.y - spaceship.y) ** 2);
+        if (dist < asteroid.radius + 15) {
+            spaceship.hull -= 5;
+            game.screenShake = 2;
+            // Bounce
+            spaceship.vx = -spaceship.vx * 0.5;
+            spaceship.vy = -spaceship.vy * 0.5;
+        }
+    }
+}
+
+function checkShipDocking() {
+    for (const ship of derelictShips) {
+        if (!ship.dockable) continue;
+
+        const dist = Math.sqrt((ship.x + ship.width / 2 - spaceship.x) ** 2 + (ship.y + ship.height / 2 - spaceship.y) ** 2);
+        if (dist < 80) {
+            if (input.keys['KeyE']) {
+                dockWithShip(ship);
+                input.keys['KeyE'] = false;
+            }
+        }
+    }
+}
+
+function dockWithShip(ship) {
+    game.currentShip = ship.index;
+    ship.explored = true;
+    game.mode = 'ship';
+    generateShip(ship.index);
+    addMessage(`Docked with: ${ship.name}`);
+}
+
+// === COLLISION HELPERS ===
+function checkWallCollision(x, y, w, h) {
+    for (const room of rooms) {
+        for (let ty = 0; ty < room.height; ty++) {
+            for (let tx = 0; tx < room.width; tx++) {
+                if (room.tiles[ty][tx] === 1) {
+                    const wallX = room.worldX + tx * CONFIG.TILE_SIZE;
+                    const wallY = room.worldY + ty * CONFIG.TILE_SIZE;
+
+                    if (x - w/2 < wallX + CONFIG.TILE_SIZE &&
+                        x + w/2 > wallX &&
+                        y - h/2 < wallY + CONFIG.TILE_SIZE &&
+                        y + h/2 > wallY) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+function lineOfSightBlocked(x1, y1, x2, y2) {
+    const steps = Math.ceil(Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2) / 10);
+    for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const x = x1 + (x2 - x1) * t;
+        const y = y1 + (y2 - y1) * t;
+        if (checkWallCollision(x, y, 2, 2)) return true;
+    }
+    return false;
+}
+
+// === PARTICLES ===
+function spawnParticle(x, y, type) {
+    const p = { x, y, type, life: 1, maxLife: 1 };
+
+    switch (type) {
+        case 'muzzle':
+            p.vx = (Math.random() - 0.5) * 100;
+            p.vy = (Math.random() - 0.5) * 100;
+            p.size = 6;
+            p.color = '#ffaa44';
+            p.life = 0.1;
+            break;
+        case 'melee':
+            p.vx = (Math.random() - 0.5) * 50;
+            p.vy = (Math.random() - 0.5) * 50;
+            p.size = 4;
+            p.color = '#888888';
+            p.life = 0.2;
+            break;
+        case 'hit':
+            p.vx = (Math.random() - 0.5) * 100;
+            p.vy = (Math.random() - 0.5) * 100;
+            p.size = 4;
+            p.color = '#ff4444';
+            p.life = 0.3;
+            break;
+        case 'death':
+            p.vx = (Math.random() - 0.5) * 150;
+            p.vy = (Math.random() - 0.5) * 150;
+            p.size = 5;
+            p.color = '#662222';
+            p.life = 0.5;
+            break;
+        case 'playerHit':
+            p.vx = (Math.random() - 0.5) * 80;
+            p.vy = (Math.random() - 0.5) * 80;
+            p.size = 5;
+            p.color = '#ff2222';
+            p.life = 0.4;
+            break;
+        case 'dust':
+            p.vx = (Math.random() - 0.5) * 8;
+            p.vy = (Math.random() - 0.5) * 8 - 5;
+            p.size = 2;
+            p.color = '#555555';
+            p.life = 2 + Math.random() * 2;
+            break;
+        case 'spark':
+            p.vx = (Math.random() - 0.5) * 60;
+            p.vy = -30 - Math.random() * 30;
+            p.size = 2;
+            p.color = '#ffaa44';
+            p.life = 0.3 + Math.random() * 0.3;
+            p.gravity = 100;
+            break;
+        case 'o2':
+            p.vx = (Math.random() - 0.5) * 20;
+            p.vy = -20 - Math.random() * 20;
+            p.size = 3;
+            p.color = '#00aaff';
+            p.life = 0.5;
+            break;
+    }
+
+    p.maxLife = p.life;
+    game.particles.push(p);
+}
+
+// Spawn ambient particles
+function spawnAmbientParticles() {
+    if (game.mode !== 'ship' || game.state !== 'playing') return;
+
+    // Dust particles near player
+    if (Math.random() < 0.1) {
+        const dustX = player.x + (Math.random() - 0.5) * 200;
+        const dustY = player.y + (Math.random() - 0.5) * 200;
+        spawnParticle(dustX, dustY, 'dust');
+    }
+
+    // Sparks from debris props
+    if (currentRoom) {
+        for (const prop of currentRoom.props) {
+            if (prop.type === 'debris' && Math.random() < 0.01) {
+                spawnParticle(prop.x, prop.y, 'spark');
+            }
+        }
+    }
+
+    // O2 particles from life support
+    if (currentRoom && currentRoom.hasLifeSupport && Math.random() < 0.15) {
+        const lx = currentRoom.worldX + currentRoom.width * CONFIG.TILE_SIZE / 2;
+        const ly = currentRoom.worldY + currentRoom.height * CONFIG.TILE_SIZE / 2;
+        spawnParticle(lx + (Math.random() - 0.5) * 20, ly, 'o2');
+    }
+}
+
+function updateParticles(dt) {
+    for (let i = game.particles.length - 1; i >= 0; i--) {
+        const p = game.particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+
+        // Apply gravity if defined
+        if (p.gravity) {
+            p.vy += p.gravity * dt;
+        }
+
+        // Damping based on particle type
+        if (p.type === 'dust') {
+            p.vx *= 0.99;
+            p.vy *= 0.99;
+        } else {
+            p.vx *= 0.9;
+            p.vy *= 0.9;
+        }
+
+        p.life -= dt;
+
+        if (p.life <= 0) {
+            game.particles.splice(i, 1);
+        }
+    }
+}
+
+// === MESSAGES ===
+function addMessage(text) {
+    game.messages.push({ text, time: game.time });
+    if (game.messages.length > 5) game.messages.shift();
+}
+
+// === DRAW FUNCTIONS ===
+function draw() {
+    // Screen shake
+    let shakeX = 0, shakeY = 0;
+    if (game.screenShake > 0) {
+        shakeX = (Math.random() - 0.5) * game.screenShake * 2;
+        shakeY = (Math.random() - 0.5) * game.screenShake * 2;
+    }
+
+    ctx.save();
+    ctx.translate(shakeX, shakeY);
+
+    ctx.fillStyle = '#000';
+    ctx.fillRect(-10, -10, canvas.width + 20, canvas.height + 20);
+
+    if (game.state === 'menu') {
+        drawMenu();
+    } else if (game.state === 'gameover') {
+        drawGameOver();
+    } else if (game.state === 'victory') {
+        drawVictory();
+    } else if (game.mode === 'ship') {
+        drawShipMode();
+    } else {
+        drawSpaceMode();
+    }
+
+    ctx.restore();
+}
+
+function drawMenu() {
+    ctx.fillStyle = '#aa4400';
+    ctx.font = 'bold 48px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText('DERELICT', canvas.width / 2, 150);
+
+    ctx.fillStyle = '#666666';
+    ctx.font = '16px Courier New';
+    ctx.fillText('Survival Horror', canvas.width / 2, 190);
+
+    ctx.fillStyle = '#888888';
+    ctx.font = '14px Courier New';
+    const controls = [
+        'WASD - Move',
+        'Mouse - Aim',
+        'Click - Attack',
+        'Shift - Run (uses more O2)',
+        'E - Interact/Pickup',
+        'F - Toggle Flashlight',
+        '1-6 - Use Items',
+        'Q - Debug Mode'
+    ];
+
+    controls.forEach((text, i) => {
+        ctx.fillText(text, canvas.width / 2, 280 + i * 25);
+    });
+
+    ctx.fillStyle = '#aa4400';
+    ctx.font = 'bold 20px Courier New';
+    ctx.fillText('Click to Start', canvas.width / 2, 520);
+
+    ctx.fillStyle = '#666666';
+    ctx.font = '12px Courier New';
+    ctx.fillText('Your O2 is always draining. Move fast, die faster.', canvas.width / 2, 560);
+}
+
+function drawShipMode() {
+    // Camera follows player
+    const camX = player.x - canvas.width / 2;
+    const camY = player.y - canvas.height / 2;
+
+    ctx.save();
+    ctx.translate(-camX, -camY);
+
+    // Draw rooms
+    for (const room of rooms) {
+        drawRoom(room);
+    }
+
+    // Draw doors
+    for (const door of doors) {
+        ctx.fillStyle = door.isOpen ? '#333333' : '#664444';
+        ctx.fillRect(door.x, door.y, door.width, door.height);
+    }
+
+    // Draw items (only visible in vision cone)
+    for (const item of items) {
+        if (item.collected) continue;
+        if (isInVisionCone(item.x, item.y)) {
+            ctx.fillStyle = item.color;
+            ctx.fillRect(item.x - 8, item.y - 8, 16, 16);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(item.x - 8, item.y - 8, 16, 16);
+        }
+    }
+
+    // Draw enemies (only visible in vision cone)
+    for (const enemy of enemies) {
+        if (enemy.visible) {
+            drawEnemy(enemy);
+        }
+    }
+
+    // Draw bullets
+    for (const bullet of bullets) {
+        ctx.fillStyle = bullet.isPlayer ? '#ffaa00' : '#ff4444';
+        ctx.beginPath();
+        ctx.arc(bullet.x, bullet.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Draw player
+    drawPlayer();
+
+    // Draw vision cone overlay
+    drawVisionCone();
+
+    // Draw particles
+    for (const p of game.particles) {
+        const alpha = p.life / p.maxLife;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.restore();
+
+    // Draw HUD
+    drawHUD();
+
+    if (game.debugMode) drawDebug();
+}
+
+function drawRoom(room) {
+    for (let y = 0; y < room.height; y++) {
+        for (let x = 0; x < room.width; x++) {
+            const tile = room.tiles[y][x];
+            const px = room.worldX + x * CONFIG.TILE_SIZE;
+            const py = room.worldY + y * CONFIG.TILE_SIZE;
+            const ts = CONFIG.TILE_SIZE;
+
+            if (tile === 1) {
+                // Wall - metal panel style
+                ctx.fillStyle = COLORS.WALL;
+                ctx.fillRect(px, py, ts, ts);
+
+                // Wall panel detail
+                ctx.fillStyle = COLORS.WALL_DETAIL;
+                ctx.fillRect(px + 2, py + 2, ts - 4, ts - 4);
+
+                // Rivets on walls
+                ctx.fillStyle = '#0a0a0a';
+                ctx.fillRect(px + 4, py + 4, 3, 3);
+                ctx.fillRect(px + ts - 7, py + 4, 3, 3);
+                ctx.fillRect(px + 4, py + ts - 7, 3, 3);
+                ctx.fillRect(px + ts - 7, py + ts - 7, 3, 3);
+            } else {
+                // Floor - metal grid pattern like reference
+                ctx.fillStyle = COLORS.FLOOR;
+                ctx.fillRect(px, py, ts, ts);
+
+                // Grid lines
+                ctx.fillStyle = COLORS.FLOOR_GRID;
+                ctx.fillRect(px, py, ts, 1);
+                ctx.fillRect(px, py, 1, ts);
+
+                // Inner panel
+                ctx.fillStyle = COLORS.FLOOR_DARK;
+                ctx.fillRect(px + 4, py + 4, ts - 8, ts - 8);
+
+                // Metal detail - rivets at corners
+                ctx.fillStyle = COLORS.FLOOR_DETAIL;
+                ctx.fillRect(px + 2, py + 2, 2, 2);
+                ctx.fillRect(px + ts - 4, py + 2, 2, 2);
+                ctx.fillRect(px + 2, py + ts - 4, 2, 2);
+                ctx.fillRect(px + ts - 4, py + ts - 4, 2, 2);
+
+                // Center grate pattern (every other tile)
+                if ((x + y) % 2 === 0) {
+                    ctx.fillStyle = '#1a1a1a';
+                    for (let gy = 0; gy < 3; gy++) {
+                        ctx.fillRect(px + 8, py + 8 + gy * 6, ts - 16, 2);
+                    }
+                }
+
+                // Blood
+                if (tile === 2) {
+                    ctx.fillStyle = COLORS.BLOOD;
+                    ctx.beginPath();
+                    ctx.arc(px + ts/2, py + ts/2, ts/3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = COLORS.BLOOD_DARK;
+                    ctx.beginPath();
+                    ctx.arc(px + ts/2 + 3, py + ts/2 + 3, ts/5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Hazard stripes near room edges
+                const nearEdge = x === 1 || x === room.width - 2 || y === 1 || y === room.height - 2;
+                if (nearEdge && (x + y) % 2 === 0) {
+                    ctx.fillStyle = COLORS.HAZARD_STRIPE;
+                    ctx.fillRect(px + 2, py, ts - 4, 4);
+                    ctx.fillStyle = COLORS.HAZARD_DARK;
+                    ctx.fillRect(px + 6, py, 4, 4);
+                    ctx.fillRect(px + 14, py, 4, 4);
+                    ctx.fillRect(px + 22, py, 4, 4);
+                }
+            }
+        }
+    }
+
+    // Life support indicator - glowing terminal
+    if (room.hasLifeSupport) {
+        const lx = room.worldX + room.width * CONFIG.TILE_SIZE / 2;
+        const ly = room.worldY + room.height * CONFIG.TILE_SIZE / 2;
+
+        // Glow effect
+        ctx.fillStyle = 'rgba(0, 150, 255, 0.2)';
+        ctx.beginPath();
+        ctx.arc(lx, ly, 30, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Terminal base
+        ctx.fillStyle = '#002244';
+        ctx.fillRect(lx - 18, ly - 18, 36, 36);
+        ctx.fillStyle = '#003366';
+        ctx.fillRect(lx - 14, ly - 14, 28, 28);
+
+        // Screen
+        ctx.fillStyle = '#00aaff';
+        ctx.fillRect(lx - 10, ly - 10, 20, 16);
+
+        // O2 text
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px Courier New';
+        ctx.textAlign = 'center';
+        ctx.fillText('O2', lx, ly + 2);
+    }
+
+    // Exit indicator - escape pod hatch
+    if (room.type === 'exit') {
+        const ex = room.worldX + room.width * CONFIG.TILE_SIZE / 2;
+        const ey = room.worldY + room.height * CONFIG.TILE_SIZE - 30;
+
+        // Hatch glow
+        ctx.fillStyle = 'rgba(68, 255, 68, 0.15)';
+        ctx.beginPath();
+        ctx.arc(ex, ey + 10, 35, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hatch base
+        ctx.fillStyle = '#224422';
+        ctx.fillRect(ex - 25, ey - 5, 50, 30);
+        ctx.fillStyle = '#336633';
+        ctx.fillRect(ex - 20, ey, 40, 20);
+
+        // Exit text
+        ctx.fillStyle = '#88ff88';
+        ctx.font = 'bold 12px Courier New';
+        ctx.textAlign = 'center';
+        ctx.fillText('EXIT', ex, ey + 14);
+
+        // Arrow
+        ctx.strokeStyle = '#88ff88';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(ex - 8, ey + 22);
+        ctx.lineTo(ex, ey + 28);
+        ctx.lineTo(ex + 8, ey + 22);
+        ctx.stroke();
+    }
+
+    // Draw props in room
+    for (const prop of room.props) {
+        if (isInVisionCone(prop.x, prop.y)) {
+            drawProp(prop);
+        }
+    }
+
+    // Flickering light effect
+    if (room.flickeringLights) {
+        const flicker = Math.sin(game.time * 8 + room.lightPhase);
+        if (flicker > 0.7) {
+            ctx.fillStyle = 'rgba(255, 200, 100, 0.05)';
+            ctx.fillRect(room.worldX, room.worldY, room.width * CONFIG.TILE_SIZE, room.height * CONFIG.TILE_SIZE);
+        }
+    }
+}
+
+function drawProp(prop) {
+    ctx.save();
+    ctx.translate(prop.x, prop.y);
+
+    switch (prop.type) {
+        case 'crate':
+            // Metal supply crate
+            ctx.fillStyle = '#3a3a30';
+            ctx.fillRect(-12, -12, 24, 24);
+            ctx.fillStyle = '#4a4a40';
+            ctx.fillRect(-10, -10, 20, 20);
+            // Markings
+            ctx.strokeStyle = '#5a5a50';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(-8, -8, 16, 16);
+            ctx.beginPath();
+            ctx.moveTo(-6, 0);
+            ctx.lineTo(6, 0);
+            ctx.moveTo(0, -6);
+            ctx.lineTo(0, 6);
+            ctx.stroke();
+            break;
+
+        case 'corpse':
+            ctx.rotate(prop.rotation);
+            // Dead body
+            ctx.fillStyle = '#553333';
+            ctx.fillRect(-14, -6, 28, 12);
+            // Head
+            ctx.fillStyle = '#664444';
+            ctx.beginPath();
+            ctx.arc(12, 0, 6, 0, Math.PI * 2);
+            ctx.fill();
+            // Blood pool
+            ctx.fillStyle = 'rgba(80, 20, 20, 0.6)';
+            ctx.beginPath();
+            ctx.ellipse(0, 4, 18, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        case 'console':
+            // Computer terminal
+            ctx.fillStyle = '#2a2a3a';
+            ctx.fillRect(-15, -10, 30, 20);
+            ctx.fillStyle = '#1a1a2a';
+            ctx.fillRect(-13, -8, 26, 12);
+            // Screen (sometimes on)
+            ctx.fillStyle = Math.random() > 0.5 ? '#224488' : '#111122';
+            ctx.fillRect(-11, -6, 22, 8);
+            // Keyboard
+            ctx.fillStyle = '#333344';
+            ctx.fillRect(-10, 6, 20, 6);
+            break;
+
+        case 'debris':
+            // Scattered metal debris
+            ctx.fillStyle = '#333333';
+            ctx.fillRect(-8, -4, 16, 8);
+            ctx.fillStyle = '#2a2a2a';
+            ctx.fillRect(-12, 2, 10, 5);
+            ctx.fillRect(4, -6, 8, 4);
+            // Sparks (occasional)
+            if (Math.random() > 0.9) {
+                ctx.fillStyle = '#ffaa44';
+                ctx.fillRect(-2 + Math.random() * 4, -2 + Math.random() * 4, 2, 2);
+            }
+            break;
+
+        case 'barrel':
+            // Industrial barrel
+            ctx.fillStyle = '#3a3530';
+            ctx.beginPath();
+            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#4a4540';
+            ctx.beginPath();
+            ctx.arc(0, 0, 7, 0, Math.PI * 2);
+            ctx.fill();
+            // Hazard stripe
+            ctx.fillStyle = '#5a5a00';
+            ctx.fillRect(-8, -2, 16, 4);
+            break;
+    }
+
+    ctx.restore();
+}
+
+function drawPlayer() {
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    ctx.rotate(player.facing);
+
+    // Space suit body
+    ctx.fillStyle = COLORS.PLAYER_SUIT;
+    ctx.fillRect(-10, -8, 20, 16);
+
+    // Suit highlights
+    ctx.fillStyle = COLORS.PLAYER;
+    ctx.fillRect(-8, -6, 16, 12);
+
+    // Helmet visor
+    ctx.fillStyle = '#225588';
+    ctx.beginPath();
+    ctx.arc(0, 0, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#3388bb';
+    ctx.beginPath();
+    ctx.arc(-1, -1, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Arm holding weapon
+    ctx.fillStyle = COLORS.PLAYER_SUIT;
+    ctx.fillRect(8, -3, 8, 6);
+
+    // Flashlight/weapon glow
+    if (player.flashlightOn) {
+        ctx.fillStyle = '#ffcc44';
+        ctx.beginPath();
+        ctx.arc(14, 0, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffeeaa';
+        ctx.beginPath();
+        ctx.arc(14, 0, 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Backpack/O2 tank
+    ctx.fillStyle = '#335566';
+    ctx.fillRect(-14, -4, 4, 8);
+
+    ctx.restore();
+
+    // I-frames flash
+    if (player.iframes > 0 && Math.floor(game.time * 10) % 2 === 0) {
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = '#ff0000';
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, 18, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+    }
+}
+
+function drawEnemy(enemy) {
+    ctx.save();
+    ctx.translate(enemy.x, enemy.y);
+
+    const angleToPlayer = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+    ctx.rotate(angleToPlayer);
+
+    const w = enemy.width;
+    const h = enemy.height;
+
+    // Draw based on enemy type
+    if (enemy.typeKey === 'CRAWLER') {
+        // Low crawling creature - elongated
+        ctx.fillStyle = '#443322';
+        ctx.fillRect(-w/2, -h/2, w, h);
+        ctx.fillStyle = '#332211';
+        ctx.fillRect(-w/2 + 2, -h/2 + 2, w - 4, h - 4);
+
+        // Multiple legs
+        ctx.fillStyle = '#221100';
+        for (let i = 0; i < 3; i++) {
+            ctx.fillRect(-w/2 + i * 8, h/2, 4, 6);
+            ctx.fillRect(-w/2 + i * 8, -h/2 - 6, 4, 6);
+        }
+
+        // Eyes
+        ctx.fillStyle = '#ff6644';
+        ctx.beginPath();
+        ctx.arc(w/3, -2, 3, 0, Math.PI * 2);
+        ctx.arc(w/3, 2, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+    } else if (enemy.typeKey === 'SHAMBLER') {
+        // Bulky shambling zombie
+        ctx.fillStyle = '#445544';
+        ctx.beginPath();
+        ctx.arc(0, 0, w/2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Darker inner
+        ctx.fillStyle = '#334433';
+        ctx.beginPath();
+        ctx.arc(2, 2, w/3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Reaching arms
+        ctx.fillStyle = '#3a4a3a';
+        ctx.fillRect(w/3, -4, 12, 8);
+        ctx.fillRect(w/3 + 10, -6, 6, 12);
+
+        // Glowing eyes
+        ctx.fillStyle = '#88ff88';
+        ctx.beginPath();
+        ctx.arc(4, -4, 3, 0, Math.PI * 2);
+        ctx.arc(4, 4, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+    } else if (enemy.typeKey === 'STALKER') {
+        // Tall thin predator
+        ctx.fillStyle = '#334455';
+        ctx.fillRect(-w/2, -h/2, w, h);
+        ctx.fillStyle = '#223344';
+        ctx.fillRect(-w/2 + 2, -h/2 + 4, w - 4, h - 8);
+
+        // Long arms
+        ctx.fillStyle = '#2a3a4a';
+        ctx.fillRect(w/2, -h/3, 14, 6);
+        ctx.fillRect(w/2, h/3 - 6, 14, 6);
+
+        // Menacing eyes
+        ctx.fillStyle = '#ff2222';
+        ctx.beginPath();
+        ctx.arc(2, -5, 4, 0, Math.PI * 2);
+        ctx.arc(2, 5, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(3, -5, 2, 0, Math.PI * 2);
+        ctx.arc(3, 5, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+    } else if (enemy.typeKey === 'SHIP_BOSS') {
+        // Large mutated creature
+        ctx.fillStyle = '#664444';
+        ctx.beginPath();
+        ctx.arc(0, 0, w/2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pulsating inner mass
+        const pulse = 1 + Math.sin(game.time * 4) * 0.1;
+        ctx.fillStyle = '#553333';
+        ctx.beginPath();
+        ctx.arc(0, 0, w/2.5 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Tentacles
+        ctx.fillStyle = '#775555';
+        for (let i = 0; i < 6; i++) {
+            const angle = (i / 6) * Math.PI * 2;
+            const tx = Math.cos(angle) * w/2;
+            const ty = Math.sin(angle) * w/2;
+            ctx.fillRect(tx - 4, ty - 4, 16, 8);
+        }
+
+        // Central eye
+        ctx.fillStyle = '#ffcc00';
+        ctx.beginPath();
+        ctx.arc(0, 0, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ff0000';
+        ctx.beginPath();
+        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+    } else {
+        // Default
+        ctx.fillStyle = enemy.color;
+        ctx.fillRect(-w/2, -h/2, w, h);
+        ctx.fillStyle = '#ff4444';
+        ctx.beginPath();
+        ctx.arc(w/4, 0, 3, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    ctx.restore();
+
+    // Health bar
+    if (enemy.currentHp < enemy.hp) {
+        const barWidth = Math.max(30, enemy.width);
+        const barHeight = 4;
+        ctx.fillStyle = '#333333';
+        ctx.fillRect(enemy.x - barWidth / 2, enemy.y - enemy.height / 2 - 12, barWidth, barHeight);
+        ctx.fillStyle = '#ff4444';
+        ctx.fillRect(enemy.x - barWidth / 2, enemy.y - enemy.height / 2 - 12,
+                     barWidth * (enemy.currentHp / enemy.hp), barHeight);
+    }
+}
+
+function drawVisionCone() {
+    // Draw darkness everywhere except vision cone
+    ctx.save();
+
+    // Create clipping path for vision cone
+    ctx.beginPath();
+    ctx.moveTo(player.x, player.y);
+
+    const segments = 30;
+    for (let i = 0; i <= segments; i++) {
+        const angle = player.facing - CONFIG.VISION_ANGLE / 2 + (CONFIG.VISION_ANGLE * i / segments);
+        let dist = CONFIG.VISION_RANGE;
+
+        // Raycast to find wall
+        for (let d = 0; d < CONFIG.VISION_RANGE; d += 5) {
+            const px = player.x + Math.cos(angle) * d;
+            const py = player.y + Math.sin(angle) * d;
+            if (checkWallCollision(px, py, 2, 2)) {
+                dist = d;
+                break;
+            }
+        }
+
+        ctx.lineTo(player.x + Math.cos(angle) * dist, player.y + Math.sin(angle) * dist);
+    }
+
+    ctx.closePath();
+
+    // Fill everything else with darkness
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+
+    ctx.restore();
+
+    // Draw darkness overlay (reduced for visibility)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+
+    // Create the darkness by drawing full black then cutting out vision cone
+    ctx.save();
+    ctx.beginPath();
+
+    // Full screen rect
+    const camX = player.x - canvas.width / 2;
+    const camY = player.y - canvas.height / 2;
+    ctx.rect(camX - 100, camY - 100, canvas.width + 200, canvas.height + 200);
+
+    // Cut out vision cone
+    ctx.moveTo(player.x, player.y);
+    for (let i = 0; i <= segments; i++) {
+        const angle = player.facing - CONFIG.VISION_ANGLE / 2 + (CONFIG.VISION_ANGLE * i / segments);
+        let dist = CONFIG.VISION_RANGE;
+
+        for (let d = 0; d < CONFIG.VISION_RANGE; d += 5) {
+            const px = player.x + Math.cos(angle) * d;
+            const py = player.y + Math.sin(angle) * d;
+            if (checkWallCollision(px, py, 2, 2)) {
+                dist = d;
+                break;
+            }
+        }
+
+        ctx.lineTo(player.x + Math.cos(angle) * dist, player.y + Math.sin(angle) * dist);
+    }
+    ctx.closePath();
+
+    ctx.clip('evenodd');
+    ctx.fillRect(camX - 100, camY - 100, canvas.width + 200, canvas.height + 200);
+    ctx.restore();
+
+    // Vision cone tint
+    ctx.fillStyle = COLORS.VISION_CONE;
+    ctx.beginPath();
+    ctx.moveTo(player.x, player.y);
+    for (let i = 0; i <= segments; i++) {
+        const angle = player.facing - CONFIG.VISION_ANGLE / 2 + (CONFIG.VISION_ANGLE * i / segments);
+        let dist = CONFIG.VISION_RANGE;
+
+        for (let d = 0; d < CONFIG.VISION_RANGE; d += 5) {
+            const px = player.x + Math.cos(angle) * d;
+            const py = player.y + Math.sin(angle) * d;
+            if (checkWallCollision(px, py, 2, 2)) {
+                dist = d;
+                break;
+            }
+        }
+
+        ctx.lineTo(player.x + Math.cos(angle) * dist, player.y + Math.sin(angle) * dist);
+    }
+    ctx.closePath();
+    ctx.fill();
+}
+
+function isInVisionCone(x, y) {
+    const dx = x - player.x;
+    const dy = y - player.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist > CONFIG.VISION_RANGE) return false;
+
+    const angleToPoint = Math.atan2(dy, dx);
+    let angleDiff = Math.abs(angleToPoint - player.facing);
+    if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff;
+
+    if (angleDiff > CONFIG.VISION_ANGLE / 2) return false;
+
+    return !lineOfSightBlocked(player.x, player.y, x, y);
+}
+
+function drawSpaceMode() {
+    // Camera follows ship
+    const camX = spaceship.x - canvas.width / 2;
+    const camY = spaceship.y - canvas.height / 2;
+
+    // Deep space background
+    ctx.fillStyle = '#050505';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Nebula background - multiple gradients for depth (like reference)
+    // Large orange sun/nebula in corner
+    const sunGrad = ctx.createRadialGradient(80 - camX * 0.1, 80 - camY * 0.1, 0,
+                                              80 - camX * 0.1, 80 - camY * 0.1, 500);
+    sunGrad.addColorStop(0, '#ffaa44');
+    sunGrad.addColorStop(0.2, '#ff6600');
+    sunGrad.addColorStop(0.4, '#aa3300');
+    sunGrad.addColorStop(0.7, '#442200');
+    sunGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = sunGrad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Secondary nebula cloud
+    const neb2 = ctx.createRadialGradient(canvas.width - 100 - camX * 0.05, canvas.height - 150 - camY * 0.05, 0,
+                                           canvas.width - 100 - camX * 0.05, canvas.height - 150 - camY * 0.05, 300);
+    neb2.addColorStop(0, 'rgba(100, 60, 40, 0.4)');
+    neb2.addColorStop(0.5, 'rgba(60, 30, 20, 0.3)');
+    neb2.addColorStop(1, 'transparent');
+    ctx.fillStyle = neb2;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    ctx.translate(-camX, -camY);
+
+    // Draw distant stars
+    ctx.fillStyle = '#ffffff';
+    for (let i = 0; i < 150; i++) {
+        const x = ((i * 73 + 17) % 2500) - 500;
+        const y = ((i * 137 + 23) % 2000) - 500;
+        const size = i % 3 === 0 ? 2 : 1;
+        ctx.globalAlpha = 0.3 + (i % 5) * 0.15;
+        ctx.fillRect(x, y, size, size);
+    }
+    ctx.globalAlpha = 1;
+
+    // Draw pixelated asteroids (matching reference style)
+    for (const asteroid of asteroids) {
+        drawPixelatedAsteroid(asteroid);
+    }
+
+    // Draw derelict ships
+    for (const ship of derelictShips) {
+        drawDerelictShip(ship);
+    }
+
+    // Draw player ship
+    ctx.save();
+    ctx.translate(spaceship.x, spaceship.y);
+    ctx.rotate(spaceship.angle);
+
+    // Ship body (yellow like reference)
+    ctx.fillStyle = '#ccaa44';
+    ctx.beginPath();
+    ctx.moveTo(12, 0);
+    ctx.lineTo(-8, -6);
+    ctx.lineTo(-4, 0);
+    ctx.lineTo(-8, 6);
+    ctx.closePath();
+    ctx.fill();
+
+    // Cockpit
+    ctx.fillStyle = '#88cc88';
+    ctx.fillRect(2, -2, 6, 4);
+
+    // Wings
+    ctx.fillStyle = '#aa8833';
+    ctx.fillRect(-6, -10, 8, 4);
+    ctx.fillRect(-6, 6, 8, 4);
+
+    // Engine glow
+    if (input.keys['KeyW'] || input.keys['ArrowUp']) {
+        ctx.fillStyle = '#ff8844';
+        ctx.beginPath();
+        ctx.moveTo(-4, 0);
+        ctx.lineTo(-12 - Math.random() * 6, -3);
+        ctx.lineTo(-12 - Math.random() * 6, 3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#ffcc88';
+        ctx.beginPath();
+        ctx.moveTo(-4, 0);
+        ctx.lineTo(-8 - Math.random() * 3, -1);
+        ctx.lineTo(-8 - Math.random() * 3, 1);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    ctx.restore();
+
+    ctx.restore();
+
+    // Space HUD
+    drawSpaceHUD();
+}
+
+function drawPixelatedAsteroid(asteroid) {
+    const x = asteroid.x;
+    const y = asteroid.y;
+    const r = asteroid.radius;
+
+    // Pixelated irregular shape
+    ctx.fillStyle = COLORS.ASTEROID;
+
+    // Draw as a series of rectangles to create pixelated look
+    const pixelSize = Math.max(4, r / 5);
+    for (let px = -r; px < r; px += pixelSize) {
+        for (let py = -r; py < r; py += pixelSize) {
+            const dist = Math.sqrt(px * px + py * py);
+            // Irregular edge
+            const threshold = r * (0.8 + Math.sin(px * 0.5 + py * 0.3) * 0.2);
+            if (dist < threshold) {
+                ctx.fillRect(x + px, y + py, pixelSize, pixelSize);
+            }
+        }
+    }
+
+    // Darker craters
+    ctx.fillStyle = COLORS.ASTEROID_DARK;
+    const craterCount = Math.floor(r / 15) + 1;
+    for (let i = 0; i < craterCount; i++) {
+        const angle = (i / craterCount) * Math.PI * 2 + asteroid.x * 0.01;
+        const dist = r * 0.3 + (i % 3) * r * 0.15;
+        const cx = x + Math.cos(angle) * dist;
+        const cy = y + Math.sin(angle) * dist;
+        const cSize = pixelSize * (1 + i % 2);
+        ctx.fillRect(cx, cy, cSize, cSize);
+    }
+}
+
+function drawDerelictShip(ship) {
+    const sx = ship.x;
+    const sy = ship.y;
+    const sw = ship.width;
+    const sh = ship.height;
+
+    // Main hull
+    ctx.fillStyle = ship.explored ? '#2a2a2a' : '#1f1f1f';
+    ctx.fillRect(sx, sy, sw, sh);
+
+    // Hull plating pattern
+    ctx.fillStyle = '#252525';
+    for (let px = 0; px < sw; px += 20) {
+        for (let py = 0; py < sh; py += 15) {
+            ctx.fillRect(sx + px + 2, sy + py + 2, 16, 11);
+        }
+    }
+
+    // Bridge section
+    ctx.fillStyle = '#333333';
+    ctx.fillRect(sx + sw * 0.7, sy + sh * 0.3, sw * 0.25, sh * 0.4);
+
+    // Engine section
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(sx, sy + sh * 0.2, sw * 0.15, sh * 0.6);
+
+    // Windows (some dark, some with faint glow)
+    for (let i = 0; i < 4; i++) {
+        const wx = sx + sw * 0.3 + i * 25;
+        const wy = sy + sh * 0.4;
+        ctx.fillStyle = i % 3 === 0 ? '#334433' : '#111111';
+        ctx.fillRect(wx, wy, 8, 8);
+    }
+
+    // Damage marks
+    ctx.fillStyle = '#0f0f0f';
+    ctx.fillRect(sx + sw * 0.4, sy + 2, 15, 8);
+    ctx.fillRect(sx + sw * 0.6, sy + sh - 10, 20, 8);
+
+    // Docking indicator
+    if (ship.dockable) {
+        const dist = Math.sqrt((sx + sw / 2 - spaceship.x) ** 2 + (sy + sh / 2 - spaceship.y) ** 2);
+        if (dist < 120) {
+            // Docking highlight
+            ctx.strokeStyle = '#44ff44';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(sx - 5, sy - 5, sw + 10, sh + 10);
+
+            // Dock prompt
+            ctx.fillStyle = '#44ff44';
+            ctx.font = 'bold 12px Courier New';
+            ctx.textAlign = 'center';
+            ctx.fillText('[E] DOCK', sx + sw / 2, sy - 20);
+
+            // Docking port glow
+            ctx.fillStyle = 'rgba(68, 255, 68, 0.3)';
+            ctx.fillRect(sx + sw - 5, sy + sh / 2 - 10, 10, 20);
+        }
+    }
+
+    // Ship name
+    ctx.fillStyle = '#888888';
+    ctx.font = '11px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText(ship.name, sx + sw / 2, sy + sh + 18);
+}
+
+function drawHUD() {
+    // O2 Bar
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(10, 10, 200, 25);
+
+    ctx.fillStyle = '#333333';
+    ctx.fillRect(15, 15, 190, 15);
+
+    const o2Color = player.o2 < 20 ? '#ff4444' : COLORS.O2_BAR;
+    ctx.fillStyle = o2Color;
+    ctx.fillRect(15, 15, 190 * (player.o2 / player.maxO2), 15);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '12px Courier New';
+    ctx.textAlign = 'left';
+    ctx.fillText(`O2: ${Math.floor(player.o2)}/${player.maxO2}`, 20, 26);
+
+    // HP Bar
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(10, 40, 200, 25);
+
+    ctx.fillStyle = '#333333';
+    ctx.fillRect(15, 45, 190, 15);
+
+    ctx.fillStyle = COLORS.HP_BAR;
+    ctx.fillRect(15, 45, 190 * (player.hp / player.maxHp), 15);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(`HP: ${Math.floor(player.hp)}/${player.maxHp}`, 20, 56);
+
+    // Current weapon
+    const weapon = player.weapons[player.currentWeapon];
+    if (weapon) {
+        const weaponDef = WEAPONS[weapon.type];
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(canvas.width - 160, canvas.height - 50, 150, 40);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '14px Courier New';
+        ctx.textAlign = 'right';
+        ctx.fillText(weaponDef.name, canvas.width - 20, canvas.height - 30);
+
+        if (weaponDef.type === 'ranged') {
+            ctx.fillText(`${weapon.currentAmmo}/${weaponDef.magSize}`, canvas.width - 20, canvas.height - 15);
+        }
+    }
+
+    // Inventory quick slots
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(10, canvas.height - 50, 200, 40);
+
+    for (let i = 0; i < 6; i++) {
+        ctx.strokeStyle = '#444444';
+        ctx.strokeRect(15 + i * 32, canvas.height - 45, 28, 28);
+
+        if (player.inventory[i]) {
+            ctx.fillStyle = player.inventory[i].color;
+            ctx.fillRect(17 + i * 32, canvas.height - 43, 24, 24);
+        }
+
+        ctx.fillStyle = '#666666';
+        ctx.font = '10px Courier New';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${i + 1}`, 29 + i * 32, canvas.height - 20);
+    }
+
+    // Messages
+    ctx.textAlign = 'left';
+    for (let i = 0; i < game.messages.length; i++) {
+        const msg = game.messages[i];
+        const age = game.time - msg.time;
+        if (age < 5) {
+            ctx.globalAlpha = 1 - (age / 5);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '12px Courier New';
+            ctx.fillText(msg.text, 10, canvas.height - 70 - i * 18);
+        }
+    }
+    ctx.globalAlpha = 1;
+
+    // O2 warning
+    if (player.o2 < 20) {
+        ctx.fillStyle = `rgba(255, 0, 0, ${0.3 + Math.sin(game.time * 5) * 0.2})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Life support indicator
+    if (currentRoom && currentRoom.hasLifeSupport) {
+        ctx.fillStyle = '#00ff00';
+        ctx.font = '14px Courier New';
+        ctx.textAlign = 'center';
+        ctx.fillText('[ LIFE SUPPORT ACTIVE - O2 REFILLING ]', canvas.width / 2, 80);
+    }
+}
+
+function drawSpaceHUD() {
+    // Hull
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(10, 10, 200, 25);
+    ctx.fillStyle = '#333333';
+    ctx.fillRect(15, 15, 190, 15);
+    ctx.fillStyle = '#44aa44';
+    ctx.fillRect(15, 15, 190 * (spaceship.hull / 100), 15);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '12px Courier New';
+    ctx.textAlign = 'left';
+    ctx.fillText(`HULL: ${spaceship.hull}/100`, 20, 26);
+
+    // Ship info
+    ctx.fillStyle = '#666666';
+    ctx.font = '14px Courier New';
+    ctx.fillText(`Ship ${game.currentShip + 1}/3 Explored`, 10, 50);
+
+    // Instructions
+    ctx.fillStyle = '#888888';
+    ctx.textAlign = 'center';
+    ctx.fillText('WASD to move | E to dock with ships', canvas.width / 2, canvas.height - 20);
+
+    // Messages
+    ctx.textAlign = 'left';
+    for (let i = 0; i < game.messages.length; i++) {
+        const msg = game.messages[i];
+        const age = game.time - msg.time;
+        if (age < 5) {
+            ctx.globalAlpha = 1 - (age / 5);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '12px Courier New';
+            ctx.fillText(msg.text, 10, canvas.height - 70 - i * 18);
+        }
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawDebug() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(canvas.width - 200, 10, 190, 180);
+
+    ctx.fillStyle = '#00ff00';
+    ctx.font = '11px Courier New';
+    ctx.textAlign = 'left';
+
+    const debugInfo = [
+        `Player: (${Math.floor(player.x)}, ${Math.floor(player.y)})`,
+        `HP: ${Math.floor(player.hp)}/${player.maxHp}`,
+        `O2: ${player.o2.toFixed(1)}/${player.maxO2}`,
+        `Facing: ${(player.facing * 180 / Math.PI).toFixed(0)}°`,
+        `Running: ${player.isRunning === true ? 'YES' : 'no'}`,
+        `Enemies: ${enemies.length}`,
+        `Room: ${currentRoom?.type || 'none'}`,
+        `Ship: ${game.currentShip + 1}`,
+        `Mode: ${game.mode}`,
+        `State: ${game.state}`,
+        `FPS: ${Math.round(1 / game.deltaTime)}`
+    ];
+
+    debugInfo.forEach((text, i) => {
+        ctx.fillText(text, canvas.width - 195, 25 + i * 15);
+    });
+}
+
+function drawGameOver() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#aa0000';
+    ctx.font = 'bold 48px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 50);
+
+    ctx.fillStyle = '#888888';
+    ctx.font = '16px Courier New';
+    ctx.fillText(game.deathMessage || 'You died.', canvas.width / 2, canvas.height / 2);
+
+    ctx.fillStyle = '#aa4400';
+    ctx.font = '14px Courier New';
+    ctx.fillText('Click to try again', canvas.width / 2, canvas.height / 2 + 60);
+}
+
+function drawVictory() {
+    ctx.fillStyle = 'rgba(0, 20, 0, 0.9)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#00aa00';
+    ctx.font = 'bold 48px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText('ESCAPED!', canvas.width / 2, canvas.height / 2 - 50);
+
+    ctx.fillStyle = '#88ff88';
+    ctx.font = '16px Courier New';
+    ctx.fillText('You escaped the derelict ships!', canvas.width / 2, canvas.height / 2);
+
+    ctx.fillStyle = '#44aa44';
+    ctx.font = '14px Courier New';
+    ctx.fillText('Click to play again', canvas.width / 2, canvas.height / 2 + 60);
+}
+
+// === INPUT HANDLERS ===
+document.addEventListener('keydown', (e) => {
+    input.keys[e.code] = true;
+
+    if (e.code === 'KeyQ') {
+        game.debugMode = !game.debugMode;
+    }
+});
+
+document.addEventListener('keyup', (e) => {
+    input.keys[e.code] = false;
+});
+
+canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    input.mouse.x = e.clientX - rect.left;
+    input.mouse.y = e.clientY - rect.top;
+
+    // In ship mode, convert to world coords
+    if (game.mode === 'ship' && game.state === 'playing') {
+        input.mouse.x += player.x - canvas.width / 2;
+        input.mouse.y += player.y - canvas.height / 2;
+    }
+    // In space mode, convert to world coords
+    if (game.mode === 'space') {
+        input.mouse.x += spaceship.x - canvas.width / 2;
+        input.mouse.y += spaceship.y - canvas.height / 2;
+    }
+});
+
+canvas.addEventListener('mousedown', (e) => {
+    input.mouse.down = true;
+
+    if (game.state === 'menu') {
+        startGame();
+    } else if (game.state === 'gameover' || game.state === 'victory') {
+        startGame();
+    }
+});
+
+canvas.addEventListener('mouseup', () => {
+    input.mouse.down = false;
+});
+
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+// === GAME LOOP ===
+function startGame() {
+    game.state = 'playing';
+    game.mode = 'ship';
+    game.currentShip = 0;
+    game.messages = [];
+
+    player.hp = 100;
+    player.o2 = 100;
+    player.weapons = [{ type: 'PIPE', currentAmmo: 0, totalAmmo: 0 }];
+    player.currentWeapon = 0;
+    player.inventory = [];
+    player.iframes = 0;
+
+    generateShip(0);
+
+    addMessage('You awaken on a derelict ship...');
+    addMessage('Find the escape pod. Your O2 is draining.');
+}
+
+function gameLoop(timestamp) {
+    const dt = Math.min((timestamp - game.lastTime) / 1000, 0.1);
+    game.lastTime = timestamp;
+
+    update(dt);
+    draw();
+
+    requestAnimationFrame(gameLoop);
+}
+
+// Start
+game.lastTime = performance.now();
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>

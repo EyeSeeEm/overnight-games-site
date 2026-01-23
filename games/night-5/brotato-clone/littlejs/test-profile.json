@@ -1,0 +1,24 @@
+{
+  "game_info": {
+    "name": "Brotato Clone",
+    "genre": "arena survivor roguelike"
+  },
+  "input_scheme": {
+    "movement": "wasd",
+    "action": "auto_attack",
+    "menu_navigation": "arrows_and_enter",
+    "special": ["space"]
+  },
+  "goals": [
+    "Navigate character selection menu",
+    "Survive enemy waves in arena",
+    "Collect XP and level up",
+    "Pick upgrades between waves"
+  ],
+  "success_conditions": {
+    "survive_30s": true,
+    "reach_wave": 2,
+    "collect_xp": true
+  },
+  "notes": "Menu uses arrows+Enter, gameplay uses WASD, auto-attack is automatic"
+}

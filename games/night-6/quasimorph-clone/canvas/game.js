@@ -2512,10 +2512,15 @@ function renderGameOver() {
     ctx.fillStyle = 'rgba(20, 0, 0, 0.9)';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    // Static effect
+    // Static effect - use deterministic positions based on time for stable visuals
+    const time = Math.floor(Date.now() / 100); // Update every 100ms for subtle animation
     for (let i = 0; i < 100; i++) {
-        ctx.fillStyle = `rgba(255, 0, 0, ${Math.random() * 0.1})`;
-        ctx.fillRect(Math.random() * CANVAS_WIDTH, Math.random() * CANVAS_HEIGHT, 2, 2);
+        const seed = (time + i * 17) % 1000;
+        const x = ((seed * 7919) % 1000) / 1000 * CANVAS_WIDTH;
+        const y = ((seed * 104729) % 1000) / 1000 * CANVAS_HEIGHT;
+        const alpha = ((seed * 31337) % 100) / 1000;
+        ctx.fillStyle = `rgba(255, 0, 0, ${alpha})`;
+        ctx.fillRect(x, y, 2, 2);
     }
 
     ctx.font = 'bold 48px Arial';
@@ -2564,11 +2569,14 @@ function renderVictory() {
     ctx.fillStyle = 'rgba(0, 20, 0, 0.9)';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    // Particle effect
+    // Particle effect - use deterministic positions for stable animation
     for (let i = 0; i < 50; i++) {
-        ctx.fillStyle = `rgba(68, 255, 68, ${Math.random() * 0.2})`;
+        const seed = (i * 7919) % 1000;
+        const x = ((seed * 104729) % 1000) / 1000 * CANVAS_WIDTH;
         const y = (Date.now() / 20 + i * 12) % CANVAS_HEIGHT;
-        ctx.fillRect(Math.random() * CANVAS_WIDTH, y, 2, 4);
+        const alpha = ((seed * 31337) % 200) / 1000;
+        ctx.fillStyle = `rgba(68, 255, 68, ${alpha})`;
+        ctx.fillRect(x, y, 2, 4);
     }
 
     ctx.font = 'bold 48px Arial';

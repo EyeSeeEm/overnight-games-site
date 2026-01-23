@@ -1,0 +1,23 @@
+{
+  "game_info": {
+    "name": "XCOM Classic Clone",
+    "genre": "isometric turn-based tactics"
+  },
+  "input_scheme": {
+    "movement": "click_to_move",
+    "action": "click_to_shoot",
+    "special": ["space", "tab", "r", "e"]
+  },
+  "goals": [
+    "Select and move soldiers",
+    "Find and engage alien enemies",
+    "Use cover and tactical positioning",
+    "Complete mission objectives"
+  ],
+  "success_conditions": {
+    "survive_30s": true,
+    "move_units": 2,
+    "engage_enemies": true
+  },
+  "notes": "Should be ISOMETRIC perspective, not top-down"
+}

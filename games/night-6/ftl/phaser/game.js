@@ -179,6 +179,7 @@ class GameScene extends Phaser.Scene {
     create() {
         gameState = 'map';
         combatPaused = false;
+        gamePaused = false;
 
         // Initialize player ship
         this.playerShip = {
@@ -1297,7 +1298,7 @@ class GameScene extends Phaser.Scene {
         this.hullText.setText(`Hull: ${this.playerShip.hull}/${this.playerShip.maxHull}`);
 
         // Resources
-        this.resourceText.setText(`Scrap: ${this.playerShip.scrap} | Fuel: ${this.playerShip.fuel} | Crew: ${this.playerShip.crew}`);
+        this.resourceText.setText(`Scrap: ${this.playerShip.scrap} | Fuel: ${this.playerShip.fuel} | Crew: ${this.crew.length}`);
 
         // Sector
         this.sectorText.setText(`Sector ${this.currentSector}/${this.maxSectors}`);

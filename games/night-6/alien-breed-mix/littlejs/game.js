@@ -459,26 +459,28 @@ class Player extends EngineObject {
             return;
         }
 
-        // Screen shake (reduced per feedback)
-        // Screen shake removed - was too strong
+        // Calculate aim direction from player to mouse position in world coordinates
+        const mouseWorld = screenToWorld(mousePos);
+        const aimDir = mouseWorld.subtract(this.pos);
+        const aimAngle = Math.atan2(aimDir.y, aimDir.x);
 
         if (weapon.pellets) {
             // Shotgun
             for (let i = 0; i < weapon.pellets; i++) {
                 const spread = (rand() - 0.5) * weapon.spread * Math.PI / 180;
                 const dir = vec2(
-                    Math.cos(this.angle + spread),
-                    Math.sin(this.angle + spread)
+                    Math.cos(aimAngle + spread),
+                    Math.sin(aimAngle + spread)
                 );
-                bullets.push(new Bullet(this.pos.add(this.facing.scale(0.5)), dir, weapon.damage, weapon.speed));
+                bullets.push(new Bullet(this.pos.add(dir.scale(0.5)), dir, weapon.damage, weapon.speed));
             }
         } else {
             const spread = (rand() - 0.5) * weapon.spread * Math.PI / 180;
             const dir = vec2(
-                Math.cos(this.angle + spread),
-                Math.sin(this.angle + spread)
+                Math.cos(aimAngle + spread),
+                Math.sin(aimAngle + spread)
             );
-            bullets.push(new Bullet(this.pos.add(this.facing.scale(0.5)), dir, weapon.damage, weapon.speed));
+            bullets.push(new Bullet(this.pos.add(dir.scale(0.5)), dir, weapon.damage, weapon.speed));
         }
 
         currentMag--;

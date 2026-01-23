@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dome Keeper Clone</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+        #gameCanvas {
+            border: 2px solid #444;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        #startScreen, #gameOverScreen, #victoryScreen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #ffa;
+            z-index: 100;
+        }
+        #startScreen h1, #victoryScreen h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #fa0;
+        }
+        #startScreen h2 {
+            font-size: 16px;
+            color: #888;
+            margin-bottom: 30px;
+        }
+        #gameOverScreen h1 {
+            font-size: 48px;
+            color: #f44;
+            text-shadow: 0 0 20px #f44;
+            margin-bottom: 20px;
+        }
+        #victoryScreen h1 {
+            color: #0f0;
+            text-shadow: 0 0 10px #0f0;
+        }
+        .controls {
+            font-size: 12px;
+            color: #666;
+            margin-top: 20px;
+            line-height: 1.8;
+        }
+        button {
+            background: transparent;
+            border: 2px solid #fa0;
+            color: #fa0;
+            padding: 15px 40px;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #fa0;
+            color: #000;
+            box-shadow: 0 0 20px #fa0;
+        }
+        #gameOverScreen button {
+            border-color: #f44;
+            color: #f44;
+        }
+        #gameOverScreen button:hover {
+            background: #f44;
+            color: #000;
+        }
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <div id="startScreen">
+        <h1>DOME KEEPER</h1>
+        <h2>Mine. Defend. Survive.</h2>
+        <button onclick="startGame()">START MINING</button>
+        <div class="controls">
+            WASD - Move | Space - Interact/Dig<br>
+            Mouse - Aim Laser | Click - Fire<br>
+            E - Upgrade Menu | Q - Debug<br>
+            Survive 10 waves to win!
+        </div>
+    </div>
+
+    <div id="gameOverScreen" class="hidden">
+        <h1>DOME DESTROYED</h1>
+        <p>Wave reached: <span id="waveReached">1</span></p>
+        <button onclick="restartGame()">TRY AGAIN</button>
+    </div>
+
+    <div id="victoryScreen" class="hidden">
+        <h1>VICTORY!</h1>
+        <p>You survived all 10 waves!</p>
+        <button onclick="restartGame()">PLAY AGAIN</button>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

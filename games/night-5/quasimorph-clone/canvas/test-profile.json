@@ -1,0 +1,23 @@
+{
+  "game_info": {
+    "name": "Quasimorph Clone",
+    "genre": "turn-based tactical roguelike"
+  },
+  "input_scheme": {
+    "movement": "click_to_move",
+    "action": "click_enemy_to_attack",
+    "special": ["space", "tab", "e"]
+  },
+  "goals": [
+    "Move character by clicking tiles",
+    "Attack enemies by clicking them",
+    "Wait for enemy turn to complete",
+    "Explore rooms and collect items"
+  ],
+  "success_conditions": {
+    "survive_30s": true,
+    "complete_turns": 5,
+    "kill_enemies": 1
+  },
+  "notes": "Turn-based - player acts then enemies act. Enemy turn should NOT darken screen."
+}

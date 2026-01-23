@@ -759,7 +759,6 @@ class Enemy {
         this.credits = data.credits;
         this.behavior = data.behavior;
         this.hitFlash = 0; // Timer for white flash on hit
-        this.spawnTimer = 300; // Spawn animation (grow in over 300ms)
 
         // Behavior-specific
         this.alerted = false;
@@ -793,11 +792,7 @@ class Enemy {
             this.hitFlash -= dt * 1000;
         }
 
-        // Update spawn timer
-        if (this.spawnTimer > 0) {
-            this.spawnTimer -= dt * 1000;
-            return; // Don't move or attack while spawning
-        }
+        // No spawn animation - enemies are immediately present in rooms
 
         if (this.stunned) {
             this.stunTimer -= dt * 1000;
@@ -1301,12 +1296,7 @@ class Enemy {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // Spawn animation (scale up from 0)
-        if (this.spawnTimer > 0) {
-            const scale = 1 - (this.spawnTimer / 300);
-            ctx.scale(scale, scale);
-            ctx.globalAlpha = scale;
-        }
+        // No spawn animation - enemies render at full size immediately
 
         ctx.rotate(this.angle);
 
@@ -1363,140 +1353,191 @@ class Enemy {
 }
 
 // ============================================================================
-// LEVEL GENERATION
+// LEVEL GENERATION - Exploration-based maze with rooms connected by corridors
 // ============================================================================
+
+// Exit door object for deck progression
+let exitDoor = null;
+
 function generateLevel(deck) {
     walls = [];
     doors = [];
     enemies = [];
     pickups = [];
     rooms = [];
-    decals = []; // Clear blood splatters
+    decals = [];
+    exitDoor = null;
 
-    // Level size based on deck
-    const levelWidth = 20 + deck * 5;
-    const levelHeight = 15 + deck * 3;
+    // Number of rooms scales with deck (8-14 rooms)
+    const numRooms = 6 + deck * 2 + Math.floor(Math.random() * 3);
 
-    // Generate room layout
-    const roomGrid = [];
-    const roomWidth = 10;
-    const roomHeight = 8;
-    const gridCols = Math.floor(levelWidth / roomWidth);
-    const gridRows = Math.floor(levelHeight / roomHeight);
+    // Room sizes vary
+    const ROOM_MIN = 8;
+    const ROOM_MAX = 14;
+    const CORRIDOR_WIDTH = 3;
 
-    // Create rooms
-    for (let gy = 0; gy < gridRows; gy++) {
-        roomGrid[gy] = [];
-        for (let gx = 0; gx < gridCols; gx++) {
-            const room = {
-                gx, gy,
-                x: gx * roomWidth * TILE_SIZE,
-                y: gy * roomHeight * TILE_SIZE,
-                width: roomWidth * TILE_SIZE,
-                height: roomHeight * TILE_SIZE,
-                type: 'normal',
-                cleared: false,
-                enemies: [],
-                keycardRequired: null
-            };
-            roomGrid[gy][gx] = room;
-            rooms.push(room);
+    // Use maze-like generation: place rooms, connect with corridors
+    const placedRooms = [];
+
+    // Start room at origin
+    const startRoom = {
+        id: 0,
+        x: TILE_SIZE * 2,
+        y: TILE_SIZE * 2,
+        width: 10 * TILE_SIZE,
+        height: 8 * TILE_SIZE,
+        type: 'start',
+        cleared: true,
+        enemies: [],
+        connections: [],
+        visited: true
+    };
+    placedRooms.push(startRoom);
+    rooms.push(startRoom);
+
+    // Place remaining rooms by branching from existing ones
+    let roomId = 1;
+    let attempts = 0;
+    const maxAttempts = 500;
+
+    while (placedRooms.length < numRooms && attempts < maxAttempts) {
+        attempts++;
+
+        // Pick a random existing room to branch from
+        const sourceRoom = placedRooms[Math.floor(Math.random() * placedRooms.length)];
+
+        // Pick a random direction (0=right, 1=down, 2=left, 3=up)
+        const dir = Math.floor(Math.random() * 4);
+
+        // Random room size
+        const roomW = (ROOM_MIN + Math.floor(Math.random() * (ROOM_MAX - ROOM_MIN))) * TILE_SIZE;
+        const roomH = (ROOM_MIN + Math.floor(Math.random() * (ROOM_MAX - ROOM_MIN))) * TILE_SIZE;
+
+        // Corridor length
+        const corridorLen = (4 + Math.floor(Math.random() * 4)) * TILE_SIZE;
+
+        // Calculate new room position
+        let newX, newY;
+        switch (dir) {
+            case 0: // Right
+                newX = sourceRoom.x + sourceRoom.width + corridorLen;
+                newY = sourceRoom.y + Math.floor((sourceRoom.height - roomH) / 2);
+                break;
+            case 1: // Down
+                newX = sourceRoom.x + Math.floor((sourceRoom.width - roomW) / 2);
+                newY = sourceRoom.y + sourceRoom.height + corridorLen;
+                break;
+            case 2: // Left
+                newX = sourceRoom.x - roomW - corridorLen;
+                newY = sourceRoom.y + Math.floor((sourceRoom.height - roomH) / 2);
+                break;
+            case 3: // Up
+                newX = sourceRoom.x + Math.floor((sourceRoom.width - roomW) / 2);
+                newY = sourceRoom.y - roomH - corridorLen;
+                break;
         }
+
+        // Check for overlap with existing rooms (with margin)
+        const margin = TILE_SIZE * 3;
+        let overlaps = false;
+        for (const room of placedRooms) {
+            if (newX - margin < room.x + room.width &&
+                newX + roomW + margin > room.x &&
+                newY - margin < room.y + room.height &&
+                newY + roomH + margin > room.y) {
+                overlaps = true;
+                break;
+            }
+        }
+
+        if (overlaps || newX < 0 || newY < 0) continue;
+
+        // Create the new room
+        const newRoom = {
+            id: roomId++,
+            x: newX,
+            y: newY,
+            width: roomW,
+            height: roomH,
+            type: 'normal',
+            cleared: false,
+            enemies: [],
+            connections: [],
+            visited: false
+        };
+
+        // Connect rooms
+        sourceRoom.connections.push({ room: newRoom, direction: dir });
+        newRoom.connections.push({ room: sourceRoom, direction: (dir + 2) % 4 });
+
+        placedRooms.push(newRoom);
+        rooms.push(newRoom);
     }
 
-    // Set start room (empty)
-    const startRoom = roomGrid[0][0];
-    startRoom.type = 'start';
-    startRoom.cleared = true;
-
-    // Set keycard rooms - improved placement for better pacing
-    if (gridCols > 1) {
-        // Place keycard in a room that requires some exploration
-        // Not too close to start, but reachable without the keycard
-        let keycardGx = Math.min(gridCols - 2, 1 + Math.floor(Math.random() * (gridCols > 2 ? 1 : 1)));
-        let keycardGy = Math.floor(Math.random() * gridRows);
-        // Ensure it's not start room
-        if (keycardGx === 0 && keycardGy === 0) {
-            keycardGx = 1;
-        }
-        const keycardRoom = roomGrid[keycardGy][keycardGx];
-        keycardRoom.type = 'keycard';
-        keycardRoom.keycard = 'green';
+    // Assign special rooms
+    // Keycard room: somewhere in the middle of the path
+    const keycardRoomIndex = Math.floor(rooms.length * 0.4) + Math.floor(Math.random() * Math.floor(rooms.length * 0.3));
+    if (rooms[keycardRoomIndex] && rooms[keycardRoomIndex].type !== 'start') {
+        rooms[keycardRoomIndex].type = 'keycard';
+        rooms[keycardRoomIndex].keycard = 'green';
     }
 
-    // Set locked sections (everything beyond column 1 requires keycard)
-    if (gridCols > 2) {
-        for (let gx = 2; gx < gridCols; gx++) {
-            for (let gy = 0; gy < gridRows; gy++) {
-                roomGrid[gy][gx].keycardRequired = 'green';
+    // Exit room: the furthest room from start (by connection depth)
+    let maxDepth = 0;
+    let exitRoom = rooms[rooms.length - 1];
+
+    function findDepth(room, visited, depth) {
+        if (visited.has(room.id)) return;
+        visited.add(room.id);
+        if (depth > maxDepth && room.type !== 'start' && room.type !== 'keycard') {
+            maxDepth = depth;
+            exitRoom = room;
+        }
+        for (const conn of room.connections) {
+            findDepth(conn.room, visited, depth + 1);
+        }
+    }
+    findDepth(startRoom, new Set(), 0);
+    exitRoom.type = 'exit';
+    exitRoom.keycardRequired = 'green';
+
+    // Mark rooms after keycard as requiring keycard (simple distance-based)
+    const keycardRoom = rooms.find(r => r.type === 'keycard');
+    if (keycardRoom) {
+        function markLocked(room, visited) {
+            if (visited.has(room.id)) return;
+            visited.add(room.id);
+            if (room.type === 'exit') {
+                room.keycardRequired = 'green';
+            }
+            for (const conn of room.connections) {
+                markLocked(conn.room, visited);
+            }
+        }
+        // Start marking from keycard room's deeper connections
+        for (const conn of keycardRoom.connections) {
+            if (conn.room.type !== 'start') {
+                markLocked(conn.room, new Set([startRoom.id, keycardRoom.id]));
             }
         }
     }
 
-    // Exit room
-    const exitRoom = roomGrid[gridRows - 1][gridCols - 1];
-    exitRoom.type = 'exit';
-
-    // Generate walls
+    // Build walls for each room
     for (const room of rooms) {
-        // Room walls
-        const x = room.x;
-        const y = room.y;
-        const w = room.width;
-        const h = room.height;
+        buildRoomWalls(room);
 
-        // Top wall
-        walls.push({ x, y, w, h: TILE_SIZE });
-        // Bottom wall
-        walls.push({ x, y: y + h - TILE_SIZE, w, h: TILE_SIZE });
-        // Left wall
-        walls.push({ x, y: y + TILE_SIZE, w: TILE_SIZE, h: h - TILE_SIZE * 2 });
-        // Right wall
-        walls.push({ x: x + w - TILE_SIZE, y: y + TILE_SIZE, w: TILE_SIZE, h: h - TILE_SIZE * 2 });
-
-        // Add obstacles
+        // Add obstacles (fewer than before)
         if (room.type !== 'start') {
-            const numObstacles = 2 + Math.floor(Math.random() * 4);
+            const numObstacles = 1 + Math.floor(Math.random() * 2);
             for (let i = 0; i < numObstacles; i++) {
-                const ox = x + TILE_SIZE * 2 + Math.random() * (w - TILE_SIZE * 4);
-                const oy = y + TILE_SIZE * 2 + Math.random() * (h - TILE_SIZE * 4);
-                if (Math.random() < 0.3) {
-                    // Crate/pillar (wall)
+                const ox = room.x + TILE_SIZE * 2 + Math.random() * (room.width - TILE_SIZE * 4);
+                const oy = room.y + TILE_SIZE * 2 + Math.random() * (room.height - TILE_SIZE * 4);
+                if (Math.random() < 0.5) {
+                    // Pillar/crate (solid obstacle)
                     walls.push({
-                        x: ox,
-                        y: oy,
-                        w: TILE_SIZE,
-                        h: TILE_SIZE,
-                        destructible: true,
-                        hp: 20
-                    });
-                } else if (Math.random() < 0.6) {
-                    // Crate (drops loot)
-                    const lootRoll = Math.random();
-                    let lootType, specificAmmo;
-                    if (lootRoll < 0.3) {
-                        lootType = 'ammo';
-                    } else if (lootRoll < 0.45) {
-                        // Specific ammo crate
-                        lootType = 'specificAmmo';
-                        const ammoTypes = ['9mm', 'shells', 'rifle'];
-                        if (deck >= 2) ammoTypes.push('plasma');
-                        if (deck >= 3) ammoTypes.push('fuel', 'rockets');
-                        specificAmmo = ammoTypes[Math.floor(Math.random() * ammoTypes.length)];
-                    } else if (lootRoll < 0.6) {
-                        lootType = 'health';
-                    } else if (lootRoll < 0.75) {
-                        lootType = 'shield';
-                    } else {
-                        lootType = 'credits';
-                    }
-                    pickups.push({
-                        x: ox + TILE_SIZE / 2,
-                        y: oy + TILE_SIZE / 2,
-                        type: 'crate',
-                        hp: 15,
-                        lootType: lootType,
-                        specificAmmo: specificAmmo
+                        x: ox, y: oy,
+                        w: TILE_SIZE, h: TILE_SIZE,
+                        destructible: true, hp: 20
                     });
                 } else {
                     // Barrel (explosive)
@@ -1511,122 +1552,237 @@ function generateLevel(deck) {
             }
         }
 
-        // Add enemies to non-start rooms (varied by room type)
+        // Place enemies in rooms (already there, not spawning)
         if (room.type !== 'start') {
-            // Room type affects enemy count
-            let baseEnemies = 2;
-            let randomEnemies = 4;
+            let numEnemies;
             if (room.type === 'keycard') {
-                baseEnemies = 4; // More enemies guarding keycards
-                randomEnemies = 3;
+                numEnemies = 4 + Math.floor(Math.random() * 2) + deck;
             } else if (room.type === 'exit') {
-                baseEnemies = 5; // Most enemies at exit
-                randomEnemies = 4;
-            } else if (room.gx === 0 && room.gy === 0) {
-                // Rooms near start have fewer enemies
-                baseEnemies = 1;
-                randomEnemies = 2;
+                numEnemies = 5 + Math.floor(Math.random() * 3) + deck;
+            } else {
+                numEnemies = 2 + Math.floor(Math.random() * 2) + Math.floor(deck * 0.5);
             }
-            const numEnemies = baseEnemies + Math.floor(Math.random() * randomEnemies) + Math.floor(deck * 0.5);
-            const enemyPool = getEnemyPoolForDeck(deck);
 
+            const enemyPool = getEnemyPoolForDeck(deck);
             for (let i = 0; i < numEnemies; i++) {
                 const type = enemyPool[Math.floor(Math.random() * enemyPool.length)];
-                const ex = x + TILE_SIZE * 2 + Math.random() * (w - TILE_SIZE * 4);
-                const ey = y + TILE_SIZE * 2 + Math.random() * (h - TILE_SIZE * 4);
+                const ex = room.x + TILE_SIZE * 2 + Math.random() * (room.width - TILE_SIZE * 4);
+                const ey = room.y + TILE_SIZE * 2 + Math.random() * (room.height - TILE_SIZE * 4);
                 room.enemies.push({ type, x: ex, y: ey });
             }
         }
 
-        // Add keycard pickup
+        // Keycard pickup
         if (room.type === 'keycard') {
             pickups.push({
-                x: x + w / 2,
-                y: y + h / 2,
+                x: room.x + room.width / 2,
+                y: room.y + room.height / 2,
                 type: 'keycard',
                 keycard: room.keycard
             });
         }
-
-        // Random weapon pickup (10% chance per room, not in start room)
-        if (room.type !== 'start' && Math.random() < 0.1) {
-            const weaponTypes = ['shotgun', 'smg', 'assault'];
-            // Add better weapons in later decks
-            if (deck >= 2) weaponTypes.push('plasma');
-            if (deck >= 3) weaponTypes.push('flamethrower', 'rocket');
-            const weaponType = weaponTypes[Math.floor(Math.random() * weaponTypes.length)];
-            pickups.push({
-                x: x + TILE_SIZE * 2 + Math.random() * (w - TILE_SIZE * 4),
-                y: y + TILE_SIZE * 2 + Math.random() * (h - TILE_SIZE * 4),
-                type: 'weapon',
-                weapon: weaponType
-            });
-        }
     }
 
-    // Create doors between rooms
-    for (let gy = 0; gy < gridRows; gy++) {
-        for (let gx = 0; gx < gridCols; gx++) {
-            const room = roomGrid[gy][gx];
-
-            // Door to right
-            if (gx < gridCols - 1) {
-                const nextRoom = roomGrid[gy][gx + 1];
-                const doorX = room.x + room.width - TILE_SIZE;
-                const doorY = room.y + room.height / 2 - TILE_SIZE;
-
-                doors.push({
-                    x: doorX,
-                    y: doorY,
-                    w: TILE_SIZE * 2,
-                    h: TILE_SIZE * 2,
-                    direction: 'horizontal',
-                    open: false,
-                    keycardRequired: nextRoom.keycardRequired,
-                    room1: room,
-                    room2: nextRoom
-                });
-            }
-
-            // Door to bottom
-            if (gy < gridRows - 1) {
-                const nextRoom = roomGrid[gy + 1][gx];
-                const doorX = room.x + room.width / 2 - TILE_SIZE;
-                const doorY = room.y + room.height - TILE_SIZE;
-
-                doors.push({
-                    x: doorX,
-                    y: doorY,
-                    w: TILE_SIZE * 2,
-                    h: TILE_SIZE * 2,
-                    direction: 'vertical',
-                    open: false,
-                    keycardRequired: nextRoom.keycardRequired,
-                    room1: room,
-                    room2: nextRoom
-                });
+    // Build corridors between connected rooms
+    for (const room of rooms) {
+        for (const conn of room.connections) {
+            // Only build corridor once (from lower ID to higher ID)
+            if (room.id < conn.room.id) {
+                buildCorridor(room, conn.room, conn.direction);
             }
         }
     }
 
-    // Remove wall segments where doors are
-    for (const door of doors) {
-        walls = walls.filter(wall => {
-            return !(wall.x < door.x + door.w &&
-                    wall.x + wall.w > door.x &&
-                    wall.y < door.y + door.h &&
-                    wall.y + wall.h > door.y);
+    // Add doors at corridor entrances
+    for (const room of rooms) {
+        for (const conn of room.connections) {
+            if (room.id < conn.room.id) {
+                createCorridorDoor(room, conn.room, conn.direction);
+            }
+        }
+    }
+
+    // Create exit door in exit room
+    const exitRoomObj = rooms.find(r => r.type === 'exit');
+    if (exitRoomObj) {
+        exitDoor = {
+            x: exitRoomObj.x + exitRoomObj.width / 2 - TILE_SIZE,
+            y: exitRoomObj.y + exitRoomObj.height / 2 - TILE_SIZE,
+            w: TILE_SIZE * 2,
+            h: TILE_SIZE * 2,
+            active: false // Becomes active when room is cleared
+        };
+    }
+
+    // Sparse pickups: only 1 per 2-3 rooms
+    let pickupCounter = 0;
+    for (const room of rooms) {
+        if (room.type === 'start' || room.type === 'keycard') continue;
+        pickupCounter++;
+
+        // One pickup every 2-3 rooms
+        if (pickupCounter % 3 === 0) {
+            const px = room.x + TILE_SIZE * 2 + Math.random() * (room.width - TILE_SIZE * 4);
+            const py = room.y + TILE_SIZE * 2 + Math.random() * (room.height - TILE_SIZE * 4);
+
+            const roll = Math.random();
+            if (roll < 0.4) {
+                pickups.push({ x: px, y: py, type: 'ammo' });
+            } else if (roll < 0.7) {
+                pickups.push({ x: px, y: py, type: 'health' });
+            } else {
+                pickups.push({ x: px, y: py, type: 'credits' });
+            }
+        }
+    }
+
+    // One weapon pickup per deck (not in start)
+    const weaponRoom = rooms[1 + Math.floor(Math.random() * (rooms.length - 2))];
+    if (weaponRoom && weaponRoom.type !== 'start') {
+        const weaponTypes = ['shotgun', 'smg', 'assault'];
+        if (deck >= 2) weaponTypes.push('plasma');
+        if (deck >= 3) weaponTypes.push('flamethrower', 'rocket');
+        const weaponType = weaponTypes[Math.floor(Math.random() * weaponTypes.length)];
+        pickups.push({
+            x: weaponRoom.x + weaponRoom.width / 2,
+            y: weaponRoom.y + weaponRoom.height / 2 + TILE_SIZE,
+            type: 'weapon',
+            weapon: weaponType
         });
     }
 
-    // Spawn player
+    // Spawn player in start room
     player = new Player(
         startRoom.x + startRoom.width / 2,
         startRoom.y + startRoom.height / 2
     );
 
-    // Set current room
     currentRoom = startRoom;
+}
+
+function buildRoomWalls(room) {
+    const x = room.x;
+    const y = room.y;
+    const w = room.width;
+    const h = room.height;
+
+    // Top wall
+    walls.push({ x, y, w, h: TILE_SIZE });
+    // Bottom wall
+    walls.push({ x, y: y + h - TILE_SIZE, w, h: TILE_SIZE });
+    // Left wall
+    walls.push({ x, y: y + TILE_SIZE, w: TILE_SIZE, h: h - TILE_SIZE * 2 });
+    // Right wall
+    walls.push({ x: x + w - TILE_SIZE, y: y + TILE_SIZE, w: TILE_SIZE, h: h - TILE_SIZE * 2 });
+}
+
+function buildCorridor(room1, room2, direction) {
+    const CORRIDOR_WIDTH = 3 * TILE_SIZE;
+
+    let corridorX, corridorY, corridorW, corridorH;
+
+    switch (direction) {
+        case 0: // Right
+            corridorX = room1.x + room1.width - TILE_SIZE;
+            corridorY = room1.y + room1.height / 2 - CORRIDOR_WIDTH / 2;
+            corridorW = room2.x - room1.x - room1.width + TILE_SIZE * 2;
+            corridorH = CORRIDOR_WIDTH;
+            break;
+        case 1: // Down
+            corridorX = room1.x + room1.width / 2 - CORRIDOR_WIDTH / 2;
+            corridorY = room1.y + room1.height - TILE_SIZE;
+            corridorW = CORRIDOR_WIDTH;
+            corridorH = room2.y - room1.y - room1.height + TILE_SIZE * 2;
+            break;
+        case 2: // Left
+            corridorX = room2.x + room2.width - TILE_SIZE;
+            corridorY = room1.y + room1.height / 2 - CORRIDOR_WIDTH / 2;
+            corridorW = room1.x - room2.x - room2.width + TILE_SIZE * 2;
+            corridorH = CORRIDOR_WIDTH;
+            break;
+        case 3: // Up
+            corridorX = room1.x + room1.width / 2 - CORRIDOR_WIDTH / 2;
+            corridorY = room2.y + room2.height - TILE_SIZE;
+            corridorW = CORRIDOR_WIDTH;
+            corridorH = room1.y - room2.y - room2.height + TILE_SIZE * 2;
+            break;
+    }
+
+    // Build corridor walls (horizontal or vertical)
+    if (direction === 0 || direction === 2) {
+        // Horizontal corridor - top and bottom walls
+        walls.push({ x: corridorX, y: corridorY, w: corridorW, h: TILE_SIZE });
+        walls.push({ x: corridorX, y: corridorY + corridorH - TILE_SIZE, w: corridorW, h: TILE_SIZE });
+    } else {
+        // Vertical corridor - left and right walls
+        walls.push({ x: corridorX, y: corridorY, w: TILE_SIZE, h: corridorH });
+        walls.push({ x: corridorX + corridorW - TILE_SIZE, y: corridorY, w: TILE_SIZE, h: corridorH });
+    }
+
+    // Remove walls from room where corridor connects
+    removeWallsAtCorridor(room1, direction, corridorX, corridorY, corridorW, corridorH);
+    removeWallsAtCorridor(room2, (direction + 2) % 4, corridorX, corridorY, corridorW, corridorH);
+}
+
+function removeWallsAtCorridor(room, direction, cx, cy, cw, ch) {
+    // Remove wall segments where corridor connects
+    const openingSize = 3 * TILE_SIZE;
+
+    walls = walls.filter(wall => {
+        // Check if wall overlaps with corridor opening
+        const wallOverlap = wall.x < cx + cw && wall.x + wall.w > cx &&
+                           wall.y < cy + ch && wall.y + wall.h > cy;
+
+        // Only remove room walls that overlap with corridor
+        const isRoomWall = (wall.x >= room.x && wall.x < room.x + room.width &&
+                           wall.y >= room.y && wall.y < room.y + room.height);
+
+        return !(wallOverlap && isRoomWall);
+    });
+}
+
+function createCorridorDoor(room1, room2, direction) {
+    const CORRIDOR_WIDTH = 3 * TILE_SIZE;
+    let doorX, doorY, doorW, doorH;
+
+    switch (direction) {
+        case 0: // Right - door at room1's right edge
+            doorX = room1.x + room1.width - TILE_SIZE;
+            doorY = room1.y + room1.height / 2 - CORRIDOR_WIDTH / 2;
+            doorW = TILE_SIZE * 2;
+            doorH = CORRIDOR_WIDTH;
+            break;
+        case 1: // Down - door at room1's bottom edge
+            doorX = room1.x + room1.width / 2 - CORRIDOR_WIDTH / 2;
+            doorY = room1.y + room1.height - TILE_SIZE;
+            doorW = CORRIDOR_WIDTH;
+            doorH = TILE_SIZE * 2;
+            break;
+        case 2: // Left - door at room1's left edge
+            doorX = room1.x - TILE_SIZE;
+            doorY = room1.y + room1.height / 2 - CORRIDOR_WIDTH / 2;
+            doorW = TILE_SIZE * 2;
+            doorH = CORRIDOR_WIDTH;
+            break;
+        case 3: // Up - door at room1's top edge
+            doorX = room1.x + room1.width / 2 - CORRIDOR_WIDTH / 2;
+            doorY = room1.y - TILE_SIZE;
+            doorW = CORRIDOR_WIDTH;
+            doorH = TILE_SIZE * 2;
+            break;
+    }
+
+    doors.push({
+        x: doorX,
+        y: doorY,
+        w: doorW,
+        h: doorH,
+        direction: (direction === 0 || direction === 2) ? 'horizontal' : 'vertical',
+        open: room1.type === 'start' || room1.cleared, // Start room doors are open
+        keycardRequired: room2.keycardRequired,
+        room1: room1,
+        room2: room2
+    });
 }
 
 function getEnemyPoolForDeck(deck) {
@@ -2006,6 +2162,43 @@ function renderDoors() {
             ctx.lineWidth = 2;
             ctx.strokeRect(drawX, drawY, drawW, drawH);
         }
+    }
+
+    // Render exit door (to next deck)
+    if (exitDoor) {
+        const isVisible = isPointInVision(exitDoor.x + exitDoor.w / 2, exitDoor.y + exitDoor.h / 2);
+        if (!isVisible) return;
+
+        ctx.save();
+
+        // Pulsing glow when active
+        if (exitDoor.active) {
+            const pulse = (Math.sin(gameTime / 200) + 1) * 0.5;
+            ctx.shadowColor = '#00FF00';
+            ctx.shadowBlur = 20 + pulse * 20;
+        }
+
+        // Exit door appearance
+        if (exitDoor.active) {
+            ctx.fillStyle = '#00AA00';
+        } else {
+            ctx.fillStyle = '#444444';
+        }
+        ctx.fillRect(exitDoor.x, exitDoor.y, exitDoor.w, exitDoor.h);
+
+        // EXIT text
+        ctx.fillStyle = exitDoor.active ? '#FFFFFF' : '#666666';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('EXIT', exitDoor.x + exitDoor.w / 2, exitDoor.y + exitDoor.h / 2);
+
+        // Border
+        ctx.strokeStyle = exitDoor.active ? '#00FF00' : '#333333';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(exitDoor.x, exitDoor.y, exitDoor.w, exitDoor.h);
+
+        ctx.restore();
     }
 }
 
@@ -2557,13 +2750,23 @@ function renderObjective() {
         }
     }
 
-    // If all keycards, find exit
+    // If all needed keycards, find exit
     if (!hasTarget) {
         for (const room of rooms) {
             if (room.type === 'exit') {
-                objective = 'Reach the Escape Pod';
-                targetX = room.x + room.width / 2;
-                targetY = room.y + room.height / 2;
+                if (currentDeck < 4) {
+                    objective = `Find EXIT to Deck ${currentDeck + 1}`;
+                } else {
+                    objective = 'Reach the Escape Pod';
+                }
+                // Point to exit door if it exists, otherwise room center
+                if (exitDoor) {
+                    targetX = exitDoor.x + exitDoor.w / 2;
+                    targetY = exitDoor.y + exitDoor.h / 2;
+                } else {
+                    targetX = room.x + room.width / 2;
+                    targetY = room.y + room.height / 2;
+                }
                 hasTarget = true;
                 break;
             }
@@ -3437,28 +3640,30 @@ function collectPickups() {
 }
 
 function checkExit() {
-    // Find exit room
-    for (const room of rooms) {
-        if (room.type === 'exit' && room.cleared) {
-            // Check if player is at exit
-            if (player.x > room.x + room.width / 2 - 50 &&
-                player.x < room.x + room.width / 2 + 50 &&
-                player.y > room.y + room.height / 2 - 50 &&
-                player.y < room.y + room.height / 2 + 50) {
+    // Exit door becomes active when exit room is cleared
+    const exitRoom = rooms.find(r => r.type === 'exit');
+    if (exitRoom && exitRoom.cleared && exitDoor) {
+        exitDoor.active = true;
+    }
 
-                if (currentDeck < 4) {
-                    // Next deck
-                    currentDeck++;
-                    generateLevel(currentDeck);
-                    showFloatingText(player.x, player.y, `DECK ${currentDeck}`, '#FFFFFF');
+    // Check if player is at the exit door
+    if (exitDoor && exitDoor.active) {
+        const dx = player.x - (exitDoor.x + exitDoor.w / 2);
+        const dy = player.y - (exitDoor.y + exitDoor.h / 2);
+        const dist = Math.sqrt(dx * dx + dy * dy);
 
-                    if (currentDeck === 4) {
-                        selfDestructActive = true;
-                    }
-                } else {
-                    // Victory!
-                    gameState = 'victory';
+        if (dist < 40) {
+            // Player reached the exit!
+            if (currentDeck < 4) {
+                currentDeck++;
+                generateLevel(currentDeck);
+                showFloatingText(player.x, player.y, `DECK ${currentDeck}`, '#FFFFFF');
+
+                if (currentDeck === 4) {
+                    selfDestructActive = true;
                 }
+            } else {
+                gameState = 'victory';
             }
         }
     }
@@ -3480,9 +3685,6 @@ function resolvePlayerEnemyCollisions() {
     if (!player) return;
 
     for (const enemy of enemies) {
-        // Skip enemies that are spawning
-        if (enemy.spawnTimer > 0) continue;
-
         const dx = player.x - enemy.x;
         const dy = player.y - enemy.y;
         const dist = Math.sqrt(dx * dx + dy * dy);

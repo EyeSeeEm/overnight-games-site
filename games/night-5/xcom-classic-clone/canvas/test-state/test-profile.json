@@ -1,0 +1,355 @@
+{
+  "game_info": {
+    "name": "XCOM Classic Clone",
+    "type": "turn-based tactical strategy",
+    "description": "Tile-based tactical combat where soldiers with limited Time Units (action points) fight aliens. Each action costs TUs - moving, turning, shooting. Soldiers can kneel for accuracy, take snap/aimed/auto shots, and trigger reaction fire when enemies move in their line of sight. Permadeath creates tension.",
+    "framework": "canvas",
+    "gdd_reference": "C:/Dev/overnight-games/gdds-v2/xcom-classic-clone.md"
+  },
+
+  "core_loop": {
+    "description": "Select soldier -> spend TUs on actions (move/shoot/use item) -> end turn -> watch alien turn -> repeat. One tactical turn involves positioning multiple soldiers and engaging visible enemies.",
+    "phases": [
+      "Player turn: TUs regenerate, check panic, take actions",
+      "Player actions: Select units, move, shoot, use items until TUs spent or End Turn",
+      "Alien turn: AI moves and shoots, player units can reaction fire",
+      "Victory check: All aliens dead = win, all soldiers dead = lose"
+    ],
+    "estimated_time_per_turn_sec": 30,
+    "turns_for_meaningful_test": 5
+  },
+
+  "recommended_test_duration_sec": 180,
+  "test_duration_rationale": "5 turns at ~30 sec each = 150 sec, plus menu navigation and potential combat resolution. 3 minutes gives enough time to see movement, shooting, alien AI response, and at least one engagement.",
+
+  "input_scheme": {
+    "primary_input": "mouse",
+    "secondary_input": "keyboard",
+    "controls": {
+      "select_unit": {
+        "method": "left_click",
+        "target": "soldier sprite on map",
+        "notes": "Click directly on soldier to select them"
+      },
+      "move_unit": {
+        "method": "left_click",
+        "target": "destination tile",
+        "notes": "After selecting soldier, click empty tile to move. TU cost shown (4 per tile flat, 6-8 difficult terrain)"
+      },
+      "shoot": {
+        "method": "action_button_then_click",
+        "notes": "Select soldier -> click shoot action button -> choose shot type (snap/aimed/auto) -> click target alien"
+      },
+      "kneel": {
+        "method": "action_button",
+        "tu_cost": 4,
+        "notes": "Kneeling gives +15% accuracy bonus"
+      },
+      "turn_facing": {
+        "method": "action_button_or_movement",
+        "tu_cost": "1 per 45 degrees",
+        "notes": "8 direction facing system affects vision cone and reaction fire"
+      },
+      "end_turn": {
+        "method": "button_click",
+        "target": "End Turn button in UI",
+        "notes": "Passes to alien turn. Remaining TUs contribute to reaction fire chances"
+      },
+      "use_item": {
+        "method": "action_button",
+        "notes": "Grenades, medi-kits, etc. from inventory"
+      }
+    },
+    "ui_elements": {
+      "action_bar": "Bottom of screen - movement, shoot modes, kneel, inventory, end turn",
+      "tu_display": "Shows current/max TUs for selected soldier",
+      "unit_info": "Stats panel showing health, TU, equipment"
+    }
+  },
+
+  "combat_profile": {
+    "type": "turn_based_time_units",
+    "turn_structure": {
+      "player_phase": true,
+      "enemy_phase": true,
+      "simultaneous": false
+    },
+    "action_point_system": {
+      "name": "Time Units (TU)",
+      "regeneration": "full at turn start",
+      "typical_pool": "50-80 TU per soldier",
+      "move_cost": "4-8 TU per tile depending on terrain",
+      "shoot_cost_percentage": "25-80% of base TU depending on shot type"
+    },
+    "shot_types": {
+      "snap_shot": {
+        "tu_percent": "25-35%",
+        "accuracy": "low-medium",
+        "allows_reaction_fire": true
+      },
+      "aimed_shot": {
+        "tu_percent": "50-80%",
+        "accuracy": "high",
+        "allows_reaction_fire": false
+      },
+      "auto_shot": {
+        "tu_percent": "35-45%",
+        "accuracy": "low",
+        "rounds": 3,
+        "allows_reaction_fire": true
+      }
+    },
+    "reaction_fire": {
+      "description": "Soldiers with remaining TUs may fire when enemies move in LOS",
+      "formula": "(Soldier Reactions * Soldier TU Remaining) vs (Enemy Reactions * Enemy TU Spent)"
+    },
+    "cover_system": {
+      "types": ["none", "partial", "full"],
+      "affects": "hit chance against unit in cover"
+    },
+    "how_to_attack": [
+      "1. Select soldier by clicking on them",
+      "2. Click attack/shoot button in action bar",
+      "3. Choose shot type (snap/aimed/auto)",
+      "4. Click on visible alien to fire",
+      "5. Damage calculated with 50-200% variance"
+    ],
+    "how_to_end_turn": "Click 'End Turn' button in action bar"
+  },
+
+  "turn_indicators": {
+    "player_turn": {
+      "indicators": [
+        "Can select and move soldiers",
+        "Action buttons are active/clickable",
+        "TU values update when actions taken",
+        "Possible 'Your Turn' or phase indicator"
+      ]
+    },
+    "enemy_turn": {
+      "indicators": [
+        "Cannot interact with soldiers",
+        "Aliens move/shoot (may see enemy movement)",
+        "Possible 'Alien Activity' or phase indicator",
+        "Player soldiers may reaction fire automatically"
+      ]
+    }
+  },
+
+  "menu_start": {
+    "expected_flow": [
+      "Title screen with Start/New Game button",
+      "Possible mission briefing or squad loadout screen",
+      "Mission begins with soldiers deployed"
+    ],
+    "start_actions": [
+      {"type": "wait", "duration_ms": 2000, "reason": "Let title screen load"},
+      {"type": "click", "target": "center or Start button area", "reason": "Start game/mission"},
+      {"type": "wait", "duration_ms": 3000, "reason": "Mission may need to load/deploy"}
+    ],
+    "notes": "May go directly to tactical map or have intermediate screens. Look for clickable buttons."
+  },
+
+  "success_conditions": {
+    "minimum_viable_test": {
+      "turns_completed": 3,
+      "soldiers_selected": 2,
+      "movement_actions": 3,
+      "shots_fired": 1
+    },
+    "good_test": {
+      "turns_completed": 5,
+      "aliens_engaged": 1,
+      "damage_dealt_or_received": true,
+      "reaction_fire_triggered": true
+    },
+    "metrics_to_track": [
+      "turn_count",
+      "soldiers_alive",
+      "soldiers_moved",
+      "shots_fired",
+      "shots_hit",
+      "aliens_killed",
+      "damage_taken",
+      "reaction_shots"
+    ]
+  },
+
+  "failure_indicators": [
+    {
+      "indicator": "Cannot select any soldier",
+      "severity": "critical",
+      "likely_cause": "Click handling broken or no soldiers spawned"
+    },
+    {
+      "indicator": "Selected soldier cannot move",
+      "severity": "critical",
+      "likely_cause": "Movement system broken or TU not regenerating"
+    },
+    {
+      "indicator": "End Turn button does nothing",
+      "severity": "critical",
+      "likely_cause": "Turn system broken"
+    },
+    {
+      "indicator": "Turn never ends (stuck on player turn)",
+      "severity": "critical",
+      "likely_cause": "Turn transition logic broken"
+    },
+    {
+      "indicator": "Alien turn never ends",
+      "severity": "critical",
+      "likely_cause": "AI stuck in loop or waiting for impossible action"
+    },
+    {
+      "indicator": "No aliens on map",
+      "severity": "high",
+      "likely_cause": "Enemy spawning broken"
+    },
+    {
+      "indicator": "Shooting does nothing",
+      "severity": "high",
+      "likely_cause": "Combat resolution broken"
+    },
+    {
+      "indicator": "TU shows 0 but actions still work",
+      "severity": "medium",
+      "likely_cause": "TU system display or enforcement broken"
+    },
+    {
+      "indicator": "Game immediately ends on start",
+      "severity": "critical",
+      "likely_cause": "Victory/defeat check wrong or soldiers killed on spawn"
+    }
+  ],
+
+  "key_features_from_gdd": [
+    {
+      "feature": "Time Unit System",
+      "gdd_section": "1.1",
+      "test_approach": "Verify TU decreases with actions, regenerates on new turn"
+    },
+    {
+      "feature": "Tile-based Movement",
+      "gdd_section": "1.7",
+      "test_approach": "Click soldier, click tile, verify movement with TU cost"
+    },
+    {
+      "feature": "Shooting Modes (Snap/Aimed/Auto)",
+      "gdd_section": "1.1 and 1.4",
+      "test_approach": "Select soldier, initiate attack, choose shot type, fire at alien"
+    },
+    {
+      "feature": "Kneeling Stance",
+      "gdd_section": "1.1",
+      "test_approach": "Click kneel button, verify stance change and accuracy modifier"
+    },
+    {
+      "feature": "8-Direction Facing",
+      "gdd_section": "1.7",
+      "test_approach": "Verify soldier sprite changes direction, TU cost for turning"
+    },
+    {
+      "feature": "Fog of War",
+      "gdd_section": "1.7",
+      "test_approach": "Areas outside soldier vision should be obscured"
+    },
+    {
+      "feature": "Reaction Fire",
+      "gdd_section": "1.3",
+      "test_approach": "Leave TUs remaining, observe if soldiers fire during alien turn"
+    },
+    {
+      "feature": "Turn System",
+      "gdd_section": "Technical Notes - Turn Flow",
+      "test_approach": "Verify clean player->alien->player transition"
+    },
+    {
+      "feature": "Alien AI",
+      "gdd_section": "1.8 and MVP Checklist",
+      "test_approach": "Aliens should patrol, take cover, attack visible soldiers"
+    },
+    {
+      "feature": "Victory/Defeat Conditions",
+      "gdd_section": "Technical Notes - Turn Flow",
+      "test_approach": "All aliens dead = win, all soldiers dead = lose"
+    },
+    {
+      "feature": "UI Action Buttons with Icons",
+      "gdd_section": "Feedback Requirements",
+      "test_approach": "Buttons should have clear icons and tooltips"
+    },
+    {
+      "feature": "Random Map Generation",
+      "gdd_section": "Feedback Requirements",
+      "test_approach": "Maps should vary between games"
+    }
+  ],
+
+  "automated_test_strategy": {
+    "phase_1_menu": {
+      "duration_sec": 10,
+      "actions": "Click center/start button to begin mission"
+    },
+    "phase_2_exploration": {
+      "duration_sec": 60,
+      "actions": [
+        "Click on soldier sprites to select them",
+        "Click on empty tiles to move selected soldier",
+        "After moving 2-3 soldiers, click End Turn button"
+      ]
+    },
+    "phase_3_combat": {
+      "duration_sec": 90,
+      "actions": [
+        "When alien visible, select soldier with LOS",
+        "Click shoot button",
+        "Choose snap shot (fastest)",
+        "Click on alien",
+        "End turn and observe alien response"
+      ]
+    },
+    "phase_4_assessment": {
+      "duration_sec": 20,
+      "actions": "Take final screenshots, assess turn count and casualties"
+    },
+    "click_patterns": {
+      "soldier_selection": "Click near bottom of map where soldiers typically spawn",
+      "movement": "Click tiles progressively toward map center (toward enemies)",
+      "combat": "Click top half of map where aliens spawn, look for enemy sprites"
+    }
+  },
+
+  "visual_recognition_hints": {
+    "soldiers": "Human-like sprites, may have weapons visible, typically 32x32 or 64x64 pixels",
+    "aliens": "Non-human sprites (Sectoids are grey humanoids, Floaters fly), enemy color coding",
+    "selected_unit": "Highlight, border, or glow around selected unit",
+    "movement_range": "Highlighted tiles showing where selected unit can move",
+    "action_bar": "Row of buttons at screen bottom with icons",
+    "tu_display": "Number showing remaining TU, usually near selected unit or in UI panel",
+    "fog_of_war": "Darkened/greyed areas outside soldier vision"
+  },
+
+  "gdd_ambiguities": [
+    {
+      "issue": "No specific key bindings mentioned",
+      "assumption": "Game is primarily mouse-driven, keyboard shortcuts may exist but not documented"
+    },
+    {
+      "issue": "No explicit camera control scheme",
+      "assumption": "Map may be scrollable via edge panning, arrow keys, or drag"
+    },
+    {
+      "issue": "No description of how to access inventory during combat",
+      "assumption": "Inventory button in action bar or clicking equipment slot"
+    },
+    {
+      "issue": "Shot type selection UI not specified",
+      "assumption": "Dropdown menu, sub-buttons, or modal after clicking shoot"
+    },
+    {
+      "issue": "Mission start/deployment not detailed",
+      "assumption": "Soldiers auto-deployed or simple click-to-place system"
+    }
+  ]
+}

@@ -2577,6 +2577,232 @@ window.debugCommands = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
+// TEST HARNESS DEBUG API (window.debug)
+// ═══════════════════════════════════════════════════════════════════════════
+
+window.debug = {
+    // REQUIRED: Go to specific room by coordinates "x,y" or {x, y}
+    gotoRoom: function(roomId) {
+        let roomX, roomY;
+        if (typeof roomId === 'string') {
+            const parts = roomId.split(',');
+            roomX = parseInt(parts[0], 10);
+            roomY = parseInt(parts[1], 10);
+        } else if (typeof roomId === 'object' && roomId !== null) {
+            roomX = roomId.x;
+            roomY = roomId.y;
+        } else {
+            console.error('gotoRoom: Invalid roomId format. Use "x,y" string or {x, y} object.');
+            return false;
+        }
+        if (floorMap[roomY]?.[roomX]) {
+            loadRoom(roomX, roomY, null);
+            return true;
+        }
+        console.error('gotoRoom: Room not found at', roomX, roomY);
+        return false;
+    },
+
+    // REQUIRED: Set player health
+    setHealth: function(hp) {
+        if (player) {
+            player.health = Math.max(0, Math.min(player.maxHealth, hp));
+            return player.health;
+        }
+        return null;
+    },
+
+    // REQUIRED: Spawn enemy at position
+    spawnEnemy: function(type, x, y) {
+        if (!ENEMY_DATA[type]) {
+            console.error('spawnEnemy: Unknown enemy type:', type);
+            return null;
+        }
+        const ex = x !== undefined ? x : (player?.x || ROOM_OFFSET_X + ROOM_WIDTH / 2) + 50;
+        const ey = y !== undefined ? y : (player?.y || ROOM_OFFSET_Y + ROOM_HEIGHT / 2);
+        const enemy = new Enemy(type, ex, ey);
+        enemies.push(enemy);
+        return enemy;
+    },
+
+    // REQUIRED: Remove all enemies
+    clearEnemies: function() {
+        const count = enemies.length;
+        enemies = [];
+        for (const door of doors) door.open = true;
+        return count;
+    },
+
+    // REQUIRED: Get full game state object
+    getState: function() {
+        return {
+            gameState: gameState,
+            floorNum: floorNum,
+            currentRoom: { x: currentRoom.x, y: currentRoom.y },
+            roomKey: `${currentRoom.x},${currentRoom.y}`,
+            bossDefeated: bossDefeated,
+            totalKills: totalKills,
+            player: player ? {
+                x: player.x,
+                y: player.y,
+                health: player.health,
+                maxHealth: player.maxHealth,
+                soulHearts: player.soulHearts,
+                damage: player.damage,
+                speed: player.speed,
+                coins: player.coins,
+                bombs: player.bombs,
+                keys: player.keys,
+                collectedItems: [...player.collectedItems]
+            } : null,
+            enemies: enemies.map(e => ({
+                type: e.type,
+                x: e.x,
+                y: e.y,
+                health: e.health,
+                isBoss: e.isBoss
+            })),
+            pickups: pickups.map(p => ({ type: p.type, x: p.x, y: p.y })),
+            items: items.map(i => ({ id: i.id, x: i.x, y: i.y })),
+            doors: doors.map(d => ({ dir: d.dir, open: d.open, locked: d.locked })),
+            visitedRooms: [...visitedRooms]
+        };
+    },
+
+    // NICE TO HAVE: Set max health
+    setMaxHealth: function(hp) {
+        if (player) {
+            player.maxHealth = Math.max(2, hp);
+            player.health = Math.min(player.health, player.maxHealth);
+            return player.maxHealth;
+        }
+        return null;
+    },
+
+    // NICE TO HAVE: Give item to player
+    giveItem: function(itemId) {
+        if (!player) return false;
+        if (!ITEM_DATA[itemId]) {
+            console.error('giveItem: Unknown item:', itemId);
+            return false;
+        }
+        player.addItem(itemId);
+        return true;
+    },
+
+    // NICE TO HAVE: Set player position
+    setPosition: function(x, y) {
+        if (player) {
+            player.x = x;
+            player.y = y;
+            return { x: player.x, y: player.y };
+        }
+        return null;
+    },
+
+    // NICE TO HAVE: Spawn pickup at position
+    spawnPickup: function(type, x, y) {
+        const validTypes = ['heart', 'halfHeart', 'soulHeart', 'coin', 'bomb', 'key'];
+        if (!validTypes.includes(type)) {
+            console.error('spawnPickup: Unknown type:', type, 'Valid types:', validTypes);
+            return null;
+        }
+        const px = x !== undefined ? x : (player?.x || ROOM_OFFSET_X + ROOM_WIDTH / 2);
+        const py = y !== undefined ? y : (player?.y || ROOM_OFFSET_Y + ROOM_HEIGHT / 2);
+        const pickup = { type: type, x: px, y: py };
+        pickups.push(pickup);
+        return pickup;
+    },
+
+    // NICE TO HAVE: Get player state only
+    getPlayerState: function() {
+        if (!player) return null;
+        return {
+            x: player.x,
+            y: player.y,
+            health: player.health,
+            maxHealth: player.maxHealth,
+            soulHearts: player.soulHearts,
+            blackHearts: player.blackHearts,
+            damage: player.damage,
+            damageMult: player.damageMult,
+            speed: player.speed,
+            tearDelay: player.tearDelay,
+            range: player.range,
+            shotSpeed: player.shotSpeed,
+            coins: player.coins,
+            bombs: player.bombs,
+            keys: player.keys,
+            homing: player.homing,
+            piercing: player.piercing,
+            bouncing: player.bouncing,
+            multishot: player.multishot,
+            collectedItems: [...player.collectedItems],
+            canMove: player.canMove,
+            invulnTimer: player.invulnTimer
+        };
+    },
+
+    // NICE TO HAVE: Get enemy count
+    getEnemyCount: function() {
+        return enemies.length;
+    },
+
+    // NICE TO HAVE: Get current room ID
+    getRoomId: function() {
+        return `${currentRoom.x},${currentRoom.y}`;
+    },
+
+    // NICE TO HAVE: Pause game
+    pause: function() {
+        if (gameState === 'playing') {
+            gameState = 'paused';
+            return true;
+        }
+        return false;
+    },
+
+    // NICE TO HAVE: Resume game
+    resume: function() {
+        if (gameState === 'paused') {
+            gameState = 'playing';
+            return true;
+        }
+        return false;
+    },
+
+    // BONUS: List available enemy types
+    getEnemyTypes: function() {
+        return Object.keys(ENEMY_DATA);
+    },
+
+    // BONUS: List available item IDs
+    getItemIds: function() {
+        return Object.keys(ITEM_DATA);
+    },
+
+    // BONUS: Skip to next floor
+    nextFloor: function() {
+        floorNum++;
+        bossDefeated = false;
+        roomStates = {};
+        visitedRooms.clear();
+        floorMap = generateFloor(floorNum);
+        loadRoom(4, 3, null);
+        return floorNum;
+    },
+
+    // BONUS: God mode toggle
+    godMode: function(enabled) {
+        if (player) {
+            player.invulnTimer = enabled ? 999999 : 0;
+            return enabled;
+        }
+        return null;
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
 // EXPOSED GETTERS FOR TEST HARNESS
 // ═══════════════════════════════════════════════════════════════════════════
 

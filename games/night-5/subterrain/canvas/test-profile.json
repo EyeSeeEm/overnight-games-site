@@ -1,0 +1,23 @@
+{
+  "game_info": {
+    "name": "Subterrain",
+    "genre": "survival horror action"
+  },
+  "input_scheme": {
+    "movement": "wasd",
+    "action": "mouse_click",
+    "special": ["e", "r", "tab", "space"]
+  },
+  "goals": [
+    "Explore the underground facility",
+    "Find and attack zombies/mutants",
+    "Collect resources and weapons",
+    "Survive as long as possible"
+  ],
+  "success_conditions": {
+    "survive_30s": true,
+    "attack_enemies": true,
+    "move_around": true
+  },
+  "notes": "Attacks should have visual/audio feedback"
+}

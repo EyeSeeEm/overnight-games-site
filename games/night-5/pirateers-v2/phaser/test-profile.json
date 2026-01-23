@@ -1,0 +1,23 @@
+{
+  "game_info": {
+    "name": "Pirateers V2",
+    "genre": "open world sailing RPG"
+  },
+  "input_scheme": {
+    "movement": "wasd",
+    "action": "mouse_click",
+    "special": ["e", "space", "tab"]
+  },
+  "goals": [
+    "Sail ship around the ocean",
+    "Find and attack trading ships",
+    "Avoid or fight Navy ships",
+    "Collect loot from destroyed ships"
+  ],
+  "success_conditions": {
+    "survive_30s": true,
+    "sail_distance": true,
+    "encounter_ships": true
+  },
+  "notes": "Ships should move at moderate pace, not too fast"
+}

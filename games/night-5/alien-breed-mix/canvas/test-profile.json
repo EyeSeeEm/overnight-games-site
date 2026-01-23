@@ -1,0 +1,22 @@
+{
+  "game_info": {
+    "name": "Alien Breed Mix",
+    "genre": "top-down shooter exploration"
+  },
+  "input_scheme": {
+    "movement": "wasd",
+    "action": "mouse_click",
+    "special": ["e", "space"]
+  },
+  "goals": [
+    "Find and open doors to explore new rooms",
+    "Kill aliens encountered in rooms",
+    "Search for exit to next deck/level"
+  ],
+  "success_conditions": {
+    "survive_30s": true,
+    "visit_rooms": 2,
+    "kill_enemies": 1
+  },
+  "notes": "Room-based exploration, NOT wave survival"
+}

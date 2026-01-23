@@ -817,7 +817,7 @@ function spawnCorruptedEnemy(type) {
 // ═══════════════════════════════════════════════════════════
 function startGame() {
     gameState = 'playing';
-    gamePaused = true;
+    gamePaused = false;
     currentPhase = 'player';
 
     document.getElementById('menuScreen').classList.add('hidden');

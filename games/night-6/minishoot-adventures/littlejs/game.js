@@ -471,6 +471,14 @@ function gameUpdate() {
 
     const dt = 1/60;
 
+    // Handle menu/gameover state transitions with Space key
+    if (gamePhase === 'menu' || gamePhase === 'gameover') {
+        if (keyWasPressed('Space') || keyWasPressed(' ')) {
+            startGame();
+        }
+        return;
+    }
+
     if (gamePhase === 'playing') {
         // Update player
         if (player) {

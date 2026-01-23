@@ -1110,7 +1110,12 @@ class GameScene extends Phaser.Scene {
         this.roomCleared = true;
         const roomKey = `${this.currentRoomX},${this.currentRoomY}`;
         this.roomContents[roomKey].cleared = true;
-        // Doors will update on next render naturally
+
+        // IMMEDIATELY re-render room to open doors (100% reliable)
+        this.renderRoom();
+
+        // Visual feedback that room is cleared
+        this.showMessage('Room Cleared!');
     }
 
     checkDoorTransition() {
@@ -1127,18 +1132,21 @@ class GameScene extends Phaser.Scene {
         let newRoomY = this.currentRoomY;
         let entryDir = null;
 
+        // Entry direction is OPPOSITE of exit direction
+        // Exit left -> enter from RIGHT side of new room
+        // Exit right -> enter from LEFT side of new room
         if (px < roomLeft) {
             newRoomX--;
-            entryDir = 'left';
+            entryDir = 'right';  // Enter from RIGHT side (came from right/east room)
         } else if (px > roomRight) {
             newRoomX++;
-            entryDir = 'right';
+            entryDir = 'left';   // Enter from LEFT side (came from left/west room)
         } else if (py < roomTop) {
             newRoomY--;
-            entryDir = 'up';
+            entryDir = 'down';   // Enter from BOTTOM (came from below/south room)
         } else if (py > roomBottom) {
             newRoomY++;
-            entryDir = 'down';
+            entryDir = 'up';     // Enter from TOP (came from above/north room)
         }
 
         if (entryDir && this.floorMap[newRoomY]?.[newRoomX]) {
@@ -1157,21 +1165,26 @@ class GameScene extends Phaser.Scene {
             this.currentRoomX = newX;
             this.currentRoomY = newY;
 
-            // Position player at entry door
+            // Position player at entry door (where they came FROM)
+            // entryDir indicates which side of the NEW room the player enters
             let px, py;
             const midX = this.roomOffsetX + ROOM_WIDTH * TILE_SIZE / 2;
             const midY = this.roomOffsetY + ROOM_HEIGHT * TILE_SIZE / 2;
 
             if (entryDir === 'left') {
+                // Entering from LEFT door (player walks in from left side)
                 px = this.roomOffsetX + TILE_SIZE * 1.5;
                 py = midY;
             } else if (entryDir === 'right') {
+                // Entering from RIGHT door (player walks in from right side)
                 px = this.roomOffsetX + ROOM_WIDTH * TILE_SIZE - TILE_SIZE * 1.5;
                 py = midY;
             } else if (entryDir === 'up') {
+                // Entering from TOP door (player walks in from top)
                 px = midX;
                 py = this.roomOffsetY + TILE_SIZE * 1.5;
-            } else {
+            } else { // 'down'
+                // Entering from BOTTOM door (player walks in from bottom)
                 px = midX;
                 py = this.roomOffsetY + ROOM_HEIGHT * TILE_SIZE - TILE_SIZE * 1.5;
             }

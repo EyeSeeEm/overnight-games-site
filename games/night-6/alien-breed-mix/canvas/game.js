@@ -2329,6 +2329,7 @@
     // ========================================================================
     function startGame() {
         gameState = 'playing';
+        gamePaused = false;
         currentDeck = 1;
         selfDestructActive = false;
         selfDestructTimer = 600;

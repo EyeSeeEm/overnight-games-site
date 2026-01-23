@@ -1,0 +1,374 @@
+{
+  "metadata": {
+    "game": "star-of-providence-clone",
+    "framework": "canvas",
+    "iteration": 1,
+    "test_type": "general_playtest",
+    "target": null,
+    "started_at": "2026-01-12T13:32:40.442Z",
+    "duration_ms": 21082,
+    "agent_id": "test-runner"
+  },
+  "initial_state": {
+    "used_debug_commands": [],
+    "game_state": {
+      "gameState": "menu",
+      "currentFloor": 1,
+      "roomsCleared": 0,
+      "player": null,
+      "enemies": []
+    }
+  },
+  "steps": [
+    {
+      "t": 64,
+      "intent": "Capture screenshot",
+      "action": null,
+      "duration_ms": 0,
+      "observation": "Screenshot: initial",
+      "screenshot": "screenshot-001-initial.png"
+    },
+    {
+      "t": 273,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 200,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 1236,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_a"
+      },
+      "duration_ms": 847.4039514129292,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 2063,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_s"
+      },
+      "duration_ms": 709.0353782337363,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 2382,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 200,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 3211,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_w"
+      },
+      "duration_ms": 703.3711136496589,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 3959,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_a"
+      },
+      "duration_ms": 617.1005861360544,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 4265,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 200,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 4481,
+      "intent": "Dash to avoid bullets",
+      "action": {
+        "type": "dash"
+      },
+      "duration_ms": 100,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 5462,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_w"
+      },
+      "duration_ms": 847.6482340057343,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 5782,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 200,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 5830,
+      "intent": "Capture screenshot",
+      "action": null,
+      "duration_ms": 0,
+      "observation": "Screenshot: action-10",
+      "screenshot": "screenshot-002-action-10.png"
+    },
+    {
+      "t": 6682,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_s"
+      },
+      "duration_ms": 729.9707901443142,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 7678,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_d"
+      },
+      "duration_ms": 878.1164401546562,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 7987,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 200,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 8877,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_a"
+      },
+      "duration_ms": 761.8284000558408,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 9094,
+      "intent": "Dash to avoid bullets",
+      "action": {
+        "type": "dash"
+      },
+      "duration_ms": 100,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 9402,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 200,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 10396,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_w"
+      },
+      "duration_ms": 874.2061099118732,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 11410,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_a"
+      },
+      "duration_ms": 891.814849559752,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 11720,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 200,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 12481,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_d"
+      },
+      "duration_ms": 650.6316387733892,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 12530,
+      "intent": "Capture screenshot",
+      "action": null,
+      "duration_ms": 0,
+      "observation": "Screenshot: action-20",
+      "screenshot": "screenshot-003-action-20.png"
+    },
+    {
+      "t": 13261,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_w"
+      },
+      "duration_ms": 612.7809350665328,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 13569,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 200,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 14444,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_s"
+      },
+      "duration_ms": 759.4923256575124,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 15346,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_d"
+      },
+      "duration_ms": 785.7468763982627,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 15652,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 200,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 16551,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_a"
+      },
+      "duration_ms": 780.8955627640353,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 17282,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_s"
+      },
+      "duration_ms": 619.9778468086221,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 17611,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 200,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 17827,
+      "intent": "Dash to avoid bullets",
+      "action": {
+        "type": "dash"
+      },
+      "duration_ms": 100,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 18710,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_a"
+      },
+      "duration_ms": 771.1335217605381,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 18764,
+      "intent": "Capture screenshot",
+      "action": null,
+      "duration_ms": 0,
+      "observation": "Screenshot: action-30",
+      "screenshot": "screenshot-004-action-30.png"
+    },
+    {
+      "t": 19093,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 200,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 19927,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_d"
+      },
+      "duration_ms": 701.1200606787215,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 20913,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_w"
+      },
+      "duration_ms": 879.5505583479481,
+      "observation": "{\"gameState\":\"menu\",\"currentFloor\":1,\"roomsCleared\":0,\"player\":null,\"enemies\":[]}"
+    },
+    {
+      "t": 21081,
+      "intent": "Capture screenshot",
+      "action": null,
+      "duration_ms": 0,
+      "observation": "Screenshot: final",
+      "screenshot": "screenshot-005-final.png"
+    }
+  ],
+  "outcome": {
+    "success": true,
+    "summary": "Test completed",
+    "issues_found": [],
+    "issues_verified_fixed": []
+  },
+  "final_state": {
+    "gameState": "menu",
+    "currentFloor": 1,
+    "roomsCleared": 0,
+    "player": null,
+    "enemies": []
+  }
+}

@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Quasimorph Clone - Turn-Based Tactical Horror</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+        }
+        #game-container {
+            position: relative;
+        }
+        canvas {
+            display: block;
+            border: 2px solid #1a4a1a;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="960" height="720"></canvas>
+    </div>
+
+<script>
+// === QUASIMORPH CLONE ===
+// Turn-based tactical extraction roguelike
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// === CONFIGURATION ===
+const CONFIG = {
+    TILE_SIZE: 32,
+    MAP_WIDTH: 30,
+    MAP_HEIGHT: 22,
+    VISION_RANGE: 8,
+    CORRUPTION_PER_TURN: 15,
+    STARTING_HP: 100,
+    STARTING_AP: 2
+};
+
+// === COLORS (matched to reference) ===
+const COLORS = {
+    BG: '#080808',
+    FLOOR: '#1f1f1f',
+    FLOOR_LIGHT: '#262626',
+    FLOOR_DARK: '#181818',
+    FLOOR_GRATE: '#222222',
+    WALL: '#121212',
+    WALL_TOP: '#1a1a1a',
+    WALL_SIDE: '#0f0f0f',
+    FOG: '#050505',
+    EXPLORED: 'rgba(8, 8, 8, 0.75)',
+    PLAYER: '#3a6a3a',
+    PLAYER_ARMOR: '#2a4a2a',
+    ENEMY_HUMAN: '#6a5a4a',
+    ENEMY_CORRUPTED: '#6a2a2a',
+    BLOOD: '#2a0808',
+    BLOOD_DARK: '#1a0505',
+    EXTRACTION: '#3a6a3a',
+    LOCKER: '#3a3a3a',
+    CRATE: '#4a4030',
+    UI_BG: 'rgba(15, 20, 15, 0.95)',
+    UI_BORDER: '#1a3a1a',
+    UI_TEXT: '#6a8a6a',
+    HEALTH: '#3a6a3a',
+    HEALTH_LOW: '#6a3a3a',
+    CORRUPTION: '#6a3a3a',
+    CORRUPTION_HIGH: '#8a2a2a',
+    AP: '#3a5a6a',
+    AMMO: '#4a6a4a'
+};
+
+// === WEAPONS ===
+const WEAPONS = {
+    KNIFE: { name: 'Knife', apCost: 1, range: 1, accuracy: 90, damage: [20, 30], ammoType: null, maxDurability: 50, silent: true },
+    PISTOL: { name: 'Pistol', apCost: 1, range: 6, accuracy: 75, damage: [15, 20], ammoType: '9mm', maxDurability: 40, magSize: 12 },
+    SMG: { name: 'SMG', apCost: 1, range: 5, accuracy: 60, damage: [10, 15], ammoType: '9mm', maxDurability: 30, magSize: 25, burst: 3 },
+    SHOTGUN: { name: 'Shotgun', apCost: 2, range: 3, accuracy: 80, damage: [25, 40], ammoType: '12g', maxDurability: 35, magSize: 6, spread: true }
+};
+
+// === ENEMIES ===
+const ENEMIES = {
+    GUARD: { name: 'Guard', hp: 50, ap: 2, damage: [10, 15], range: 5, color: '#6a5a4a', behavior: 'patrol', loot: ['9mm', 'bandage'] },
+    SOLDIER: { name: 'Soldier', hp: 75, ap: 2, damage: [12, 18], range: 5, color: '#5a6a5a', behavior: 'aggressive', loot: ['9mm', 'medkit'] },
+    POSSESSED: { name: 'Possessed', hp: 80, ap: 3, damage: [15, 25], range: 1, color: '#6a3a3a', behavior: 'hunt', corrupted: true },
+    BLOATER: { name: 'Bloater', hp: 150, ap: 1, damage: [30, 50], range: 1, color: '#5a4a3a', behavior: 'slow', explodes: true, corrupted: true },
+    STALKER: { name: 'Stalker', hp: 60, ap: 4, damage: [20, 30], range: 1, color: '#4a3a4a', behavior: 'ambush', poison: true, corrupted: true }
+};
+
+// === ROOM TYPES ===
+const ROOM_TYPES = {
+    STORAGE: { name: 'Storage', loot: ['ammo', 'items'], enemies: [0, 2] },
+    BARRACKS: { name: 'Barracks', loot: ['ammo'], enemies: [1, 3] },
+    MEDICAL: { name: 'Medical', loot: ['medkit', 'bandage'], enemies: [0, 1] },
+    ARMORY: { name: 'Armory', loot: ['weapon', 'ammo'], enemies: [1, 2] },
+    CORRIDOR: { name: 'Corridor', loot: [], enemies: [0, 1] }
+};
+
+// === GAME STATE ===
+const game = {
+    state: 'menu', // menu, playing, enemy_turn, gameover, victory
+    turn: 0,
+    corruption: 0,
+    score: 0,
+    messages: [],
+    floatingTexts: [],
+    debugMode: false,
+    enemyTurnTimer: 0,
+    currentEnemyIndex: 0
+};
+
+// === PLAYER ===
+const player = {
+    x: 5,
+    y: 5,
+    hp: CONFIG.STARTING_HP,
+    maxHp: CONFIG.STARTING_HP,
+    ap: CONFIG.STARTING_AP,
+    maxAp: CONFIG.STARTING_AP,
+    stance: 'walk', // sneak, walk, run
+    bleeding: 0,
+    weapons: [
+        { ...WEAPONS.KNIFE, durability: WEAPONS.KNIFE.maxDurability, ammo: 0 },
+        { ...WEAPONS.PISTOL, durability: WEAPONS.PISTOL.maxDurability, ammo: 12 }
+    ],
+    currentWeapon: 1,
+    inventory: [
+        { type: 'bandage', count: 2 },
+        { type: 'medkit', count: 1 }
+    ]
+};
+
+// === MAP DATA ===
+let map = [];
+let visibility = [];
+let explored = [];
+let enemies = [];
+let items = [];
+let rooms = [];
+let extractionPoint = { x: 0, y: 0 };
+
+// === INPUT ===
+const input = {
+    mouse: { x: 0, y: 0, tile: { x: 0, y: 0 } },
+    clicked: false,
+    keys: {}
+};
+
+// === INITIALIZATION ===
+function init() {
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('click', handleClick);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+
+    requestAnimationFrame(gameLoop);
+}
+
+function handleMouseMove(e) {
+    const rect = canvas.getBoundingClientRect();
+    input.mouse.x = e.clientX - rect.left;
+    input.mouse.y = e.clientY - rect.top;
+    input.mouse.tile.x = Math.floor(input.mouse.x / CONFIG.TILE_SIZE);
+    input.mouse.tile.y = Math.floor(input.mouse.y / CONFIG.TILE_SIZE);
+}
+
+function handleClick(e) {
+    if (game.state === 'menu') {
+        startGame();
+    } else if (game.state === 'playing') {
+        handlePlayerAction();
+    } else if (game.state === 'gameover' || game.state === 'victory') {
+        game.state = 'menu';
+    }
+}
+
+function handleKeyDown(e) {
+    input.keys[e.code] = true;
+
+    if (game.state === 'playing') {
+        // Number keys for weapons
+        if (e.code === 'Digit1') player.currentWeapon = 0;
+        if (e.code === 'Digit2' && player.weapons[1]) player.currentWeapon = 1;
+
+        // R to reload
+        if (e.code === 'KeyR') reloadWeapon();
+
+        // Enter to end turn
+        if (e.code === 'Enter' || e.code === 'NumpadEnter') endTurn();
+
+        // Q for debug
+        if (e.code === 'KeyQ') game.debugMode = !game.debugMode;
+
+        // E to use item / interact
+        if (e.code === 'KeyE') useItem();
+
+        // Stance changes
+        if (e.code === 'KeyZ') changeStance('sneak');
+        if (e.code === 'KeyX') changeStance('walk');
+        if (e.code === 'KeyC') changeStance('run');
+    }
+}
+
+function handleKeyUp(e) {
+    input.keys[e.code] = false;
+}
+
+// === GAME START ===
+function startGame() {
+    game.state = 'playing';
+    game.turn = 0;
+    game.corruption = 0;
+    game.score = 0;
+    game.messages = [];
+
+    // Reset player
+    player.hp = CONFIG.STARTING_HP;
+    player.ap = CONFIG.STARTING_AP;
+    player.bleeding = 0;
+    player.stance = 'walk';
+    player.weapons = [
+        { ...WEAPONS.KNIFE, durability: WEAPONS.KNIFE.maxDurability, ammo: 0 },
+        { ...WEAPONS.PISTOL, durability: WEAPONS.PISTOL.maxDurability, ammo: 12 }
+    ];
+    player.currentWeapon = 1;
+    player.inventory = [
+        { type: 'bandage', count: 2 },
+        { type: 'medkit', count: 1 }
+    ];
+
+    generateStation();
+    updateVisibility();
+    addMessage("Deploy complete. Extraction point marked.");
+    addMessage("Corruption rising. Move fast.");
+}
+
+// === MAP GENERATION ===
+function generateStation() {
+    // Initialize empty map
+    map = [];
+    visibility = [];
+    explored = [];
+    enemies = [];
+    items = [];
+    rooms = [];
+
+    for (let y = 0; y < CONFIG.MAP_HEIGHT; y++) {
+        map[y] = [];
+        visibility[y] = [];
+        explored[y] = [];
+        for (let x = 0; x < CONFIG.MAP_WIDTH; x++) {
+            map[y][x] = 1; // Wall
+            visibility[y][x] = false;
+            explored[y][x] = false;
+        }
+    }
+
+    // Generate rooms
+    const roomCount = 8 + Math.floor(Math.random() * 5);
+
+    for (let i = 0; i < roomCount; i++) {
+        const roomType = Object.keys(ROOM_TYPES)[Math.floor(Math.random() * Object.keys(ROOM_TYPES).length)];
+        const width = 4 + Math.floor(Math.random() * 5);
+        const height = 4 + Math.floor(Math.random() * 4);
+        const x = 1 + Math.floor(Math.random() * (CONFIG.MAP_WIDTH - width - 2));
+        const y = 1 + Math.floor(Math.random() * (CONFIG.MAP_HEIGHT - height - 2));
+
+        // Check overlap
+        let overlaps = false;
+        for (const room of rooms) {
+            if (x < room.x + room.width + 1 && x + width + 1 > room.x &&
+                y < room.y + room.height + 1 && y + height + 1 > room.y) {
+                overlaps = true;
+                break;
+            }
+        }
+
+        if (!overlaps) {
+            const room = { x, y, width, height, type: roomType };
+            rooms.push(room);
+
+            // Carve room
+            for (let ry = y; ry < y + height; ry++) {
+                for (let rx = x; rx < x + width; rx++) {
+                    map[ry][rx] = 0; // Floor
+                }
+            }
+
+            // Add blood stains
+            if (Math.random() < 0.3) {
+                const bx = x + Math.floor(Math.random() * width);
+                const by = y + Math.floor(Math.random() * height);
+                map[by][bx] = 2; // Blood
+            }
+        }
+    }
+
+    // Connect rooms with corridors
+    for (let i = 1; i < rooms.length; i++) {
+        const r1 = rooms[i - 1];
+        const r2 = rooms[i];
+        const x1 = Math.floor(r1.x + r1.width / 2);
+        const y1 = Math.floor(r1.y + r1.height / 2);
+        const x2 = Math.floor(r2.x + r2.width / 2);
+        const y2 = Math.floor(r2.y + r2.height / 2);
+
+        // L-shaped corridor
+        for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
+            if (map[y1][x] === 1) map[y1][x] = 0;
+        }
+        for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
+            if (map[y][x2] === 1) map[y][x2] = 0;
+        }
+    }
+
+    // Place player in first room
+    if (rooms.length > 0) {
+        player.x = rooms[0].x + Math.floor(rooms[0].width / 2);
+        player.y = rooms[0].y + Math.floor(rooms[0].height / 2);
+    }
+
+    // Place extraction in last room
+    if (rooms.length > 1) {
+        const lastRoom = rooms[rooms.length - 1];
+        extractionPoint.x = lastRoom.x + Math.floor(lastRoom.width / 2);
+        extractionPoint.y = lastRoom.y + Math.floor(lastRoom.height / 2);
+        map[extractionPoint.y][extractionPoint.x] = 3; // Extraction
+    }
+
+    // Spawn enemies and items
+    for (const room of rooms) {
+        if (room === rooms[0]) continue; // Skip starting room
+
+        const roomType = ROOM_TYPES[room.type];
+        const enemyCount = roomType.enemies[0] + Math.floor(Math.random() * (roomType.enemies[1] - roomType.enemies[0] + 1));
+
+        for (let i = 0; i < enemyCount; i++) {
+            const enemyType = game.corruption < 200 ?
+                (Math.random() < 0.7 ? 'GUARD' : 'SOLDIER') :
+                Object.keys(ENEMIES)[Math.floor(Math.random() * Object.keys(ENEMIES).length)];
+
+            const ex = room.x + 1 + Math.floor(Math.random() * (room.width - 2));
+            const ey = room.y + 1 + Math.floor(Math.random() * (room.height - 2));
+
+            if (map[ey][ex] === 0) {
+                enemies.push({
+                    ...ENEMIES[enemyType],
+                    typeKey: enemyType,
+                    x: ex,
+                    y: ey,
+                    currentHp: ENEMIES[enemyType].hp,
+                    currentAp: ENEMIES[enemyType].ap,
+                    alerted: false,
+                    lastKnownPlayer: null
+                });
+            }
+        }
+
+        // Spawn items
+        if (roomType.loot.length > 0 && Math.random() < 0.5) {
+            const ix = room.x + 1 + Math.floor(Math.random() * (room.width - 2));
+            const iy = room.y + 1 + Math.floor(Math.random() * (room.height - 2));
+
+            if (map[iy][ix] === 0) {
+                const lootType = roomType.loot[Math.floor(Math.random() * roomType.loot.length)];
+                items.push({
+                    x: ix,
+                    y: iy,
+                    type: lootType,
+                    count: lootType === 'ammo' ? 10 + Math.floor(Math.random() * 20) : 1
+                });
+            }
+        }
+    }
+}
+
+// === VISIBILITY (SHADOWCASTING) ===
+function updateVisibility() {
+    // Reset visibility
+    for (let y = 0; y < CONFIG.MAP_HEIGHT; y++) {
+        for (let x = 0; x < CONFIG.MAP_WIDTH; x++) {
+            visibility[y][x] = false;
+        }
+    }
+
+    // Player position is always visible
+    visibility[player.y][player.x] = true;
+    explored[player.y][player.x] = true;
+
+    // Cast rays in all directions
+    const rayCount = 360;
+    for (let i = 0; i < rayCount; i++) {
+        const angle = (i / rayCount) * Math.PI * 2;
+        castRay(player.x, player.y, angle, CONFIG.VISION_RANGE);
+    }
+}
+
+function castRay(startX, startY, angle, maxDist) {
+    const dx = Math.cos(angle);
+    const dy = Math.sin(angle);
+
+    for (let d = 0; d <= maxDist; d += 0.5) {
+        const x = Math.floor(startX + dx * d);
+        const y = Math.floor(startY + dy * d);
+
+        if (x < 0 || x >= CONFIG.MAP_WIDTH || y < 0 || y >= CONFIG.MAP_HEIGHT) break;
+
+        visibility[y][x] = true;
+        explored[y][x] = true;
+
+        if (map[y][x] === 1) break; // Wall blocks sight
+    }
+}
+
+// === PLAYER ACTIONS ===
+function handlePlayerAction() {
+    if (game.state !== 'playing') return;
+
+    const tx = input.mouse.tile.x;
+    const ty = input.mouse.tile.y;
+
+    // Check if out of AP
+    if (player.ap <= 0) {
+        addFloatingText(player.x * CONFIG.TILE_SIZE + 16, player.y * CONFIG.TILE_SIZE, "No AP!", "#ff4444");
+        return;
+    }
+
+    // Check if clicking on enemy (attack)
+    const targetEnemy = enemies.find(e => e.x === tx && e.y === ty && visibility[e.y][e.x]);
+    if (targetEnemy) {
+        attackEnemy(targetEnemy);
+        return;
+    }
+
+    // Check if clicking on item (pickup)
+    const targetItem = items.find(i => i.x === tx && i.y === ty && visibility[i.y][i.x]);
+    if (targetItem && Math.abs(tx - player.x) <= 1 && Math.abs(ty - player.y) <= 1) {
+        pickupItem(targetItem);
+        return;
+    }
+
+    // Check if clicking on extraction point
+    if (tx === extractionPoint.x && ty === extractionPoint.y &&
+        Math.abs(tx - player.x) <= 1 && Math.abs(ty - player.y) <= 1) {
+        extract();
+        return;
+    }
+
+    // Movement
+    if (tx >= 0 && tx < CONFIG.MAP_WIDTH && ty >= 0 && ty < CONFIG.MAP_HEIGHT) {
+        if (map[ty][tx] !== 1) {
+            const dist = Math.abs(tx - player.x) + Math.abs(ty - player.y);
+            if (dist === 1 && player.ap >= 1) {
+                player.x = tx;
+                player.y = ty;
+                player.ap -= 1;
+                updateVisibility();
+
+                // Auto-end turn if no AP
+                if (player.ap <= 0) {
+                    setTimeout(() => endTurn(), 300);
+                }
+            }
+        }
+    }
+}
+
+function attackEnemy(enemy) {
+    const weapon = player.weapons[player.currentWeapon];
+    if (!weapon) return;
+
+    if (player.ap < weapon.apCost) {
+        addFloatingText(player.x * CONFIG.TILE_SIZE + 16, player.y * CONFIG.TILE_SIZE, "No AP!", "#ff4444");
+        return;
+    }
+
+    const dist = Math.abs(enemy.x - player.x) + Math.abs(enemy.y - player.y);
+    if (dist > weapon.range) {
+        addFloatingText(player.x * CONFIG.TILE_SIZE + 16, player.y * CONFIG.TILE_SIZE, "Out of range!", "#ffaa44");
+        return;
+    }
+
+    // Check ammo for ranged weapons
+    if (weapon.ammoType && weapon.ammo <= 0) {
+        addFloatingText(player.x * CONFIG.TILE_SIZE + 16, player.y * CONFIG.TILE_SIZE, "No ammo!", "#ffaa44");
+        return;
+    }
+
+    player.ap -= weapon.apCost;
+    if (weapon.ammoType) weapon.ammo--;
+    weapon.durability--;
+
+    // Check for jam
+    if (weapon.durability <= 0 && Math.random() < 0.5) {
+        addMessage("Weapon jammed!");
+        addFloatingText(player.x * CONFIG.TILE_SIZE + 16, player.y * CONFIG.TILE_SIZE, "JAM!", "#ff4444");
+        if (player.ap <= 0) setTimeout(() => endTurn(), 300);
+        return;
+    }
+
+    // Roll accuracy
+    const roll = Math.random() * 100;
+    if (roll < weapon.accuracy) {
+        const damage = weapon.damage[0] + Math.floor(Math.random() * (weapon.damage[1] - weapon.damage[0] + 1));
+        const bursts = weapon.burst || 1;
+        const totalDamage = damage * bursts;
+
+        enemy.currentHp -= totalDamage;
+        enemy.alerted = true;
+
+        addFloatingText(enemy.x * CONFIG.TILE_SIZE + 16, enemy.y * CONFIG.TILE_SIZE, `-${totalDamage}`, "#ff4444");
+        addMessage(`Hit ${enemy.name} for ${totalDamage} damage!`);
+
+        if (enemy.currentHp <= 0) {
+            killEnemy(enemy);
+        }
+    } else {
+        addFloatingText(enemy.x * CONFIG.TILE_SIZE + 16, enemy.y * CONFIG.TILE_SIZE, "MISS", "#888888");
+        addMessage("Shot missed!");
+    }
+
+    // Alert nearby enemies
+    if (!weapon.silent) {
+        alertNearbyEnemies(player.x, player.y, 8);
+    }
+
+    if (player.ap <= 0) setTimeout(() => endTurn(), 300);
+}
+
+function killEnemy(enemy) {
+    const index = enemies.indexOf(enemy);
+    if (index !== -1) {
+        enemies.splice(index, 1);
+        game.score += enemy.hp;
+        addMessage(`${enemy.name} killed!`);
+
+        // Bloater explosion
+        if (enemy.explodes) {
+            addMessage("BLOATER EXPLODES!");
+            const explosionRange = 2;
+            for (let dy = -explosionRange; dy <= explosionRange; dy++) {
+                for (let dx = -explosionRange; dx <= explosionRange; dx++) {
+                    const dist = Math.abs(dx) + Math.abs(dy);
+                    if (dist <= explosionRange) {
+                        if (player.x === enemy.x + dx && player.y === enemy.y + dy) {
+                            const damage = 30;
+                            player.hp -= damage;
+                            addFloatingText(player.x * CONFIG.TILE_SIZE + 16, player.y * CONFIG.TILE_SIZE, `-${damage}`, "#ff4444");
+                        }
+                    }
+                }
+            }
+        }
+
+        // Drop loot
+        if (enemy.loot) {
+            for (const loot of enemy.loot) {
+                if (Math.random() < 0.5) {
+                    items.push({
+                        x: enemy.x,
+                        y: enemy.y,
+                        type: loot,
+                        count: loot === '9mm' || loot === '12g' ? 5 + Math.floor(Math.random() * 10) : 1
+                    });
+                }
+            }
+        }
+    }
+}
+
+function alertNearbyEnemies(x, y, range) {
+    for (const enemy of enemies) {
+        const dist = Math.abs(enemy.x - x) + Math.abs(enemy.y - y);
+        if (dist <= range) {
+            enemy.alerted = true;
+            enemy.lastKnownPlayer = { x: player.x, y: player.y };
+        }
+    }
+}
+
+function pickupItem(item) {
+    const index = items.indexOf(item);
+    if (index === -1) return;
+
+    if (item.type === '9mm' || item.type === '12g' || item.type === 'ammo') {
+        // Add ammo to current weapon
+        const weapon = player.weapons.find(w => w.ammoType === item.type || (item.type === 'ammo' && w.ammoType));
+        if (weapon) {
+            weapon.ammo += item.count;
+            addMessage(`Picked up ${item.count} ammo`);
+        }
+    } else if (item.type === 'weapon') {
+        // Swap weapon
+        addMessage("Found a weapon!");
+    } else {
+        // Add to inventory
+        const existing = player.inventory.find(i => i.type === item.type);
+        if (existing) {
+            existing.count += item.count;
+        } else {
+            player.inventory.push({ type: item.type, count: item.count });
+        }
+        addMessage(`Picked up ${item.type}`);
+    }
+
+    items.splice(index, 1);
+    game.score += 10;
+}
+
+function reloadWeapon() {
+    const weapon = player.weapons[player.currentWeapon];
+    if (!weapon || !weapon.magSize) return;
+
+    if (player.ap < 1) {
+        addFloatingText(player.x * CONFIG.TILE_SIZE + 16, player.y * CONFIG.TILE_SIZE, "No AP!", "#ff4444");
+        return;
+    }
+
+    if (weapon.ammo >= weapon.magSize) {
+        addFloatingText(player.x * CONFIG.TILE_SIZE + 16, player.y * CONFIG.TILE_SIZE, "Full!", "#888888");
+        return;
+    }
+
+    // Find ammo in inventory
+    const ammoItem = player.inventory.find(i => i.type === weapon.ammoType || i.type === 'ammo');
+    if (!ammoItem) {
+        addFloatingText(player.x * CONFIG.TILE_SIZE + 16, player.y * CONFIG.TILE_SIZE, "No ammo!", "#ffaa44");
+        return;
+    }
+
+    player.ap -= 1;
+    const needed = weapon.magSize - weapon.ammo;
+    const toLoad = Math.min(needed, ammoItem.count);
+    weapon.ammo += toLoad;
+    ammoItem.count -= toLoad;
+
+    if (ammoItem.count <= 0) {
+        player.inventory.splice(player.inventory.indexOf(ammoItem), 1);
+    }
+
+    addMessage(`Reloaded ${weapon.name}`);
+    if (player.ap <= 0) setTimeout(() => endTurn(), 300);
+}
+
+function useItem() {
+    const bandage = player.inventory.find(i => i.type === 'bandage');
+    const medkit = player.inventory.find(i => i.type === 'medkit');
+
+    if (player.bleeding > 0 && bandage) {
+        bandage.count--;
+        if (bandage.count <= 0) player.inventory.splice(player.inventory.indexOf(bandage), 1);
+        player.bleeding = 0;
+        player.hp = Math.min(player.hp + 10, player.maxHp);
+        addMessage("Used bandage, bleeding stopped");
+    } else if (player.hp < player.maxHp && medkit) {
+        medkit.count--;
+        if (medkit.count <= 0) player.inventory.splice(player.inventory.indexOf(medkit), 1);
+        player.hp = Math.min(player.hp + 30, player.maxHp);
+        addMessage("Used medkit +30 HP");
+    }
+}
+
+function changeStance(newStance) {
+    player.stance = newStance;
+    player.maxAp = newStance === 'sneak' ? 1 : (newStance === 'walk' ? 2 : 3);
+    addMessage(`Stance: ${newStance}`);
+}
+
+function extract() {
+    if (game.corruption >= 1000) {
+        addMessage("Extraction blocked! Kill the boss first!");
+        return;
+    }
+
+    game.state = 'victory';
+    addMessage("EXTRACTION SUCCESSFUL!");
+}
+
+// === TURN SYSTEM ===
+function endTurn() {
+    if (game.state !== 'playing') return;
+
+    game.state = 'enemy_turn';
+    game.enemyTurnTimer = 0;
+    game.currentEnemyIndex = 0;
+
+    // Increment turn
+    game.turn++;
+
+    // Increase corruption
+    game.corruption += CONFIG.CORRUPTION_PER_TURN;
+
+    // Apply bleeding
+    if (player.bleeding > 0) {
+        player.hp -= player.bleeding;
+        addFloatingText(player.x * CONFIG.TILE_SIZE + 16, player.y * CONFIG.TILE_SIZE, `-${player.bleeding}`, "#ff8888");
+    }
+
+    // Check corruption events
+    checkCorruptionEvents();
+
+    // Check death
+    if (player.hp <= 0) {
+        game.state = 'gameover';
+        addMessage("CLONE LOST. MISSION FAILED.");
+        return;
+    }
+}
+
+function processEnemyTurn(dt) {
+    game.enemyTurnTimer += dt;
+
+    if (game.enemyTurnTimer >= 0.3) {
+        game.enemyTurnTimer = 0;
+
+        if (game.currentEnemyIndex < enemies.length) {
+            const enemy = enemies[game.currentEnemyIndex];
+            processEnemyAction(enemy);
+            game.currentEnemyIndex++;
+        } else {
+            // Enemy turn complete
+            game.state = 'playing';
+            player.ap = player.maxAp;
+        }
+    }
+}
+
+function processEnemyAction(enemy) {
+    enemy.currentAp = enemy.ap;
+
+    // Check if can see player
+    const dist = Math.abs(enemy.x - player.x) + Math.abs(enemy.y - player.y);
+    const canSee = dist <= CONFIG.VISION_RANGE && hasLineOfSight(enemy.x, enemy.y, player.x, player.y);
+
+    if (canSee) {
+        enemy.alerted = true;
+        enemy.lastKnownPlayer = { x: player.x, y: player.y };
+    }
+
+    while (enemy.currentAp > 0) {
+        if (canSee && dist <= enemy.range) {
+            // Attack player
+            enemyAttack(enemy);
+            enemy.currentAp--;
+        } else if (enemy.alerted && enemy.lastKnownPlayer) {
+            // Move toward player
+            const dx = Math.sign(enemy.lastKnownPlayer.x - enemy.x);
+            const dy = Math.sign(enemy.lastKnownPlayer.y - enemy.y);
+
+            if (dx !== 0 && map[enemy.y][enemy.x + dx] !== 1 && !enemies.some(e => e.x === enemy.x + dx && e.y === enemy.y)) {
+                enemy.x += dx;
+            } else if (dy !== 0 && map[enemy.y + dy][enemy.x] !== 1 && !enemies.some(e => e.x === enemy.x && e.y === enemy.y + dy)) {
+                enemy.y += dy;
+            }
+            enemy.currentAp--;
+        } else {
+            // Idle
+            enemy.currentAp = 0;
+        }
+    }
+}
+
+function enemyAttack(enemy) {
+    const roll = Math.random() * 100;
+    if (roll < 70) {
+        const damage = enemy.damage[0] + Math.floor(Math.random() * (enemy.damage[1] - enemy.damage[0] + 1));
+        player.hp -= damage;
+
+        addFloatingText(player.x * CONFIG.TILE_SIZE + 16, player.y * CONFIG.TILE_SIZE, `-${damage}`, "#ff4444");
+        addMessage(`${enemy.name} hits you for ${damage}!`);
+
+        // Poison from stalker
+        if (enemy.poison && Math.random() < 0.3) {
+            player.bleeding += 1;
+            addMessage("Poisoned! Bleeding started.");
+        }
+
+        if (player.hp <= 0) {
+            game.state = 'gameover';
+        }
+    } else {
+        addMessage(`${enemy.name} misses!`);
+    }
+}
+
+function hasLineOfSight(x1, y1, x2, y2) {
+    const dx = Math.abs(x2 - x1);
+    const dy = Math.abs(y2 - y1);
+    const sx = x1 < x2 ? 1 : -1;
+    const sy = y1 < y2 ? 1 : -1;
+    let err = dx - dy;
+    let x = x1;
+    let y = y1;
+
+    while (x !== x2 || y !== y2) {
+        if (map[y][x] === 1) return false;
+
+        const e2 = 2 * err;
+        if (e2 > -dy) {
+            err -= dy;
+            x += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            y += sy;
+        }
+    }
+    return true;
+}
+
+function checkCorruptionEvents() {
+    // Transform human enemies at high corruption
+    if (game.corruption >= 200) {
+        const transformChance = game.corruption < 400 ? 0.1 : (game.corruption < 600 ? 0.25 : 0.5);
+
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            const enemy = enemies[i];
+            if (!enemy.corrupted && Math.random() < transformChance) {
+                // Transform to corrupted
+                const newType = Math.random() < 0.5 ? 'POSSESSED' : (Math.random() < 0.5 ? 'BLOATER' : 'STALKER');
+                const newEnemy = {
+                    ...ENEMIES[newType],
+                    typeKey: newType,
+                    x: enemy.x,
+                    y: enemy.y,
+                    currentHp: ENEMIES[newType].hp,
+                    currentAp: ENEMIES[newType].ap,
+                    alerted: true,
+                    lastKnownPlayer: { x: player.x, y: player.y }
+                };
+                enemies[i] = newEnemy;
+                addMessage(`${enemy.name} transforms into ${newEnemy.name}!`);
+            }
+        }
+    }
+}
+
+// === FLOATING TEXT ===
+function addFloatingText(x, y, text, color) {
+    game.floatingTexts.push({
+        x, y,
+        text,
+        color,
+        life: 1.0
+    });
+}
+
+function updateFloatingTexts(dt) {
+    for (let i = game.floatingTexts.length - 1; i >= 0; i--) {
+        const ft = game.floatingTexts[i];
+        ft.life -= dt;
+        ft.y -= 30 * dt;
+        if (ft.life <= 0) {
+            game.floatingTexts.splice(i, 1);
+        }
+    }
+}
+
+// === MESSAGES ===
+function addMessage(text) {
+    game.messages.push(text);
+    if (game.messages.length > 5) game.messages.shift();
+}
+
+// === GAME LOOP ===
+let lastTime = 0;
+function gameLoop(time) {
+    const dt = Math.min((time - lastTime) / 1000, 0.1);
+    lastTime = time;
+
+    update(dt);
+    render();
+
+    requestAnimationFrame(gameLoop);
+}
+
+function update(dt) {
+    updateFloatingTexts(dt);
+
+    if (game.state === 'enemy_turn') {
+        processEnemyTurn(dt);
+    }
+}
+
+// === RENDERING ===
+function render() {
+    // Clear
+    ctx.fillStyle = COLORS.BG;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (game.state === 'menu') {
+        drawMenu();
+    } else if (game.state === 'playing' || game.state === 'enemy_turn') {
+        drawGame();
+        drawUI();
+        if (game.state === 'enemy_turn') {
+            drawEnemyTurnIndicator();
+        }
+    } else if (game.state === 'gameover') {
+        drawGame();
+        drawGameOver();
+    } else if (game.state === 'victory') {
+        drawGame();
+        drawVictory();
+    }
+
+    if (game.debugMode) drawDebug();
+}
+
+function drawMenu() {
+    ctx.fillStyle = '#4a8a4a';
+    ctx.font = 'bold 48px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText('QUASIMORPH', canvas.width / 2, 200);
+
+    ctx.fillStyle = '#888888';
+    ctx.font = '16px Courier New';
+    ctx.fillText('Turn-Based Tactical Extraction', canvas.width / 2, 250);
+
+    ctx.fillStyle = '#4a8a4a';
+    ctx.font = '24px Courier New';
+    ctx.fillText('[ CLICK TO DEPLOY ]', canvas.width / 2, 400);
+
+    ctx.fillStyle = '#666666';
+    ctx.font = '14px Courier New';
+    ctx.fillText('WASD/Click - Move | 1-2 - Weapons | R - Reload | E - Use Item', canvas.width / 2, 500);
+    ctx.fillText('ENTER - End Turn | Z/X/C - Stance | Q - Debug', canvas.width / 2, 530);
+}
+
+function drawGame() {
+    const ts = CONFIG.TILE_SIZE;
+
+    // Apply corruption visual effects
+    if (game.corruption >= 400) {
+        ctx.fillStyle = `rgba(80, 20, 20, ${Math.min(0.3, (game.corruption - 400) / 2000)})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Draw tiles with detailed patterns
+    for (let y = 0; y < CONFIG.MAP_HEIGHT; y++) {
+        for (let x = 0; x < CONFIG.MAP_WIDTH; x++) {
+            const tile = map[y][x];
+            const visible = visibility[y][x];
+            const wasExplored = explored[y][x];
+            const px = x * ts;
+            const py = y * ts;
+
+            if (!visible && !wasExplored) {
+                ctx.fillStyle = COLORS.FOG;
+                ctx.fillRect(px, py, ts, ts);
+                continue;
+            }
+
+            // Draw base tile
+            if (tile === 1) {
+                // Wall with grid pattern
+                ctx.fillStyle = COLORS.WALL;
+                ctx.fillRect(px, py, ts, ts);
+                ctx.fillStyle = COLORS.WALL_TOP;
+                ctx.fillRect(px + 2, py + 2, ts - 4, ts - 4);
+                ctx.fillStyle = COLORS.WALL_SIDE;
+                ctx.fillRect(px + 6, py + 6, ts - 12, ts - 12);
+            } else if (tile === 2) {
+                // Blood on floor
+                ctx.fillStyle = (x + y) % 2 === 0 ? COLORS.FLOOR : COLORS.FLOOR_LIGHT;
+                ctx.fillRect(px, py, ts, ts);
+                ctx.fillStyle = COLORS.BLOOD;
+                ctx.beginPath();
+                ctx.arc(px + ts/2, py + ts/2, 10, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = COLORS.BLOOD_DARK;
+                ctx.beginPath();
+                ctx.arc(px + ts/2 + 3, py + ts/2 + 2, 5, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (tile === 3) {
+                // Extraction point
+                ctx.fillStyle = '#1a2a1a';
+                ctx.fillRect(px, py, ts, ts);
+            } else {
+                // Floor with grid pattern
+                ctx.fillStyle = (x + y) % 2 === 0 ? COLORS.FLOOR : COLORS.FLOOR_LIGHT;
+                ctx.fillRect(px, py, ts, ts);
+
+                // Grid lines
+                ctx.fillStyle = COLORS.FLOOR_DARK;
+                ctx.fillRect(px, py, ts, 1);
+                ctx.fillRect(px, py, 1, ts);
+
+                // Grate pattern on some tiles
+                if ((x + y) % 4 === 0) {
+                    ctx.fillStyle = COLORS.FLOOR_GRATE;
+                    ctx.fillRect(px + 8, py + 8, ts - 16, 2);
+                    ctx.fillRect(px + 8, py + 14, ts - 16, 2);
+                    ctx.fillRect(px + 8, py + 20, ts - 16, 2);
+                }
+
+                // Corner rivets
+                ctx.fillStyle = '#151515';
+                ctx.fillRect(px + 2, py + 2, 3, 3);
+                ctx.fillRect(px + ts - 5, py + 2, 3, 3);
+                ctx.fillRect(px + 2, py + ts - 5, 3, 3);
+                ctx.fillRect(px + ts - 5, py + ts - 5, 3, 3);
+            }
+
+            // Dim explored but not visible
+            if (!visible && wasExplored) {
+                ctx.fillStyle = COLORS.EXPLORED;
+                ctx.fillRect(px, py, ts, ts);
+            }
+
+            // Extraction marker
+            if (tile === 3 && visible) {
+                // Glowing border
+                ctx.strokeStyle = '#4a8a4a';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(px + 4, py + 4, ts - 8, ts - 8);
+
+                // Pulsing effect
+                const pulse = 0.5 + Math.sin(Date.now() / 300) * 0.3;
+                ctx.fillStyle = `rgba(68, 136, 68, ${pulse * 0.3})`;
+                ctx.fillRect(px + 6, py + 6, ts - 12, ts - 12);
+
+                ctx.fillStyle = '#6a9a6a';
+                ctx.font = 'bold 9px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText('EXIT', px + ts / 2, py + ts / 2 + 3);
+            }
+        }
+    }
+
+    // Draw items with better visuals
+    for (const item of items) {
+        if (visibility[item.y][item.x]) {
+            const ix = item.x * ts;
+            const iy = item.y * ts;
+
+            if (item.type === 'medkit') {
+                ctx.fillStyle = '#2a4a2a';
+                ctx.fillRect(ix + 8, iy + 8, 16, 16);
+                ctx.fillStyle = '#4a8a4a';
+                ctx.fillRect(ix + 14, iy + 10, 4, 12);
+                ctx.fillRect(ix + 10, iy + 14, 12, 4);
+            } else if (item.type === 'bandage') {
+                ctx.fillStyle = '#6a6a5a';
+                ctx.fillRect(ix + 10, iy + 10, 12, 12);
+                ctx.fillStyle = '#8a3a3a';
+                ctx.fillRect(ix + 14, iy + 12, 4, 8);
+            } else if (item.type === 'ammo' || item.type === '9mm' || item.type === '12g') {
+                ctx.fillStyle = '#4a5a4a';
+                ctx.fillRect(ix + 8, iy + 12, 16, 8);
+                ctx.fillStyle = '#6a7a6a';
+                ctx.fillRect(ix + 10, iy + 14, 4, 4);
+                ctx.fillRect(ix + 16, iy + 14, 4, 4);
+            } else {
+                ctx.fillStyle = '#4a6a8a';
+                ctx.fillRect(ix + 10, iy + 10, 12, 12);
+            }
+        }
+    }
+
+    // Draw enemies with detailed sprites
+    for (const enemy of enemies) {
+        if (visibility[enemy.y][enemy.x]) {
+            const ex = enemy.x * ts;
+            const ey = enemy.y * ts;
+
+            if (enemy.corrupted) {
+                // Corrupted enemy - more monstrous
+                ctx.fillStyle = enemy.typeKey === 'BLOATER' ? '#4a3a2a' :
+                               (enemy.typeKey === 'STALKER' ? '#3a2a3a' : '#5a2a2a');
+                ctx.fillRect(ex + 4, ey + 4, ts - 8, ts - 8);
+
+                // Twisted features
+                ctx.fillStyle = '#2a1a1a';
+                ctx.fillRect(ex + 6, ey + 6, ts - 12, ts - 12);
+
+                // Glowing eyes
+                ctx.fillStyle = '#ff4444';
+                ctx.fillRect(ex + 10, ey + 10, 4, 4);
+                ctx.fillRect(ex + 18, ey + 10, 4, 4);
+
+                // Corruption glow
+                ctx.fillStyle = 'rgba(100, 30, 30, 0.3)';
+                ctx.beginPath();
+                ctx.arc(ex + ts/2, ey + ts/2, 18, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // Human enemy
+                ctx.fillStyle = COLORS.ENEMY_HUMAN;
+                ctx.fillRect(ex + 6, ey + 4, ts - 12, ts - 8);
+
+                // Armor/gear
+                ctx.fillStyle = '#4a4a3a';
+                ctx.fillRect(ex + 8, ey + 8, ts - 16, ts - 14);
+
+                // Face
+                ctx.fillStyle = '#5a4a3a';
+                ctx.fillRect(ex + 10, ey + 6, ts - 20, 8);
+
+                // Eyes
+                ctx.fillStyle = enemy.alerted ? '#ff4444' : '#888888';
+                ctx.fillRect(ex + 12, ey + 10, 3, 3);
+                ctx.fillRect(ex + 17, ey + 10, 3, 3);
+            }
+
+            // Health bar
+            const hpPercent = enemy.currentHp / enemy.hp;
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(ex, ey - 6, ts, 4);
+            ctx.fillStyle = enemy.corrupted ? '#6a2a2a' : '#2a6a2a';
+            ctx.fillRect(ex, ey - 6, ts * hpPercent, 4);
+
+        }
+    }
+
+    // Draw player
+    ctx.fillStyle = COLORS.PLAYER;
+    ctx.fillRect(player.x * ts + 2, player.y * ts + 2, ts - 4, ts - 4);
+
+    // Player visor
+    ctx.fillStyle = '#88ff88';
+    ctx.fillRect(player.x * ts + 8, player.y * ts + 10, 16, 6);
+
+    // Draw floating texts
+    for (const ft of game.floatingTexts) {
+        ctx.globalAlpha = ft.life;
+        ctx.fillStyle = ft.color;
+        ctx.font = 'bold 14px Courier New';
+        ctx.textAlign = 'center';
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.globalAlpha = 1;
+    }
+
+    // Highlight hovered tile
+    if (game.state === 'playing') {
+        const tx = input.mouse.tile.x;
+        const ty = input.mouse.tile.y;
+        if (tx >= 0 && tx < CONFIG.MAP_WIDTH && ty >= 0 && ty < CONFIG.MAP_HEIGHT) {
+            ctx.strokeStyle = 'rgba(136, 255, 136, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(tx * ts, ty * ts, ts, ts);
+        }
+    }
+}
+
+function drawUI() {
+    const panelY = CONFIG.MAP_HEIGHT * CONFIG.TILE_SIZE;
+
+    // Bottom panel background
+    ctx.fillStyle = COLORS.UI_BG;
+    ctx.fillRect(0, panelY, canvas.width, canvas.height - panelY);
+    ctx.strokeStyle = COLORS.UI_BORDER;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, panelY, canvas.width, canvas.height - panelY);
+
+    // HP Bar
+    ctx.fillStyle = '#666666';
+    ctx.font = '14px Courier New';
+    ctx.textAlign = 'left';
+    ctx.fillText('HP:', 10, panelY + 25);
+    ctx.fillStyle = '#333333';
+    ctx.fillRect(50, panelY + 12, 150, 16);
+    ctx.fillStyle = COLORS.HEALTH;
+    ctx.fillRect(50, panelY + 12, 150 * (player.hp / player.maxHp), 16);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(`${player.hp}/${player.maxHp}`, 55, panelY + 25);
+
+    // AP
+    ctx.fillStyle = '#666666';
+    ctx.fillText('AP:', 220, panelY + 25);
+    for (let i = 0; i < player.maxAp; i++) {
+        ctx.fillStyle = i < player.ap ? COLORS.AP : '#333333';
+        ctx.fillRect(260 + i * 25, panelY + 12, 20, 16);
+    }
+
+    // Stance
+    ctx.fillStyle = '#666666';
+    ctx.fillText(`Stance: ${player.stance.toUpperCase()}`, 350, panelY + 25);
+
+    // Corruption
+    ctx.fillStyle = '#666666';
+    ctx.fillText('CORRUPTION:', 500, panelY + 25);
+    ctx.fillStyle = '#333333';
+    ctx.fillRect(620, panelY + 12, 100, 16);
+    ctx.fillStyle = COLORS.CORRUPTION;
+    ctx.fillRect(620, panelY + 12, Math.min(100, game.corruption / 10), 16);
+    ctx.fillStyle = game.corruption >= 800 ? '#ff4444' : '#ffffff';
+    ctx.fillText(`${game.corruption}`, 730, panelY + 25);
+
+    // Turn counter
+    ctx.fillStyle = '#666666';
+    ctx.fillText(`Turn: ${game.turn}`, 850, panelY + 25);
+
+    // Weapon display
+    const weapon = player.weapons[player.currentWeapon];
+    ctx.fillStyle = '#666666';
+    ctx.fillText('Weapon:', 10, panelY + 55);
+    ctx.fillStyle = '#4a8a4a';
+    ctx.fillText(`[${player.currentWeapon + 1}] ${weapon.name}`, 90, panelY + 55);
+    if (weapon.ammoType) {
+        ctx.fillStyle = weapon.ammo <= 0 ? '#ff4444' : '#888888';
+        ctx.fillText(`Ammo: ${weapon.ammo}/${weapon.magSize || '-'}`, 250, panelY + 55);
+    }
+    ctx.fillStyle = weapon.durability <= 5 ? '#ff4444' : '#888888';
+    ctx.fillText(`Dur: ${weapon.durability}`, 380, panelY + 55);
+
+    // Inventory quick display
+    ctx.fillStyle = '#666666';
+    ctx.fillText('Items:', 500, panelY + 55);
+    let ix = 560;
+    for (const item of player.inventory) {
+        ctx.fillStyle = '#888888';
+        ctx.fillText(`${item.type}(${item.count})`, ix, panelY + 55);
+        ix += 90;
+    }
+
+    // Messages
+    ctx.fillStyle = '#666666';
+    ctx.font = '12px Courier New';
+    for (let i = 0; i < game.messages.length; i++) {
+        ctx.fillText(game.messages[i], 10, panelY + 80 + i * 14);
+    }
+
+    // Score
+    ctx.fillStyle = '#4a8a4a';
+    ctx.font = '14px Courier New';
+    ctx.textAlign = 'right';
+    ctx.fillText(`Score: ${game.score}`, canvas.width - 10, panelY + 55);
+}
+
+function drawEnemyTurnIndicator() {
+    ctx.fillStyle = 'rgba(80, 20, 20, 0.5)';
+    ctx.fillRect(canvas.width / 2 - 150, 10, 300, 50);
+    ctx.strokeStyle = '#8a3a3a';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(canvas.width / 2 - 150, 10, 300, 50);
+
+    ctx.fillStyle = '#ff6666';
+    ctx.font = 'bold 24px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText('ENEMY TURN', canvas.width / 2, 45);
+}
+
+function drawGameOver() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#8a3a3a';
+    ctx.font = 'bold 48px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText('MISSION FAILED', canvas.width / 2, 300);
+
+    ctx.fillStyle = '#888888';
+    ctx.font = '20px Courier New';
+    ctx.fillText(`Clone lost. All equipment lost.`, canvas.width / 2, 360);
+    ctx.fillText(`Score: ${game.score}`, canvas.width / 2, 400);
+
+    ctx.fillStyle = '#4a8a4a';
+    ctx.font = '16px Courier New';
+    ctx.fillText('[ Click to return ]', canvas.width / 2, 500);
+}
+
+function drawVictory() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#4a8a4a';
+    ctx.font = 'bold 48px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText('EXTRACTION SUCCESSFUL', canvas.width / 2, 300);
+
+    ctx.fillStyle = '#888888';
+    ctx.font = '20px Courier New';
+    ctx.fillText(`Mission complete!`, canvas.width / 2, 360);
+    ctx.fillText(`Final Score: ${game.score}`, canvas.width / 2, 400);
+    ctx.fillText(`Turns: ${game.turn} | Corruption: ${game.corruption}`, canvas.width / 2, 440);
+
+    ctx.fillStyle = '#4a8a4a';
+    ctx.font = '16px Courier New';
+    ctx.fillText('[ Click to return ]', canvas.width / 2, 520);
+}
+
+function drawDebug() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(canvas.width - 200, 0, 200, 200);
+
+    ctx.fillStyle = '#88ff88';
+    ctx.font = '12px Courier New';
+    ctx.textAlign = 'left';
+
+    const lines = [
+        `Player: (${player.x}, ${player.y})`,
+        `HP: ${player.hp}/${player.maxHp}`,
+        `AP: ${player.ap}/${player.maxAp}`,
+        `Bleeding: ${player.bleeding}`,
+        `Stance: ${player.stance}`,
+        `Enemies: ${enemies.length}`,
+        `Items: ${items.length}`,
+        `Rooms: ${rooms.length}`,
+        `Turn: ${game.turn}`,
+        `Corruption: ${game.corruption}`,
+        `State: ${game.state}`,
+        `Score: ${game.score}`
+    ];
+
+    for (let i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], canvas.width - 190, 20 + i * 15);
+    }
+}
+
+// === START ===
+init();
+</script>
+</body>
+</html>

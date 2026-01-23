@@ -1,0 +1,31 @@
+{
+  "game": "binding-of-isaac-clone",
+  "framework": "canvas",
+  "last_updated": "2026-01-12T13:32:43Z",
+  "manifest_coverage": {
+    "total_features": 287,
+    "verified": 0,
+    "percentage": 0
+  },
+  "issues": {
+    "open": 3,
+    "in_progress": 0,
+    "fixed": 0,
+    "wont_fix": 0
+  },
+  "recordings": {
+    "total": 3,
+    "total_duration_sec": 40
+  },
+  "last_iteration": 3,
+  "debug_commands_available": true,
+  "player_intent_map": true,
+  "test_harness_ready": true,
+  "notes": "Iteration 3 findings: (1) Test runner stays on title screen until firing triggers game start - wasted ~5s. (2) Player died 2x in ~13s total gameplay (6HP->0HP rapidly) - enemies very aggressive or i-frames not working. (3) Zero kills after entire 20s test (totalKills: 0) - test runner never actually fires at enemies. (4) Movement pattern is repetitive WASD cycle, not strategic. (5) Final state shows boss_monstro in START room - boss should not spawn in start room.",
+  "observed_issues": [
+    "Title screen: game only starts on fire action, not Enter key despite console log claiming Enter pressed",
+    "Combat balance: Player takes damage every ~1-2 seconds, loses all 6HP in about 4-5 seconds of combat",
+    "Boss spawn: boss_monstro spawning in room 4,3 (start room) - should only spawn in boss room",
+    "Test runner: Never fires at enemies during combat, only fires to accidentally start game"
+  ]
+}

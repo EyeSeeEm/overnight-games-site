@@ -1,0 +1,475 @@
+{
+  "metadata": {
+    "game": "enter-the-gungeon-clone",
+    "framework": "canvas",
+    "iteration": 1,
+    "test_type": "general_playtest",
+    "target": null,
+    "started_at": "2026-01-12T13:32:39.445Z",
+    "duration_ms": 21491,
+    "agent_id": "test-runner"
+  },
+  "initial_state": {
+    "used_debug_commands": [],
+    "game_state": {
+      "gameState": "menu",
+      "roomCleared": false,
+      "currentFloor": 1,
+      "currentRoomIndex": -1,
+      "currentRoomType": null,
+      "player": null,
+      "enemies": [],
+      "enemyCount": 0,
+      "playerBulletCount": 0,
+      "enemyBulletCount": 0,
+      "pickupCount": 0,
+      "chestCount": 0,
+      "runStats": {
+        "kills": 0,
+        "damageDealt": 0,
+        "damageTaken": 0,
+        "shotsFired": 0,
+        "roomsCleared": 0,
+        "bossesKilled": 0
+      }
+    }
+  },
+  "steps": [
+    {
+      "t": 78,
+      "intent": "Capture screenshot",
+      "action": null,
+      "duration_ms": 0,
+      "observation": "Screenshot: initial",
+      "screenshot": "screenshot-001-initial.png"
+    },
+    {
+      "t": 1443,
+      "intent": "Move A to explore/position",
+      "action": {
+        "type": "move_a"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":true,\"currentFloor\":1,\"currentRoomIndex\":2,\"currentRoomType\":\"start\",\"player\":{\"x\":361.9960000000004,\"y\":196,\"health\":6,\"maxHealth\":6,\"armor\":1,\"blanks\":2,\"keys\":1"
+    },
+    {
+      "t": 1967,
+      "intent": "Move W to explore/position",
+      "action": {
+        "type": "move_w"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":true,\"currentFloor\":1,\"currentRoomIndex\":2,\"currentRoomType\":\"start\",\"player\":{\"x\":361.9960000000004,\"y\":139.9959999999998,\"health\":6,\"maxHealth\":6,\"armor\":1,\"blan"
+    },
+    {
+      "t": 2396,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":true,\"currentFloor\":1,\"currentRoomIndex\":2,\"currentRoomType\":\"start\",\"player\":{\"x\":361.9960000000004,\"y\":139.9959999999998,\"health\":6,\"maxHealth\":6,\"armor\":1,\"blan"
+    },
+    {
+      "t": 3165,
+      "intent": "Move D to explore/position",
+      "action": {
+        "type": "move_d"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":true,\"currentFloor\":1,\"currentRoomIndex\":2,\"currentRoomType\":\"start\",\"player\":{\"x\":447.98800000000006,\"y\":139.9959999999998,\"health\":6,\"maxHealth\":6,\"armor\":1,\"bla"
+    },
+    {
+      "t": 3892,
+      "intent": "Move A to explore/position",
+      "action": {
+        "type": "move_a"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":true,\"currentFloor\":1,\"currentRoomIndex\":2,\"currentRoomType\":\"start\",\"player\":{\"x\":367.98400000000044,\"y\":139.9959999999998,\"health\":6,\"maxHealth\":6,\"armor\":1,\"bla"
+    },
+    {
+      "t": 4513,
+      "intent": "Move S to explore/position",
+      "action": {
+        "type": "move_s"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":true,\"currentFloor\":1,\"currentRoomIndex\":2,\"currentRoomType\":\"start\",\"player\":{\"x\":367.98400000000044,\"y\":205.984,\"health\":6,\"maxHealth\":6,\"armor\":1,\"blanks\":2,\"ke"
+    },
+    {
+      "t": 4997,
+      "intent": "Move A to explore/position",
+      "action": {
+        "type": "move_a"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":true,\"currentFloor\":1,\"currentRoomIndex\":2,\"currentRoomType\":\"start\",\"player\":{\"x\":317.99200000000087,\"y\":205.984,\"health\":6,\"maxHealth\":6,\"armor\":1,\"blanks\":2,\"ke"
+    },
+    {
+      "t": 5559,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":true,\"currentFloor\":1,\"currentRoomIndex\":2,\"currentRoomType\":\"start\",\"player\":{\"x\":317.99200000000087,\"y\":205.984,\"health\":6,\"maxHealth\":6,\"armor\":1,\"blanks\":2,\"ke"
+    },
+    {
+      "t": 6129,
+      "intent": "Dodge roll to avoid bullets",
+      "action": {
+        "type": "dodge_roll"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":true,\"currentFloor\":1,\"currentRoomIndex\":2,\"currentRoomType\":\"start\",\"player\":{\"x\":491.4606569892157,\"y\":229.34799510696627,\"health\":6,\"maxHealth\":6,\"armor\":1,\"bla"
+    },
+    {
+      "t": 6548,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":true,\"currentFloor\":1,\"currentRoomIndex\":2,\"currentRoomType\":\"start\",\"player\":{\"x\":491.4606569892157,\"y\":229.34799510696627,\"health\":6,\"maxHealth\":6,\"armor\":1,\"bla"
+    },
+    {
+      "t": 6609,
+      "intent": "Capture screenshot",
+      "action": null,
+      "duration_ms": 0,
+      "observation": "Screenshot: action-10",
+      "screenshot": "screenshot-002-action-10.png"
+    },
+    {
+      "t": 7400,
+      "intent": "Move D to explore/position",
+      "action": {
+        "type": "move_d"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":true,\"currentFloor\":1,\"currentRoomIndex\":2,\"currentRoomType\":\"start\",\"player\":{\"x\":577,\"y\":229.34799510696627,\"health\":6,\"maxHealth\":6,\"armor\":1,\"blanks\":2,\"keys\":"
+    },
+    {
+      "t": 7975,
+      "intent": "Move W to explore/position",
+      "action": {
+        "type": "move_w"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":232,\"y\":155.99200000000005,\"health\":6,\"maxHealth\":6,\"armor\":1,\"blanks\":2,\"keys"
+    },
+    {
+      "t": 8643,
+      "intent": "Move W to explore/position",
+      "action": {
+        "type": "move_w"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":232,\"y\":83.99200000000006,\"health\":6,\"maxHealth\":6,\"armor\":1,\"blanks\":2,\"keys\""
+    },
+    {
+      "t": 9206,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":232,\"y\":83.99200000000006,\"health\":6,\"maxHealth\":6,\"armor\":1,\"blanks\":2,\"keys\""
+    },
+    {
+      "t": 9777,
+      "intent": "Dodge roll to avoid bullets",
+      "action": {
+        "type": "dodge_roll"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":337.0144570735696,\"y\":225.01987281029434,\"health\":6,\"maxHealth\":6,\"armor\":0,\"b"
+    },
+    {
+      "t": 10308,
+      "intent": "Move D to explore/position",
+      "action": {
+        "type": "move_d"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":393.01845707356904,\"y\":225.01987281029434,\"health\":6,\"maxHealth\":6,\"armor\":0,\""
+    },
+    {
+      "t": 10649,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":393.01845707356904,\"y\":225.01987281029434,\"health\":6,\"maxHealth\":6,\"armor\":0,\""
+    },
+    {
+      "t": 11282,
+      "intent": "Move S to explore/position",
+      "action": {
+        "type": "move_s"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":393.01845707356904,\"y\":293.01187281029405,\"health\":6,\"maxHealth\":6,\"armor\":0,\""
+    },
+    {
+      "t": 11565,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":393.01845707356904,\"y\":293.01187281029405,\"health\":6,\"maxHealth\":6,\"armor\":0,\""
+    },
+    {
+      "t": 11999,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":393.01845707356904,\"y\":293.01187281029405,\"health\":6,\"maxHealth\":6,\"armor\":0,\""
+    },
+    {
+      "t": 12077,
+      "intent": "Capture screenshot",
+      "action": null,
+      "duration_ms": 0,
+      "observation": "Screenshot: action-20",
+      "screenshot": "screenshot-003-action-20.png"
+    },
+    {
+      "t": 12660,
+      "intent": "Dodge roll to avoid bullets",
+      "action": {
+        "type": "dodge_roll"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":297.84804910168816,\"y\":144.14877896021696,\"health\":6,\"maxHealth\":6,\"armor\":0,\""
+    },
+    {
+      "t": 13230,
+      "intent": "Dodge roll to avoid bullets",
+      "action": {
+        "type": "dodge_roll"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":393.2773947443034,\"y\":292.1241309333001,\"health\":6,\"maxHealth\":6,\"armor\":0,\"bl"
+    },
+    {
+      "t": 13792,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":393.2773947443034,\"y\":292.1241309333001,\"health\":6,\"maxHealth\":6,\"armor\":0,\"bl"
+    },
+    {
+      "t": 14300,
+      "intent": "Fire at enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":393.2773947443034,\"y\":292.1241309333001,\"health\":6,\"maxHealth\":6,\"armor\":0,\"bl"
+    },
+    {
+      "t": 14693,
+      "intent": "Move W to explore/position",
+      "action": {
+        "type": "move_w"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":393.2773947443034,\"y\":252.12813093330013,\"health\":6,\"maxHealth\":6,\"armor\":0,\"b"
+    },
+    {
+      "t": 15067,
+      "intent": "Move A to explore/position",
+      "action": {
+        "type": "move_a"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":357.2773947443034,\"y\":252.12813093330013,\"health\":6,\"maxHealth\":6,\"armor\":0,\"b"
+    },
+    {
+      "t": 15893,
+      "intent": "Move S to explore/position",
+      "action": {
+        "type": "move_s"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":357.2773947443034,\"y\":309,\"health\":6,\"maxHealth\":6,\"armor\":0,\"blanks\":2,\"keys\""
+    },
+    {
+      "t": 16433,
+      "intent": "Move A to explore/position",
+      "action": {
+        "type": "move_a"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":299.2813947443035,\"y\":309,\"health\":6,\"maxHealth\":6,\"armor\":0,\"blanks\":2,\"keys\""
+    },
+    {
+      "t": 16886,
+      "intent": "Move W to explore/position",
+      "action": {
+        "type": "move_w"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":299.2813947443035,\"y\":260.99999999999994,\"health\":6,\"maxHealth\":6,\"armor\":0,\"b"
+    },
+    {
+      "t": 17348,
+      "intent": "Move D to explore/position",
+      "action": {
+        "type": "move_d"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":347.2693947443033,\"y\":260.99999999999994,\"health\":6,\"maxHealth\":6,\"armor\":0,\"b"
+    },
+    {
+      "t": 17425,
+      "intent": "Capture screenshot",
+      "action": null,
+      "duration_ms": 0,
+      "observation": "Screenshot: action-30",
+      "screenshot": "screenshot-004-action-30.png"
+    },
+    {
+      "t": 18092,
+      "intent": "Move D to explore/position",
+      "action": {
+        "type": "move_d"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":419.2693947443033,\"y\":260.99999999999994,\"health\":5,\"maxHealth\":6,\"armor\":0,\"b"
+    },
+    {
+      "t": 18914,
+      "intent": "Move S to explore/position",
+      "action": {
+        "type": "move_s"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":419.2693947443033,\"y\":309,\"health\":4,\"maxHealth\":6,\"armor\":0,\"blanks\":2,\"keys\""
+    },
+    {
+      "t": 19519,
+      "intent": "Move D to explore/position",
+      "action": {
+        "type": "move_d"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":485.2693947443033,\"y\":309,\"health\":4,\"maxHealth\":6,\"armor\":0,\"blanks\":2,\"keys\""
+    },
+    {
+      "t": 20347,
+      "intent": "Move A to explore/position",
+      "action": {
+        "type": "move_a"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":393.2773947443031,\"y\":309,\"health\":3,\"maxHealth\":6,\"armor\":0,\"blanks\":2,\"keys\""
+    },
+    {
+      "t": 20924,
+      "intent": "Dodge roll to avoid bullets",
+      "action": {
+        "type": "dodge_roll"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":537.9424277079031,\"y\":309,\"health\":1,\"maxHealth\":6,\"armor\":0,\"blanks\":2,\"keys\""
+    },
+    {
+      "t": 21373,
+      "intent": "Move S to explore/position",
+      "action": {
+        "type": "move_s"
+      },
+      "duration_ms": 0,
+      "observation": "{\"gameState\":\"playing\",\"roomCleared\":false,\"currentFloor\":1,\"currentRoomIndex\":3,\"currentRoomType\":\"combat\",\"player\":{\"x\":537.9424277079031,\"y\":309,\"health\":1,\"maxHealth\":6,\"armor\":0,\"blanks\":2,\"keys\""
+    },
+    {
+      "t": 21489,
+      "intent": "Capture screenshot",
+      "action": null,
+      "duration_ms": 0,
+      "observation": "Screenshot: final",
+      "screenshot": "screenshot-005-final.png"
+    }
+  ],
+  "outcome": {
+    "success": true,
+    "summary": "Test completed",
+    "issues_found": [],
+    "issues_verified_fixed": []
+  },
+  "final_state": {
+    "gameState": "playing",
+    "roomCleared": false,
+    "currentFloor": 1,
+    "currentRoomIndex": 3,
+    "currentRoomType": "combat",
+    "player": {
+      "x": 537.9424277079031,
+      "y": 309,
+      "health": 1,
+      "maxHealth": 6,
+      "armor": 0,
+      "blanks": 2,
+      "keys": 1,
+      "shells": 0,
+      "isRolling": false,
+      "isInvulnerable": false,
+      "currentWeapon": "Marine Sidearm",
+      "weaponCount": 1,
+      "passiveItems": [],
+      "activeItem": null
+    },
+    "enemies": [
+      {
+        "type": "bulletKin",
+        "x": 405.9497007143337,
+        "y": 245.00601450702283,
+        "health": 15,
+        "isBoss": false
+      },
+      {
+        "type": "bulletKin",
+        "x": 429.2901967394472,
+        "y": 256.5595834342073,
+        "health": 15,
+        "isBoss": false
+      },
+      {
+        "type": "bandanaBulletKin",
+        "x": 389.21582944934073,
+        "y": 265.47532932776465,
+        "health": 2.357624848489481,
+        "isBoss": false
+      },
+      {
+        "type": "bulletKin",
+        "x": 378.75273657836925,
+        "y": 258.50809618547413,
+        "health": 7.526771210102003,
+        "isBoss": false
+      }
+    ],
+    "enemyCount": 4,
+    "playerBulletCount": 0,
+    "enemyBulletCount": 8,
+    "pickupCount": 0,
+    "chestCount": 0,
+    "runStats": {
+      "kills": 0,
+      "damageDealt": 20.115603941408516,
+      "damageTaken": 5,
+      "shotsFired": 18,
+      "roomsCleared": 0,
+      "bossesKilled": 0
+    }
+  }
+}

@@ -982,57 +982,95 @@
             ctx.save();
             ctx.translate(this.x - camera.x, this.y - camera.y);
 
-            // Vision cone (debug)
-            // ctx.globalAlpha = 0.1;
-            // ctx.fillStyle = this.state === 'combat' ? '#ff0000' : '#ffff00';
-            // ctx.beginPath();
-            // ctx.moveTo(0, 0);
-            // ctx.arc(0, 0, this.visionRange, this.angle - this.visionAngle/2, this.angle + this.visionAngle/2);
-            // ctx.closePath();
-            // ctx.fill();
-            // ctx.globalAlpha = 1;
+            // Vision cone (visible for gameplay)
+            ctx.globalAlpha = this.state === 'combat' ? 0.15 : 0.08;
+            ctx.fillStyle = this.state === 'combat' ? '#ff0000' : (this.state === 'alert' ? '#ffaa00' : '#ffff00');
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.arc(0, 0, this.visionRange, this.angle - this.visionAngle/2, this.angle + this.visionAngle/2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.globalAlpha = 1;
 
-            // Body
+            // Shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.beginPath();
+            ctx.ellipse(3, 3, this.size * 0.8, this.size * 0.4, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Body - different shapes for different enemies
             ctx.fillStyle = this.color;
             ctx.strokeStyle = COLORS.enemyOutline;
             ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(0, 0, this.size, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
 
-            // Direction
-            ctx.fillStyle = COLORS.enemyOutline;
-            ctx.beginPath();
-            ctx.arc(
-                Math.cos(this.angle) * (this.size - 4),
-                Math.sin(this.angle) * (this.size - 4),
-                3, 0, Math.PI * 2
-            );
-            ctx.fill();
+            if (this.type === 'wolf' || this.type === 'ghoul') {
+                // Quadruped/creature shape
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.size * 1.3, this.size * 0.8, this.angle, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                // Eyes
+                ctx.fillStyle = '#ff3333';
+                const eyeOffsetX = Math.cos(this.angle) * this.size * 0.5;
+                const eyeOffsetY = Math.sin(this.angle) * this.size * 0.5;
+                ctx.beginPath();
+                ctx.arc(eyeOffsetX - Math.sin(this.angle) * 4, eyeOffsetY + Math.cos(this.angle) * 4, 2, 0, Math.PI * 2);
+                ctx.arc(eyeOffsetX + Math.sin(this.angle) * 4, eyeOffsetY - Math.cos(this.angle) * 4, 2, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // Humanoid shape
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Direction indicator (gun barrel for ranged)
+                ctx.strokeStyle = '#444444';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(Math.cos(this.angle) * (this.size + 8), Math.sin(this.angle) * (this.size + 8));
+                ctx.stroke();
+
+                // Face direction dot
+                ctx.fillStyle = COLORS.enemyOutline;
+                ctx.beginPath();
+                ctx.arc(
+                    Math.cos(this.angle) * (this.size - 4),
+                    Math.sin(this.angle) * (this.size - 4),
+                    3, 0, Math.PI * 2
+                );
+                ctx.fill();
+            }
 
             // Health bar if damaged
             if (this.health < this.maxHealth) {
                 const barWidth = this.size * 2;
                 const healthPct = this.health / this.maxHealth;
                 ctx.fillStyle = '#222';
-                ctx.fillRect(-barWidth/2, -this.size - 10, barWidth, 4);
+                ctx.fillRect(-barWidth/2, -this.size - 12, barWidth, 5);
                 ctx.fillStyle = healthPct > 0.3 ? COLORS.health : COLORS.healthLow;
-                ctx.fillRect(-barWidth/2, -this.size - 10, barWidth * healthPct, 4);
+                ctx.fillRect(-barWidth/2, -this.size - 12, barWidth * healthPct, 5);
             }
 
             // Alert indicator
             if (this.state === 'alert') {
                 ctx.fillStyle = '#ffff00';
-                ctx.font = 'bold 16px sans-serif';
+                ctx.font = 'bold 18px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('?', 0, -this.size - 15);
+                ctx.fillText('?', 0, -this.size - 18);
             } else if (this.state === 'combat') {
                 ctx.fillStyle = '#ff0000';
-                ctx.font = 'bold 16px sans-serif';
+                ctx.font = 'bold 18px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('!', 0, -this.size - 15);
+                ctx.fillText('!', 0, -this.size - 18);
             }
+
+            // Enemy type label (small)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.font = '8px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(ENEMY_DATA[this.type]?.name || this.type, 0, this.size + 12);
 
             ctx.restore();
         }
@@ -1323,8 +1361,8 @@
             size: 6
         });
 
-        // Chance to drop ammo
-        if (lootChance < 0.4) {
+        // Chance to drop ammo (reduced from 40% to 30%)
+        if (lootChance < 0.3) {
             lootDrops.push({
                 x: x + (Math.random() - 0.5) * 20,
                 y: y + (Math.random() - 0.5) * 20,
@@ -1335,8 +1373,8 @@
             });
         }
 
-        // Chance to drop bandage
-        if (lootChance < 0.2) {
+        // Chance to drop bandage (increased from 20% to 40%)
+        if (Math.random() < 0.4) {
             lootDrops.push({
                 x: x + (Math.random() - 0.5) * 20,
                 y: y + (Math.random() - 0.5) * 20,
@@ -1359,34 +1397,34 @@
             });
         }
 
-        // Rare chance to drop armor plate (5%)
-        if (Math.random() < 0.05) {
+        // Armor plate (increased from 5% to 10%)
+        if (Math.random() < 0.1) {
             lootDrops.push({
                 x: x + (Math.random() - 0.5) * 20,
                 y: y + (Math.random() - 0.5) * 20,
                 type: 'armor',
-                amount: 20 + Math.floor(Math.random() * 30),  // 20-50 armor
+                amount: 20 + Math.floor(Math.random() * 30),
                 color: '#4488aa',
                 size: 7
             });
         }
 
-        // Rare chance to drop medkit (3%)
-        if (Math.random() < 0.03) {
+        // Medkit drop (increased from 3% to 15%)
+        if (Math.random() < 0.15) {
             lootDrops.push({
                 x: x + (Math.random() - 0.5) * 20,
                 y: y + (Math.random() - 0.5) * 20,
                 type: 'medkit',
                 amount: 1,
-                color: '#ff4444',  // Red cross color
+                color: '#ff4444',
                 size: 7
             });
         }
 
-        // Chance to drop weapon from gun-using enemies
+        // Chance to drop weapon from gun-using enemies (reduced from 25% to 10%)
         const enemyData = ENEMY_DATA[enemyType];
         if (enemyData && !enemyData.isMelee && enemyData.weapon !== 'melee') {
-            if (Math.random() < 0.25) {  // 25% chance
+            if (Math.random() < 0.1) {
                 spawnWeaponDrop(x, y, enemyData.weapon);
             }
         }
@@ -1869,26 +1907,60 @@
             }
         }
 
-        // Add buildings/obstacles
-        const buildingCount = 5 + Math.floor(Math.random() * 5);
+        // Add trees for scenery
+        const treeCount = 20 + Math.floor(Math.random() * 15);
+        for (let i = 0; i < treeCount; i++) {
+            const tx = 50 + Math.random() * (ZONE_WIDTH * TILE_SIZE - 100);
+            const ty = 50 + Math.random() * (ZONE_HEIGHT * TILE_SIZE - 100);
+            // Don't place near player start
+            if (Math.hypot(tx - 100, ty - 100) < 150) continue;
+
+            obstacles.push({
+                x: tx - 10,
+                y: ty - 10,
+                width: 20,
+                height: 20,
+                type: 'tree',
+                treeSize: 15 + Math.random() * 10,
+                trunkColor: `rgb(${70 + Math.random() * 30}, ${50 + Math.random() * 20}, ${30 + Math.random() * 20})`,
+                leafColor: `rgb(${30 + Math.random() * 40}, ${80 + Math.random() * 60}, ${30 + Math.random() * 30})`
+            });
+        }
+
+        // Add buildings/obstacles with entrances
+        const buildingCount = 6 + Math.floor(Math.random() * 4);
         for (let i = 0; i < buildingCount; i++) {
             const bx = 100 + Math.random() * (ZONE_WIDTH * TILE_SIZE - 200);
             const by = 100 + Math.random() * (ZONE_HEIGHT * TILE_SIZE - 200);
             const bw = 80 + Math.random() * 80;
             const bh = 60 + Math.random() * 60;
 
+            // Create entrance
+            const entranceSide = Math.floor(Math.random() * 4);
+            const entranceWidth = 25;
+            let entrance = {};
+            switch(entranceSide) {
+                case 0: entrance = { x: bx + bw/2 - entranceWidth/2, y: by - 5, width: entranceWidth, height: 10, side: 'top' }; break;
+                case 1: entrance = { x: bx + bw - 5, y: by + bh/2 - entranceWidth/2, width: 10, height: entranceWidth, side: 'right' }; break;
+                case 2: entrance = { x: bx + bw/2 - entranceWidth/2, y: by + bh - 5, width: entranceWidth, height: 10, side: 'bottom' }; break;
+                case 3: entrance = { x: bx - 5, y: by + bh/2 - entranceWidth/2, width: 10, height: entranceWidth, side: 'left' }; break;
+            }
+
             obstacles.push({
                 x: bx,
                 y: by,
                 width: bw,
                 height: bh,
-                type: 'building'
+                type: 'building',
+                entrance: entrance,
+                roofColor: `rgb(${80 + Math.random() * 40}, ${70 + Math.random() * 30}, ${60 + Math.random() * 30})`,
+                wallColor: `rgb(${90 + Math.random() * 30}, ${90 + Math.random() * 30}, ${80 + Math.random() * 30})`
             });
 
-            // Loot near buildings
+            // Loot inside buildings (via entrance)
             lootContainers.push(new LootContainer(
-                bx + bw/2 + (Math.random() - 0.5) * 40,
-                by + bh/2 + (Math.random() - 0.5) * 40,
+                bx + bw/2 + (Math.random() - 0.5) * 30,
+                by + bh/2 + (Math.random() - 0.5) * 30,
                 Math.random() < 0.3 ? 'weapon' : 'supply'
             ));
         }
@@ -2421,20 +2493,104 @@
             }
         }
 
-        // Draw obstacles
+        // Draw obstacles (trees and buildings)
         for (const obs of obstacles) {
             const screenX = obs.x - camera.x;
             const screenY = obs.y - camera.y;
 
             // Skip if not visible
-            if (screenX + obs.width < 0 || screenX > CANVAS_WIDTH ||
-                screenY + obs.height < 0 || screenY > CANVAS_HEIGHT) continue;
+            if (screenX + obs.width < -50 || screenX > CANVAS_WIDTH + 50 ||
+                screenY + obs.height < -50 || screenY > CANVAS_HEIGHT + 50) continue;
 
-            ctx.fillStyle = COLORS.wall;
-            ctx.fillRect(screenX, screenY, obs.width, obs.height);
-            ctx.strokeStyle = COLORS.wallDark;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(screenX, screenY, obs.width, obs.height);
+            if (obs.type === 'tree') {
+                // Draw detailed tree
+                const centerX = screenX + obs.width / 2;
+                const centerY = screenY + obs.height / 2;
+                const size = obs.treeSize || 20;
+
+                // Tree trunk
+                ctx.fillStyle = obs.trunkColor || '#5a4030';
+                ctx.fillRect(centerX - 4, centerY - 5, 8, 15);
+
+                // Tree shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.beginPath();
+                ctx.ellipse(centerX + 5, centerY + 10, size * 0.6, size * 0.3, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Tree leaves (layered circles for depth)
+                ctx.fillStyle = obs.leafColor || '#2a6030';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY - size * 0.3, size * 0.9, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#3a7040';
+                ctx.beginPath();
+                ctx.arc(centerX - 5, centerY - size * 0.5, size * 0.6, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#4a8050';
+                ctx.beginPath();
+                ctx.arc(centerX + 5, centerY - size * 0.6, size * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (obs.type === 'building') {
+                // Draw building with more detail
+                // Wall base
+                ctx.fillStyle = obs.wallColor || COLORS.wall;
+                ctx.fillRect(screenX, screenY, obs.width, obs.height);
+
+                // Roof (slightly darker)
+                ctx.fillStyle = obs.roofColor || COLORS.wallDark;
+                ctx.fillRect(screenX - 3, screenY - 5, obs.width + 6, 8);
+
+                // Window details
+                ctx.fillStyle = '#303030';
+                const windowSize = 10;
+                const windowMargin = 15;
+                for (let wx = screenX + windowMargin; wx < screenX + obs.width - windowMargin; wx += 25) {
+                    for (let wy = screenY + windowMargin; wy < screenY + obs.height - windowMargin; wy += 20) {
+                        ctx.fillRect(wx, wy, windowSize, windowSize);
+                        // Window reflection
+                        ctx.fillStyle = 'rgba(100, 150, 200, 0.3)';
+                        ctx.fillRect(wx + 2, wy + 2, windowSize - 4, windowSize - 4);
+                        ctx.fillStyle = '#303030';
+                    }
+                }
+
+                // Building outline
+                ctx.strokeStyle = COLORS.wallDark;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(screenX, screenY, obs.width, obs.height);
+
+                // Draw entrance with doorway
+                if (obs.entrance) {
+                    const entX = obs.entrance.x - camera.x;
+                    const entY = obs.entrance.y - camera.y;
+
+                    // Door frame
+                    ctx.fillStyle = '#5a4030';
+                    ctx.fillRect(entX - 2, entY - 2, obs.entrance.width + 4, obs.entrance.height + 4);
+
+                    // Door opening (darker)
+                    ctx.fillStyle = '#202020';
+                    ctx.fillRect(entX, entY, obs.entrance.width, obs.entrance.height);
+
+                    // Door indicator text
+                    ctx.fillStyle = '#888888';
+                    ctx.font = '8px monospace';
+                    ctx.textAlign = 'center';
+                    const doorCenterX = entX + obs.entrance.width / 2;
+                    const doorCenterY = entY + obs.entrance.height / 2;
+                    ctx.fillText('ENTER', doorCenterX, doorCenterY + 3);
+                }
+            } else {
+                // Default obstacle rendering
+                ctx.fillStyle = COLORS.wall;
+                ctx.fillRect(screenX, screenY, obs.width, obs.height);
+                ctx.strokeStyle = COLORS.wallDark;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(screenX, screenY, obs.width, obs.height);
+            }
         }
     }
 

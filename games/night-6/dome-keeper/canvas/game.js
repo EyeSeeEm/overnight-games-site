@@ -948,6 +948,154 @@
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // UPGRADE SHOP SYSTEM
+    // ═══════════════════════════════════════════════════════════════════════════
+    let shopOpen = false;
+    let selectedUpgrade = 0;
+
+    const UPGRADE_SHOP = [
+        { key: 'drillSpeed', name: 'Drill Speed', desc: 'Drill faster', cost: { iron: 5 }, maxLevel: 5 },
+        { key: 'drillStrength', name: 'Drill Power', desc: 'Break rocks faster', cost: { iron: 8 }, maxLevel: 5 },
+        { key: 'moveSpeed', name: 'Move Speed', desc: 'Walk faster', cost: { iron: 4 }, maxLevel: 5 },
+        { key: 'carryCapacity', name: 'Carry Capacity', desc: 'Carry more resources', cost: { iron: 6 }, maxLevel: 5 },
+        { key: 'laserDamage', name: 'Laser Damage', desc: 'Deal more damage', cost: { iron: 10, water: 3 }, maxLevel: 5 },
+        { key: 'laserSpeed', name: 'Laser Speed', desc: 'Aim faster', cost: { iron: 6, water: 2 }, maxLevel: 5 },
+        { key: 'domeHealth', name: 'Dome Armor', desc: 'More dome HP', cost: { iron: 12, cobalt: 2 }, maxLevel: 5 },
+        { key: 'domeRepair', name: 'Repair Dome', desc: 'Restore 200 HP', cost: { water: 5 }, maxLevel: 99, isRepair: true }
+    ];
+
+    function canAffordUpgrade(upgrade) {
+        for (const [res, amount] of Object.entries(upgrade.cost)) {
+            const levelMult = upgrade.isRepair ? 1 : (1 + upgrades[upgrade.key] * 0.5);
+            if (resources[res] < Math.ceil(amount * levelMult)) return false;
+        }
+        return true;
+    }
+
+    function getUpgradeCost(upgrade) {
+        const levelMult = upgrade.isRepair ? 1 : (1 + upgrades[upgrade.key] * 0.5);
+        const costs = [];
+        for (const [res, amount] of Object.entries(upgrade.cost)) {
+            costs.push(`${Math.ceil(amount * levelMult)} ${res}`);
+        }
+        return costs.join(', ');
+    }
+
+    function purchaseUpgrade(upgrade) {
+        if (!canAffordUpgrade(upgrade)) return false;
+        if (!upgrade.isRepair && upgrades[upgrade.key] >= upgrade.maxLevel) return false;
+
+        // Deduct costs
+        for (const [res, amount] of Object.entries(upgrade.cost)) {
+            const levelMult = upgrade.isRepair ? 1 : (1 + upgrades[upgrade.key] * 0.5);
+            resources[res] -= Math.ceil(amount * levelMult);
+        }
+
+        if (upgrade.isRepair) {
+            // Repair dome
+            dome.hp = Math.min(dome.maxHp, dome.hp + 200);
+            floatingTexts.push({
+                x: dome.x,
+                y: dome.y - 40,
+                text: '+200 HP',
+                color: '#48BB78',
+                life: 2
+            });
+        } else {
+            // Apply upgrade
+            upgrades[upgrade.key]++;
+            floatingTexts.push({
+                x: keeper.x,
+                y: keeper.y - 40,
+                text: `${upgrade.name} Lv${upgrades[upgrade.key]}!`,
+                color: '#ECC94B',
+                life: 2
+            });
+        }
+
+        return true;
+    }
+
+    function renderUpgradeShop(ctx) {
+        // Semi-transparent background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        // Title
+        ctx.fillStyle = '#ECC94B';
+        ctx.font = 'bold 32px Courier New';
+        ctx.textAlign = 'center';
+        ctx.fillText('UPGRADE SHOP', CANVAS_WIDTH / 2, 60);
+
+        ctx.fillStyle = '#AAA';
+        ctx.font = '14px Courier New';
+        ctx.fillText('Use UP/DOWN to select, ENTER to buy, ESC to close', CANVAS_WIDTH / 2, 90);
+
+        // Resources display
+        ctx.fillStyle = COLORS.iron;
+        ctx.font = '16px Courier New';
+        ctx.textAlign = 'left';
+        ctx.fillText(`Iron: ${resources.iron}`, 50, 130);
+        ctx.fillStyle = COLORS.water;
+        ctx.fillText(`Water: ${resources.water}`, 200, 130);
+        ctx.fillStyle = COLORS.cobalt;
+        ctx.fillText(`Cobalt: ${resources.cobalt}`, 350, 130);
+
+        // Upgrade list
+        const startY = 170;
+        const itemHeight = 50;
+
+        for (let i = 0; i < UPGRADE_SHOP.length; i++) {
+            const upgrade = UPGRADE_SHOP[i];
+            const y = startY + i * itemHeight;
+            const isSelected = i === selectedUpgrade;
+            const canAfford = canAffordUpgrade(upgrade);
+            const atMaxLevel = !upgrade.isRepair && upgrades[upgrade.key] >= upgrade.maxLevel;
+
+            // Selection highlight
+            if (isSelected) {
+                ctx.fillStyle = 'rgba(236, 201, 75, 0.2)';
+                ctx.fillRect(40, y - 5, CANVAS_WIDTH - 80, itemHeight - 5);
+                ctx.strokeStyle = '#ECC94B';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(40, y - 5, CANVAS_WIDTH - 80, itemHeight - 5);
+            }
+
+            // Upgrade name and level
+            ctx.fillStyle = atMaxLevel ? '#888' : (canAfford ? '#FFF' : '#666');
+            ctx.font = 'bold 16px Courier New';
+            ctx.textAlign = 'left';
+            const levelText = upgrade.isRepair ? '' : ` [Lv ${upgrades[upgrade.key]}/${upgrade.maxLevel}]`;
+            ctx.fillText(`${upgrade.name}${levelText}`, 60, y + 15);
+
+            // Description
+            ctx.fillStyle = '#888';
+            ctx.font = '12px Courier New';
+            ctx.fillText(upgrade.desc, 60, y + 32);
+
+            // Cost
+            ctx.textAlign = 'right';
+            if (atMaxLevel) {
+                ctx.fillStyle = '#888';
+                ctx.font = 'bold 14px Courier New';
+                ctx.fillText('MAX LEVEL', CANVAS_WIDTH - 60, y + 22);
+            } else {
+                ctx.fillStyle = canAfford ? '#48BB78' : '#E53E3E';
+                ctx.font = '14px Courier New';
+                ctx.fillText(`Cost: ${getUpgradeCost(upgrade)}`, CANVAS_WIDTH - 60, y + 22);
+            }
+        }
+
+        // Dome HP display
+        if (dome) {
+            ctx.fillStyle = '#FFF';
+            ctx.font = '14px Courier New';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Dome HP: ${Math.ceil(dome.hp)} / ${dome.maxHp}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT - 30);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // WAVE SYSTEM
     // ═══════════════════════════════════════════════════════════════════════════
     function startMiningPhase() {
@@ -968,7 +1116,9 @@
             return;
         }
 
-        startMiningPhase();
+        // Open upgrade shop between waves
+        shopOpen = true;
+        selectedUpgrade = 0;
     }
 
     function spawnWave() {
@@ -1139,8 +1289,38 @@
         // Update camera
         updateCamera();
 
-        // Handle upgrade menu
-        if (keysDown['e'] && keeper && keeper.isAtDome()) {
+        // Handle upgrade shop toggle (U key while at dome during mining)
+        if (keysDown['u'] && keeper && keeper.isAtDome() && phase === 'mining' && !shopOpen) {
+            shopOpen = true;
+            selectedUpgrade = 0;
+            keysDown['u'] = false; // Prevent immediate re-trigger
+        }
+
+        // Handle upgrade shop navigation
+        if (shopOpen) {
+            if (keysDown['ArrowUp'] || keysDown['w']) {
+                selectedUpgrade = Math.max(0, selectedUpgrade - 1);
+                keysDown['ArrowUp'] = false;
+                keysDown['w'] = false;
+            }
+            if (keysDown['ArrowDown'] || keysDown['s']) {
+                selectedUpgrade = Math.min(UPGRADE_SHOP.length - 1, selectedUpgrade + 1);
+                keysDown['ArrowDown'] = false;
+                keysDown['s'] = false;
+            }
+            if (keysDown['Enter']) {
+                purchaseUpgrade(UPGRADE_SHOP[selectedUpgrade]);
+                keysDown['Enter'] = false;
+            }
+            if (keysDown['Escape']) {
+                shopOpen = false;
+                startMiningPhase();
+                keysDown['Escape'] = false;
+            }
+        }
+
+        // Legacy E key upgrade (quick random upgrade)
+        if (keysDown['e'] && keeper && keeper.isAtDome() && !shopOpen) {
             // Simple upgrade: spend 5 iron for random upgrade
             if (resources.iron >= 5) {
                 resources.iron -= 5;
@@ -1156,6 +1336,7 @@
                     life: 2
                 });
             }
+            keysDown['e'] = false;
         }
     }
 
@@ -1176,6 +1357,12 @@
 
         if (gameState === 'victory') {
             renderVictory();
+            return;
+        }
+
+        // Render upgrade shop if open
+        if (shopOpen) {
+            renderUpgradeShop(ctx);
             return;
         }
 
@@ -1217,13 +1404,18 @@
         ctx.fillText('CLONE', CANVAS_WIDTH / 2, 220);
 
         ctx.font = '16px Courier New';
-        ctx.fillText('WASD - Move / Dig', CANVAS_WIDTH / 2, 300);
-        ctx.fillText('Mouse - Aim Laser (Defense Phase)', CANVAS_WIDTH / 2, 330);
-        ctx.fillText('Click - Fire Laser', CANVAS_WIDTH / 2, 360);
-        ctx.fillText('Space - Deposit Resources at Dome', CANVAS_WIDTH / 2, 390);
-        ctx.fillText('E - Buy Upgrade (5 Iron)', CANVAS_WIDTH / 2, 420);
+        ctx.fillText('WASD - Move / Dig', CANVAS_WIDTH / 2, 290);
+        ctx.fillText('Mouse - Aim Laser (Defense Phase)', CANVAS_WIDTH / 2, 315);
+        ctx.fillText('Click - Fire Laser', CANVAS_WIDTH / 2, 340);
+        ctx.fillText('Space - Deposit Resources at Dome', CANVAS_WIDTH / 2, 365);
+        ctx.fillText('U - Open Upgrade Shop (at Dome)', CANVAS_WIDTH / 2, 390);
+        ctx.fillText('E - Quick Random Upgrade (5 Iron)', CANVAS_WIDTH / 2, 415);
 
-        ctx.fillText('Press ENTER to Start', CANVAS_WIDTH / 2, 500);
+        ctx.fillStyle = '#48BB78';
+        ctx.fillText('Upgrade shop opens automatically after each wave!', CANVAS_WIDTH / 2, 455);
+
+        ctx.fillStyle = COLORS.uiText;
+        ctx.fillText('Press ENTER to Start', CANVAS_WIDTH / 2, 510);
 
         if (keysDown['Enter']) {
             startGame();
@@ -1393,11 +1585,15 @@
         }
 
         // Upgrade hint
-        if (keeper && keeper.isAtDome() && resources.iron >= 5) {
+        if (keeper && keeper.isAtDome()) {
             ctx.fillStyle = 'rgba(236, 201, 75, 0.9)';
             ctx.font = '14px Courier New';
             ctx.textAlign = 'center';
-            ctx.fillText('Press E to Upgrade (5 Iron)', CANVAS_WIDTH / 2, 70);
+            if (phase === 'mining') {
+                ctx.fillText('Press U for Upgrade Shop | E for Quick Upgrade (5 Iron)', CANVAS_WIDTH / 2, 70);
+            } else {
+                ctx.fillText('Upgrade Shop opens after wave', CANVAS_WIDTH / 2, 70);
+            }
         }
     }
 

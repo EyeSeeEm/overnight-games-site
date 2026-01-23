@@ -373,6 +373,15 @@ function gameInit() {
 let spawnTimer = 0;
 
 function gameUpdate() {
+    // Handle menu/gameover input even when paused
+    if (gamePhase === 'menu' || gamePhase === 'gameover' || gamePhase === 'victory') {
+        if (keyWasPressed('Space') || keyWasPressed(' ')) {
+            startGame();
+            gamePaused = false;
+            return;
+        }
+    }
+
     if (gamePaused) return;
 
     const dt = 1/60;

@@ -1,0 +1,262 @@
+{
+  "metadata": {
+    "game": "binding-of-isaac-clone",
+    "framework": "canvas",
+    "iteration": 2,
+    "test_type": "general_playtest",
+    "target": null,
+    "started_at": "2026-01-12T13:23:20.604Z",
+    "duration_ms": 17232,
+    "agent_id": "test-runner"
+  },
+  "initial_state": {
+    "used_debug_commands": [],
+    "game_state": {
+      "gameState": "title",
+      "floorNum": 1,
+      "currentRoom": {
+        "x": 4,
+        "y": 3
+      },
+      "roomKey": "4,3",
+      "bossDefeated": false,
+      "totalKills": 0,
+      "player": null,
+      "enemies": [],
+      "pickups": [],
+      "items": [],
+      "doors": [],
+      "visitedRooms": []
+    }
+  },
+  "steps": [
+    {
+      "t": 71,
+      "intent": "Capture screenshot",
+      "action": null,
+      "duration_ms": 0,
+      "observation": "Screenshot: initial",
+      "screenshot": "screenshot-001-initial.png"
+    },
+    {
+      "t": 2486,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_w"
+      },
+      "duration_ms": 858.8762286809533,
+      "observation": "{\"gameState\":\"title\",\"floorNum\":1,\"currentRoom\":{\"x\":4,\"y\":3},\"roomKey\":\"4,3\",\"bossDefeated\":false,\"totalKills\":0,\"player\":null,\"enemies\":[],\"pickups\":[],\"items\":[],\"doors\":[],\"visitedRooms\":[]}"
+    },
+    {
+      "t": 3746,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_a"
+      },
+      "duration_ms": 1144.0194438092753,
+      "observation": "{\"gameState\":\"title\",\"floorNum\":1,\"currentRoom\":{\"x\":4,\"y\":3},\"roomKey\":\"4,3\",\"bossDefeated\":false,\"totalKills\":0,\"player\":null,\"enemies\":[],\"pickups\":[],\"items\":[],\"doors\":[],\"visitedRooms\":[]}"
+    },
+    {
+      "t": 4822,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_s"
+      },
+      "duration_ms": 961.7641743311665,
+      "observation": "{\"gameState\":\"title\",\"floorNum\":1,\"currentRoom\":{\"x\":4,\"y\":3},\"roomKey\":\"4,3\",\"bossDefeated\":false,\"totalKills\":0,\"player\":null,\"enemies\":[],\"pickups\":[],\"items\":[],\"doors\":[],\"visitedRooms\":[]}"
+    },
+    {
+      "t": 5952,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_d"
+      },
+      "duration_ms": 1007.4874995987834,
+      "observation": "{\"gameState\":\"title\",\"floorNum\":1,\"currentRoom\":{\"x\":4,\"y\":3},\"roomKey\":\"4,3\",\"bossDefeated\":false,\"totalKills\":0,\"player\":null,\"enemies\":[],\"pickups\":[],\"items\":[],\"doors\":[],\"visitedRooms\":[]}"
+    },
+    {
+      "t": 6263,
+      "intent": "Fire at potential enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 200,
+      "observation": "{\"gameState\":\"playing\",\"floorNum\":1,\"currentRoom\":{\"x\":4,\"y\":3},\"roomKey\":\"4,3\",\"bossDefeated\":false,\"totalKills\":0,\"player\":{\"x\":480,\"y\":360,\"health\":6,\"maxHealth\":6,\"soulHearts\":0,\"damage\":3.5,\"spee"
+    },
+    {
+      "t": 7386,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_w"
+      },
+      "duration_ms": 1010.6460760562187,
+      "observation": "{\"gameState\":\"playing\",\"floorNum\":1,\"currentRoom\":{\"x\":4,\"y\":2},\"roomKey\":\"4,2\",\"bossDefeated\":false,\"totalKills\":0,\"player\":{\"x\":480,\"y\":390.0119999999999,\"health\":6,\"maxHealth\":6,\"soulHearts\":0,\"dam"
+    },
+    {
+      "t": 8320,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_a"
+      },
+      "duration_ms": 810.2487095789216,
+      "observation": "{\"gameState\":\"playing\",\"floorNum\":1,\"currentRoom\":{\"x\":4,\"y\":2},\"roomKey\":\"4,2\",\"bossDefeated\":false,\"totalKills\":0,\"player\":{\"x\":330.0060000000002,\"y\":390.0119999999999,\"health\":6,\"maxHealth\":6,\"soul"
+    },
+    {
+      "t": 9577,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_s"
+      },
+      "duration_ms": 1146.485107694185,
+      "observation": "{\"gameState\":\"playing\",\"floorNum\":1,\"currentRoom\":{\"x\":4,\"y\":2},\"roomKey\":\"4,2\",\"bossDefeated\":false,\"totalKills\":0,\"player\":{\"x\":330.0060000000002,\"y\":464,\"health\":6,\"maxHealth\":6,\"soulHearts\":0,\"dam"
+    },
+    {
+      "t": 10537,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_d"
+      },
+      "duration_ms": 843.6676384399693,
+      "observation": "{\"gameState\":\"playing\",\"floorNum\":1,\"currentRoom\":{\"x\":4,\"y\":2},\"roomKey\":\"4,2\",\"bossDefeated\":false,\"totalKills\":0,\"player\":{\"x\":351.012,\"y\":464,\"health\":6,\"maxHealth\":6,\"soulHearts\":0,\"damage\":3.5,\""
+    },
+    {
+      "t": 10850,
+      "intent": "Fire at potential enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 200,
+      "observation": "{\"gameState\":\"playing\",\"floorNum\":1,\"currentRoom\":{\"x\":4,\"y\":2},\"roomKey\":\"4,2\",\"bossDefeated\":false,\"totalKills\":0,\"player\":{\"x\":351.012,\"y\":464,\"health\":6,\"maxHealth\":6,\"soulHearts\":0,\"damage\":3.5,\""
+    },
+    {
+      "t": 10920,
+      "intent": "Capture screenshot",
+      "action": null,
+      "duration_ms": 0,
+      "observation": "Screenshot: action-10",
+      "screenshot": "screenshot-002-action-10.png"
+    },
+    {
+      "t": 11872,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_w"
+      },
+      "duration_ms": 822.648848648685,
+      "observation": "{\"gameState\":\"playing\",\"floorNum\":1,\"currentRoom\":{\"x\":4,\"y\":2},\"roomKey\":\"4,2\",\"bossDefeated\":false,\"totalKills\":0,\"player\":{\"x\":351.012,\"y\":344.01199999999994,\"health\":6,\"maxHealth\":6,\"soulHearts\":0"
+    },
+    {
+      "t": 13147,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_a"
+      },
+      "duration_ms": 1160.1413704351592,
+      "observation": "{\"gameState\":\"playing\",\"floorNum\":1,\"currentRoom\":{\"x\":4,\"y\":2},\"roomKey\":\"4,2\",\"bossDefeated\":false,\"totalKills\":0,\"player\":{\"x\":232,\"y\":344.01199999999994,\"health\":6,\"maxHealth\":6,\"soulHearts\":0,\"da"
+    },
+    {
+      "t": 14316,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_s"
+      },
+      "duration_ms": 1045.3470448080072,
+      "observation": "{\"gameState\":\"playing\",\"floorNum\":1,\"currentRoom\":{\"x\":4,\"y\":2},\"roomKey\":\"4,2\",\"bossDefeated\":false,\"totalKills\":0,\"player\":{\"x\":232,\"y\":464,\"health\":6,\"maxHealth\":6,\"soulHearts\":0,\"damage\":3.5,\"spee"
+    },
+    {
+      "t": 15484,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_d"
+      },
+      "duration_ms": 1052.7305056859607,
+      "observation": "{\"gameState\":\"playing\",\"floorNum\":1,\"currentRoom\":{\"x\":4,\"y\":2},\"roomKey\":\"4,2\",\"bossDefeated\":false,\"totalKills\":0,\"player\":{\"x\":351.98800000000045,\"y\":464,\"health\":6,\"maxHealth\":6,\"soulHearts\":0,\"da"
+    },
+    {
+      "t": 15793,
+      "intent": "Fire at potential enemies",
+      "action": {
+        "type": "fire"
+      },
+      "duration_ms": 200,
+      "observation": "{\"gameState\":\"playing\",\"floorNum\":1,\"currentRoom\":{\"x\":4,\"y\":2},\"roomKey\":\"4,2\",\"bossDefeated\":false,\"totalKills\":0,\"player\":{\"x\":351.98800000000045,\"y\":464,\"health\":6,\"maxHealth\":6,\"soulHearts\":0,\"da"
+    },
+    {
+      "t": 17071,
+      "intent": "Move to explore room",
+      "action": {
+        "type": "move_w"
+      },
+      "duration_ms": 1154.2943891177758,
+      "observation": "{\"gameState\":\"playing\",\"floorNum\":1,\"currentRoom\":{\"x\":4,\"y\":2},\"roomKey\":\"4,2\",\"bossDefeated\":false,\"totalKills\":0,\"player\":{\"x\":351.98800000000045,\"y\":344.0120000000003,\"health\":6,\"maxHealth\":6,\"sou"
+    },
+    {
+      "t": 17230,
+      "intent": "Capture screenshot",
+      "action": null,
+      "duration_ms": 0,
+      "observation": "Screenshot: final",
+      "screenshot": "screenshot-003-final.png"
+    }
+  ],
+  "outcome": {
+    "success": true,
+    "summary": "Test completed",
+    "issues_found": [],
+    "issues_verified_fixed": []
+  },
+  "final_state": {
+    "gameState": "playing",
+    "floorNum": 1,
+    "currentRoom": {
+      "x": 4,
+      "y": 2
+    },
+    "roomKey": "4,2",
+    "bossDefeated": false,
+    "totalKills": 0,
+    "player": {
+      "x": 351.98800000000045,
+      "y": 344.0120000000003,
+      "health": 6,
+      "maxHealth": 6,
+      "soulHearts": 0,
+      "damage": 3.5,
+      "speed": 3,
+      "coins": 0,
+      "bombs": 1,
+      "keys": 1,
+      "collectedItems": []
+    },
+    "enemies": [],
+    "pickups": [],
+    "items": [
+      {
+        "id": "magicMushroom",
+        "x": 312,
+        "y": 360
+      },
+      {
+        "id": "dinner",
+        "x": 480,
+        "y": 360
+      },
+      {
+        "id": "cricketHead",
+        "x": 648,
+        "y": 360
+      }
+    ],
+    "doors": [
+      {
+        "dir": "south",
+        "open": true,
+        "locked": false
+      }
+    ],
+    "visitedRooms": [
+      "4,3",
+      "4,2"
+    ]
+  }
+}

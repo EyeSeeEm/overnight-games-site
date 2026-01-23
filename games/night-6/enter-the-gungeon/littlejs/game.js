@@ -499,6 +499,15 @@ function gameInit() {
 }
 
 function gameUpdate() {
+    // Handle menu/gameover input even when paused
+    if (gamePhase === 'menu' || gamePhase === 'gameover') {
+        if (keyWasPressed('Space') || keyWasPressed(' ')) {
+            startGame();
+            gamePaused = false;
+            return;
+        }
+    }
+
     if (gamePaused) return;
 
     const dt = 1/60;

@@ -1,0 +1,58 @@
+{
+  "metadata": {
+    "game": "binding-of-isaac-clone",
+    "framework": "canvas",
+    "iteration": 1,
+    "test_type": "general_playtest",
+    "target": null,
+    "started_at": "2026-01-12T13:22:18.686Z",
+    "duration_ms": 77,
+    "agent_id": "test-runner"
+  },
+  "initial_state": {
+    "used_debug_commands": [],
+    "game_state": {
+      "gameState": "title",
+      "floorNum": 1,
+      "currentRoom": {
+        "x": 4,
+        "y": 3
+      },
+      "roomKey": "4,3",
+      "bossDefeated": false,
+      "totalKills": 0,
+      "player": null,
+      "enemies": [],
+      "pickups": [],
+      "items": [],
+      "doors": [],
+      "visitedRooms": []
+    }
+  },
+  "steps": [],
+  "outcome": {
+    "success": false,
+    "summary": "Test failed with error",
+    "issues_found": [
+      "TEST_RUNNER_ERROR"
+    ],
+    "issues_verified_fixed": []
+  },
+  "final_state": {
+    "gameState": "title",
+    "floorNum": 1,
+    "currentRoom": {
+      "x": 4,
+      "y": 3
+    },
+    "roomKey": "4,3",
+    "bossDefeated": false,
+    "totalKills": 0,
+    "player": null,
+    "enemies": [],
+    "pickups": [],
+    "items": [],
+    "doors": [],
+    "visitedRooms": []
+  }
+}

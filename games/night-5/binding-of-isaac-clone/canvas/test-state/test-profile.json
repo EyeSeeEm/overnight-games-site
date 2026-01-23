@@ -1,0 +1,409 @@
+{
+  "game_info": {
+    "name": "Binding of Isaac Clone",
+    "type": "roguelike_twin_stick_shooter",
+    "description": "Top-down roguelike dungeon crawler with twin-stick shooter mechanics. Player navigates procedurally generated basement floors on a 13x7 tile grid, shooting tears at enemies, collecting stacking items, and fighting bosses to descend deeper.",
+    "framework": "canvas",
+    "resolution": {
+      "width": 800,
+      "height": 600
+    },
+    "tile_grid": {
+      "columns": 13,
+      "rows": 7,
+      "tile_size_typical": 32
+    }
+  },
+
+  "core_loop": {
+    "description": "Enter room -> Enemies spawn with wake-up animation (500ms invulnerable) -> Clear all enemies with tears -> Doors unlock -> Move to next room via door -> Repeat. Find treasure room (key required), shop, and boss room on each floor. Kill boss -> Trapdoor appears -> Descend to next floor.",
+    "phases": [
+      "room_entry",
+      "enemy_spawn_animation",
+      "combat",
+      "room_clear",
+      "exploration",
+      "door_transition"
+    ],
+    "estimated_time_per_room_sec": 15,
+    "estimated_rooms_per_floor": 10,
+    "estimated_time_per_floor_sec": 180
+  },
+
+  "recommended_test_duration_sec": 120,
+  "recommended_test_rationale": "2 minutes allows clearing 4-8 rooms, sufficient to test room transitions, combat, and basic exploration. Covers multiple core loop iterations without requiring full floor completion.",
+
+  "input_scheme": {
+    "movement": {
+      "type": "4_directional_wasd",
+      "keys": {
+        "up": "KeyW",
+        "down": "KeyS",
+        "left": "KeyA",
+        "right": "KeyD"
+      },
+      "notes": "8-directional via diagonal key combos. Instant direction changes (no acceleration)."
+    },
+    "firing": {
+      "type": "4_directional_arrows",
+      "keys": {
+        "up": "ArrowUp",
+        "down": "ArrowDown",
+        "left": "ArrowLeft",
+        "right": "ArrowRight"
+      },
+      "notes": "Twin-stick style. Fire rate is ~3 tears/sec at base stats. Tears have slight arc/gravity."
+    },
+    "actions": {
+      "drop_bomb": "KeyE",
+      "use_active_item": "Space",
+      "toggle_map": "Tab",
+      "drop_card_pill": "KeyQ"
+    },
+    "critical_note": "NEVER use arrows for movement. NEVER use WASD for firing. This is a twin-stick game."
+  },
+
+  "combat_profile": {
+    "type": "twin_stick_shooter",
+    "aiming": "4_directional_discrete",
+    "fire_while_moving": true,
+    "base_fire_rate_per_sec": 3,
+    "tear_physics": "arc_with_gravity",
+    "knockback": true,
+    "test_strategy": {
+      "approach": "Move toward enemies while firing in their direction. Circle-strafe around groups. Prioritize ranged enemies (Pooters, Horfs) first.",
+      "movement_pattern": "continuous_with_direction_changes",
+      "firing_pattern": "hold_direction_toward_enemies",
+      "retreat_when": "low_health_or_overwhelmed"
+    },
+    "enemy_spawn_behavior": {
+      "spawn_animation_duration_ms": 500,
+      "invulnerable_during_spawn": true,
+      "cannot_move_or_fire_during_spawn": true
+    }
+  },
+
+  "menu_start": {
+    "expected_elements": ["title_screen", "start_button_or_press_key"],
+    "start_sequence": [
+      {
+        "action": "wait",
+        "duration_ms": 1000,
+        "reason": "Allow title screen to fully load"
+      },
+      {
+        "action": "key_press",
+        "key": "Enter",
+        "reason": "Most likely start game trigger"
+      },
+      {
+        "action": "wait",
+        "duration_ms": 500,
+        "reason": "Allow game scene to load"
+      }
+    ],
+    "alternative_start_keys": ["Space", "KeyZ"],
+    "fallback": "If menu does not respond, try clicking center of screen"
+  },
+
+  "success_conditions": {
+    "minimum_meaningful_test": {
+      "enemies_killed": 3,
+      "rooms_entered": 2,
+      "survival_time_sec": 30
+    },
+    "good_test": {
+      "enemies_killed": 10,
+      "rooms_entered": 4,
+      "survival_time_sec": 60,
+      "pickups_collected": 2
+    },
+    "excellent_test": {
+      "enemies_killed": 25,
+      "rooms_entered": 8,
+      "survival_time_sec": 120,
+      "pickups_collected": 5,
+      "boss_encountered": true
+    },
+    "metrics_to_track": [
+      "enemies_killed",
+      "rooms_entered",
+      "rooms_cleared",
+      "damage_taken",
+      "pickups_collected",
+      "items_acquired",
+      "survival_time_sec",
+      "tears_fired",
+      "boss_damage_dealt"
+    ]
+  },
+
+  "failure_indicators": {
+    "critical": [
+      {
+        "condition": "game_crash",
+        "detection": "JavaScript error in console or page unresponsive",
+        "known_issues": [
+          "Crash when killing certain enemies (pink two-eyed enemy, bats)",
+          "Crash on room transitions"
+        ]
+      },
+      {
+        "condition": "stuck_on_menu",
+        "detection": "No gameplay after 10 seconds of start attempts"
+      },
+      {
+        "condition": "instant_death",
+        "detection": "Game over screen within 2 seconds of game start"
+      },
+      {
+        "condition": "player_stuck",
+        "detection": "Player position unchanged for 5+ seconds despite movement input",
+        "known_issues": ["Player can get stuck in objects when entering rooms"]
+      }
+    ],
+    "warning": [
+      {
+        "condition": "zero_kills",
+        "detection": "No enemies killed after 30 seconds of combat"
+      },
+      {
+        "condition": "no_room_transitions",
+        "detection": "Same room for 60+ seconds despite cleared enemies"
+      },
+      {
+        "condition": "enemies_not_spawning",
+        "detection": "Empty room that should have enemies"
+      },
+      {
+        "condition": "doors_not_unlocking",
+        "detection": "All enemies dead but doors remain locked"
+      }
+    ]
+  },
+
+  "key_features_to_test": [
+    {
+      "feature": "twin_stick_combat",
+      "gdd_section": "Section 2: Core Combat System",
+      "priority": "critical",
+      "test_actions": ["Fire tears in all 4 directions", "Move while firing", "Kill enemies"],
+      "expected_behavior": "Tears fire in arrow key direction, player moves independently with WASD"
+    },
+    {
+      "feature": "room_transitions",
+      "gdd_section": "Section 8: Room Types",
+      "priority": "critical",
+      "test_actions": ["Clear room of enemies", "Walk through door"],
+      "expected_behavior": "Doors unlock after enemies cleared. Walking through door loads new room. Player spawns near entry door edge, not room center."
+    },
+    {
+      "feature": "room_persistence",
+      "gdd_section": "FEEDBACK REQUIREMENTS - Section 6",
+      "priority": "high",
+      "test_actions": ["Clear a room", "Leave", "Return to same room"],
+      "expected_behavior": "Killed enemies stay dead, collected pickups stay collected, destroyed obstacles stay destroyed"
+    },
+    {
+      "feature": "health_system",
+      "gdd_section": "Section 3: Health System",
+      "priority": "critical",
+      "test_actions": ["Take damage from enemies", "Observe i-frames", "Collect hearts"],
+      "expected_behavior": "Hearts decrement on hit, 1 second invincibility after damage, hearts heal player"
+    },
+    {
+      "feature": "enemy_spawn_animation",
+      "gdd_section": "Section 9: Enemy Spawn Behavior",
+      "priority": "high",
+      "test_actions": ["Enter room with enemies", "Observe spawn animation"],
+      "expected_behavior": "Enemies play 500ms spawn animation, cannot move/fire during spawn, invulnerable during spawn"
+    },
+    {
+      "feature": "enemy_collision_with_obstacles",
+      "gdd_section": "Section 9: Ground Enemy Collision",
+      "priority": "high",
+      "test_actions": ["Observe non-flying enemies navigating around rocks/poop"],
+      "expected_behavior": "Ground enemies cannot walk through obstacles, must path around them"
+    },
+    {
+      "feature": "pickup_system",
+      "gdd_section": "Section 4: Pickup System",
+      "priority": "medium",
+      "test_actions": ["Kill enemies", "Collect dropped pickups"],
+      "expected_behavior": "Enemies drop hearts, coins, bombs, keys. Walking over pickup collects it."
+    },
+    {
+      "feature": "destructible_obstacles",
+      "gdd_section": "FEEDBACK REQUIREMENTS - Section 1",
+      "priority": "medium",
+      "test_actions": ["Shoot poop obstacles", "Use bombs on rocks"],
+      "expected_behavior": "Poop takes damage from tears, shows visual deterioration, eventually destroyed"
+    },
+    {
+      "feature": "minimap",
+      "gdd_section": "Section 17: Visual Design - Minimap",
+      "priority": "medium",
+      "test_actions": ["Observe minimap in corner", "Press Tab to expand"],
+      "expected_behavior": "Minimap shows discovered rooms. Treasure=yellow, Shop=cyan, Boss=red. Fog of war hides undiscovered rooms."
+    },
+    {
+      "feature": "movement_pause_on_room_entry",
+      "gdd_section": "FEEDBACK REQUIREMENTS - Section 7",
+      "priority": "medium",
+      "test_actions": ["Hold movement while entering new room"],
+      "expected_behavior": "Brief ~100ms pause before player can move, prevents walking into enemies"
+    },
+    {
+      "feature": "item_pedestals",
+      "gdd_section": "Section 5: Item System",
+      "priority": "medium",
+      "test_actions": ["Find treasure room", "Approach item pedestal"],
+      "expected_behavior": "Item on pedestal shows tooltip from 80px distance. Walking into it picks up item."
+    },
+    {
+      "feature": "shop_functionality",
+      "gdd_section": "Section 7: Floor Structure - Shop Room",
+      "priority": "medium",
+      "test_actions": ["Find shop", "Attempt purchase with coins"],
+      "expected_behavior": "Every floor has a shop. Items have coin prices. Sufficient coins allows purchase."
+    },
+    {
+      "feature": "boss_fight",
+      "gdd_section": "Section 10: Boss Fights",
+      "priority": "high",
+      "test_actions": ["Find boss room", "Engage boss", "Observe attack patterns"],
+      "expected_behavior": "Boss has multiple attack patterns. Killing boss drops item and spawns trapdoor."
+    }
+  ],
+
+  "enemy_types_in_chapter_1": [
+    {
+      "name": "Fly",
+      "hp": 4,
+      "behavior": "wander_randomly",
+      "attack": "contact",
+      "flying": true
+    },
+    {
+      "name": "Attack Fly",
+      "hp": 6,
+      "behavior": "chase_player",
+      "attack": "contact",
+      "flying": true
+    },
+    {
+      "name": "Pooter",
+      "hp": 8,
+      "behavior": "drift_toward_player",
+      "attack": "occasional_blood_shot",
+      "flying": true
+    },
+    {
+      "name": "Gaper",
+      "hp": 12,
+      "behavior": "walk_toward_player",
+      "attack": "contact",
+      "flying": false,
+      "notes": "Speeds up on sight"
+    },
+    {
+      "name": "Charger",
+      "hp": 15,
+      "behavior": "wander_then_charge",
+      "attack": "high_speed_contact",
+      "flying": false
+    },
+    {
+      "name": "Spider",
+      "hp": 6,
+      "behavior": "erratic_movement",
+      "attack": "contact",
+      "flying": false
+    },
+    {
+      "name": "Horf",
+      "hp": 10,
+      "behavior": "stationary",
+      "attack": "fires_tears_when_aligned",
+      "flying": false
+    },
+    {
+      "name": "Clotty",
+      "hp": 10,
+      "behavior": "wander",
+      "attack": "4_directional_blood_shots",
+      "flying": false
+    }
+  ],
+
+  "boss_types_in_chapter_1": [
+    {
+      "name": "Monstro",
+      "hp": 250,
+      "attacks": ["hop_toward_player", "spit_blood_arc", "jump_offscreen_land_radial_burst"]
+    },
+    {
+      "name": "Duke of Flies",
+      "hp": 110,
+      "attacks": ["spawn_orbiting_flies", "spawn_chaser_fly", "release_orbiters"]
+    },
+    {
+      "name": "Larry Jr.",
+      "hp": "22_per_segment",
+      "attacks": ["snake_movement", "drops_poop"]
+    },
+    {
+      "name": "Gemini",
+      "hp": "85_big_45_small",
+      "attacks": ["chase_slowly", "small_aggressive_on_big_death"]
+    }
+  ],
+
+  "known_bugs_from_feedback": [
+    {
+      "id": "crash_on_kill",
+      "description": "Game crashes when shooting/killing certain enemies (pink guy with two eyes, bats)",
+      "severity": "critical",
+      "gdd_reference": "FEEDBACK REQUIREMENTS - Section 3"
+    },
+    {
+      "id": "crash_on_room_transition",
+      "description": "Game often crashes or hangs when entering the next room",
+      "severity": "critical",
+      "gdd_reference": "FEEDBACK REQUIREMENTS - Section 5"
+    },
+    {
+      "id": "player_stuck_in_objects",
+      "description": "Player can get stuck in objects when entering rooms",
+      "severity": "high",
+      "gdd_reference": "Iteration Feedback - Room Layout & Grid"
+    },
+    {
+      "id": "wrong_controls",
+      "description": "Game may use IJKL to shoot instead of arrow keys",
+      "severity": "high",
+      "gdd_reference": "FEEDBACK REQUIREMENTS - Section 4"
+    }
+  ],
+
+  "visual_requirements": {
+    "no_damage_numbers": true,
+    "grid_alignment": "All objects must snap to 13x7 tile grid",
+    "ui_elements": [
+      "Hearts (top area)",
+      "Minimap (top-right)",
+      "Keys/Bombs/Coins (left side)",
+      "Active item with charges (top-left)",
+      "Stats display (DMG, SPD)"
+    ],
+    "treasure_room_minimap_color": "yellow/gold (#FFD700)"
+  },
+
+  "test_automation_hints": {
+    "start_detection": "Look for player sprite or HUD hearts appearing",
+    "room_clear_detection": "Door sprites change from locked to unlocked, or listen for unlock sound",
+    "death_detection": "Game over screen or health reaches zero",
+    "pickup_detection": "Coin/key/bomb count changes in HUD",
+    "room_transition_detection": "Screen wipe or instant room change, player position near door"
+  }
+}

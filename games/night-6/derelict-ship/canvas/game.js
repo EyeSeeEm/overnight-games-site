@@ -934,7 +934,7 @@ function generateSector(sectorIdx) {
 
 function startGame() {
     gameState = 'playing';
-    gamePaused = true;
+    gamePaused = false;
 
     // Hide menus
     document.getElementById('menuScreen').classList.add('hidden');

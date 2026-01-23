@@ -1,0 +1,23 @@
+{
+  "game_info": {
+    "name": "Zero Sievert Clone",
+    "genre": "extraction looter shooter"
+  },
+  "input_scheme": {
+    "movement": "wasd",
+    "action": "mouse_click",
+    "special": ["e", "r", "tab", "i"]
+  },
+  "goals": [
+    "Explore the wasteland area",
+    "Loot items and weapons",
+    "Enter houses through doors",
+    "Fight or avoid enemies"
+  ],
+  "success_conditions": {
+    "survive_30s": true,
+    "move_around": true,
+    "find_loot": true
+  },
+  "notes": "Houses should have visible entrances/doors"
+}

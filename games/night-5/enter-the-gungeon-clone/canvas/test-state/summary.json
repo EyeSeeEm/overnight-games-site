@@ -1,0 +1,100 @@
+{
+  "game": "enter-the-gungeon-clone",
+  "framework": "canvas",
+  "version": "0.1.0",
+  "test_system_version": "2.0",
+  "created": "2026-01-12",
+  "last_updated": "2026-01-12",
+  "iteration": 1,
+  "status": "tested",
+  "core_features": {
+    "player_movement": {
+      "status": "implemented",
+      "tested": true,
+      "issues": []
+    },
+    "dodge_roll": {
+      "status": "implemented",
+      "tested": true,
+      "issues": []
+    },
+    "shooting": {
+      "status": "implemented",
+      "tested": true,
+      "issues": []
+    },
+    "weapon_switching": {
+      "status": "implemented",
+      "tested": false,
+      "issues": []
+    },
+    "blank_system": {
+      "status": "implemented",
+      "tested": false,
+      "issues": []
+    },
+    "enemy_ai": {
+      "status": "implemented",
+      "tested": true,
+      "issues": []
+    },
+    "boss_fights": {
+      "status": "implemented",
+      "tested": false,
+      "issues": []
+    },
+    "room_generation": {
+      "status": "implemented",
+      "tested": true,
+      "issues": []
+    },
+    "room_clearing": {
+      "status": "implemented",
+      "tested": false,
+      "issues": []
+    },
+    "pickups": {
+      "status": "implemented",
+      "tested": false,
+      "issues": []
+    },
+    "chests": {
+      "status": "implemented",
+      "tested": false,
+      "issues": []
+    },
+    "shop": {
+      "status": "implemented",
+      "tested": false,
+      "issues": []
+    },
+    "items": {
+      "status": "implemented",
+      "tested": false,
+      "issues": []
+    },
+    "visual_effects": {
+      "status": "implemented",
+      "tested": false,
+      "issues": []
+    },
+    "ui": {
+      "status": "implemented",
+      "tested": true,
+      "issues": []
+    }
+  },
+  "issues_found": [],
+  "issues_fixed": [],
+  "test_recordings": [
+    {
+      "iteration": 1,
+      "type": "general_playtest",
+      "duration_ms": 21491,
+      "steps": 41,
+      "screenshots": 5,
+      "file": "recordings/iter-001-general_playtest.json"
+    }
+  ],
+  "notes": "Iteration 1 complete. Test exercised: movement, dodge roll, shooting, room transitions, enemy AI. Player took 5 damage, dealt 20 damage, fired 18 shots. Did NOT clear any rooms or kill enemies in 20s test."
+}
