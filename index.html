@@ -530,6 +530,8 @@
     .card-rating .star-click.filled { color: #666; }
     .card-rating.user-rated .star-click { color: #444; }
     .card-rating.user-rated .star-click.filled { color: #ffd700; }
+    .card-rating.default-rated .star-click { color: #444; }
+    .card-rating.default-rated .star-click.filled { color: #888; }
 
     /* Star rating component */
     .star-rating {
@@ -1152,6 +1154,8 @@
     let gameNotes = {};
     let brokenGames = {};
     let finalRatings = {};
+    let defaultRatings = {}; // Pre-loaded ratings from owner
+    let defaultBroken = []; // Pre-loaded broken status from owner
     let variantOverrides = {}; // User overrides for Base/Expanded/Polished/V2
     let plannerNotes = {}; // Priority notes for planner agent
     let bugReports = {}; // Screenshots + comments from game.html
@@ -1185,6 +1189,18 @@
       // Load planner notes and bug reports (created in game.html)
       plannerNotes = JSON.parse(localStorage.getItem('plannerNotes') || '{}');
       bugReports = JSON.parse(localStorage.getItem('bugReports') || '{}');
+
+      // Load default ratings from owner (shown when user hasn't rated)
+      try {
+        const defResp = await fetch('default-ratings.json?t=' + Date.now());
+        const defData = await defResp.json();
+        defaultRatings = defData.defaultRatings || {};
+        defaultBroken = defData.defaultBroken || [];
+        console.log('[Defaults] Loaded', Object.keys(defaultRatings).length, 'default ratings');
+      } catch (e) {
+        console.log('[Defaults] No default ratings file found');
+      }
+
       notesLoaded = true; // CRITICAL: Mark notes as loaded
       console.log('[Notes] Loaded', Object.keys(gameNotes).length, 'notes from storage');
     }
@@ -1442,8 +1458,8 @@
       // Chip filters
       if (activeChips.unplayed) games = games.filter(g => !g.played);
       if (activeChips.hasNotes) games = games.filter(g => gameNotes[g.id]);
-      if (activeChips.rating5) games = games.filter(g => finalRatings[g.id] === 5);
-      if (activeChips.rating4) games = games.filter(g => finalRatings[g.id] >= 4);
+      if (activeChips.rating5) games = games.filter(g => (finalRatings[g.id] || defaultRatings[g.id]) === 5);
+      if (activeChips.rating4) games = games.filter(g => (finalRatings[g.id] || defaultRatings[g.id]) >= 4);
       if (activeChips.updated) games = games.filter(g => isGameUpdated(g.id));
       if (activeChips.showBroken) games = games.filter(g => brokenGames[g.id]);
 
@@ -1455,7 +1471,7 @@
       switch (sortBy) {
         case 'date-asc': games.sort((a, b) => new Date(a.createdDate) - new Date(b.createdDate)); break;
         case 'name': games.sort((a, b) => a.name.localeCompare(b.name)); break;
-        case 'final-rating': games.sort((a, b) => (finalRatings[b.id] || 0) - (finalRatings[a.id] || 0)); break;
+        case 'final-rating': games.sort((a, b) => (finalRatings[b.id] || defaultRatings[b.id] || 0) - (finalRatings[a.id] || defaultRatings[a.id] || 0)); break;
         case 'night': games.sort((a, b) => {
           const nightA = parseInt(a.night.replace('night-', ''));
           const nightB = parseInt(b.night.replace('night-', ''));
@@ -2174,14 +2190,17 @@
         const variantLabel = sortBy === 'grouped' ? getVariantLabel(g) : '';
 
         const isBroken = brokenGames[g.id];
-        const userRating = isBroken ? 0 : (finalRatings[g.id] || 0);
+        const userRating = finalRatings[g.id] || 0;
+        const defRating = defaultRatings[g.id] || 0;
+        const displayRating = isBroken ? 0 : (userRating || defRating);
+        const isUserRated = userRating > 0;
 
         html += `
         <div class="game-card ${g.played && !isGameUpdated(g.id) ? 'played' : ''} ${isGameUpdated(g.id) ? 'updated' : ''} ${isBroken ? 'broken' : ''}" onclick="playGame('${g.id}', '${g.path}')">
           <button class="notes-btn ${gameNotes[g.id] ? 'has-notes' : ''}" onclick="openNotes(event, '${g.id}', '${g.name.replace(/'/g, "\\'")}')">📝</button>
           <button class="broken-btn ${isBroken ? 'is-broken' : ''}" onclick="toggleBroken(event, '${g.id}')" title="Mark as broken">✕</button>
-          ${!isBroken ? `<div class="card-rating ${userRating > 0 ? 'user-rated' : ''}" onclick="event.stopPropagation()">
-            ${[1,2,3,4,5].map(n => `<span class="star-click ${n <= userRating ? 'filled' : 'empty'}" onclick="rateGame(event, '${g.id}', ${n})">★</span>`).join('')}
+          ${!isBroken ? `<div class="card-rating ${isUserRated ? 'user-rated' : (defRating > 0 ? 'default-rated' : '')}" onclick="event.stopPropagation()">
+            ${[1,2,3,4,5].map(n => `<span class="star-click ${n <= displayRating ? 'filled' : 'empty'}" onclick="rateGame(event, '${g.id}', ${n})">★</span>`).join('')}
           </div>` : ''}
           ${g.screenshot
             ? `<img class="screenshot" src="${g.path}${g.screenshot}" alt="${g.name}" onerror="this.outerHTML='<div class=no-screenshot>🎮</div>'">`
