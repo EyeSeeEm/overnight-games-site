@@ -505,6 +505,24 @@
       color: #fff;
     }
 
+    /* Highlight badge for new/updated games */
+    .highlight-badge {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #4caf50;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+      z-index: 15;
+    }
+    .game-card.highlighted {
+      border: 2px solid #4caf50;
+    }
+
     /* Card rating (clickable 5-star) */
     .card-rating {
       position: absolute;
@@ -1038,6 +1056,12 @@
       </button>
       <div class="filter-panel" id="filterPanel">
         <div class="filter-section">
+          <div class="filter-section-title">Recent</div>
+          <div class="filter-options">
+            <label class="filter-option"><input type="checkbox" id="recentFilter"> New/Updated Only</label>
+          </div>
+        </div>
+        <div class="filter-section">
           <div class="filter-section-title">Night</div>
           <div class="filter-options">
             <label class="filter-option"><input type="checkbox" data-night="night-1"> Night 1</label>
@@ -1156,6 +1180,7 @@
     let finalRatings = {};
     let defaultRatings = {}; // Pre-loaded ratings from owner
     let defaultBroken = []; // Pre-loaded broken status from owner
+    let highlightedGames = []; // Games marked as new/updated for review
     let variantOverrides = {}; // User overrides for Base/Expanded/Polished/V2
     let plannerNotes = {}; // Priority notes for planner agent
     let bugReports = {}; // Screenshots + comments from game.html
@@ -1199,6 +1224,15 @@
         console.log('[Defaults] Loaded', Object.keys(defaultRatings).length, 'default ratings');
       } catch (e) {
         console.log('[Defaults] No default ratings file found');
+      }
+
+      // Load highlighted games (new/updated for review)
+      try {
+        const hlResp = await fetch('highlighted.json?t=' + Date.now());
+        highlightedGames = await hlResp.json();
+        console.log('[Highlighted] Loaded', highlightedGames.length, 'games for review');
+      } catch (e) {
+        console.log('[Highlighted] No highlighted games file found');
       }
 
       notesLoaded = true; // CRITICAL: Mark notes as loaded
@@ -1453,6 +1487,12 @@
           if (frameworks.includes('other') && otherFrameworks.includes(g.framework)) return true;
           return frameworks.includes(normalizeFramework(g.framework));
         });
+      }
+
+      // Recent filter (new/updated games for review)
+      const recentFilter = document.getElementById('recentFilter');
+      if (recentFilter && recentFilter.checked) {
+        games = games.filter(g => highlightedGames.includes(g.id));
       }
 
       // Chip filters
@@ -2195,8 +2235,10 @@
         const displayRating = isBroken ? 0 : (userRating || defRating);
         const isUserRated = userRating > 0;
 
+        const isHighlighted = highlightedGames.includes(g.id);
         html += `
-        <div class="game-card ${g.played && !isGameUpdated(g.id) ? 'played' : ''} ${isGameUpdated(g.id) ? 'updated' : ''} ${isBroken ? 'broken' : ''}" onclick="playGame('${g.id}', '${g.path}')">
+        <div class="game-card ${g.played && !isGameUpdated(g.id) ? 'played' : ''} ${isGameUpdated(g.id) ? 'updated' : ''} ${isBroken ? 'broken' : ''} ${isHighlighted ? 'highlighted' : ''}" onclick="playGame('${g.id}', '${g.path}')">
+          ${isHighlighted ? '<div class="highlight-badge">NEW</div>' : ''}
           <button class="notes-btn ${gameNotes[g.id] ? 'has-notes' : ''}" onclick="openNotes(event, '${g.id}', '${g.name.replace(/'/g, "\\'")}')">📝</button>
           <button class="broken-btn ${isBroken ? 'is-broken' : ''}" onclick="toggleBroken(event, '${g.id}')" title="Mark as broken">✕</button>
           ${!isBroken ? `<div class="card-rating ${isUserRated ? 'user-rated' : (defRating > 0 ? 'default-rated' : '')}" onclick="event.stopPropagation()">
@@ -2306,6 +2348,7 @@
     // Event listeners
     document.getElementById('sortBy').addEventListener('change', onFilterChange);
     document.getElementById('search').addEventListener('input', onFilterChange);
+    document.getElementById('recentFilter').addEventListener('change', onFilterChange);
 
     // Chip click handlers
     document.querySelectorAll('.chip').forEach(chip => {
