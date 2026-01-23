@@ -66,6 +66,7 @@
     .tag.night-4 { background: rgba(255, 152, 0, 0.3); color: #ffb74d; }
     .tag.night-5 { background: rgba(0, 188, 212, 0.3); color: #4dd0e1; }
     .tag.night-6 { background: rgba(156, 39, 176, 0.3); color: #ce93d8; }
+    .tag.night-7 { background: rgba(121, 85, 72, 0.3); color: #bcaaa4; }
     .tag.framework { background: rgba(96, 125, 139, 0.3); color: #90a4ae; }
 
     /* Storage indicator */
@@ -209,6 +210,20 @@
     .panel-toggle.has-content {
       background: linear-gradient(to bottom, #4a6b35, #3d5a2d);
       border-color: #6b8e4e;
+    }
+    .reload-btn {
+      background: linear-gradient(to bottom, #c97f00, #a66a00);
+      border: 1px solid #e09000;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .reload-btn:hover {
+      background: linear-gradient(to bottom, #e09000, #c97f00);
+      border-color: #ffb040;
     }
     .spacer { flex: 1; }
 
@@ -622,6 +637,7 @@
         <input type="checkbox" id="brokenCheckbox">
         <span>Mark as Broken</span>
       </label>
+      <button class="reload-btn" onclick="reloadGame()">↻ Reload</button>
       <div class="spacer"></div>
       <button class="panel-toggle" id="panelToggle" onclick="togglePanel()">Panel</button>
     </div>
@@ -816,6 +832,13 @@
     // Panel toggle
     function togglePanel() {
       document.getElementById('sidePanel').classList.toggle('closed');
+    }
+
+    function reloadGame() {
+      const iframe = document.getElementById('gameFrame');
+      const src = iframe.src;
+      iframe.src = 'about:blank';
+      setTimeout(() => { iframe.src = src; }, 50);
     }
 
     // Screenshot capture

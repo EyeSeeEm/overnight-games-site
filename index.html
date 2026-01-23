@@ -891,6 +891,10 @@
       background: rgba(233, 30, 99, 0.3);
       color: #f06292;
     }
+    .tag.night-7 {
+      background: rgba(121, 85, 72, 0.3);
+      color: #bcaaa4;
+    }
     /* Agent badges */
     .tag.agent-1 {
       background: rgba(41, 128, 185, 0.4);
@@ -1040,6 +1044,7 @@
             <label class="filter-option"><input type="checkbox" data-night="night-4"> Night 4</label>
             <label class="filter-option"><input type="checkbox" data-night="night-5"> Night 5</label>
             <label class="filter-option"><input type="checkbox" data-night="night-6"> Night 6</label>
+            <label class="filter-option"><input type="checkbox" data-night="night-7"> Night 7</label>
           </div>
         </div>
         <div class="filter-section">
@@ -1255,6 +1260,13 @@
 
     const otherFrameworks = ['excalibur', 'kaboom', 'kaplay', 'crisp', 'melonjs'];
 
+    // Normalize framework names (phaser-2 → phaser, canvas-2 → canvas)
+    function normalizeFramework(fw) {
+      if (fw === 'phaser-2') return 'phaser';
+      if (fw === 'canvas-2') return 'canvas';
+      return fw;
+    }
+
     // Active chip filters state
     let activeChips = {
       hideBroken: true,
@@ -1267,17 +1279,19 @@
     };
 
     function populateFilters() {
-      const frameworks = [...new Set(allGames.map(g => g.framework))].sort();
+      // Get unique normalized framework names
+      const rawFrameworks = allGames.map(g => g.framework);
+      const normalizedFrameworks = [...new Set(rawFrameworks.map(normalizeFramework))].sort();
       const container = document.getElementById('frameworkOptions');
-      // Add main frameworks first
-      frameworks.filter(f => !otherFrameworks.includes(f)).forEach(f => {
+      // Add main frameworks first (normalized names only)
+      normalizedFrameworks.filter(f => !otherFrameworks.includes(f)).forEach(f => {
         const label = document.createElement('label');
         label.className = 'filter-option';
         label.innerHTML = `<input type="checkbox" data-framework="${f}"> ${f}`;
         container.appendChild(label);
       });
       // Add "Other" if any games use those frameworks
-      if (frameworks.some(f => otherFrameworks.includes(f))) {
+      if (rawFrameworks.some(f => otherFrameworks.includes(f))) {
         const label = document.createElement('label');
         label.className = 'filter-option';
         label.innerHTML = `<input type="checkbox" data-framework="other"> Other`;
@@ -1417,11 +1431,11 @@
         games = games.filter(g => nights.includes(g.night));
       }
 
-      // Framework filter (any selected)
+      // Framework filter (any selected) - uses normalized names
       if (frameworks.length > 0) {
         games = games.filter(g => {
           if (frameworks.includes('other') && otherFrameworks.includes(g.framework)) return true;
-          return frameworks.includes(g.framework);
+          return frameworks.includes(normalizeFramework(g.framework));
         });
       }
 
