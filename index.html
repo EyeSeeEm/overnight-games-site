@@ -1529,11 +1529,12 @@
         }); break;
         case 'grouped': games.sort((a, b) => {
           // Extract base game name (without -expanded, -polished, -v2)
-          const getBase = (g) => g.gameDir.replace(/-expanded$|-polished$|-v2$/, '');
+          const getBase = (g) => (g.gameDir || g.id.split('/')[1] || g.name).replace(/-expanded$|-polished$|-v2$/, '');
           const getVariant = (g) => {
-            if (g.gameDir.includes('-polished')) return 2;
-            if (g.gameDir.includes('-expanded')) return 1;
-            if (g.gameDir.includes('-v2')) return 3;
+            const dir = g.gameDir || g.id.split('/')[1] || '';
+            if (dir.includes('-polished')) return 2;
+            if (dir.includes('-expanded')) return 1;
+            if (dir.includes('-v2')) return 3;
             return 0; // base
           };
           const baseA = getBase(a);

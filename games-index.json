@@ -5377,161 +5377,230 @@
     "name": "Alien Breed Mix",
     "path": "games/night-8/alien-breed-mix/canvas",
     "framework": "canvas",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "alien-breed-mix",
+    "playable": true
   },
   {
     "id": "night-8/derelict-ship/canvas",
     "name": "Derelict Ship",
     "path": "games/night-8/derelict-ship/canvas",
     "framework": "canvas",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "derelict-ship",
+    "playable": true
   },
   {
     "id": "night-8/dome-keeper-clone/canvas",
     "name": "Dome Keeper",
     "path": "games/night-8/dome-keeper-clone/canvas",
     "framework": "canvas",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "dome-keeper-clone",
+    "playable": true
   },
   {
     "id": "night-8/enter-the-gungeon-clone/canvas",
     "name": "Enter The Gungeon",
     "path": "games/night-8/enter-the-gungeon-clone/canvas",
     "framework": "canvas",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "enter-the-gungeon-clone",
+    "playable": true
   },
   {
     "id": "night-8/high-tea-v2/canvas",
     "name": "High Tea V2",
     "path": "games/night-8/high-tea-v2/canvas",
     "framework": "canvas",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "high-tea-v2",
+    "playable": true
   },
   {
     "id": "night-8/high-tea-v2/phaser",
     "name": "High Tea V2",
     "path": "games/night-8/high-tea-v2/phaser",
     "framework": "phaser",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "high-tea-v2",
+    "playable": true
   },
   {
     "id": "night-8/lost-outpost/canvas",
     "name": "Lost Outpost",
     "path": "games/night-8/lost-outpost/canvas",
     "framework": "canvas",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "lost-outpost",
+    "playable": true
   },
   {
     "id": "night-8/lost-outpost/phaser",
     "name": "Lost Outpost",
     "path": "games/night-8/lost-outpost/phaser",
     "framework": "phaser",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "lost-outpost",
+    "playable": true
   },
   {
     "id": "night-8/minishoot-adventures-clone/canvas",
     "name": "Minishoot Adventures",
     "path": "games/night-8/minishoot-adventures-clone/canvas",
     "framework": "canvas",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "minishoot-adventures-clone",
+    "playable": true
   },
   {
     "id": "night-8/minishoot-adventures-clone/phaser",
     "name": "Minishoot Adventures",
     "path": "games/night-8/minishoot-adventures-clone/phaser",
     "framework": "phaser",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "minishoot-adventures-clone",
+    "playable": true
   },
   {
     "id": "night-8/pirateers-v2/canvas",
     "name": "Pirateers V2",
     "path": "games/night-8/pirateers-v2/canvas",
     "framework": "canvas",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "pirateers-v2",
+    "playable": true
   },
   {
     "id": "night-8/pirateers-v2/phaser",
     "name": "Pirateers V2",
     "path": "games/night-8/pirateers-v2/phaser",
     "framework": "phaser",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "pirateers-v2",
+    "playable": true
   },
   {
     "id": "night-8/quasimorph-clone/canvas",
     "name": "Quasimorph",
     "path": "games/night-8/quasimorph-clone/canvas",
     "framework": "canvas",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "quasimorph-clone",
+    "playable": true
   },
   {
     "id": "night-8/skyrim-2d/canvas",
     "name": "Skyrim 2D",
     "path": "games/night-8/skyrim-2d/canvas",
     "framework": "canvas",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "skyrim-2d",
+    "playable": true
   },
   {
     "id": "night-8/skyrim-2d/phaser",
     "name": "Skyrim 2D",
     "path": "games/night-8/skyrim-2d/phaser",
     "framework": "phaser",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "skyrim-2d",
+    "playable": true
   },
   {
     "id": "night-8/star-of-providence-clone/canvas",
     "name": "Star Of Providence",
     "path": "games/night-8/star-of-providence-clone/canvas",
     "framework": "canvas",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "star-of-providence-clone",
+    "playable": true
   },
   {
     "id": "night-8/star-of-providence-clone/phaser",
     "name": "Star Of Providence",
     "path": "games/night-8/star-of-providence-clone/phaser",
     "framework": "phaser",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "star-of-providence-clone",
+    "playable": true
   },
   {
     "id": "night-8/subterrain/canvas",
     "name": "Subterrain",
     "path": "games/night-8/subterrain/canvas",
     "framework": "canvas",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "subterrain",
+    "playable": true
   },
   {
     "id": "night-8/system-shock-2d/canvas",
     "name": "System Shock 2D",
     "path": "games/night-8/system-shock-2d/canvas",
     "framework": "canvas",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "system-shock-2d",
+    "playable": true
   },
   {
     "id": "night-8/xcom-classic-clone/canvas",
     "name": "Xcom Classic",
     "path": "games/night-8/xcom-classic-clone/canvas",
     "framework": "canvas",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "xcom-classic-clone",
+    "playable": true
   },
   {
     "id": "night-8/xcom-classic-clone/phaser",
     "name": "Xcom Classic",
     "path": "games/night-8/xcom-classic-clone/phaser",
     "framework": "phaser",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "xcom-classic-clone",
+    "playable": true
   },
   {
     "id": "night-8/zero-sievert-clone/canvas",
     "name": "Zero Sievert",
     "path": "games/night-8/zero-sievert-clone/canvas",
     "framework": "canvas",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "zero-sievert-clone",
+    "playable": true
   },
   {
     "id": "night-8/zero-sievert-clone/phaser",
     "name": "Zero Sievert",
     "path": "games/night-8/zero-sievert-clone/phaser",
     "framework": "phaser",
-    "screenshot": "screenshot.png"
+    "screenshot": "screenshot.png",
+    "night": "night-8",
+    "gameDir": "zero-sievert-clone",
+    "playable": true
   },
   {
     "id": "pirateers-v2-canvas-night-3",
