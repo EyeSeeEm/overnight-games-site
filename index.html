@@ -1045,6 +1045,7 @@
       <button class="chip" data-filter="rating5" id="chipRating5">★★★★★</button>
       <button class="chip" data-filter="rating4" id="chipRating4">★★★★+</button>
       <button class="chip" data-filter="updated" id="chipUpdated">Updated</button>
+      <button class="chip" data-filter="highlighted" id="chipHighlighted">New</button>
       <button class="chip" data-filter="showBroken" id="chipShowBroken">Broken Only</button>
     </div>
 
@@ -1059,12 +1060,6 @@
         <span class="arrow">▼</span>
       </button>
       <div class="filter-panel" id="filterPanel">
-        <div class="filter-section">
-          <div class="filter-section-title">Recent</div>
-          <div class="filter-options">
-            <label class="filter-option"><input type="checkbox" id="recentFilter"> New/Updated Only</label>
-          </div>
-        </div>
         <div class="filter-section">
           <div class="filter-section-title">Night</div>
           <div class="filter-options">
@@ -1330,6 +1325,7 @@
       rating5: false,
       rating4: false,
       updated: false,
+      highlighted: false,
       showBroken: false
     };
 
@@ -1494,18 +1490,13 @@
         });
       }
 
-      // Recent filter (new/updated games for review)
-      const recentFilter = document.getElementById('recentFilter');
-      if (recentFilter && recentFilter.checked) {
-        games = games.filter(g => highlightedGames.includes(g.id));
-      }
-
       // Chip filters
       if (activeChips.unplayed) games = games.filter(g => !g.played);
       if (activeChips.hasNotes) games = games.filter(g => gameNotes[g.id]);
       if (activeChips.rating5) games = games.filter(g => (finalRatings[g.id] || defaultRatings[g.id]) === 5);
       if (activeChips.rating4) games = games.filter(g => (finalRatings[g.id] || defaultRatings[g.id]) >= 4);
       if (activeChips.updated) games = games.filter(g => isGameUpdated(g.id));
+      if (activeChips.highlighted) games = games.filter(g => highlightedGames.includes(g.id));
       if (activeChips.showBroken) games = games.filter(g => brokenGames[g.id]);
 
       // Hide broken (unless showing broken only)
@@ -2358,7 +2349,6 @@
     // Event listeners
     document.getElementById('sortBy').addEventListener('change', onFilterChange);
     document.getElementById('search').addEventListener('input', onFilterChange);
-    document.getElementById('recentFilter').addEventListener('change', onFilterChange);
 
     // Chip click handlers
     document.querySelectorAll('.chip').forEach(chip => {
