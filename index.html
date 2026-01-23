@@ -1903,16 +1903,18 @@
     function exportNotes() {
       const exportData = { games: [], broken: [], rated: [], bugReports: {}, summary: {} };
 
-      // All games with any data (planner, notes, broken, rating, variant, or issues)
+      // Only export games where user changed something from defaults
       allGames.forEach(g => {
         const hasPlannerNotes = plannerNotes[g.id];
         const hasNotes = gameNotes[g.id];
         const hasIssues = bugReports[g.id]?.length > 0;
         const isBroken = brokenGames[g.id];
         const rating = finalRatings[g.id];
+        const defRating = defaultRatings[g.id];
+        const ratingChanged = rating && rating !== defRating;
         const variant = variantOverrides[g.id];
 
-        if (hasPlannerNotes || hasNotes || hasIssues || isBroken || rating || variant) {
+        if (hasPlannerNotes || hasNotes || hasIssues || isBroken || ratingChanged || variant) {
           exportData.games.push({
             id: g.id,
             name: g.name,
@@ -1928,7 +1930,7 @@
           });
         }
         if (isBroken) exportData.broken.push(g.id);
-        if (rating) exportData.rated.push({ id: g.id, rating });
+        if (ratingChanged) exportData.rated.push({ id: g.id, rating });
       });
 
       // Add variant overrides summary
@@ -1952,6 +1954,8 @@
       exportData.rated.sort((a, b) => b.rating - a.rating);
 
       const totalIssues = Object.values(bugReports).reduce((sum, arr) => sum + (arr?.length || 0), 0);
+      // Count only ratings that differ from defaults
+      const changedRatings = Object.entries(finalRatings).filter(([id, r]) => r !== defaultRatings[id]);
       exportData.summary = {
         total: allGames.length,
         broken: Object.keys(brokenGames).length,
@@ -1960,16 +1964,16 @@
         withNotes: Object.keys(gameNotes).length,
         withIssues: Object.keys(bugReports).filter(k => bugReports[k]?.length > 0).length,
         totalIssues: totalIssues,
-        withRating: Object.keys(finalRatings).length,
-        avgRating: Object.keys(finalRatings).length > 0
-          ? (Object.values(finalRatings).reduce((a,b) => a+b, 0) / Object.keys(finalRatings).length).toFixed(1)
+        withChangedRating: changedRatings.length,
+        avgChangedRating: changedRatings.length > 0
+          ? (changedRatings.reduce((a, [,r]) => a + r, 0) / changedRatings.length).toFixed(1)
           : null,
         ratingBreakdown: {
-          '5': Object.values(finalRatings).filter(r => r === 5).length,
-          '4': Object.values(finalRatings).filter(r => r === 4).length,
-          '3': Object.values(finalRatings).filter(r => r === 3).length,
-          '2': Object.values(finalRatings).filter(r => r === 2).length,
-          '1': Object.values(finalRatings).filter(r => r === 1).length
+          '5': changedRatings.filter(([,r]) => r === 5).length,
+          '4': changedRatings.filter(([,r]) => r === 4).length,
+          '3': changedRatings.filter(([,r]) => r === 3).length,
+          '2': changedRatings.filter(([,r]) => r === 2).length,
+          '1': changedRatings.filter(([,r]) => r === 1).length
         }
       };
 
