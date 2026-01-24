@@ -83,68 +83,6 @@ function addMuzzleFlash(x, y, angle) {
     muzzleFlashes.push({ x, y, angle, life: 0.1 });
 }
 
-// Attack effect (melee slash)
-let attackEffects = [];
-function addAttackEffect(x, y, angle) {
-    attackEffects.push({ x, y, angle, life: 0.15, maxLife: 0.15 });
-}
-
-// Audio context for sound effects
-let audioCtx = null;
-function initAudio() {
-    if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-}
-
-function playSound(type) {
-    if (!audioCtx) initAudio();
-    if (!audioCtx) return;
-
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-
-    if (type === 'melee') {
-        // Swoosh sound
-        osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-        osc.type = 'sawtooth';
-        osc.start(audioCtx.currentTime);
-        osc.stop(audioCtx.currentTime + 0.1);
-    } else if (type === 'hit') {
-        // Impact sound
-        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
-        osc.type = 'square';
-        osc.start(audioCtx.currentTime);
-        osc.stop(audioCtx.currentTime + 0.08);
-    } else if (type === 'gunshot') {
-        // Gunshot sound
-        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.15);
-        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-        osc.type = 'sawtooth';
-        osc.start(audioCtx.currentTime);
-        osc.stop(audioCtx.currentTime + 0.15);
-    } else if (type === 'crit') {
-        // Critical hit sound
-        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
-        gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-        osc.type = 'square';
-        osc.start(audioCtx.currentTime);
-        osc.stop(audioCtx.currentTime + 0.2);
-    }
-}
-
 // Init ambient particles
 function initAmbientParticles() {
     for (let i = 0; i < 30; i++) {
@@ -209,7 +147,7 @@ const ItemDef = {
     powerCell: { name: 'Power Cell', type: 'material', stackable: true, maxStack: 5 },
     shiv: { name: 'Shiv', type: 'weapon', melee: true, damage: 10, speed: 0.4, durability: 20 },
     pipeClub: { name: 'Pipe Club', type: 'weapon', melee: true, damage: 20, speed: 1.0, durability: 30 },
-    pistol: { name: 'Pistol', type: 'weapon', melee: false, damage: 15, speed: 0.5, accuracy: 85, magazine: 12, durability: 100 },
+    pistol: { name: 'Pistol', type: 'weapon', melee: false, damage: 15, speed: 0.5, accuracy: 85, magazine: 12, durability: Infinity },
     stunBaton: { name: 'Stun Baton', type: 'weapon', melee: true, damage: 15, speed: 0.7, durability: 25, stun: 2 },
     ammo: { name: 'Pistol Ammo', type: 'ammo', stackable: true, maxStack: 30 },
     keycard: { name: 'Red Keycard', type: 'key', stackable: false },
@@ -385,8 +323,9 @@ function spawnEnemiesForSector(type, state) {
 
     let spawns = [];
     if (type === SectorType.STORAGE) {
-        for (let i = 0; i < 4; i++) spawns.push('shambler');
-        for (let i = 0; i < 2; i++) spawns.push('crawler');
+        // Reduced by 50% (was 4 shamblers + 2 crawlers = 6)
+        for (let i = 0; i < 2; i++) spawns.push('shambler');
+        for (let i = 0; i < 1; i++) spawns.push('crawler');
     } else if (type === SectorType.MEDICAL) {
         for (let i = 0; i < 3; i++) spawns.push('shambler');
         for (let i = 0; i < 2; i++) spawns.push('spitter');
@@ -539,7 +478,6 @@ function setupInput() {
 }
 
 function startGame() {
-    initAudio(); // Initialize audio on user interaction
     gameState = GameState.PLAYING;
     gameTime = 0;
     globalInfection = 0;
@@ -787,7 +725,7 @@ function attack() {
     let weapon = player.equippedWeapon;
     let damage = 5; // Fists
     let speed = 0.5;
-    let range = TILE_SIZE * 1.5;
+    let range = TILE_SIZE * 1.65; // +10% melee range (was 1.5)
     let isRanged = false;
 
     if (weapon && ItemDef[weapon.id]) {
@@ -795,26 +733,18 @@ function attack() {
         damage = def.damage || 5;
         speed = def.speed || 0.5;
         if (!def.melee) {
-            range = TILE_SIZE * 10; // Ranged
+            range = TILE_SIZE * 11; // +10% ranged range (was 10)
             isRanged = true;
         }
     }
 
     player.attackTimer = speed;
 
-    // Visual and audio feedback
-    let angle = Math.atan2(player.facing.y, player.facing.x);
-
+    // Muzzle flash for ranged weapons
     if (isRanged) {
-        // Muzzle flash for ranged weapons
+        let angle = Math.atan2(player.facing.y, player.facing.x);
         addMuzzleFlash(player.x + player.facing.x * 20, player.y + player.facing.y * 20, angle);
         triggerScreenShake(3, 0.1);
-        playSound('gunshot');
-    } else {
-        // Melee attack slash effect
-        addAttackEffect(player.x + player.facing.x * 25, player.y + player.facing.y * 25, angle);
-        triggerScreenShake(2, 0.08);
-        playSound('melee');
     }
 
     // Check hits
@@ -824,9 +754,10 @@ function attack() {
         let dist = Math.hypot(dx, dy);
 
         if (dist < range) {
-            // Check if in facing direction
+            // Check if in facing direction (widened cone for better hit detection)
             let dot = (dx / dist) * player.facing.x + (dy / dist) * player.facing.y;
-            if (dot > 0.5 || dist < TILE_SIZE) {
+            // Improved collision: wider angle (0.3 instead of 0.5) and larger close-range threshold
+            if (dot > 0.3 || dist < TILE_SIZE * 2) {
                 // Hit!
                 let finalDamage = damage;
                 if (player.fatigue >= 75) finalDamage *= 0.6;
@@ -838,10 +769,8 @@ function attack() {
                     finalDamage *= CRIT_MULTIPLIER;
                     addFloatingText(enemy.x, enemy.y - 20, 'CRITICAL!', '#ff0');
                     triggerScreenShake(8, 0.2);
-                    playSound('crit');
                 } else {
                     addFloatingText(enemy.x, enemy.y - 20, Math.floor(finalDamage).toString(), '#f88');
-                    playSound('hit');
                 }
 
                 enemy.hp -= finalDamage;
@@ -1011,12 +940,6 @@ function updateParticles(dt) {
         if (muzzleFlashes[i].life <= 0) muzzleFlashes.splice(i, 1);
     }
 
-    // Attack effects
-    for (let i = attackEffects.length - 1; i >= 0; i--) {
-        attackEffects[i].life -= dt;
-        if (attackEffects[i].life <= 0) attackEffects.splice(i, 1);
-    }
-
     // Screen shake decay
     if (screenShake.duration > 0) {
         screenShake.duration -= dt;
@@ -1037,25 +960,12 @@ function updateParticles(dt) {
 function updateCamera() {
     let targetX = player.x - VIEWPORT_WIDTH / 2;
     let targetY = player.y - VIEWPORT_HEIGHT / 2;
-    camera.x += (targetX - camera.x) * 0.15; // Faster camera follow
-    camera.y += (targetY - camera.y) * 0.15;
+    camera.x += (targetX - camera.x) * 0.1;
+    camera.y += (targetY - camera.y) * 0.1;
 
-    // Calculate map boundaries - allow camera to show player centered even at edges
-    let mapPixelW = mapWidth * TILE_SIZE;
-    let mapPixelH = mapHeight * TILE_SIZE;
-
-    // If map is smaller than viewport, center it
-    if (mapPixelW <= VIEWPORT_WIDTH) {
-        camera.x = (mapPixelW - VIEWPORT_WIDTH) / 2;
-    } else {
-        camera.x = Math.max(0, Math.min(mapPixelW - VIEWPORT_WIDTH, camera.x));
-    }
-
-    if (mapPixelH <= VIEWPORT_HEIGHT) {
-        camera.y = (mapPixelH - VIEWPORT_HEIGHT) / 2;
-    } else {
-        camera.y = Math.max(0, Math.min(mapPixelH - VIEWPORT_HEIGHT, camera.y));
-    }
+    // Clamp
+    camera.x = Math.max(0, Math.min(mapWidth * TILE_SIZE - VIEWPORT_WIDTH, camera.x));
+    camera.y = Math.max(0, Math.min(mapHeight * TILE_SIZE - VIEWPORT_HEIGHT, camera.y));
 }
 
 function checkWinLose() {
@@ -1289,76 +1199,18 @@ function renderGame() {
             if (px + TILE_SIZE < camera.x || px > camera.x + VIEWPORT_WIDTH) continue;
             if (py + TILE_SIZE < camera.y || py > camera.y + VIEWPORT_HEIGHT) continue;
 
-            // Floor - with subtle variation pattern
-            let floorBase = darkness ? '#0a0f0a' : '#1a1f1a';
-            let floorHighlight = darkness ? '#0c110c' : '#1e241e';
-            // Checkerboard pattern for depth
-            if ((x + y) % 2 === 0) {
-                ctx.fillStyle = floorBase;
-            } else {
-                ctx.fillStyle = floorHighlight;
-            }
+            // Floor
+            ctx.fillStyle = darkness ? '#0a0f0a' : '#1a1f1a';
             ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-
-            // Add subtle grid lines
-            ctx.strokeStyle = darkness ? 'rgba(30, 40, 30, 0.3)' : 'rgba(40, 60, 40, 0.2)';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(px, py, TILE_SIZE, TILE_SIZE);
 
             // Tile type
             if (tile === Tile.WALL) {
-                // Wall with 3D beveled effect
-                let wallBase = darkness ? '#1a2a1a' : '#2a3a2a';
-                let wallLight = darkness ? '#253525' : '#3a4a3a';
-                let wallDark = darkness ? '#101a10' : '#1a2a1a';
-
-                ctx.fillStyle = wallBase;
+                ctx.fillStyle = darkness ? '#1a2a1a' : '#2a3a2a';
                 ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-
-                // Top highlight
-                ctx.fillStyle = wallLight;
-                ctx.beginPath();
-                ctx.moveTo(px, py);
-                ctx.lineTo(px + TILE_SIZE, py);
-                ctx.lineTo(px + TILE_SIZE - 4, py + 4);
-                ctx.lineTo(px + 4, py + 4);
-                ctx.closePath();
-                ctx.fill();
-
-                // Bottom shadow
-                ctx.fillStyle = wallDark;
-                ctx.beginPath();
-                ctx.moveTo(px, py + TILE_SIZE);
-                ctx.lineTo(px + TILE_SIZE, py + TILE_SIZE);
-                ctx.lineTo(px + TILE_SIZE - 4, py + TILE_SIZE - 4);
-                ctx.lineTo(px + 4, py + TILE_SIZE - 4);
-                ctx.closePath();
-                ctx.fill();
             } else if (tile === Tile.CONTAINER) {
                 let cont = containers.find(c => c.tileX === x && c.tileY === y);
-                let opened = cont && cont.opened;
-
-                // Container base with 3D effect
-                let contBase = opened ? '#3a3a2a' : '#5a5a3a';
-                let contLight = opened ? '#4a4a3a' : '#7a7a5a';
-                let contDark = opened ? '#2a2a1a' : '#3a3a2a';
-
-                ctx.fillStyle = contBase;
+                ctx.fillStyle = cont && cont.opened ? '#3a3a2a' : '#5a5a3a';
                 ctx.fillRect(px + 4, py + 4, TILE_SIZE - 8, TILE_SIZE - 8);
-
-                // Top edge (lid)
-                ctx.fillStyle = contLight;
-                ctx.fillRect(px + 4, py + 4, TILE_SIZE - 8, 4);
-
-                // Bottom shadow
-                ctx.fillStyle = contDark;
-                ctx.fillRect(px + 4, py + TILE_SIZE - 8, TILE_SIZE - 8, 4);
-
-                // Handle/lock
-                if (!opened) {
-                    ctx.fillStyle = '#8a8a6a';
-                    ctx.fillRect(px + TILE_SIZE/2 - 4, py + TILE_SIZE/2 - 2, 8, 4);
-                }
             } else if (tile === Tile.WORKBENCH) {
                 ctx.fillStyle = '#4a3a2a';
                 ctx.fillRect(px + 2, py + 2, TILE_SIZE - 4, TILE_SIZE - 4);
@@ -1416,42 +1268,17 @@ function renderGame() {
         ctx.fill();
     });
 
-    // Ground items with glow and animation
+    // Ground items
     groundItems.forEach(item => {
-        let pulse = Math.sin(Date.now() / 300 + item.x) * 0.2 + 1;
-        let bobY = Math.sin(Date.now() / 400 + item.y) * 2;
-
-        // Glow effect
-        ctx.save();
-        ctx.shadowColor = '#aaaa44';
-        ctx.shadowBlur = 8 * pulse;
-
-        // Item background
-        let itemGrad = ctx.createRadialGradient(item.x, item.y + bobY, 0, item.x, item.y + bobY, 10);
-        itemGrad.addColorStop(0, '#cccc66');
-        itemGrad.addColorStop(0.5, '#8a8a4a');
-        itemGrad.addColorStop(1, '#5a5a3a');
-        ctx.fillStyle = itemGrad;
+        ctx.fillStyle = '#8a8a4a';
         ctx.beginPath();
-        ctx.arc(item.x, item.y + bobY, 8 * pulse, 0, Math.PI * 2);
+        ctx.arc(item.x, item.y, 8, 0, Math.PI * 2);
         ctx.fill();
-
-        // Item outline
-        ctx.strokeStyle = '#aaaa66';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(item.x, item.y + bobY, 8 * pulse, 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.shadowBlur = 0;
-        ctx.restore();
-
-        // Item symbol
-        ctx.fillStyle = '#ffff99';
-        ctx.font = 'bold 9px Courier New';
+        ctx.fillStyle = '#aa9a5a';
+        ctx.font = '8px Courier New';
         ctx.textAlign = 'center';
         let symbol = item.id.charAt(0).toUpperCase();
-        ctx.fillText(symbol, item.x, item.y + bobY + 3);
+        ctx.fillText(symbol, item.x, item.y + 3);
     });
 
     // Enemies
@@ -1466,50 +1293,12 @@ function renderGame() {
         // Glow during attack
         if (enemy.attackAnim > 0) {
             ctx.shadowColor = '#ff0000';
-            ctx.shadowBlur = 20;
-        } else if (enemy.alerted) {
-            ctx.shadowColor = def.color;
-            ctx.shadowBlur = 8;
+            ctx.shadowBlur = 15;
         }
 
-        // Enemy body with gradient
-        let enemyGradient = ctx.createRadialGradient(-def.size/6, -def.size/6, 0, 0, 0, def.size/2);
-        if (enemy.hitFlash > 0) {
-            enemyGradient.addColorStop(0, '#ffffff');
-            enemyGradient.addColorStop(1, '#cccccc');
-        } else if (enemy.attackAnim > 0) {
-            enemyGradient.addColorStop(0, '#ff8888');
-            enemyGradient.addColorStop(1, '#aa3333');
-        } else {
-            // Parse the color and create lighter/darker versions
-            let baseColor = def.color;
-            enemyGradient.addColorStop(0, lightenColor(baseColor, 40));
-            enemyGradient.addColorStop(0.7, baseColor);
-            enemyGradient.addColorStop(1, darkenColor(baseColor, 30));
-        }
-
-        ctx.fillStyle = enemyGradient;
+        ctx.fillStyle = enemy.hitFlash > 0 ? '#ffffff' : (enemy.attackAnim > 0 ? '#ff6666' : def.color);
         ctx.beginPath();
         ctx.arc(0, 0, def.size / 2, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Enemy outline
-        ctx.strokeStyle = enemy.hitFlash > 0 ? '#ffffff' : lightenColor(def.color, 30);
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(0, 0, def.size / 2, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Enemy "eyes" - facing direction
-        let eyeAngle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
-        let eyeDist = def.size / 4;
-        let eyeSize = def.size / 10;
-        ctx.fillStyle = enemy.alerted ? '#ff4444' : '#aa2222';
-        ctx.beginPath();
-        ctx.arc(Math.cos(eyeAngle - 0.3) * eyeDist, Math.sin(eyeAngle - 0.3) * eyeDist, eyeSize, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(Math.cos(eyeAngle + 0.3) * eyeDist, Math.sin(eyeAngle + 0.3) * eyeDist, eyeSize, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.shadowBlur = 0;
@@ -1517,130 +1306,42 @@ function renderGame() {
 
         // Attack indicator
         if (enemy.attackAnim > 0.5) {
-            ctx.fillStyle = '#ff0000';
-            ctx.font = 'bold 18px Courier New';
+            ctx.fillStyle = '#f00';
+            ctx.font = 'bold 16px Courier New';
             ctx.textAlign = 'center';
-            ctx.fillText('!', enemy.x, enemy.y - def.size / 2 - 15);
+            ctx.fillText('!', enemy.x, enemy.y - def.size / 2 - 12);
         }
 
-        // Health bar with border
-        let barWidth = def.size + 4;
-        let barHeight = 5;
-        let barX = enemy.x - barWidth / 2;
-        let barY = enemy.y - def.size / 2 - 10;
+        // Health bar
+        let barWidth = def.size;
+        let barHeight = 4;
+        ctx.fillStyle = '#300';
+        ctx.fillRect(enemy.x - barWidth / 2, enemy.y - def.size / 2 - 8, barWidth, barHeight);
+        ctx.fillStyle = '#a00';
+        ctx.fillRect(enemy.x - barWidth / 2, enemy.y - def.size / 2 - 8, barWidth * (enemy.hp / enemy.maxHp), barHeight);
 
-        // Background
-        ctx.fillStyle = '#000';
-        ctx.fillRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2);
-
-        // Empty bar
-        ctx.fillStyle = '#331111';
-        ctx.fillRect(barX, barY, barWidth, barHeight);
-
-        // Health fill with gradient
-        let healthPct = enemy.hp / enemy.maxHp;
-        let healthGrad = ctx.createLinearGradient(barX, barY, barX, barY + barHeight);
-        healthGrad.addColorStop(0, '#ff4444');
-        healthGrad.addColorStop(1, '#aa2222');
-        ctx.fillStyle = healthGrad;
-        ctx.fillRect(barX, barY, barWidth * healthPct, barHeight);
-
-        // Alert indicator with animation
+        // Alert indicator
         if (enemy.alerted && enemy.attackAnim <= 0) {
-            let alertPulse = 0.7 + Math.sin(Date.now() / 150) * 0.3;
-            ctx.fillStyle = `rgba(255, 136, 0, ${alertPulse})`;
-            ctx.font = 'bold 11px Courier New';
+            ctx.fillStyle = '#ff8800';
+            ctx.font = '10px Courier New';
             ctx.textAlign = 'center';
-            ctx.fillText('ALERT', enemy.x, enemy.y - def.size / 2 - 18);
+            ctx.fillText('ALERT', enemy.x, enemy.y - def.size / 2 - 14);
         }
     });
 
-    // Helper functions for color manipulation
-    function lightenColor(hex, percent) {
-        let r = parseInt(hex.slice(1, 3), 16);
-        let g = parseInt(hex.slice(3, 5), 16);
-        let b = parseInt(hex.slice(5, 7), 16);
-        r = Math.min(255, r + (255 - r) * percent / 100);
-        g = Math.min(255, g + (255 - g) * percent / 100);
-        b = Math.min(255, b + (255 - b) * percent / 100);
-        return `rgb(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)})`;
-    }
-
-    function darkenColor(hex, percent) {
-        let r = parseInt(hex.slice(1, 3), 16);
-        let g = parseInt(hex.slice(3, 5), 16);
-        let b = parseInt(hex.slice(5, 7), 16);
-        r = Math.max(0, r * (100 - percent) / 100);
-        g = Math.max(0, g * (100 - percent) / 100);
-        b = Math.max(0, b * (100 - percent) / 100);
-        return `rgb(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)})`;
-    }
-
-    // Player - enhanced with gradient and glow
-    ctx.save();
-
-    // Glow effect when attacking
-    if (player.attackTimer > 0) {
-        ctx.shadowColor = '#88ff88';
-        ctx.shadowBlur = 15;
-    }
-
-    // Dodge trail effect
-    if (player.dodging) {
-        ctx.fillStyle = 'rgba(74, 74, 170, 0.3)';
-        ctx.beginPath();
-        ctx.arc(player.x - player.facing.x * 8, player.y - player.facing.y * 8, 12, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = 'rgba(74, 74, 170, 0.15)';
-        ctx.beginPath();
-        ctx.arc(player.x - player.facing.x * 16, player.y - player.facing.y * 16, 10, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    // Player body gradient
-    let playerGradient = ctx.createRadialGradient(player.x - 3, player.y - 3, 0, player.x, player.y, 14);
-    if (player.dodging) {
-        playerGradient.addColorStop(0, '#7a7aee');
-        playerGradient.addColorStop(1, '#4a4aaa');
-    } else if (player.health < 25) {
-        playerGradient.addColorStop(0, '#aa6a6a');
-        playerGradient.addColorStop(1, '#6a3a3a');
-    } else {
-        playerGradient.addColorStop(0, '#7aca7a');
-        playerGradient.addColorStop(1, '#4a8a4a');
-    }
-    ctx.fillStyle = playerGradient;
+    // Player
+    ctx.fillStyle = player.dodging ? '#4a4aaa' : '#4a8a4a';
     ctx.beginPath();
     ctx.arc(player.x, player.y, 14, 0, Math.PI * 2);
     ctx.fill();
 
-    // Player outline
-    ctx.strokeStyle = player.dodging ? '#9a9aff' : '#aaffaa';
+    // Player direction indicator
+    ctx.strokeStyle = '#8aca8a';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(player.x, player.y, 14, 0, Math.PI * 2);
+    ctx.moveTo(player.x, player.y);
+    ctx.lineTo(player.x + player.facing.x * 20, player.y + player.facing.y * 20);
     ctx.stroke();
-
-    ctx.shadowBlur = 0;
-    ctx.restore();
-
-    // Player weapon/direction indicator
-    let weaponLength = player.equippedWeapon ? 25 : 20;
-    let weaponWidth = player.equippedWeapon ? 3 : 2;
-
-    ctx.strokeStyle = '#aaddaa';
-    ctx.lineWidth = weaponWidth;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(player.x + player.facing.x * 10, player.y + player.facing.y * 10);
-    ctx.lineTo(player.x + player.facing.x * weaponLength, player.y + player.facing.y * weaponLength);
-    ctx.stroke();
-
-    // Weapon tip
-    ctx.fillStyle = '#ccffcc';
-    ctx.beginPath();
-    ctx.arc(player.x + player.facing.x * weaponLength, player.y + player.facing.y * weaponLength, weaponWidth, 0, Math.PI * 2);
-    ctx.fill();
 
     // Particles
     particles.forEach(p => {
@@ -1663,43 +1364,6 @@ function renderGame() {
         ctx.beginPath();
         ctx.arc(0, 0, 20, 0, Math.PI * 2);
         ctx.fill();
-        ctx.restore();
-    });
-
-    // Attack slash effects
-    attackEffects.forEach(ae => {
-        ctx.save();
-        ctx.translate(ae.x, ae.y);
-        ctx.rotate(ae.angle);
-
-        let progress = 1 - (ae.life / ae.maxLife);
-        let alpha = 1 - progress;
-
-        // Draw slash arc
-        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
-        ctx.lineWidth = 4 - progress * 3;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.arc(0, 0, 20 + progress * 15, -0.8 + progress * 0.4, 0.8 - progress * 0.4);
-        ctx.stroke();
-
-        // Draw secondary arc
-        ctx.strokeStyle = `rgba(200, 220, 255, ${alpha * 0.6})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(0, 0, 15 + progress * 20, -0.6 + progress * 0.3, 0.6 - progress * 0.3);
-        ctx.stroke();
-
-        // Sparks
-        for (let i = 0; i < 3; i++) {
-            let sparkX = (10 + progress * 25) * Math.cos(-0.5 + i * 0.5);
-            let sparkY = (10 + progress * 25) * Math.sin(-0.5 + i * 0.5);
-            ctx.fillStyle = `rgba(255, 255, 200, ${alpha * 0.8})`;
-            ctx.beginPath();
-            ctx.arc(sparkX, sparkY, 2 - progress, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
         ctx.restore();
     });
 

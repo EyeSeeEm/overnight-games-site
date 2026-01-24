@@ -169,7 +169,7 @@
             radius: 60
         };
 
-        // Generate buildings with entrances
+        // Generate buildings
         const buildingCount = randomInt(8, 12);
         for (let i = 0; i < buildingCount; i++) {
             let attempts = 0;
@@ -179,32 +179,7 @@
                 const x = randomRange(200, WORLD_WIDTH - 300);
                 const y = randomRange(100, WORLD_HEIGHT - h - 100);
 
-                // Create building with entrance
-                const entranceSide = randomInt(0, 3); // 0=top, 1=right, 2=bottom, 3=left
-                const entranceWidth = 30;
-                let entrance = {};
-
-                switch(entranceSide) {
-                    case 0: // top
-                        entrance = { x: x + w/2 - entranceWidth/2, y: y - 5, width: entranceWidth, height: 10, side: 'top' };
-                        break;
-                    case 1: // right
-                        entrance = { x: x + w - 5, y: y + h/2 - entranceWidth/2, width: 10, height: entranceWidth, side: 'right' };
-                        break;
-                    case 2: // bottom
-                        entrance = { x: x + w/2 - entranceWidth/2, y: y + h - 5, width: entranceWidth, height: 10, side: 'bottom' };
-                        break;
-                    case 3: // left
-                        entrance = { x: x - 5, y: y + h/2 - entranceWidth/2, width: 10, height: entranceWidth, side: 'left' };
-                        break;
-                }
-
-                const building = {
-                    x, y, width: w, height: h,
-                    entrance: entrance,
-                    interior: { x: x + 8, y: y + 8, width: w - 16, height: h - 16 },
-                    hasLoot: Math.random() < 0.7
-                };
+                const building = { x, y, width: w, height: h };
 
                 // Check not too close to player start or extraction
                 if (distance(x + w/2, y + h/2, playerStartX, playerStartY) < 150 ||
@@ -261,23 +236,20 @@
             }
         }
 
-        // Generate loot containers - more inside buildings
-        const containerCount = randomInt(8, 14);
+        // Generate loot containers
+        const containerCount = randomInt(6, 10);
         for (let i = 0; i < containerCount; i++) {
-            // Place containers inside buildings (in interior area)
-            if (buildings.length > 0 && Math.random() < 0.8) {
+            // Place containers near or inside buildings
+            if (buildings.length > 0 && Math.random() < 0.7) {
                 const building = buildings[randomInt(0, buildings.length - 1)];
-                if (building.interior) {
-                    containers.push({
-                        x: building.interior.x + randomRange(5, building.interior.width - 25),
-                        y: building.interior.y + randomRange(5, building.interior.height - 25),
-                        width: 20,
-                        height: 20,
-                        looted: false,
-                        lootValue: randomInt(150, 600),
-                        insideBuilding: true
-                    });
-                }
+                containers.push({
+                    x: building.x + randomRange(10, building.width - 30),
+                    y: building.y + randomRange(10, building.height - 30),
+                    width: 20,
+                    height: 20,
+                    looted: false,
+                    lootValue: randomInt(100, 500)
+                });
             } else {
                 containers.push({
                     x: randomRange(100, WORLD_WIDTH - 100),
@@ -285,8 +257,7 @@
                     width: 20,
                     height: 20,
                     looted: false,
-                    lootValue: randomInt(50, 200),
-                    insideBuilding: false
+                    lootValue: randomInt(50, 200)
                 });
             }
         }
@@ -316,34 +287,11 @@
 
     function collidesWithBuildings(x, y, radius) {
         for (const b of buildings) {
-            // Check if inside the building interior (allowed)
-            if (b.interior && pointInRect(x, y, b.interior)) {
-                return false;
-            }
-            // Check if in entrance (allowed)
-            if (b.entrance && pointInRect(x, y, b.entrance)) {
-                return false;
-            }
-            // Check collision with building walls
             if (circleRectCollision(x, y, radius, b)) {
                 return true;
             }
         }
         return false;
-    }
-
-    function pointInRect(px, py, rect) {
-        return px >= rect.x && px <= rect.x + rect.width &&
-               py >= rect.y && py <= rect.y + rect.height;
-    }
-
-    function isInsideBuilding(x, y) {
-        for (const b of buildings) {
-            if (b.interior && pointInRect(x, y, b.interior)) {
-                return b;
-            }
-        }
-        return null;
     }
 
     function collidesWithTrees(x, y, radius) {
@@ -515,17 +463,8 @@
         }
 
         handleCollision() {
-            // Buildings - allow entering through entrances
+            // Buildings
             for (const b of buildings) {
-                // Check if inside building interior (allowed)
-                if (b.interior && pointInRect(this.x, this.y, b.interior)) {
-                    continue;
-                }
-                // Check if in entrance (allowed)
-                if (b.entrance && pointInRect(this.x, this.y, b.entrance)) {
-                    continue;
-                }
-                // Handle wall collision
                 if (circleRectCollision(this.x, this.y, this.radius, b)) {
                     // Push out
                     const centerX = b.x + b.width / 2;
@@ -679,19 +618,6 @@
 
         render(ctx) {
             const screen = worldToScreen(this.x, this.y);
-
-            // Player vision cone
-            const visionRange = 150;
-            const visionAngle = Math.PI / 3; // 60 degrees
-            ctx.save();
-            ctx.globalAlpha = 0.15;
-            ctx.fillStyle = '#88CCFF';
-            ctx.beginPath();
-            ctx.moveTo(screen.x, screen.y);
-            ctx.arc(screen.x, screen.y, visionRange, this.angle - visionAngle/2, this.angle + visionAngle/2);
-            ctx.closePath();
-            ctx.fill();
-            ctx.restore();
 
             // Dodge trail
             if (this.dodging) {
@@ -995,26 +921,6 @@
         render(ctx) {
             const screen = worldToScreen(this.x, this.y);
 
-            // Enemy vision cone
-            const visionAngleRad = (this.visionAngle || 90) * Math.PI / 180;
-            ctx.save();
-            if (this.state === 'combat') {
-                ctx.globalAlpha = 0.2;
-                ctx.fillStyle = '#FF4444';
-            } else if (this.state === 'alert') {
-                ctx.globalAlpha = 0.15;
-                ctx.fillStyle = '#FFAA00';
-            } else {
-                ctx.globalAlpha = 0.1;
-                ctx.fillStyle = '#FFFF00';
-            }
-            ctx.beginPath();
-            ctx.moveTo(screen.x, screen.y);
-            ctx.arc(screen.x, screen.y, this.visionRange, this.angle - visionAngleRad/2, this.angle + visionAngleRad/2);
-            ctx.closePath();
-            ctx.fill();
-            ctx.restore();
-
             // Alert indicator
             if (this.state === 'alert') {
                 ctx.fillStyle = '#ECC94B';
@@ -1210,6 +1116,9 @@
     }
 
     function startGame() {
+        // Unpause the game so input works
+        gamePaused = false;
+
         // Reset stats
         stats = {
             enemiesKilled: 0,
@@ -1336,34 +1245,14 @@
         ctx.textAlign = 'center';
         ctx.fillText('EXTRACT', epScreen.x, epScreen.y + 4);
 
-        // Buildings with entrances
+        // Buildings
         for (const b of buildings) {
             const screen = worldToScreen(b.x, b.y);
-
-            // Building exterior
             ctx.fillStyle = COLORS.building;
             ctx.fillRect(screen.x, screen.y, b.width, b.height);
             ctx.strokeStyle = COLORS.wall;
             ctx.lineWidth = 2;
             ctx.strokeRect(screen.x, screen.y, b.width, b.height);
-
-            // Interior (lighter floor)
-            if (b.interior) {
-                const intScreen = worldToScreen(b.interior.x, b.interior.y);
-                ctx.fillStyle = '#5A6A6A';
-                ctx.fillRect(intScreen.x, intScreen.y, b.interior.width, b.interior.height);
-            }
-
-            // Entrance (highlighted doorway)
-            if (b.entrance) {
-                const entScreen = worldToScreen(b.entrance.x, b.entrance.y);
-                ctx.fillStyle = '#3D5050';
-                ctx.fillRect(entScreen.x, entScreen.y, b.entrance.width, b.entrance.height);
-                // Door frame
-                ctx.strokeStyle = '#8B4513';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(entScreen.x, entScreen.y, b.entrance.width, b.entrance.height);
-            }
         }
 
         // Trees

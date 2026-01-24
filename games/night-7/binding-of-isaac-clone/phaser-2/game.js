@@ -55,6 +55,28 @@ class BootScene extends Phaser.Scene {
         g.strokeTriangle(3, 8, 17, 8, 10, 18);
         g.generateTexture('heart_empty', 20, 20);
 
+        // Half Heart (left half filled, right half empty)
+        g.clear();
+        // Filled left side
+        g.fillStyle(0xff0000);
+        g.fillCircle(6, 6, 5);
+        g.beginPath();
+        g.moveTo(3, 8);
+        g.lineTo(10, 8);
+        g.lineTo(10, 18);
+        g.closePath();
+        g.fillPath();
+        // Empty right side
+        g.lineStyle(2, 0xff0000);
+        g.strokeCircle(14, 6, 5);
+        g.beginPath();
+        g.moveTo(10, 8);
+        g.lineTo(17, 8);
+        g.lineTo(10, 18);
+        g.closePath();
+        g.strokePath();
+        g.generateTexture('heart_half', 20, 20);
+
         // Soul Heart
         g.clear();
         g.fillStyle(0x3366ff);
@@ -624,6 +646,14 @@ class GameScene extends Phaser.Scene {
                 const trap = this.pickups.create(px, py, 'trapdoor');
                 trap.pickupType = 'trapdoor';
             }
+
+            // Restore saved pickups (coins, hearts dropped by enemies)
+            if (content.pickups && content.pickups.length > 0) {
+                content.pickups.forEach(p => {
+                    const pickup = this.pickups.create(p.x, p.y, p.texture);
+                    pickup.pickupType = p.type;
+                });
+            }
         }
 
         this.roomCleared = content?.cleared || false;
@@ -780,7 +810,7 @@ class GameScene extends Phaser.Scene {
             const y = 40;
             let texture = 'heart_empty';
             if (i < fullHearts) texture = 'heart_red';
-            else if (i === fullHearts && halfHeart) texture = 'heart_red'; // simplified
+            else if (i === fullHearts && halfHeart) texture = 'heart_half'; // Use half-heart texture
 
             const heart = this.add.image(x + 10, y, texture).setScale(0.8);
             this.heartIcons.push(heart);
@@ -1110,12 +1140,7 @@ class GameScene extends Phaser.Scene {
         this.roomCleared = true;
         const roomKey = `${this.currentRoomX},${this.currentRoomY}`;
         this.roomContents[roomKey].cleared = true;
-
-        // IMMEDIATELY re-render room to open doors (100% reliable)
-        this.renderRoom();
-
-        // Visual feedback that room is cleared
-        this.showMessage('Room Cleared!');
+        // Doors will update on next render naturally
     }
 
     checkDoorTransition() {
@@ -1132,21 +1157,18 @@ class GameScene extends Phaser.Scene {
         let newRoomY = this.currentRoomY;
         let entryDir = null;
 
-        // Entry direction is OPPOSITE of exit direction
-        // Exit left -> enter from RIGHT side of new room
-        // Exit right -> enter from LEFT side of new room
         if (px < roomLeft) {
             newRoomX--;
-            entryDir = 'right';  // Enter from RIGHT side (came from right/east room)
+            entryDir = 'left';
         } else if (px > roomRight) {
             newRoomX++;
-            entryDir = 'left';   // Enter from LEFT side (came from left/west room)
+            entryDir = 'right';
         } else if (py < roomTop) {
             newRoomY--;
-            entryDir = 'down';   // Enter from BOTTOM (came from below/south room)
+            entryDir = 'up';
         } else if (py > roomBottom) {
             newRoomY++;
-            entryDir = 'up';     // Enter from TOP (came from above/north room)
+            entryDir = 'down';
         }
 
         if (entryDir && this.floorMap[newRoomY]?.[newRoomX]) {
@@ -1158,6 +1180,20 @@ class GameScene extends Phaser.Scene {
         this.transitioning = true;
         this.player.setVelocity(0, 0);
 
+        // Save current room's pickups before leaving
+        const currentRoomKey = `${this.currentRoomX},${this.currentRoomY}`;
+        if (this.roomContents[currentRoomKey]) {
+            this.roomContents[currentRoomKey].pickups = [];
+            this.pickups.getChildren().forEach(pickup => {
+                this.roomContents[currentRoomKey].pickups.push({
+                    x: pickup.x,
+                    y: pickup.y,
+                    type: pickup.pickupType,
+                    texture: pickup.texture.key
+                });
+            });
+        }
+
         // Fade out
         this.cameras.main.fadeOut(200, 0, 0, 0);
 
@@ -1165,26 +1201,21 @@ class GameScene extends Phaser.Scene {
             this.currentRoomX = newX;
             this.currentRoomY = newY;
 
-            // Position player at entry door (where they came FROM)
-            // entryDir indicates which side of the NEW room the player enters
+            // Position player at entry door
             let px, py;
             const midX = this.roomOffsetX + ROOM_WIDTH * TILE_SIZE / 2;
             const midY = this.roomOffsetY + ROOM_HEIGHT * TILE_SIZE / 2;
 
             if (entryDir === 'left') {
-                // Entering from LEFT door (player walks in from left side)
                 px = this.roomOffsetX + TILE_SIZE * 1.5;
                 py = midY;
             } else if (entryDir === 'right') {
-                // Entering from RIGHT door (player walks in from right side)
                 px = this.roomOffsetX + ROOM_WIDTH * TILE_SIZE - TILE_SIZE * 1.5;
                 py = midY;
             } else if (entryDir === 'up') {
-                // Entering from TOP door (player walks in from top)
                 px = midX;
                 py = this.roomOffsetY + TILE_SIZE * 1.5;
-            } else { // 'down'
-                // Entering from BOTTOM door (player walks in from bottom)
+            } else {
                 px = midX;
                 py = this.roomOffsetY + ROOM_HEIGHT * TILE_SIZE - TILE_SIZE * 1.5;
             }
